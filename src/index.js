@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import {initializeConfig,predefined} from '@ckb-lumos/config-manager'
+
+initializeConfig((predefined.AGGRON4))
 
 ReactDOM.render(
   <React.StrictMode>

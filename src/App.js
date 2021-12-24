@@ -1,24 +1,20 @@
-import logo from './logo.svg';
-import './App.css';
+import "antd/dist/antd.css";
+import React from "react";
+import { HashRouter as Router, Route, Routes } from "react-router-dom";
+import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
+import RequestWithdrawal from "./views/RequestWithdrawal";
+import Withdrawal from "./views/Withdrawal";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <LightGodwokenProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Withdrawal />}></Route>
+          <Route path="/request-withdrawal" element={<RequestWithdrawal />}></Route>
+        </Routes>
+      </Router>
+    </LightGodwokenProvider>
   );
 }
 
