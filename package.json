@@ -36,8 +36,11 @@
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
+    "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
+    "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "prepare": "husky install"
   },
   "eslintConfig": {
     "extends": [
@@ -64,7 +67,9 @@
     "@craco/craco": "^6.4.3",
     "acorn": "^8.6.0",
     "gh-pages": "^3.2.3",
+    "husky": "^7.0.4",
     "patch-package": "^6.4.7",
+    "prettier": "^2.5.1",
     "typescript": "^4.5.3"
   },
   "resolutions": {
