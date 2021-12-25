@@ -102,9 +102,7 @@ function serializeTable(buffers) {
 }
 
 class Identity {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -127,10 +125,7 @@ class Identity {
   static size() {
     return 21;
   }
-
 }
-
-
 
 function SerializeIdentity(value) {
   const buffer = assertArrayBuffer(value);
@@ -139,9 +134,7 @@ function SerializeIdentity(value) {
 }
 
 class RcIdentity {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -152,10 +145,10 @@ class RcIdentity {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Identity(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new SmtProofEntryVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -164,7 +157,7 @@ class RcIdentity {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Identity(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -173,13 +166,10 @@ class RcIdentity {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new SmtProofEntryVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeRcIdentity(value) {
   const buffers = [];
@@ -189,9 +179,7 @@ function SerializeRcIdentity(value) {
 }
 
 class RcIdentityOpt {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -207,17 +195,14 @@ class RcIdentityOpt {
 
   value() {
     return new RcIdentity(this.view.buffer, {
-      validate: false
+      validate: false,
     });
   }
 
   hasValue() {
     return this.view.byteLength > 0;
   }
-
 }
-
-
 
 function SerializeRcIdentityOpt(value) {
   if (value) {
@@ -228,9 +213,7 @@ function SerializeRcIdentityOpt(value) {
 }
 
 class RcLockWitnessLock {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -241,13 +224,13 @@ class RcLockWitnessLock {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new BytesOpt(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new RcIdentityOpt(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesOpt(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -256,7 +239,7 @@ class RcLockWitnessLock {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new BytesOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -265,7 +248,7 @@ class RcLockWitnessLock {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new RcIdentityOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -274,11 +257,10 @@ class RcLockWitnessLock {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 }
-
 
 export function SerializeRcLockWitnessLock(value) {
   const buffers = [];
@@ -289,9 +271,7 @@ export function SerializeRcLockWitnessLock(value) {
 }
 
 class ScriptVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -304,7 +284,7 @@ class ScriptVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new Script(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -327,22 +307,17 @@ class ScriptVec {
     }
 
     return new Script(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeScriptVec(value) {
-  return serializeTable(value.map(item => SerializeScript(item)));
+  return serializeTable(value.map((item) => SerializeScript(item)));
 }
 
 class ScriptVecOpt {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -358,17 +333,14 @@ class ScriptVecOpt {
 
   value() {
     return new ScriptVec(this.view.buffer, {
-      validate: false
+      validate: false,
     });
   }
 
   hasValue() {
     return this.view.byteLength > 0;
   }
-
 }
-
-
 
 function SerializeScriptVecOpt(value) {
   if (value) {
@@ -379,9 +351,7 @@ function SerializeScriptVecOpt(value) {
 }
 
 class XudtWitnessInput {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -392,10 +362,10 @@ class XudtWitnessInput {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new ScriptVecOpt(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -404,7 +374,7 @@ class XudtWitnessInput {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new ScriptVecOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -413,13 +383,10 @@ class XudtWitnessInput {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeXudtWitnessInput(value) {
   const buffers = [];
@@ -429,9 +396,7 @@ function SerializeXudtWitnessInput(value) {
 }
 
 class RCRule {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -441,7 +406,7 @@ class RCRule {
 
   getSmtRoot() {
     return new Byte32(this.view.buffer.slice(0, 0 + Byte32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -457,10 +422,7 @@ class RCRule {
   static size() {
     return 0 + Byte32.size() + 1;
   }
-
 }
-
-
 
 function SerializeRCRule(value) {
   const array = new Uint8Array(0 + Byte32.size() + 1);
@@ -471,9 +433,7 @@ function SerializeRCRule(value) {
 }
 
 class RCCellVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -497,17 +457,14 @@ class RCCellVec {
 
   indexAt(i) {
     return new Byte32(this.view.buffer.slice(4 + i * Byte32.size(), 4 + (i + 1) * Byte32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeRCCellVec(value) {
   const array = new Uint8Array(4 + Byte32.size() * value.length);
@@ -522,9 +479,7 @@ function SerializeRCCellVec(value) {
 }
 
 class RCData {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -542,13 +497,13 @@ class RCData {
     switch (t) {
       case 0:
         new RCRule(this.view.buffer.slice(4), {
-          validate: false
+          validate: false,
         }).validate();
         break;
 
       case 1:
         new RCCellVec(this.view.buffer.slice(4), {
-          validate: false
+          validate: false,
         }).validate();
         break;
 
@@ -578,42 +533,39 @@ class RCData {
     switch (t) {
       case 0:
         return new RCRule(this.view.buffer.slice(4), {
-          validate: false
+          validate: false,
         });
 
       case 1:
         return new RCCellVec(this.view.buffer.slice(4), {
-          validate: false
+          validate: false,
         });
 
       default:
         throw new Error(`Invalid type: ${t}`);
     }
   }
-
 }
 
 function SerializeRCData(value) {
   switch (value.type) {
-    case "RCRule":
-      {
-        const itemBuffer = SerializeRCRule(value.value);
-        const array = new Uint8Array(4 + itemBuffer.byteLength);
-        const view = new DataView(array.buffer);
-        view.setUint32(0, 0, true);
-        array.set(new Uint8Array(itemBuffer), 4);
-        return array.buffer;
-      }
+    case "RCRule": {
+      const itemBuffer = SerializeRCRule(value.value);
+      const array = new Uint8Array(4 + itemBuffer.byteLength);
+      const view = new DataView(array.buffer);
+      view.setUint32(0, 0, true);
+      array.set(new Uint8Array(itemBuffer), 4);
+      return array.buffer;
+    }
 
-    case "RCCellVec":
-      {
-        const itemBuffer = SerializeRCCellVec(value.value);
-        const array = new Uint8Array(4 + itemBuffer.byteLength);
-        const view = new DataView(array.buffer);
-        view.setUint32(0, 1, true);
-        array.set(new Uint8Array(itemBuffer), 4);
-        return array.buffer;
-      }
+    case "RCCellVec": {
+      const itemBuffer = SerializeRCCellVec(value.value);
+      const array = new Uint8Array(4 + itemBuffer.byteLength);
+      const view = new DataView(array.buffer);
+      view.setUint32(0, 1, true);
+      array.set(new Uint8Array(itemBuffer), 4);
+      return array.buffer;
+    }
 
     default:
       throw new Error(`Invalid type: ${value.type}`);
@@ -621,9 +573,7 @@ function SerializeRCData(value) {
 }
 
 class SmtProof {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -651,9 +601,7 @@ class SmtProof {
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
 
 function SerializeSmtProof(value) {
   const item = assertArrayBuffer(value);
@@ -664,9 +612,7 @@ function SerializeSmtProof(value) {
 }
 
 class SmtProofEntry {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -682,7 +628,7 @@ class SmtProofEntry {
     }
 
     new SmtProof(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -698,12 +644,10 @@ class SmtProofEntry {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new SmtProof(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
 
 function SerializeSmtProofEntry(value) {
   const buffers = [];
@@ -715,9 +659,7 @@ function SerializeSmtProofEntry(value) {
 }
 
 class SmtProofEntryVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -730,7 +672,7 @@ class SmtProofEntryVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new SmtProofEntry(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -753,22 +695,17 @@ class SmtProofEntryVec {
     }
 
     return new SmtProofEntry(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeSmtProofEntryVec(value) {
-  return serializeTable(value.map(item => SerializeSmtProofEntry(item)));
+  return serializeTable(value.map((item) => SerializeSmtProofEntry(item)));
 }
 
 class SmtUpdateItem {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -778,7 +715,7 @@ class SmtUpdateItem {
 
   getKey() {
     return new Byte32(this.view.buffer.slice(0, 0 + Byte32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -794,10 +731,7 @@ class SmtUpdateItem {
   static size() {
     return 0 + Byte32.size() + 1;
   }
-
 }
-
-
 
 function SerializeSmtUpdateItem(value) {
   const array = new Uint8Array(0 + Byte32.size() + 1);
@@ -808,9 +742,7 @@ function SerializeSmtUpdateItem(value) {
 }
 
 class SmtUpdateItemVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -834,17 +766,14 @@ class SmtUpdateItemVec {
 
   indexAt(i) {
     return new SmtUpdateItem(this.view.buffer.slice(4 + i * SmtUpdateItem.size(), 4 + (i + 1) * SmtUpdateItem.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeSmtUpdateItemVec(value) {
   const array = new Uint8Array(4 + SmtUpdateItem.size() * value.length);
@@ -859,9 +788,7 @@ function SerializeSmtUpdateItemVec(value) {
 }
 
 class SmtUpdateAction {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -872,10 +799,10 @@ class SmtUpdateAction {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new SmtUpdateItemVec(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new SmtProof(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -884,7 +811,7 @@ class SmtUpdateAction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new SmtUpdateItemVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -893,13 +820,10 @@ class SmtUpdateAction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new SmtProof(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeSmtUpdateAction(value) {
   const buffers = [];
@@ -909,9 +833,7 @@ function SerializeSmtUpdateAction(value) {
 }
 
 class XudtData {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -922,10 +844,10 @@ class XudtData {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Bytes(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -934,7 +856,7 @@ class XudtData {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Bytes(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -943,13 +865,10 @@ class XudtData {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeXudtData(value) {
   const buffers = [];
@@ -959,9 +878,7 @@ function SerializeXudtData(value) {
 }
 
 class Uint32 {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -992,10 +909,7 @@ class Uint32 {
   static size() {
     return 4;
   }
-
 }
-
-
 
 function SerializeUint32(value) {
   const buffer = assertArrayBuffer(value);
@@ -1004,9 +918,7 @@ function SerializeUint32(value) {
 }
 
 class Uint64 {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1029,10 +941,7 @@ class Uint64 {
   static size() {
     return 8;
   }
-
 }
-
-
 
 function SerializeUint64(value) {
   const buffer = assertArrayBuffer(value);
@@ -1041,9 +950,7 @@ function SerializeUint64(value) {
 }
 
 class Uint128 {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1066,10 +973,7 @@ class Uint128 {
   static size() {
     return 16;
   }
-
 }
-
-
 
 function SerializeUint128(value) {
   const buffer = assertArrayBuffer(value);
@@ -1078,9 +982,7 @@ function SerializeUint128(value) {
 }
 
 class Byte32 {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1103,10 +1005,7 @@ class Byte32 {
   static size() {
     return 32;
   }
-
 }
-
-
 
 function SerializeByte32(value) {
   const buffer = assertArrayBuffer(value);
@@ -1115,9 +1014,7 @@ function SerializeByte32(value) {
 }
 
 class Uint256 {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1140,10 +1037,7 @@ class Uint256 {
   static size() {
     return 32;
   }
-
 }
-
-
 
 function SerializeUint256(value) {
   const buffer = assertArrayBuffer(value);
@@ -1152,9 +1046,7 @@ function SerializeUint256(value) {
 }
 
 class Bytes {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1182,10 +1074,7 @@ class Bytes {
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeBytes(value) {
   const item = assertArrayBuffer(value);
@@ -1196,9 +1085,7 @@ function SerializeBytes(value) {
 }
 
 class BytesOpt {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1214,17 +1101,14 @@ class BytesOpt {
 
   value() {
     return new Bytes(this.view.buffer, {
-      validate: false
+      validate: false,
     });
   }
 
   hasValue() {
     return this.view.byteLength > 0;
   }
-
 }
-
-
 
 function SerializeBytesOpt(value) {
   if (value) {
@@ -1235,9 +1119,7 @@ function SerializeBytesOpt(value) {
 }
 
 class BytesVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1250,7 +1132,7 @@ class BytesVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new Bytes(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -1273,22 +1155,17 @@ class BytesVec {
     }
 
     return new Bytes(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeBytesVec(value) {
-  return serializeTable(value.map(item => SerializeBytes(item)));
+  return serializeTable(value.map((item) => SerializeBytes(item)));
 }
 
 class Byte32Vec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1312,17 +1189,14 @@ class Byte32Vec {
 
   indexAt(i) {
     return new Byte32(this.view.buffer.slice(4 + i * Byte32.size(), 4 + (i + 1) * Byte32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeByte32Vec(value) {
   const array = new Uint8Array(4 + Byte32.size() * value.length);
@@ -1337,9 +1211,7 @@ function SerializeByte32Vec(value) {
 }
 
 class ScriptOpt {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1355,17 +1227,14 @@ class ScriptOpt {
 
   value() {
     return new Script(this.view.buffer, {
-      validate: false
+      validate: false,
     });
   }
 
   hasValue() {
     return this.view.byteLength > 0;
   }
-
 }
-
-
 
 function SerializeScriptOpt(value) {
   if (value) {
@@ -1376,9 +1245,7 @@ function SerializeScriptOpt(value) {
 }
 
 class ProposalShortId {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1401,10 +1268,7 @@ class ProposalShortId {
   static size() {
     return 10;
   }
-
 }
-
-
 
 function SerializeProposalShortId(value) {
   const buffer = assertArrayBuffer(value);
@@ -1413,9 +1277,7 @@ function SerializeProposalShortId(value) {
 }
 
 class UncleBlockVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1428,7 +1290,7 @@ class UncleBlockVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new UncleBlock(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -1451,22 +1313,17 @@ class UncleBlockVec {
     }
 
     return new UncleBlock(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeUncleBlockVec(value) {
-  return serializeTable(value.map(item => SerializeUncleBlock(item)));
+  return serializeTable(value.map((item) => SerializeUncleBlock(item)));
 }
 
 class TransactionVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1479,7 +1336,7 @@ class TransactionVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new Transaction(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -1502,22 +1359,17 @@ class TransactionVec {
     }
 
     return new Transaction(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeTransactionVec(value) {
-  return serializeTable(value.map(item => SerializeTransaction(item)));
+  return serializeTable(value.map((item) => SerializeTransaction(item)));
 }
 
 class ProposalShortIdVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1540,18 +1392,18 @@ class ProposalShortIdVec {
   }
 
   indexAt(i) {
-    return new ProposalShortId(this.view.buffer.slice(4 + i * ProposalShortId.size(), 4 + (i + 1) * ProposalShortId.size()), {
-      validate: false
-    });
+    return new ProposalShortId(
+      this.view.buffer.slice(4 + i * ProposalShortId.size(), 4 + (i + 1) * ProposalShortId.size()),
+      {
+        validate: false,
+      },
+    );
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeProposalShortIdVec(value) {
   const array = new Uint8Array(4 + ProposalShortId.size() * value.length);
@@ -1566,9 +1418,7 @@ function SerializeProposalShortIdVec(value) {
 }
 
 class CellDepVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1592,17 +1442,14 @@ class CellDepVec {
 
   indexAt(i) {
     return new CellDep(this.view.buffer.slice(4 + i * CellDep.size(), 4 + (i + 1) * CellDep.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeCellDepVec(value) {
   const array = new Uint8Array(4 + CellDep.size() * value.length);
@@ -1617,9 +1464,7 @@ function SerializeCellDepVec(value) {
 }
 
 class CellInputVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1643,17 +1488,14 @@ class CellInputVec {
 
   indexAt(i) {
     return new CellInput(this.view.buffer.slice(4 + i * CellInput.size(), 4 + (i + 1) * CellInput.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   length() {
     return this.view.getUint32(0, true);
   }
-
 }
-
-
 
 function SerializeCellInputVec(value) {
   const array = new Uint8Array(4 + CellInput.size() * value.length);
@@ -1668,9 +1510,7 @@ function SerializeCellInputVec(value) {
 }
 
 class CellOutputVec {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1683,7 +1523,7 @@ class CellOutputVec {
 
     for (let i = 0; i < offsets.length - 1; i++) {
       new CellOutput(this.view.buffer.slice(offsets[i], offsets[i + 1]), {
-        validate: false
+        validate: false,
       }).validate();
     }
   }
@@ -1706,22 +1546,17 @@ class CellOutputVec {
     }
 
     return new CellOutput(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
 
-
-
 function SerializeCellOutputVec(value) {
-  return serializeTable(value.map(item => SerializeCellOutput(item)));
+  return serializeTable(value.map((item) => SerializeCellOutput(item)));
 }
 
 class Script {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1732,7 +1567,7 @@ class Script {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Byte32(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
 
     if (offsets[2] - offsets[1] !== 1) {
@@ -1740,7 +1575,7 @@ class Script {
     }
 
     new Bytes(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -1749,7 +1584,7 @@ class Script {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Byte32(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1765,13 +1600,10 @@ class Script {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new Bytes(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeScript(value) {
   const buffers = [];
@@ -1784,9 +1616,7 @@ function SerializeScript(value) {
 }
 
 class OutPoint {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1796,13 +1626,13 @@ class OutPoint {
 
   getTxHash() {
     return new Byte32(this.view.buffer.slice(0, 0 + Byte32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   getIndex() {
     return new Uint32(this.view.buffer.slice(0 + Byte32.size(), 0 + Byte32.size() + Uint32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1815,10 +1645,7 @@ class OutPoint {
   static size() {
     return 0 + Byte32.size() + Uint32.size();
   }
-
 }
-
-
 
 function SerializeOutPoint(value) {
   const array = new Uint8Array(0 + Byte32.size() + Uint32.size());
@@ -1829,9 +1656,7 @@ function SerializeOutPoint(value) {
 }
 
 class CellInput {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1841,13 +1666,13 @@ class CellInput {
 
   getSince() {
     return new Uint64(this.view.buffer.slice(0, 0 + Uint64.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   getPreviousOutput() {
     return new OutPoint(this.view.buffer.slice(0 + Uint64.size(), 0 + Uint64.size() + OutPoint.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1860,10 +1685,7 @@ class CellInput {
   static size() {
     return 0 + Uint64.size() + OutPoint.size();
   }
-
 }
-
-
 
 function SerializeCellInput(value) {
   const array = new Uint8Array(0 + Uint64.size() + OutPoint.size());
@@ -1874,9 +1696,7 @@ function SerializeCellInput(value) {
 }
 
 class CellOutput {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1887,13 +1707,13 @@ class CellOutput {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Uint64(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new Script(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
     new ScriptOpt(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -1902,7 +1722,7 @@ class CellOutput {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Uint64(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1911,7 +1731,7 @@ class CellOutput {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Script(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1920,13 +1740,10 @@ class CellOutput {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new ScriptOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeCellOutput(value) {
   const buffers = [];
@@ -1937,9 +1754,7 @@ function SerializeCellOutput(value) {
 }
 
 class CellDep {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1949,7 +1764,7 @@ class CellDep {
 
   getOutPoint() {
     return new OutPoint(this.view.buffer.slice(0, 0 + OutPoint.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -1965,10 +1780,7 @@ class CellDep {
   static size() {
     return 0 + OutPoint.size() + 1;
   }
-
 }
-
-
 
 function SerializeCellDep(value) {
   const array = new Uint8Array(0 + OutPoint.size() + 1);
@@ -1979,9 +1791,7 @@ function SerializeCellDep(value) {
 }
 
 class RawTransaction {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -1992,22 +1802,22 @@ class RawTransaction {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Uint32(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new CellDepVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
     new Byte32Vec(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
     new CellInputVec(this.view.buffer.slice(offsets[3], offsets[4]), {
-      validate: false
+      validate: false,
     }).validate();
     new CellOutputVec(this.view.buffer.slice(offsets[4], offsets[5]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesVec(this.view.buffer.slice(offsets[5], offsets[6]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2016,7 +1826,7 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Uint32(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2025,7 +1835,7 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new CellDepVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2034,7 +1844,7 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Byte32Vec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2043,7 +1853,7 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new CellInputVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2052,7 +1862,7 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new CellOutputVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2061,13 +1871,10 @@ class RawTransaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeRawTransaction(value) {
   const buffers = [];
@@ -2081,9 +1888,7 @@ function SerializeRawTransaction(value) {
 }
 
 class Transaction {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2094,10 +1899,10 @@ class Transaction {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new RawTransaction(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2106,7 +1911,7 @@ class Transaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new RawTransaction(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2115,13 +1920,10 @@ class Transaction {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeTransaction(value) {
   const buffers = [];
@@ -2131,9 +1933,7 @@ function SerializeTransaction(value) {
 }
 
 class RawHeader {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2143,62 +1943,165 @@ class RawHeader {
 
   getVersion() {
     return new Uint32(this.view.buffer.slice(0, 0 + Uint32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   getCompactTarget() {
     return new Uint32(this.view.buffer.slice(0 + Uint32.size(), 0 + Uint32.size() + Uint32.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   getTimestamp() {
-    return new Uint64(this.view.buffer.slice(0 + Uint32.size() + Uint32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size()), {
-      validate: false
-    });
+    return new Uint64(
+      this.view.buffer.slice(0 + Uint32.size() + Uint32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size()),
+      {
+        validate: false,
+      },
+    );
   }
 
   getNumber() {
-    return new Uint64(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size()), {
-      validate: false
-    });
+    return new Uint64(
+      this.view.buffer.slice(
+        0 + Uint32.size() + Uint32.size() + Uint64.size(),
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getEpoch() {
-    return new Uint64(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size()), {
-      validate: false
-    });
+    return new Uint64(
+      this.view.buffer.slice(
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size(),
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getParentHash() {
-    return new Byte32(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size()), {
-      validate: false
-    });
+    return new Byte32(
+      this.view.buffer.slice(
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size(),
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getTransactionsRoot() {
-    return new Byte32(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size()), {
-      validate: false
-    });
+    return new Byte32(
+      this.view.buffer.slice(
+        0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size(),
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getProposalsHash() {
-    return new Byte32(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size()), {
-      validate: false
-    });
+    return new Byte32(
+      this.view.buffer.slice(
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size(),
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getUnclesHash() {
-    return new Byte32(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size()), {
-      validate: false
-    });
+    return new Byte32(
+      this.view.buffer.slice(
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size(),
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   getDao() {
-    return new Byte32(this.view.buffer.slice(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size(), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size()), {
-      validate: false
-    });
+    return new Byte32(
+      this.view.buffer.slice(
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size(),
+        0 +
+          Uint32.size() +
+          Uint32.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Uint64.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size() +
+          Byte32.size(),
+      ),
+      {
+        validate: false,
+      },
+    );
   }
 
   validate(compatible = false) {
@@ -2216,33 +2119,87 @@ class RawHeader {
   }
 
   static size() {
-    return 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size();
+    return (
+      0 +
+      Uint32.size() +
+      Uint32.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size()
+    );
   }
-
 }
 
-
-
 function SerializeRawHeader(value) {
-  const array = new Uint8Array(0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size());
+  const array = new Uint8Array(
+    0 +
+      Uint32.size() +
+      Uint32.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size(),
+  );
   const view = new DataView(array.buffer);
   array.set(new Uint8Array(SerializeUint32(value.version)), 0);
   array.set(new Uint8Array(SerializeUint32(value.compact_target)), 0 + Uint32.size());
   array.set(new Uint8Array(SerializeUint64(value.timestamp)), 0 + Uint32.size() + Uint32.size());
   array.set(new Uint8Array(SerializeUint64(value.number)), 0 + Uint32.size() + Uint32.size() + Uint64.size());
-  array.set(new Uint8Array(SerializeUint64(value.epoch)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size());
-  array.set(new Uint8Array(SerializeByte32(value.parent_hash)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size());
-  array.set(new Uint8Array(SerializeByte32(value.transactions_root)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size());
-  array.set(new Uint8Array(SerializeByte32(value.proposals_hash)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size());
-  array.set(new Uint8Array(SerializeByte32(value.uncles_hash)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size());
-  array.set(new Uint8Array(SerializeByte32(value.dao)), 0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size() + Byte32.size() + Byte32.size());
+  array.set(
+    new Uint8Array(SerializeUint64(value.epoch)),
+    0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size(),
+  );
+  array.set(
+    new Uint8Array(SerializeByte32(value.parent_hash)),
+    0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size(),
+  );
+  array.set(
+    new Uint8Array(SerializeByte32(value.transactions_root)),
+    0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size(),
+  );
+  array.set(
+    new Uint8Array(SerializeByte32(value.proposals_hash)),
+    0 + Uint32.size() + Uint32.size() + Uint64.size() + Uint64.size() + Uint64.size() + Byte32.size() + Byte32.size(),
+  );
+  array.set(
+    new Uint8Array(SerializeByte32(value.uncles_hash)),
+    0 +
+      Uint32.size() +
+      Uint32.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size(),
+  );
+  array.set(
+    new Uint8Array(SerializeByte32(value.dao)),
+    0 +
+      Uint32.size() +
+      Uint32.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Uint64.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size() +
+      Byte32.size(),
+  );
   return array.buffer;
 }
 
 class Header {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2252,13 +2209,13 @@ class Header {
 
   getRaw() {
     return new RawHeader(this.view.buffer.slice(0, 0 + RawHeader.size()), {
-      validate: false
+      validate: false,
     });
   }
 
   getNonce() {
     return new Uint128(this.view.buffer.slice(0 + RawHeader.size(), 0 + RawHeader.size() + Uint128.size()), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2271,10 +2228,7 @@ class Header {
   static size() {
     return 0 + RawHeader.size() + Uint128.size();
   }
-
 }
-
-
 
 function SerializeHeader(value) {
   const array = new Uint8Array(0 + RawHeader.size() + Uint128.size());
@@ -2285,9 +2239,7 @@ function SerializeHeader(value) {
 }
 
 class UncleBlock {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2298,10 +2250,10 @@ class UncleBlock {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Header(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new ProposalShortIdVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2310,7 +2262,7 @@ class UncleBlock {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Header(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2319,13 +2271,10 @@ class UncleBlock {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new ProposalShortIdVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeUncleBlock(value) {
   const buffers = [];
@@ -2335,9 +2284,7 @@ function SerializeUncleBlock(value) {
 }
 
 class Block {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2348,16 +2295,16 @@ class Block {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Header(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new UncleBlockVec(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
     new TransactionVec(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
     new ProposalShortIdVec(this.view.buffer.slice(offsets[3], offsets[4]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2366,7 +2313,7 @@ class Block {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Header(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2375,7 +2322,7 @@ class Block {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new UncleBlockVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2384,7 +2331,7 @@ class Block {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new TransactionVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2393,13 +2340,10 @@ class Block {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new ProposalShortIdVec(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeBlock(value) {
   const buffers = [];
@@ -2411,9 +2355,7 @@ function SerializeBlock(value) {
 }
 
 class CellbaseWitness {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2424,10 +2366,10 @@ class CellbaseWitness {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new Script(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new Bytes(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2436,7 +2378,7 @@ class CellbaseWitness {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new Script(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2445,13 +2387,10 @@ class CellbaseWitness {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new Bytes(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeCellbaseWitness(value) {
   const buffers = [];
@@ -2461,9 +2400,7 @@ function SerializeCellbaseWitness(value) {
 }
 
 class WitnessArgs {
-  constructor(reader, {
-    validate = true
-  } = {}) {
+  constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
 
     if (validate) {
@@ -2474,13 +2411,13 @@ class WitnessArgs {
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
     new BytesOpt(this.view.buffer.slice(offsets[0], offsets[1]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesOpt(this.view.buffer.slice(offsets[1], offsets[2]), {
-      validate: false
+      validate: false,
     }).validate();
     new BytesOpt(this.view.buffer.slice(offsets[2], offsets[3]), {
-      validate: false
+      validate: false,
     }).validate();
   }
 
@@ -2489,7 +2426,7 @@ class WitnessArgs {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new BytesOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2498,7 +2435,7 @@ class WitnessArgs {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
     return new BytesOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
 
@@ -2507,13 +2444,10 @@ class WitnessArgs {
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
     return new BytesOpt(this.view.buffer.slice(offset, offset_end), {
-      validate: false
+      validate: false,
     });
   }
-
 }
-
-
 
 function SerializeWitnessArgs(value) {
   const buffers = [];

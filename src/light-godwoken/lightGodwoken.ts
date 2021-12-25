@@ -59,7 +59,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     const l1Address = this.provider.l1Address;
     const l1Lock = helpers.parseAddress(l1Address);
     const outputCells: Cell[] = [];
-    if(payload.cell.cell_output.type) {
+    if (payload.cell.cell_output.type) {
       const dummySudtCell = {
         cell_output: {
           capacity: "0x0",
@@ -67,9 +67,9 @@ export default class DefaultLightGodwoken implements LightGodwoken {
           type: payload.cell.cell_output.type,
         },
         data: payload.cell.data,
-      }
+      };
       const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
-      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity
+      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
 
       outputCells.push({
         cell_output: {
@@ -168,9 +168,9 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       const sudtCellDep: CellDep = {
         out_point: {
           tx_hash: SCRIPTS.sudt.tx_hash,
-          index:  SCRIPTS.sudt.index,
+          index: SCRIPTS.sudt.index,
         },
-        dep_type:  SCRIPTS.sudt.dep_type as DepType,
+        dep_type: SCRIPTS.sudt.dep_type as DepType,
       };
       txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
         return cell_deps.push(sudtCellDep);

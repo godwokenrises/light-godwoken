@@ -1,10 +1,4 @@
-import {
-  Hash,
-  HexNumber,
-  HexString,
-  PackedSince,
-  Script,
-} from "@ckb-lumos/lumos";
+import { Hash, HexNumber, HexString, PackedSince, Script } from "@ckb-lumos/lumos";
 import { normalizers, Reader } from "ckb-js-toolkit";
 
 // Taken for now from https://github.com/xxuejie/ckb-js-toolkit/blob/68f5ff709f78eb188ee116b2887a362123b016cc/src/normalizers.js#L17-L69,
@@ -17,11 +11,7 @@ function normalizeHexNumber(length: number) {
         intValue = "0" + intValue;
       }
       if (intValue.length / 2 > length) {
-        throw new Error(
-          `${debugPath} is ${
-            intValue.length / 2
-          } bytes long, expected length is ${length}!`
-        );
+        throw new Error(`${debugPath} is ${intValue.length / 2} bytes long, expected length is ${length}!`);
       }
       const view = new DataView(new ArrayBuffer(length));
       for (let i = 0; i < intValue.length / 2; i++) {
@@ -43,9 +33,7 @@ function normalizeRawData(length: number) {
   return function (debugPath: string, value: any) {
     value = new Reader(value).toArrayBuffer();
     if (length > 0 && value.byteLength !== length) {
-      throw new Error(
-        `${debugPath} has invalid length ${value.byteLength}, required: ${length}`
-      );
+      throw new Error(`${debugPath} has invalid length ${value.byteLength}, required: ${length}`);
     }
     return value;
   };
@@ -78,10 +66,7 @@ export interface DepositLockArgs {
   cancel_timeout: PackedSince;
 }
 
-export function NormalizeDepositLockArgs(
-  args: object,
-  { debugPath = "deposit_lock_args" } = {}
-) {
+export function NormalizeDepositLockArgs(args: object, { debugPath = "deposit_lock_args" } = {}) {
   return normalizeObject(debugPath, args, {
     owner_lock_hash: normalizeRawData(32),
     layer2_lock: toNormalize(normalizers.NormalizeScript),
@@ -128,10 +113,7 @@ export interface WithdrawalRequest {
   signature: HexString;
 }
 
-export function NormalizeRawWithdrawalRequest(
-  raw_request: object,
-  { debugPath = "raw_withdrawal_request" } = {}
-) {
+export function NormalizeRawWithdrawalRequest(raw_request: object, { debugPath = "raw_withdrawal_request" } = {}) {
   return normalizeObject(debugPath, raw_request, {
     nonce: normalizeHexNumber(4),
     capacity: normalizeHexNumber(8),
@@ -146,10 +128,7 @@ export function NormalizeRawWithdrawalRequest(
   });
 }
 
-export function NormalizeWithdrawalRequest(
-  request: WithdrawalRequest,
-  { debugPath = "withdrawal_request" } = {}
-) {
+export function NormalizeWithdrawalRequest(request: WithdrawalRequest, { debugPath = "withdrawal_request" } = {}) {
   return normalizeObject(debugPath, request, {
     raw: toNormalize(NormalizeRawWithdrawalRequest),
     signature: normalizeRawData(65),
@@ -173,7 +152,7 @@ export interface WithdrawalLockArgs {
 
 export function NormalizeWithdrawalLockArgs(
   withdrawal_lock_args: WithdrawalLockArgs,
-  { debugPath = "withdrawal_lock_args" } = {}
+  { debugPath = "withdrawal_lock_args" } = {},
 ) {
   return normalizeObject(debugPath, withdrawal_lock_args, {
     account_script_hash: normalizeRawData(32),
@@ -189,7 +168,7 @@ export function NormalizeWithdrawalLockArgs(
 
 export function NormalizeUnlockWithdrawalViaFinalize(
   unlock_withdrawal_finalize: object,
-  { debugPath = "unlock_withdrawal_finalize" } = {}
+  { debugPath = "unlock_withdrawal_finalize" } = {},
 ) {
   return normalizeObject(debugPath, unlock_withdrawal_finalize, {});
 }
@@ -203,7 +182,7 @@ export interface RawL2Transaction {
 
 export function NormalizeRawL2Transaction(
   rawL2Transaction: RawL2Transaction,
-  { debugPath = "raw_l2_transaction" } = {}
+  { debugPath = "raw_l2_transaction" } = {},
 ) {
   return normalizeObject(debugPath, rawL2Transaction, {
     from_id: normalizeHexNumber(4),
@@ -218,10 +197,7 @@ export interface L2Transaction {
   signature: HexString;
 }
 
-export function NormalizeL2Transaction(
-  l2Transaction: L2Transaction,
-  { debugPath = "l2_transaction" } = {}
-) {
+export function NormalizeL2Transaction(l2Transaction: L2Transaction, { debugPath = "l2_transaction" } = {}) {
   return normalizeObject(debugPath, l2Transaction, {
     raw: toNormalize(NormalizeRawL2Transaction),
     signature: normalizeRawData(-1),

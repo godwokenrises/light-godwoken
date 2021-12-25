@@ -26,9 +26,7 @@ export class GodwokenClient {
    * @returns
    */
   async submitWithdrawalRequest(request: WithdrawalRequest): Promise<void> {
-    const data = new Reader(
-      SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))
-    ).serializeJson();
+    const data = new Reader(SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
@@ -37,9 +35,7 @@ export class GodwokenClient {
    * @param scriptHash layer2 lock script hash
    * @returns uint32
    */
-  async getAccountIdByScriptHash(
-    scriptHash: Hash
-  ): Promise<HexNumber | undefined> {
+  async getAccountIdByScriptHash(scriptHash: Hash): Promise<HexNumber | undefined> {
     const id = await this.rpcCall("get_account_id_by_script_hash", scriptHash);
     return id;
   }
@@ -49,27 +45,17 @@ export class GodwokenClient {
    * @param shortAddress scriptHash160 (scriptHash first 20 bytes)
    * @returns uint32
    */
-  async getScriptHashByShortAddress(
-    shortAddress: HexString
-  ): Promise<Hash | undefined> {
-    const scriptHash = await this.rpcCall(
-      "get_script_hash_by_short_address",
-      shortAddress
-    );
+  async getScriptHashByShortAddress(shortAddress: HexString): Promise<Hash | undefined> {
+    const scriptHash = await this.rpcCall("get_script_hash_by_short_address", shortAddress);
     return scriptHash;
   }
   /**
    *
-   * @param txHash Hash 
+   * @param txHash Hash
    * @returns uint32
    */
-  async getWithdrawal(
-    txHash: Hash
-  ): Promise<Hash | undefined> {
-    const withdrawal = await this.rpcCall(
-      "get_withdrawal",
-      txHash
-    );
+  async getWithdrawal(txHash: Hash): Promise<Hash | undefined> {
+    const withdrawal = await this.rpcCall("get_withdrawal", txHash);
     return withdrawal;
   }
   /**

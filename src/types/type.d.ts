@@ -1,7 +1,7 @@
-import { Cell, HexNumber, Hash } from '@ckb-lumos/lumos'
+import { Cell, HexNumber, Hash } from "@ckb-lumos/lumos";
 
 export interface CellWithStatus extends Cell {
-  withdrawBlock: number
+  withdrawBlock: number;
 }
 export interface L1MappedErc20 {
   address: string;

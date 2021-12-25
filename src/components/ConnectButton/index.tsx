@@ -5,10 +5,10 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Address } from "../Address";
 const StyleWrapper = styled(Button)`
   &.ant-btn-primary {
-    background: rgb(60,58,75);
+    background: rgb(60, 58, 75);
     border: none;
   }
-`
+`;
 export const ConnectButton: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
 

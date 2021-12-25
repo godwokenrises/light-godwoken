@@ -1,7 +1,7 @@
 function getProductionSetting() {
-  if (process.env.NODE_ENV !== 'production') return {};
+  if (process.env.NODE_ENV !== "production") return {};
   return {
-    presets: ['@babel/preset-env'],
+    presets: ["@babel/preset-env"],
   };
 }
 

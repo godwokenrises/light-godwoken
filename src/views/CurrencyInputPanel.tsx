@@ -1,58 +1,58 @@
-import styled from "styled-components"
-import {Typography, Modal, List} from 'antd'
-import { FixedHeightRow } from "./WithdrawalRequestCard"
-import NumericalInput from './NumericalInput'
-import { DownOutlined } from "@ant-design/icons"
-import React, { useState, useEffect } from "react"
-import { L1MappedErc20 } from "../types/type"
-import {getFullDisplayAmount} from "../utils/formatTokenAmount"
-import { useLightGodwoken } from "../hooks/useLightGodwoken"
-const {Text} = Typography;
+import styled from "styled-components";
+import { Typography, Modal, List } from "antd";
+import { FixedHeightRow } from "./WithdrawalRequestCard";
+import NumericalInput from "./NumericalInput";
+import { DownOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { L1MappedErc20 } from "../types/type";
+import { getFullDisplayAmount } from "../utils/formatTokenAmount";
+import { useLightGodwoken } from "../hooks/useLightGodwoken";
+const { Text } = Typography;
 const StyleWrapper = styled.div`
-    border-radius: 16px;
-    background-color: rgb(60, 58, 75);
-    box-shadow: rgb(74 74 104 / 10%) 0px 2px 2px -1px;
-    .first-row {
-      margin-bottom: 3px;
-    }
-    .anticon {
-      font-size: 12px;
-    }
-    .max-button {
-      height: 32px;
-      line-height: 32px;
-      padding: 0px 16px;
-      background-color: transparent;
-      color: rgb(255, 67, 66);
-      font-weight: 600;
-    }
-    .token-list {
-      height: 390px;
-      overflow-y: auto;
-    }
-    .first-row {
-      margin-bottom: 3px;
-      padding: 0.75rem 1rem 0px;
-    }
-    .input-wrapper {
-      height: 56px;
-      padding: 0.75rem 0.5rem 0.75rem 1rem;
-      display: flex;
-      align-items: center;
-    }
-    .currency-wrapper {
-      display: flex;
-      align-items: center;
-    }
-    .anticon {
-      margin-left: 10px;
-    }
-`
+  border-radius: 16px;
+  background-color: rgb(60, 58, 75);
+  box-shadow: rgb(74 74 104 / 10%) 0px 2px 2px -1px;
+  .first-row {
+    margin-bottom: 3px;
+  }
+  .anticon {
+    font-size: 12px;
+  }
+  .max-button {
+    height: 32px;
+    line-height: 32px;
+    padding: 0px 16px;
+    background-color: transparent;
+    color: rgb(255, 67, 66);
+    font-weight: 600;
+  }
+  .token-list {
+    height: 390px;
+    overflow-y: auto;
+  }
+  .first-row {
+    margin-bottom: 3px;
+    padding: 0.75rem 1rem 0px;
+  }
+  .input-wrapper {
+    height: 56px;
+    padding: 0.75rem 0.5rem 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+  }
+  .currency-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  .anticon {
+    margin-left: 10px;
+  }
+`;
 
 const TokenList = styled.div`
-   height: 390px;
-    overflow-y: auto;
-`
+  height: 390px;
+  overflow-y: auto;
+`;
 
 const TokenListModal = styled(Modal)`
   color: white;
@@ -73,7 +73,8 @@ const TokenListModal = styled(Modal)`
     display: flex;
     align-items: center;
   }
-  .ant-modal-title, .ant-list-item {
+  .ant-modal-title,
+  .ant-list-item {
     color: white;
   }
   .ant-modal-body {
@@ -120,7 +121,7 @@ const TokenListModal = styled(Modal)`
       }
     }
   }
-`
+`;
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
@@ -131,73 +132,79 @@ const Row = styled.div`
     line-height: 1.5;
   }
   .ckb-logo {
-    height:24px;
+    height: 24px;
     width: 24px;
     margin-right: 8px;
   }
   .max-button {
-      height: 32px;
-      padding: 0px 16px;
-      background-color: transparent;
-      color: rgb(255, 67, 66);
-      font-weight: 600;
-    }
-`
+    height: 32px;
+    padding: 0px 16px;
+    background-color: transparent;
+    color: rgb(255, 67, 66);
+    font-weight: 600;
+  }
+`;
 
 interface CurrencyInputPanelProps {
-    value: string
-    onUserInput: (value: string) => void
-    label?: string
-    disableCurrencySelect?: boolean
-    hideBalance?: boolean
-    hideInput?: boolean
-    showCommonBases?: boolean
-    disableInput?: boolean
-    autoFocus?: boolean
-    transparent?: boolean,
-    onSelectedChange: (value: L1MappedErc20) => void
-  }
-export default function CurrencyInputPanel({autoFocus, disableInput, value, onUserInput, label, onSelectedChange}: CurrencyInputPanelProps) {
-  const [selectedCurrencyBalance, setCurrencyBalance] = useState('');
+  value: string;
+  onUserInput: (value: string) => void;
+  label?: string;
+  disableCurrencySelect?: boolean;
+  hideBalance?: boolean;
+  hideInput?: boolean;
+  showCommonBases?: boolean;
+  disableInput?: boolean;
+  autoFocus?: boolean;
+  transparent?: boolean;
+  onSelectedChange: (value: L1MappedErc20) => void;
+}
+export default function CurrencyInputPanel({
+  autoFocus,
+  disableInput,
+  value,
+  onUserInput,
+  label,
+  onSelectedChange,
+}: CurrencyInputPanelProps) {
+  const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
   const [showMaxButton, setShowMaxButton] = useState(false);
-  const [erc20List, setErc20List] = useState<L1MappedErc20[]>([])
-  const [balancesList, setBalancesList] = useState<string[]>([])
-  const [selectedCurrency, setSelectedCurrency] = useState<L1MappedErc20>()
-  const [selectedIndex, setSelectedIndex] = useState<number>()
+  const [erc20List, setErc20List] = useState<L1MappedErc20[]>([]);
+  const [balancesList, setBalancesList] = useState<string[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<L1MappedErc20>();
+  const [selectedIndex, setSelectedIndex] = useState<number>();
   const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
-    setIsModalVisible(true)
-  }
+    setIsModalVisible(true);
+  };
   const [isModalVisible, setIsModalVisible] = useState(false);
   useEffect(() => {
-    const fetchData =  async () => {
-      if(lightGodwoken) {
+    const fetchData = async () => {
+      if (lightGodwoken) {
         const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
         setErc20List(results);
-        const addressList = results.map(erc20 => (erc20.address))
-        const balances = await lightGodwoken.getErc20Balances({addresses: addressList})
+        const addressList = results.map((erc20) => erc20.address);
+        const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
         setBalancesList(balances.balances);
       }
-    }
-    fetchData()
-  }, [lightGodwoken])
+    };
+    fetchData();
+  }, [lightGodwoken]);
 
   useEffect(() => {
-    if(selectedCurrency && 
-      (value !== selectedCurrencyBalance || value === '')) {
+    if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
       setShowMaxButton(true);
     } else {
       setShowMaxButton(false);
     }
-  }, [value, selectedCurrencyBalance, selectedCurrency])
+  }, [value, selectedCurrencyBalance, selectedCurrency]);
 
   useEffect(() => {
-    if(balancesList && balancesList.length && selectedIndex !== undefined && selectedCurrency) {
+    if (balancesList && balancesList.length && selectedIndex !== undefined && selectedCurrency) {
       const balance = balancesList[selectedIndex];
-      const currencyBalance = getFullDisplayAmount(BigInt(balance), selectedCurrency.decimals)
+      const currencyBalance = getFullDisplayAmount(BigInt(balance), selectedCurrency.decimals);
       setCurrencyBalance(currencyBalance);
     }
-  }, [selectedIndex, balancesList, selectedCurrency])
+  }, [selectedIndex, balancesList, selectedCurrency]);
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -209,62 +216,80 @@ export default function CurrencyInputPanel({autoFocus, disableInput, value, onUs
   const handleErc20Selected = (index: number, erc20: L1MappedErc20) => {
     setSelectedCurrency(erc20);
     onSelectedChange(erc20);
-    setIsModalVisible(false)
+    setIsModalVisible(false);
     setShowMaxButton(true);
-    onUserInput('')
+    onUserInput("");
     setSelectedIndex(index);
-  }
+  };
   const handelMaxClick = () => {
-    onUserInput(selectedCurrencyBalance)
+    onUserInput(selectedCurrencyBalance);
     setShowMaxButton(false);
-  }
-    return (
-      <StyleWrapper>
-          <Row className="first-row">
-            <Typography.Text>{label}</Typography.Text>
-            <Typography.Text>{selectedCurrencyBalance || ''}</Typography.Text>
-          </Row>
-          <Row className="input-wrapper">
-            <NumericalInput
-                  autoFocus={autoFocus}
-                  disabled={disableInput}
-                  className="token-amount-input"
-                  value={value}
-                  onUserInput={(val) => {
-                    onUserInput(val)
-                  }}
-                />
-                {showMaxButton && (<div className="max-button" onClick={handelMaxClick}>MAX</div>)}
-                <div className="currency-wrapper" onClick={showCurrencySelectModal}>
-                  {selectedCurrency
-                   ? <div className="currency-icon">
-                        <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
-                        <Typography.Text >{selectedCurrency.symbol}</Typography.Text>
-                      </div>
-                    : <Text>Select a currency </Text>}
-                  <DownOutlined />
-                </div>
-          </Row>
-          <TokenListModal title="Select a Token" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel} footer={null}>
-            <TokenList className="token-list">
-              <List
-                dataSource={erc20List}
-                renderItem={(erc20, index) => 
-                <List.Item className={erc20.address === selectedCurrency?.address ? 'selected' : ''} onClick={() => handleErc20Selected(index, erc20)}>
-                  <FixedHeightRow className="currency-item">
-                    <div className="info">
-                      <img className="icon" src={erc20.tokenURI} alt="" />
-                      <div className="symbol-name">
-                        <Text className="symbol">{erc20.symbol}</Text>
-                        <Text className="name">{erc20.name}</Text>
-                      </div>
+  };
+  return (
+    <StyleWrapper>
+      <Row className="first-row">
+        <Typography.Text>{label}</Typography.Text>
+        <Typography.Text>{selectedCurrencyBalance || ""}</Typography.Text>
+      </Row>
+      <Row className="input-wrapper">
+        <NumericalInput
+          autoFocus={autoFocus}
+          disabled={disableInput}
+          className="token-amount-input"
+          value={value}
+          onUserInput={(val) => {
+            onUserInput(val);
+          }}
+        />
+        {showMaxButton && (
+          <div className="max-button" onClick={handelMaxClick}>
+            MAX
+          </div>
+        )}
+        <div className="currency-wrapper" onClick={showCurrencySelectModal}>
+          {selectedCurrency ? (
+            <div className="currency-icon">
+              <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
+              <Typography.Text>{selectedCurrency.symbol}</Typography.Text>
+            </div>
+          ) : (
+            <Text>Select a currency </Text>
+          )}
+          <DownOutlined />
+        </div>
+      </Row>
+      <TokenListModal
+        title="Select a Token"
+        visible={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        footer={null}
+      >
+        <TokenList className="token-list">
+          <List
+            dataSource={erc20List}
+            renderItem={(erc20, index) => (
+              <List.Item
+                className={erc20.address === selectedCurrency?.address ? "selected" : ""}
+                onClick={() => handleErc20Selected(index, erc20)}
+              >
+                <FixedHeightRow className="currency-item">
+                  <div className="info">
+                    <img className="icon" src={erc20.tokenURI} alt="" />
+                    <div className="symbol-name">
+                      <Text className="symbol">{erc20.symbol}</Text>
+                      <Text className="name">{erc20.name}</Text>
                     </div>
-                    <div>{balancesList.length ? getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals) : ''}</div>
-                  </FixedHeightRow>  
-                </List.Item>}
-              ></List>
-            </TokenList>
-          </TokenListModal>
-      </StyleWrapper>
-    )
-  }
+                  </div>
+                  <div>
+                    {balancesList.length ? getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals) : ""}
+                  </div>
+                </FixedHeightRow>
+              </List.Item>
+            )}
+          ></List>
+        </TokenList>
+      </TokenListModal>
+    </StyleWrapper>
+  );
+}

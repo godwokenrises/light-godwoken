@@ -424,4 +424,3 @@ export class WitnessArgs {
   getInputType(): BytesOpt;
   getOutputType(): BytesOpt;
 }
-

@@ -26,7 +26,7 @@ const PageContent = styled.div`
     font-size: 14px;
   }
   .button-container {
-    margin-top: 16px
+    margin-top: 16px;
   }
   .request-button {
     -webkit-box-align: center;
@@ -51,10 +51,10 @@ const PageContent = styled.div`
     background-color: rgb(255, 67, 66);
     color: white;
   }
-`
+`;
 
 const ResultList = styled.div`
-  >.header {
+  > .header {
     -webkit-box-align: center;
     align-items: center;
     -webkit-box-pack: justify;
@@ -74,48 +74,50 @@ const ResultList = styled.div`
     padding: 24px;
     border-bottom-left-radius: 24px;
     border-bottom-right-radius: 24px;
-    &>div {
+    & > div {
       margin-bottom: 16px;
     }
   }
-`
+`;
 
 const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
-  const [withdrawList, setWithdrawList] = useState<WithdrawResult[]>([])
+  const [withdrawList, setWithdrawList] = useState<WithdrawResult[]>([]);
   const lightGodwoken = useLightGodwoken();
-  const now = useClock()
+  const now = useClock();
   useEffect(() => {
-    const fetchWithdrawList =  async () => {
-      if(lightGodwoken) {
-        const results: WithdrawResult[] = await lightGodwoken?.listWithdraw()
+    const fetchWithdrawList = async () => {
+      if (lightGodwoken) {
+        const results: WithdrawResult[] = await lightGodwoken?.listWithdraw();
         setWithdrawList(results);
       }
-    }
+    };
     fetchWithdrawList();
-  }, [lightGodwoken])
-    return (
-      <Page>
-        <PageContent className="content">
-          <div className="request-withdrawal">
-            <div className="title">Withdrawal</div>
-            <div className="description">To withdraw assets back to Layer 1, you need to have CKB balance in your L1 Wallet Address</div>
-            <div className="button-container">
-              <Link to="/request-withdrawal" className="request-button">Request Withdrawal</Link >
-            </div>
+  }, [lightGodwoken]);
+  return (
+    <Page>
+      <PageContent className="content">
+        <div className="request-withdrawal">
+          <div className="title">Withdrawal</div>
+          <div className="description">
+            To withdraw assets back to Layer 1, you need to have CKB balance in your L1 Wallet Address
           </div>
-          <ResultList className="withdrawal-request">
-            <div className="header">Your Withdrawal Requests</div>
-            <div className="list">
-              {
-                withdrawList.map((withdraw, index) => (
-                  <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
-                ))
-              }
-            </div>
-          </ResultList>
-        </PageContent>
-      </Page>
-    )
-}
+          <div className="button-container">
+            <Link to="/request-withdrawal" className="request-button">
+              Request Withdrawal
+            </Link>
+          </div>
+        </div>
+        <ResultList className="withdrawal-request">
+          <div className="header">Your Withdrawal Requests</div>
+          <div className="list">
+            {withdrawList.map((withdraw, index) => (
+              <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            ))}
+          </div>
+        </ResultList>
+      </PageContent>
+    </Page>
+  );
+};
 
-export default Withdrawal
+export default Withdrawal;
