@@ -1,3 +1,4 @@
+/* eslint-disable */ 
 function dataLengthError(actual, required) {
   throw new Error(`Invalid data length! Required: ${required}, actual: ${actual}`);
 }

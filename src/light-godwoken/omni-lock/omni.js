@@ -1,5 +1,4 @@
-"use strict";
-
+/* eslint-disable */ 
 // Object.defineProperty(
 //   value: true
 // });
