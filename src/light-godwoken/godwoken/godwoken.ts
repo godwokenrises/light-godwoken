@@ -3,6 +3,9 @@ import { Hash, HexNumber, HexString } from "@ckb-lumos/lumos";
 import { NormalizeWithdrawalRequest, WithdrawalRequest } from "./normalizer";
 import { SerializeWithdrawalRequest } from "../schemas/index.esm";
 
+interface LastL2BlockCommittedInfo {
+  transaction_hash: Hash;
+}
 /**
  * Godwoken RPC client
  */
@@ -67,7 +70,10 @@ export class GodwokenClient {
     const nonce = await this.rpcCall("get_nonce", accountId);
     return nonce;
   }
-
+  
+  async getLastSubmittedInfo(): Promise<LastL2BlockCommittedInfo> {
+    return await this.rpcCall("get_last_submitted_info");
+  }
   /**
    *
    * @param accountId uint32 in hex number

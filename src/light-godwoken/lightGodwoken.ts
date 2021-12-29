@@ -130,17 +130,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       },
       dep_type: SCRIPTS.withdrawal_lock.cell_dep.dep_type as DepType,
     };
-    const rollupCell = await this.provider.getRollupCell();
-    if (!rollupCell || !rollupCell.cell_output) {
-      throw new Error("rollup cell outpoint not found");
-    }
-    const rollupDep: CellDep = {
-      out_point: {
-        tx_hash: rollupCell.out_point!.tx_hash,
-        index: rollupCell.out_point!.index,
-      },
-      dep_type: "code" as DepType,
-    };
+    const rollupCellDep: CellDep = await this.provider.getRollupCellDep();
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
         return inputs.push(payload.cell);
@@ -152,7 +142,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
         return cell_deps.push(withdrawalLockDep);
       })
       .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(rollupDep);
+        return cell_deps.push(rollupCellDep);
       })
       .update("cellDeps", (cell_deps) => {
         return cell_deps.push(omniLockCellDep);

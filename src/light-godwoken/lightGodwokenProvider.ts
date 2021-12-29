@@ -14,6 +14,7 @@ import {
   Cell,
   HashType,
   Script,
+  CellDep,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { ROLLUP_CONFIG } from "./constants";
@@ -26,6 +27,7 @@ import Web3 from "web3";
 import { LightGodwokenProvider } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
+import { TransactionWithStatus } from "@ckb-lumos/base";
 
 export const POLYJUICE_CONFIG = {
   web3Url: PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL,
@@ -177,6 +179,44 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     hasher.update(witness);
   }
 
+  async getPendingTransaction(
+    txHash: Hash,
+  ): Promise<TransactionWithStatus | null> {
+    let tx: TransactionWithStatus | null = null;
+  
+    // retry 10 times, and sleep 1s
+    for (let i = 0; i < 10; i++) {
+      tx = await this.rpc.get_transaction(txHash);
+      if (tx != null) {
+        return tx;
+      }
+      await this.asyncSleep(1000);
+    }
+    return null;
+  }
+  
+
+  async getRollupCellDep(): Promise<CellDep> {
+    const result = await this.godwokenClient.getLastSubmittedInfo();
+    const txHash = result.transaction_hash;
+    const tx = await this.getPendingTransaction(txHash);
+
+    if (tx == null) {
+      throw new Error("Last submitted tx not found!");
+    }
+
+    let rollupIndex = tx.transaction.outputs.findIndex((o: any) => {
+      return o.type && utils.computeScriptHash(o.type) === ROLLUP_CONFIG.rollup_type_hash;
+    });
+     return {
+       out_point: {
+         tx_hash: txHash,
+         index: `0x${rollupIndex.toString(16)}`,
+       },
+       dep_type: "code",
+     }
+  }
+
   async getRollupCell(): Promise<Cell | undefined> {
     const queryOptions = {
       type: {
@@ -207,5 +247,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const lastFinalizedBlockNumber = Number(globalState.getLastFinalizedBlockNumber().toLittleEndianBigUint64());
     console.log("last finalized block number: ", lastFinalizedBlockNumber);
     return lastFinalizedBlockNumber;
+  }
+
+
+  async asyncSleep(ms = 0) {
+    return new Promise((r) => setTimeout(r, ms));
   }
 }
