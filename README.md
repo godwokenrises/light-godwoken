@@ -109,9 +109,6 @@ The `status` field could be `pending` or `committed`, indicating different state
 
 Then a cell containing the assets is created on layer 1, to list all withdrawal cells requested by a layer 2 account, let's name it `AliceL2`, we can make a query using `@ckb-lumos/ckb-indexer` like this:
 
-<details>
-  <summary markdown="span">example code to get withdrawal cells</summary>
-  
 ```ts
     const getWithdrawalCellSearchParams = function(AliceL2: string) {
         const layer2Lock: Script = {
@@ -133,8 +130,6 @@ Then a cell containing the assets is created on layer 1, to list all withdrawal 
     const searchParams = getWithdrawalCellSearchParams(AliceL2);
     const collector = ckbIndexer.collector({ lock: searchParams.script });
 ```
-
-</details>
 
 ### Step 2. Unlock from layer 1
 
@@ -265,3 +260,12 @@ The cell deps should contain `rollup cellDep`, `lock cellDep` and `withdraw cell
      }
   }
 ```
+
+referrences:
+
+ - [lumos](https://github.com/nervosnetwork/lumos)
+ - [godwoken api](https://github.com/nervosnetwork/godwoken-web3#godwoken-web3-api)
+ - [godwoken demos](https://github.com/classicalliu/gw-demos)
+ - [godwoken docs](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request)
+ - [godwoken testnet config](https://github.com/nervosnetwork/godwoken-public/blob/master/testnet/config/scripts-deploy-result.json)
+ - [polyjuice-provider](https://github.com/nervosnetwork/polyjuice-provider/blob/main/docs/get-started.md)
