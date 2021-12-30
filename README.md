@@ -13,7 +13,7 @@ yarn start
 
 There are two steps withdrawing assets from a layer 2 address to layer 1 address. 
 
-![image](./image/withdraw.png)
+<img src="./image/withdraw.png" alt="withdraw" height="200"/>
 
 ### Step 1. Withdraw from layer 2
 
