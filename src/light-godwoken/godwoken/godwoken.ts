@@ -70,7 +70,7 @@ export class GodwokenClient {
     const nonce = await this.rpcCall("get_nonce", accountId);
     return nonce;
   }
-  
+
   async getLastSubmittedInfo(): Promise<LastL2BlockCommittedInfo> {
     return await this.rpcCall("get_last_submitted_info");
   }

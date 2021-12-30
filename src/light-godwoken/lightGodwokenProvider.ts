@@ -179,11 +179,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     hasher.update(witness);
   }
 
-  async getPendingTransaction(
-    txHash: Hash,
-  ): Promise<TransactionWithStatus | null> {
+  async getPendingTransaction(txHash: Hash): Promise<TransactionWithStatus | null> {
     let tx: TransactionWithStatus | null = null;
-  
+
     // retry 10 times, and sleep 1s
     for (let i = 0; i < 10; i++) {
       tx = await this.rpc.get_transaction(txHash);
@@ -194,7 +192,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     }
     return null;
   }
-  
 
   async getRollupCellDep(): Promise<CellDep> {
     const result = await this.godwokenClient.getLastSubmittedInfo();
@@ -208,13 +205,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     let rollupIndex = tx.transaction.outputs.findIndex((o: any) => {
       return o.type && utils.computeScriptHash(o.type) === ROLLUP_CONFIG.rollup_type_hash;
     });
-     return {
-       out_point: {
-         tx_hash: txHash,
-         index: `0x${rollupIndex.toString(16)}`,
-       },
-       dep_type: "code",
-     }
+    return {
+      out_point: {
+        tx_hash: txHash,
+        index: `0x${rollupIndex.toString(16)}`,
+      },
+      dep_type: "code",
+    };
   }
 
   async getRollupCell(): Promise<Cell | undefined> {
@@ -248,7 +245,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     console.log("last finalized block number: ", lastFinalizedBlockNumber);
     return lastFinalizedBlockNumber;
   }
-
 
   async asyncSleep(ms = 0) {
     return new Promise((r) => setTimeout(r, ms));
