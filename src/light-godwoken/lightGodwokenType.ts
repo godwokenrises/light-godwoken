@@ -104,7 +104,7 @@ export interface LightGodwoken {
 
   listWithdraw: () => Promise<WithdrawResult[]>;
 
-  deposit: (payload: DepositPayload) => Promise<Hash>;
+  deposit?: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
