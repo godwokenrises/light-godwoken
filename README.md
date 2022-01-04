@@ -1,6 +1,6 @@
 # Light Godwoken
 
-This is a demo for withrawing assets from Godwoken, which is a CKB Layer 2 chain to CKB chain. You will need to have metamask installed to use this demo.
+This is a demo for withrawing assets from Godwoken, which is a CKB Layer 2 chain to CKB chain. You will need to have MetaMask installed to use this demo.
 
 ## Quick Start
 
@@ -11,13 +11,15 @@ yarn start
 
 ## How to withdraw assets
 
-There are two steps withdrawing assets from a layer 2 address to layer 1 address. 
+With the release of [godwoken](https://www.nervos.org/godwoken) and [polyjuice](https://github.com/nervosnetwork/polyjuice), we can deploy Dapps on Ethereum to CKB layer 2 smoothly. When using layer 2 network, we need to move assets between layer 1 and layer 2.
+
+There are two steps withdrawing assets from a layer 2 address to layer 1 address.
 
 ![image](https://user-images.githubusercontent.com/7511174/147748554-9a98374e-e4c9-47b8-bb9f-2d682a7cd040.png)
 
 ### Step 1. Withdraw from layer 2
 
-The first step is to call `gw_submit_withdrawal_request` RPC method to burn assets on layer 2 chain and in the meantime godwoken creates the assets on layer 1 which can later be unlocked by receiver address. Note that when making such a request you need to provide some info as parameters, such as sender layer 2 address: `account`, receiver layer 1 address: `owner`, ckb amount: `capacity`, sudt amount and script hash(optional): `amount` and `sudtTypeHash`. See this [example](https://github.com/classicalliu/gw-demos/blob/d2780e4c20824796f21a8277ea357dcce34c8e9f/src/withdrawal.ts?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L26-L126) for more infomation.  Here is a example of withdrawal request:
+The first step is to call [gw_submit_withdrawal_request](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request) RPC method to burn assets on layer 2 chain and in the meantime godwoken creates the assets on layer 1 which can later be unlocked by receiver address. Note that when making such a request you need to provide some info as parameters, such as sender layer 2 address: `account`, receiver layer 1 address: `owner`, ckb amount: `capacity`, [SUDT](https://github.com/nervosnetwork/rfcs/blob/master/rfcs/0025-simple-udt/0025-simple-udt.md) amount and script hash(optional): `amount` and `sudtTypeHash`. See this [example](https://github.com/classicalliu/gw-demos/blob/d2780e4c20824796f21a8277ea357dcce34c8e9f/src/withdrawal.ts?_pjax=%23js-repo-pjax-container%2C%20div%5Bitemtype%3D%22http%3A%2F%2Fschema.org%2FSoftwareSourceCode%22%5D%20main%2C%20%5Bdata-pjax-container%5D#L26-L126) for more infomation.  Here is a example of withdrawal request:
 
 <details>
   <summary markdown="span">example withdrawal request</summary>
@@ -59,7 +61,7 @@ const l2AccountScript: Script = {
 const accountScriptHash = utils.computeScriptHash(l2AccountScript);
 ```
 
-Once you have successfully submitted the rpc request, the return hash value can be used to query the state of withdrawal by calling `gw_get_withdrawal` method:
+Once you have successfully submitted the rpc request, the return hash value can be used to query the state of withdrawal by calling [gw_get_withdrawal](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_withdrawal) method:
 
 ```json
 {
@@ -223,17 +225,7 @@ The second step is to unlock the asset created in step one, it needs to take som
 
 </details>
 
-Now let's see how to construct such a unlock transaction.
-#### 1.Inputs
-
-`Inputs[0]` should be the withdrawal cell, the assets are just in this cell, the lock script of withdrawal cell is withdrawal lock. `Inputs[1]` is owner cell, by adding this cell, user can prove that he/she is the owner and also pay the transaction fee.
-
-#### 2.Outputs
-
-`Outputs[0]` is the output of withdrawal cell, and the lock of withdrawal cell is changed to owner lock, thus the assets is transferred to owner. `Outputs[1]` is exchange cell, the capacity of `Outputs[1]` is the capacity of `Outputs[1]` minus transaction fee.
-
-
-#### 3. Cell Dependencies 
+#### Cell Dependencies 
 
 The cell deps should contain `rollup cellDep`, `lock cellDep` and `withdraw cellDep`.Remenber to add `sudt cellDep` if you have any sudt withdrawed, then other deps required by the receiver lock. You can get `withdraw cellDep` and `sudt cellDep` from some static config file, `lock cellDep` depends on which lock you would use, we use `omnilock` in the example, so we added `omnilock cellDep`.  `rollup cellDep` should be obtained from mem pool:
 
