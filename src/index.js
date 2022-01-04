@@ -4,9 +4,9 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { initializeConfig, predefined } from "@ckb-lumos/config-manager";
+import { config } from "@ckb-lumos/lumos";
 
-initializeConfig(predefined.AGGRON4);
+config.initializeConfig(config.predefined.AGGRON4);
 
 ReactDOM.render(
   <React.StrictMode>

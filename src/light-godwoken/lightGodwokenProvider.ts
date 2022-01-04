@@ -27,7 +27,7 @@ import Web3 from "web3";
 import { LightGodwokenProvider } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
-import { TransactionWithStatus } from "@ckb-lumos/base";
+import { base } from "@ckb-lumos/lumos";
 
 export const POLYJUICE_CONFIG = {
   web3Url: PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL,
@@ -179,8 +179,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     hasher.update(witness);
   }
 
-  async getPendingTransaction(txHash: Hash): Promise<TransactionWithStatus | null> {
-    let tx: TransactionWithStatus | null = null;
+  async getPendingTransaction(txHash: Hash): Promise<base.TransactionWithStatus | null> {
+    let tx: base.TransactionWithStatus | null = null;
 
     // retry 10 times, and sleep 1s
     for (let i = 0; i < 10; i++) {
