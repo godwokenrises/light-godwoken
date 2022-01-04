@@ -97,18 +97,18 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
 
     txSkeleton = txSkeleton
-    .update("inputs", (inputs) => {
-      return inputs.push(...collectedCells);
-    })
-    .update("outputs", (outputs) => {
-      return outputs.push(...outputCell);
-    })
-    .update("cellDeps", (cell_deps) => {
-      return cell_deps.push(omniLockCellDep);
-    })
-    .update("cellDeps", (cell_deps) => {
-      return cell_deps.push(secp256k1CellDep);
-    })
+      .update("inputs", (inputs) => {
+        return inputs.push(...collectedCells);
+      })
+      .update("outputs", (outputs) => {
+        return outputs.push(...outputCell);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(omniLockCellDep);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(secp256k1CellDep);
+      });
 
     if (payload.sudtType) {
       const sudtCellDep: CellDep = {
@@ -142,21 +142,21 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       cancel_timeout: "0xc0000000000004b0",
     };
     const depositLockArgsHexString: HexString = new toolkit.Reader(
-      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs))
+      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
     ).serializeJson();
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
-    const sumCapacity = collectedCells.reduce((acc, cell) => acc + BigInt(cell.cell_output.capacity), BigInt(0))
+    const sumCapacity = collectedCells.reduce((acc, cell) => acc + BigInt(cell.cell_output.capacity), BigInt(0));
     const sumSustAmount = collectedCells.reduce((acc, cell) => {
-      if(cell.cell_output.type){
-        return acc + BigInt(utils.readBigUInt128LE(cell.data))
-      }else {
-        return acc
+      if (cell.cell_output.type) {
+        return acc + BigInt(utils.readBigUInt128LE(cell.data));
+      } else {
+        return acc;
       }
-    }, BigInt(0))
+    }, BigInt(0));
     const outputCell: Cell = {
       cell_output: {
         capacity: "0x" + BigInt(payload.capacity).toString(16),
@@ -171,17 +171,16 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       },
       data: "0x",
     };
-    if (payload.sudtType && payload.amount && payload.amount != '0x' && payload.amount != '0x0' ){
-      outputCell.cell_output.type = payload.sudtType
-      outputCell.data = payload.amount
-      exchangeCell.cell_output.type = payload.sudtType
-      exchangeCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount))
+    if (payload.sudtType && payload.amount && payload.amount != "0x" && payload.amount != "0x0") {
+      outputCell.cell_output.type = payload.sudtType;
+      outputCell.data = payload.amount;
+      exchangeCell.cell_output.type = payload.sudtType;
+      exchangeCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
     }
-    
+
     return [outputCell, exchangeCell];
   }
 
-  
   /**
    * get producing 1 block time
    */
@@ -622,7 +621,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
         hash_type: token.l1Lock.hash_type as HashType,
       };
       map.push({
-        type: tokenL1Script
+        type: tokenL1Script,
       });
     });
     return map;
