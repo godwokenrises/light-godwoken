@@ -19,6 +19,7 @@ import * as secp256k1 from "secp256k1";
 import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
 import { TOKEN_LIST } from "./constants/tokens";
 import {
+  NormalizeDepositLockArgs,
   NormalizeRawWithdrawalRequest,
   NormalizeWithdrawalLockArgs,
   RawWithdrawalRequest,
@@ -27,10 +28,12 @@ import {
 } from "./godwoken/normalizer";
 import LightGodwokenProvider, { POLYJUICE_CONFIG } from "./lightGodwokenProvider";
 import {
+  DepositPayload,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
   L1MappedErc20,
+  L1Token,
   LightGodwoken,
   UnlockPayload,
   WithdrawalEventEmitter,
@@ -38,6 +41,7 @@ import {
   WithdrawResult,
 } from "./lightGodwokenType";
 import {
+  SerializeDepositLockArgs,
   SerializeRawWithdrawalRequest,
   SerializeUnlockWithdrawalViaFinalize,
   SerializeWithdrawalLockArgs,
@@ -48,6 +52,136 @@ export default class DefaultLightGodwoken implements LightGodwoken {
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+
+  async deposit(payload: DepositPayload): Promise<string> {
+    const neededCapacity = BigInt(payload.capacity);
+    const neededSudtAmount = payload.amount ? BigInt(payload.amount) : BigInt(0);
+    let collectedCapatity = BigInt(0);
+    let collectedSudtAmount = BigInt(0);
+    const collectedCells: Cell[] = [];
+    const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
+    for await (const cell of collector.collect()) {
+      if (!cell.data || cell.data === "0x" || cell.data === "0x0") {
+        collectedCapatity += BigInt(cell.cell_output.capacity);
+        collectedCells.push(cell);
+        if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
+      } else if (payload.sudtType && payload.sudtType.args === cell.cell_output.type?.args) {
+        collectedCapatity += BigInt(cell.cell_output.capacity);
+        collectedSudtAmount += BigInt(utils.readBigUInt128LE(cell.cell_output.capacity));
+        collectedCells.push(cell);
+        if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
+      }
+    }
+    if (collectedCapatity < neededCapacity) {
+      throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedCapatity} `);
+    }
+    if (collectedSudtAmount < neededSudtAmount) {
+      throw new Error(`Not enough SUDT, expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
+    }
+
+    const omniLockCellDep: CellDep = {
+      out_point: {
+        tx_hash: SCRIPTS.omni_lock.tx_hash,
+        index: SCRIPTS.omni_lock.index,
+      },
+      dep_type: SCRIPTS.omni_lock.dep_type as DepType,
+    };
+    const secp256k1CellDep: CellDep = {
+      out_point: {
+        tx_hash: SCRIPTS.secp256k1_blake160.tx_hash,
+        index: SCRIPTS.secp256k1_blake160.index,
+      },
+      dep_type: SCRIPTS.secp256k1_blake160.dep_type as DepType,
+    };
+    const outputCell = this.generateDepositOutputCell(collectedCells, payload);
+    let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
+
+    txSkeleton = txSkeleton
+    .update("inputs", (inputs) => {
+      return inputs.push(...collectedCells);
+    })
+    .update("outputs", (outputs) => {
+      return outputs.push(...outputCell);
+    })
+    .update("cellDeps", (cell_deps) => {
+      return cell_deps.push(omniLockCellDep);
+    })
+    .update("cellDeps", (cell_deps) => {
+      return cell_deps.push(secp256k1CellDep);
+    })
+
+    if (payload.sudtType) {
+      const sudtCellDep: CellDep = {
+        out_point: {
+          tx_hash: SCRIPTS.sudt.tx_hash,
+          index: SCRIPTS.sudt.index,
+        },
+        dep_type: SCRIPTS.sudt.dep_type as DepType,
+      };
+      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
+        return cell_deps.push(sudtCellDep);
+      });
+    }
+
+    const signedTx = await this.provider.signL1Transaction(txSkeleton);
+    const txHash = await this.provider.sendL1Transaction(signedTx);
+    return txHash;
+  }
+
+  generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
+    const layer2Lock: Script = {
+      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + this.provider.l2Address.slice(2).toLowerCase(),
+    };
+    const depositLockArgs = {
+      owner_lock_hash: ownerLockHash,
+      layer2_lock: layer2Lock,
+      cancel_timeout: "0xc0000000000004b0",
+    };
+    const depositLockArgsHexString: HexString = new toolkit.Reader(
+      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs))
+    ).serializeJson();
+    const depositLock: Script = {
+      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    };
+    const sumCapacity = collectedCells.reduce((acc, cell) => acc + BigInt(cell.cell_output.capacity), BigInt(0))
+    const sumSustAmount = collectedCells.reduce((acc, cell) => {
+      if(cell.cell_output.type){
+        return acc + BigInt(utils.readBigUInt128LE(cell.data))
+      }else {
+        return acc
+      }
+    }, BigInt(0))
+    const outputCell: Cell = {
+      cell_output: {
+        capacity: "0x" + BigInt(payload.capacity).toString(16),
+        lock: depositLock,
+      },
+      data: "0x",
+    };
+    const exchangeCell: Cell = {
+      cell_output: {
+        capacity: "0x" + BigInt(sumCapacity - BigInt(payload.capacity) - BigInt(100000)).toString(16),
+        lock: helpers.parseAddress(this.provider.l1Address),
+      },
+      data: "0x",
+    };
+    if (payload.sudtType && payload.amount && payload.amount != '0x' && payload.amount != '0x0' ){
+      outputCell.cell_output.type = payload.sudtType
+      outputCell.data = payload.amount
+      exchangeCell.cell_output.type = payload.sudtType
+      exchangeCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount))
+    }
+    
+    return [outputCell, exchangeCell];
+  }
+
+  
   /**
    * get producing 1 block time
    */
@@ -474,6 +608,21 @@ export default class DefaultLightGodwoken implements LightGodwoken {
         address: token.address,
         tokenURI: token.tokenURI,
         sudt_script_hash: tokenScriptHash,
+      });
+    });
+    return map;
+  }
+
+  getBuiltinL1TokenList(): L1Token[] {
+    const map: L1Token[] = [];
+    TOKEN_LIST.forEach((token) => {
+      const tokenL1Script: Script = {
+        code_hash: token.l1Lock.code_hash,
+        args: token.l1Lock.args,
+        hash_type: token.l1Lock.hash_type as HashType,
+      };
+      map.push({
+        type: tokenL1Script
       });
     });
     return map;

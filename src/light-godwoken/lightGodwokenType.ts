@@ -15,6 +15,10 @@ export interface L1MappedErc20 {
   sudt_script_hash: Hash;
 }
 
+export interface L1Token {
+  type: Script;
+}
+
 export interface GetErc20BalancesResult {
   balances: HexNumber[];
 }
@@ -72,8 +76,8 @@ export interface UnlockPayload {
 
 export interface DepositPayload {
   capacity: HexNumber;
-  amount: HexNumber;
-  sudtType: Script;
+  amount?: HexNumber;
+  sudtType?: Script;
 }
 
 type Promisable<T> = Promise<T> | T;
@@ -111,6 +115,8 @@ export interface LightGodwoken {
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 
   getBuiltinErc20List: () => L1MappedErc20[];
+
+  getBuiltinL1TokenList: () => L1Token[];
 
   getErc20Balances: (payload: GetErc20Balances) => Promise<GetErc20BalancesResult>;
 }
