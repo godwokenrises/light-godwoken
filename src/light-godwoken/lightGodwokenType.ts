@@ -1,4 +1,4 @@
-import { Address, Cell, Hash, HexNumber, Transaction, helpers } from "@ckb-lumos/lumos";
+import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script } from "@ckb-lumos/lumos";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 
 export interface GetL2CkbBalancePayload {
@@ -70,6 +70,12 @@ export interface UnlockPayload {
   cell: Cell;
 }
 
+export interface DepositPayload {
+  capacity: HexNumber;
+  amount: HexNumber;
+  sudtType: Script;
+}
+
 type Promisable<T> = Promise<T> | T;
 
 export interface LightGodwokenProvider {
@@ -97,6 +103,8 @@ export interface LightGodwoken {
   unlock: (payload: UnlockPayload) => Promise<Hash>;
 
   listWithdraw: () => Promise<WithdrawResult[]>;
+
+  deposit: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
