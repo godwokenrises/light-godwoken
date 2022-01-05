@@ -70,7 +70,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
         if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
       } else if (payload.sudtType && payload.sudtType.args === cell.cell_output.type?.args) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
-        collectedSudtAmount += BigInt(utils.readBigUInt128LE(cell.cell_output.capacity));
+        collectedSudtAmount += BigInt(utils.readBigUInt128LE(cell.data));
         collectedCells.push(cell);
         if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
       }
@@ -177,7 +177,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     };
     if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
       outputCell.cell_output.type = payload.sudtType;
-      outputCell.data = payload.amount;
+      outputCell.data = utils.toBigUInt128LE(BigInt(payload.amount));
       exchangeCell.cell_output.type = payload.sudtType;
       exchangeCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
     }
@@ -599,9 +599,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
     let collectedSum = BigInt(0);
     for await (const cell of collector.collect()) {
-      if (!cell.data || cell.data === "0x" || cell.data === "0x0" || cell.data === "0x00") {
-        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
-      }
+      collectedSum += BigInt(cell.cell_output.capacity);
     }
     return "0x" + collectedSum.toString(16);
   }
@@ -669,9 +667,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       });
       let collectedSum = BigInt(0);
       for await (const cell of collector.collect()) {
-        if (!cell.data || cell.data === "0x" || cell.data === "0x0" || cell.data === "0x00") {
-          collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
-        }
+        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
       }
       result.balances.push("0x" + collectedSum.toString(16));
     }
