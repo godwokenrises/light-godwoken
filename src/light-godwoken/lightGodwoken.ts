@@ -31,7 +31,10 @@ import {
   DepositPayload,
   GetErc20Balances,
   GetErc20BalancesResult,
+  GetL1CkbBalancePayload,
   GetL2CkbBalancePayload,
+  GetSudtBalances,
+  GetSudtBalancesResult,
   L1MappedErc20,
   L1Token,
   LightGodwoken,
@@ -166,12 +169,13 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     };
     const exchangeCell: Cell = {
       cell_output: {
+        // pay 0.0001 ckb for tx fee
         capacity: "0x" + BigInt(sumCapacity - BigInt(payload.capacity) - BigInt(100000)).toString(16),
         lock: helpers.parseAddress(this.provider.l1Address),
       },
       data: "0x",
     };
-    if (payload.sudtType && payload.amount && payload.amount != "0x" && payload.amount != "0x0") {
+    if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
       outputCell.cell_output.type = payload.sudtType;
       outputCell.data = payload.amount;
       exchangeCell.cell_output.type = payload.sudtType;
@@ -591,6 +595,17 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     return "0x" + Number(balance).toString(16);
   }
 
+  async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<HexNumber> {
+    const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
+    let collectedSum = BigInt(0);
+    for await (const cell of collector.collect()) {
+      if (!cell.data || cell.data === "0x" || cell.data === "0x0" || cell.data === "0x00") {
+        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+      }
+    }
+    return "0x" + collectedSum.toString(16);
+  }
+
   getBuiltinErc20List(): L1MappedErc20[] {
     const map: L1MappedErc20[] = [];
     TOKEN_LIST.forEach((token) => {
@@ -641,6 +656,25 @@ export default class DefaultLightGodwoken implements LightGodwoken {
         result.balances.push("0x" + Number(value).toString(16));
       });
     });
+    return result;
+  }
+
+  async getSudtBalances(payload: GetSudtBalances): Promise<GetSudtBalancesResult> {
+    const result: GetSudtBalancesResult = { balances: [] };
+    for (let index = 0; index < payload.types.length; index++) {
+      const type = payload.types[index];
+      const collector = this.provider.ckbIndexer.collector({
+        lock: helpers.parseAddress(this.provider.l1Address),
+        type,
+      });
+      let collectedSum = BigInt(0);
+      for await (const cell of collector.collect()) {
+        if (!cell.data || cell.data === "0x" || cell.data === "0x0" || cell.data === "0x00") {
+          collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+        }
+      }
+      result.balances.push("0x" + collectedSum.toString(16));
+    }
     return result;
   }
 

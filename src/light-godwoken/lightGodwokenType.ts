@@ -5,6 +5,10 @@ export interface GetL2CkbBalancePayload {
   l2Address?: string;
 }
 
+export interface GetL1CkbBalancePayload {
+  l1Address?: string;
+}
+
 export interface L1MappedErc20 {
   address: string;
   name: string;
@@ -23,8 +27,16 @@ export interface GetErc20BalancesResult {
   balances: HexNumber[];
 }
 
+export interface GetSudtBalancesResult {
+  balances: HexNumber[];
+}
+
 export interface GetErc20Balances {
   addresses: string[];
+}
+
+export interface GetSudtBalances {
+  types: Script[];
 }
 
 interface WithdrawListener {
@@ -114,9 +126,13 @@ export interface LightGodwoken {
 
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 
+  getL1CkbBalance: (payload?: GetL1CkbBalancePayload) => Promise<HexNumber>;
+
   getBuiltinErc20List: () => L1MappedErc20[];
 
   getBuiltinL1TokenList: () => L1Token[];
 
   getErc20Balances: (payload: GetErc20Balances) => Promise<GetErc20BalancesResult>;
+
+  getSudtBalances: (payload: GetSudtBalances) => Promise<GetSudtBalancesResult>;
 }
