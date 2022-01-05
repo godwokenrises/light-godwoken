@@ -2,6 +2,11 @@
 
 This is a demo for withrawing assets from Godwoken, which is a CKB Layer 2 chain to CKB chain. You will need to have MetaMask installed to use this demo.
 
+## Prerequisites
+
+- basic knowledge of [godwoken](https://www.nervos.org/godwoken) layer 2 network
+- basic knowledge of [ckb](https://docs.nervos.org/docs/basics/introduction) and ckb [transaction](https://docs.nervos.org/docs/reference/transaction)
+
 ## Quick Start
 
 ```sh
@@ -10,8 +15,6 @@ yarn start
 ```
 
 ## How to withdraw assets
-
-With the release of [godwoken](https://www.nervos.org/godwoken) and [polyjuice](https://github.com/nervosnetwork/polyjuice), we can deploy Dapps on Ethereum to CKB layer 2 smoothly. When using layer 2 network, we need to move assets between layer 1 and layer 2.
 
 There are two steps withdrawing assets from a layer 2 address to layer 1 address.
 
