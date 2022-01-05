@@ -1,11 +1,9 @@
-import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { Button, Modal, notification, Typography } from "antd";
+import { CopyOutlined, PlusOutlined } from "@ant-design/icons";
+import { Script } from "@ckb-lumos/lumos";
+import { Button, Modal, Typography } from "antd";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
-import { L1MappedErc20 } from "../types/type";
 import CKBInputPanel from "./CKBInputPanel";
 import CurrencyInputPanel from "./CurrencyInputPanel";
 import Page from "./Page";
@@ -20,12 +18,20 @@ const PageContent = styled.div`
 `;
 const PageHeader = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   padding: 24px;
-  align-items: center;
   a,
   .ant-typography {
     color: white;
+  }
+  .title {
+    font-weight: bold;
+    font-size: 20px;
+    padding-bottom: 5px;
+  }
+  .description {
+    font-size: 14px;
   }
 `;
 const PageMain = styled.div`
@@ -38,6 +44,33 @@ const PageMain = styled.div`
     justify-content: center;
     padding-top: 8px;
     padding-bottom: 8px;
+  }
+`;
+const L1WalletAddress = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin: 24px;
+  padding: 16px;
+  border: 1px solid rgb(60, 58, 75);
+  border-radius: 16px;
+  .ant-typography {
+    color: white;
+  }
+  .title {
+    font-size: 16px;
+    padding-bottom: 10px;
+  }
+  .address {
+    font-size: 16px;
+    padding-bottom: 10px;
+  }
+  .copy {
+    color: rgb(255, 67, 66);
+    .ant-typography {
+      font-size: 14px;
+      color: rgb(255, 67, 66);
+      padding-right: 5px;
+    }
   }
 `;
 const WithDrawalButton = styled.div`
@@ -111,12 +144,6 @@ const ConfirmModal = styled(Modal)`
     color: white;
     justify-content: space-between;
   }
-  .text-pair {
-    padding-top: 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 24px;
-  }
   .tips {
     margin: 24px 0;
   }
@@ -129,17 +156,34 @@ interface Token {
   tokenURI: string;
 }
 
-export default function RequestWithdrawal() {
+interface SUDT extends Token {
+  type: Script;
+}
+
+export default function Deposit() {
   const [ckbInput, setCkbInput] = useState("");
   const [outputValue, setOutputValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
-  const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
+  const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const lightGodwoken = useLightGodwoken();
 
-  const showModal = () => {
+  const showModal = async () => {
     setIsModalVisible(true);
+    if (lightGodwoken) {
+      const capacity = BigInt(ckbInput) * BigInt(Math.pow(10, 8));
+      let amount = "0x0";
+      if (selectedSudt) {
+        amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
+      }
+      const hash = await lightGodwoken.deposit({
+        capacity: "0x" + capacity.toString(16),
+        amount: amount,
+        sudtType: selectedSudt?.type,
+      });
+      console.log(hash);
+      setIsModalVisible(false);
+    }
   };
 
   const handleCancel = () => {
@@ -154,66 +198,29 @@ export default function RequestWithdrawal() {
     }
   }, [ckbInput]);
 
-  const sendWithDrawal = () => {
-    setLoading(true);
-    const capacity = BigInt(ckbInput) * BigInt(Math.pow(10, 8));
-    let amount = "0x0";
-    let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
-    if (selectedSudt) {
-      amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
-      sudt_script_hash = selectedSudt.sudt_script_hash;
-    }
-    if (!lightGodwoken) {
-      return;
-    }
-    let e: WithdrawalEventEmitter;
-    try {
-      e = lightGodwoken.withdrawWithEvent({
-        capacity: "0x" + capacity.toString(16),
-        amount: amount,
-        sudt_script_hash: sudt_script_hash,
-      });
-    } catch (e) {
-      console.log("withdrawal error:", e);
-      return;
-    }
-
-    e.on("sent", (txHash) => {
-      setIsModalVisible(false);
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent` });
-      setLoading(false);
-    });
-
-    e.on("pending", (result) => {
-      console.log("pending triggerd", result);
-    });
-
-    e.on("success", (txHash) => {
-      setIsModalVisible(false);
-      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
-    });
-
-    e.on("error", (result: unknown) => {
-      setLoading(false);
-      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
-    });
-  };
   const handleSelectedChange = (value: Token) => {
-    setSelectedSudt(value as L1MappedErc20);
+    setSelectedSudt(value as SUDT);
   };
 
   return (
     <Page>
       <PageContent>
         <PageHeader className="header">
-          <Link to="/">
-            <ArrowLeftOutlined />
-          </Link>
-          <Text>Request Withdrawal</Text>
-          <QuestionCircleOutlined />
+          <Text className="title">Deposit To Layer2</Text>
+          <Text className="description">
+            To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
+          </Text>
         </PageHeader>
+        <L1WalletAddress>
+          <Text className="title">L1 Wallet Address</Text>
+          <Text className="address">{lightGodwoken?.provider.getL1Address()}</Text>
+          <div className="copy">
+            <Text>Copy Address</Text>
+            <CopyOutlined />
+          </div>
+        </L1WalletAddress>
         <PageMain className="main">
-          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Withdraw"></CKBInputPanel>
+          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Deposit" isL1></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
@@ -222,35 +229,22 @@ export default function RequestWithdrawal() {
             onUserInput={setOutputValue}
             label="sUDT(optional)"
             onSelectedChange={handleSelectedChange}
+            isL1
           ></CurrencyInputPanel>
           <WithDrawalButton>
             <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
-              Request Withdrawal
+              Deposit
             </Button>
           </WithDrawalButton>
         </PageMain>
-        <div className="footer">
-          {/* <ProgressStepper currentStep={0} steps={withdrawalSteps}></ProgressStepper> */}
-        </div>
+        <div className="footer"></div>
       </PageContent>
-      <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
-        <div className="text-pair">
-          <Text>Block wait</Text>
-          <Text>10000</Text>
-        </div>
-        <div className="text-pair">
-          <Text>Estimated time</Text>
-          <Text>5 days</Text>
-        </div>
-        <div className="tips">
-          Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
-          Withdrawal
-        </div>
-        <WithDrawalButton>
-          <Button className="submit-button" loading={loading} onClick={sendWithDrawal}>
-            Request Withdrawal
-          </Button>
-        </WithDrawalButton>
+      <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
+        <Text>Waiting For Confirmation</Text>
+        <Text>
+          Depositing {outputValue} {selectedSudt?.symbol} and {ckbInput} CKB
+        </Text>
+        <div className="tips">Confirm this transaction in your wallet</div>
       </ConfirmModal>
     </Page>
   );

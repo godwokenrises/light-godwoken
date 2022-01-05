@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { ConnectButton } from "../components/ConnectButton";
 
@@ -14,13 +15,19 @@ const StyledPage = styled.div`
   .address:hover {
     cursor: pointer;
   }
+  a + a {
+    padding-left: 10px;
+  }
 `;
 
 const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
   return (
     <StyledPage>
-      <div className="icon"></div>
-      <div className="title">Withdrawal</div>
+      <div className="link">
+        <Link to="/deposit">Deposit</Link>
+        <Link to="/">Withdrawal</Link>
+      </div>
+      <div className="title">Light Godwoken</div>
       <div className="address">
         <ConnectButton />
       </div>
