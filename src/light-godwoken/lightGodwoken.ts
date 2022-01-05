@@ -635,6 +635,10 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       };
       map.push({
         type: tokenL1Script,
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        tokenURI: token.tokenURI,
       });
     });
     return map;

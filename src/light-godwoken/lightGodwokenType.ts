@@ -20,6 +20,11 @@ export interface L1MappedErc20 {
 }
 
 export interface L1Token {
+  name: string;
+  symbol: string;
+  decimals: number;
+  tokenURI: string;
+
   type: Script;
 }
 
