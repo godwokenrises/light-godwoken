@@ -1,4 +1,14 @@
 export const SCRIPTS = {
+  deposit_lock: {
+    script_type_hash: "0x5a2506bb68d81a11dcadad4cb7eae62a17c43c619fe47ac8037bc8ce2dd90360",
+    cell_dep: {
+      out_point: {
+        tx_hash: "0x97614145cdec9ba924001c11cd49f1c424927437b40ed3ca3b82fff358f2e3de",
+        index: "0x0",
+      },
+      dep_type: "code",
+    },
+  },
   omni_lock: {
     code_hash: "0x79f90bb5e892d80dd213439eeab551120eb417678824f282b4ffb5f21bad2e1e",
     hash_type: "type",

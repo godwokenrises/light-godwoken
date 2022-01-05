@@ -51,38 +51,41 @@ const Row = styled.div`
 interface CKBInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
+  isL1?: boolean;
   label?: string;
 }
-export default function CKBInputPanel({ value, onUserInput, label }: CKBInputPanelProps) {
+export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
-  const [l2CkbBalance, setL2CkbBalance] = useState("");
+  const [ckbBalance, setCkbBalance] = useState("");
   const lightGodwoken = useLightGodwoken();
 
   useEffect(() => {
     const fetchData = async () => {
-      const balance = (await lightGodwoken?.getL2CkbBalance()) || "";
-      setL2CkbBalance(balance);
+      const balance = isL1
+        ? (await lightGodwoken?.getL1CkbBalance()) || ""
+        : (await lightGodwoken?.getL2CkbBalance()) || "";
+      setCkbBalance(balance);
     };
     fetchData();
-  }, [lightGodwoken]);
+  }, [lightGodwoken, isL1]);
 
   useEffect(() => {
-    if (value !== getDisplayAmount(BigInt(l2CkbBalance), 8)) {
+    if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {
       setShowMaxButton(true);
     } else {
       setShowMaxButton(false);
     }
-  }, [value, l2CkbBalance]);
+  }, [value, ckbBalance]);
 
   const handelMaxClick = () => {
-    onUserInput(getDisplayAmount(BigInt(l2CkbBalance), 8));
+    onUserInput(getDisplayAmount(BigInt(ckbBalance), 8));
     setShowMaxButton(false);
   };
   return (
     <StyleWrapper>
       <Row className="first-row">
         <Typography.Text>{label}</Typography.Text>
-        <Typography.Text>Balance: {getDisplayAmount(BigInt(l2CkbBalance), 8) || ""}</Typography.Text>
+        <Typography.Text>Balance: {getDisplayAmount(BigInt(ckbBalance), 8) || ""}</Typography.Text>
       </Row>
       <Row className="input-wrapper">
         <NumericalInput

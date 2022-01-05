@@ -7,6 +7,8 @@ import React, { useState, useEffect } from "react";
 import { L1MappedErc20 } from "../types/type";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
+import { L1Token } from "../light-godwoken/lightGodwokenType";
+import { Script } from "@ckb-lumos/lumos";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -144,6 +146,12 @@ const Row = styled.div`
     font-weight: 600;
   }
 `;
+interface Token {
+  name: string;
+  symbol: string;
+  decimals: number;
+  tokenURI: string;
+}
 
 interface CurrencyInputPanelProps {
   value: string;
@@ -156,7 +164,8 @@ interface CurrencyInputPanelProps {
   disableInput?: boolean;
   autoFocus?: boolean;
   transparent?: boolean;
-  onSelectedChange: (value: L1MappedErc20) => void;
+  isL1?: boolean;
+  onSelectedChange: (value: Token) => void;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -164,13 +173,14 @@ export default function CurrencyInputPanel({
   value,
   onUserInput,
   label,
+  isL1,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
   const [showMaxButton, setShowMaxButton] = useState(false);
-  const [erc20List, setErc20List] = useState<L1MappedErc20[]>([]);
+  const [tokenList, setTokenList] = useState<Token[]>();
   const [balancesList, setBalancesList] = useState<string[]>([]);
-  const [selectedCurrency, setSelectedCurrency] = useState<L1MappedErc20>();
+  const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
@@ -180,15 +190,23 @@ export default function CurrencyInputPanel({
   useEffect(() => {
     const fetchData = async () => {
       if (lightGodwoken) {
-        const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
-        setErc20List(results);
-        const addressList = results.map((erc20) => erc20.address);
-        const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
-        setBalancesList(balances.balances);
+        if (isL1) {
+          const tokenList: L1Token[] = lightGodwoken.getBuiltinL1TokenList();
+          setTokenList(tokenList);
+          const types: Script[] = tokenList.map((token) => token.type);
+          const balances = await lightGodwoken.getSudtBalances({ types });
+          setBalancesList(balances.balances);
+        } else {
+          const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
+          setTokenList(results);
+          const addressList = results.map((erc20) => erc20.address);
+          const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
+          setBalancesList(balances.balances);
+        }
       }
     };
     fetchData();
-  }, [lightGodwoken]);
+  }, [lightGodwoken, isL1]);
 
   useEffect(() => {
     if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
@@ -213,7 +231,7 @@ export default function CurrencyInputPanel({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleErc20Selected = (index: number, erc20: L1MappedErc20) => {
+  const handleErc20Selected = (index: number, erc20: Token) => {
     setSelectedCurrency(erc20);
     onSelectedChange(erc20);
     setIsModalVisible(false);
@@ -267,10 +285,10 @@ export default function CurrencyInputPanel({
       >
         <TokenList className="token-list">
           <List
-            dataSource={erc20List}
+            dataSource={tokenList}
             renderItem={(erc20, index) => (
               <List.Item
-                className={erc20.address === selectedCurrency?.address ? "selected" : ""}
+                className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
                 onClick={() => handleErc20Selected(index, erc20)}
               >
                 <FixedHeightRow className="currency-item">
