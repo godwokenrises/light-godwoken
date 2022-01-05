@@ -8,23 +8,20 @@ export interface GetL2CkbBalancePayload {
 export interface GetL1CkbBalancePayload {
   l1Address?: string;
 }
-
-export interface L1MappedErc20 {
-  address: string;
+interface Token {
   name: string;
   symbol: string;
   decimals: number;
   tokenURI: string;
-
-  sudt_script_hash: Hash;
 }
 
-export interface L1Token {
-  name: string;
-  symbol: string;
-  decimals: number;
-  tokenURI: string;
-
+interface ERC20 extends Token {
+  address: string;
+}
+export interface ProxyERC20 extends ERC20 {
+  sudt_script_hash: Hash;
+}
+export interface SUDT extends Token {
   type: Script;
 }
 
@@ -84,7 +81,7 @@ export interface WithdrawResult {
   amount: HexNumber;
   sudt_script_hash: Hash;
 
-  erc20?: L1MappedErc20;
+  erc20?: ProxyERC20;
 }
 
 export interface UnlockPayload {
@@ -133,9 +130,9 @@ export interface LightGodwoken {
 
   getL1CkbBalance: (payload?: GetL1CkbBalancePayload) => Promise<HexNumber>;
 
-  getBuiltinErc20List: () => L1MappedErc20[];
+  getBuiltinErc20List: () => ProxyERC20[];
 
-  getBuiltinL1TokenList: () => L1Token[];
+  getBuiltinSUDTList: () => SUDT[];
 
   getErc20Balances: (payload: GetErc20Balances) => Promise<GetErc20BalancesResult>;
 

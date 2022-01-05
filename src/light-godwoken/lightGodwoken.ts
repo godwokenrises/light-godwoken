@@ -35,8 +35,8 @@ import {
   GetL2CkbBalancePayload,
   GetSudtBalances,
   GetSudtBalancesResult,
-  L1MappedErc20,
-  L1Token,
+  ProxyERC20,
+  SUDT,
   LightGodwoken,
   UnlockPayload,
   WithdrawalEventEmitter,
@@ -338,7 +338,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       const containsOwnerLock = cell.cell_output.lock.args.includes(ownerLockHash.substring(2));
 
       let sudtTypeHash = "0x" + "00".repeat(32);
-      let erc20: L1MappedErc20 | undefined = undefined;
+      let erc20: ProxyERC20 | undefined = undefined;
       let amount: HexNumber = "0x0";
 
       if (cell.cell_output.type) {
@@ -604,8 +604,8 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     return "0x" + collectedSum.toString(16);
   }
 
-  getBuiltinErc20List(): L1MappedErc20[] {
-    const map: L1MappedErc20[] = [];
+  getBuiltinErc20List(): ProxyERC20[] {
+    const map: ProxyERC20[] = [];
     TOKEN_LIST.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: token.l1Lock.code_hash,
@@ -625,8 +625,8 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     return map;
   }
 
-  getBuiltinL1TokenList(): L1Token[] {
-    const map: L1Token[] = [];
+  getBuiltinSUDTList(): SUDT[] {
+    const map: SUDT[] = [];
     TOKEN_LIST.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: token.l1Lock.code_hash,
