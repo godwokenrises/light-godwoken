@@ -3,14 +3,14 @@
 - basic knowledge of [godwoken](https://www.nervos.org/godwoken) layer 2 network
 - basic knowledge of [ckb](https://docs.nervos.org/docs/basics/introduction) and ckb [transaction](https://docs.nervos.org/docs/reference/transaction)
 
-There are two steps withdrawing assets from a layer 2 address to layer 1 address.
+There are two steps withdrawing assets from a layer 2 address to a layer 1 address.
 
 ![withdrawal](../image/sequence-godwoken-withdrawal.png)
 
 ### Step 1. Submit Withdrawal Request to Godwoken
 
 The first step is to call [gw_submit_withdrawal_request](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request) RPC method to burn assets on layer 2 chain
-and in the meantime Godwoken creates the assets on layer 1 which can later be unlocked by receiver address.
+and in the meantime, Godwoken creates the assets on layer 1 which can later be unlocked by the receiver address.
 Note that when making such a request you need to provide some info as parameters,
 
 ```json5
@@ -59,9 +59,9 @@ const l2AccountScript: Script = {
 const account_script_hash = utils.computeScriptHash(l2AccountScript);
 ```
 
-Once you have successfully submitted the rpc request, the return hash value can be used to query the state of withdrawal by calling [gw_get_withdrawal](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_withdrawal) method:
+Once you have successfully submitted the RPC request, the return hash value can be used to query the state of withdrawal by calling [gw_get_withdrawal](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_get_withdrawal) method:
 
-```json
+```JSON
 {
   "id": 2,
   "jsonrpc": "2.0",
@@ -75,7 +75,7 @@ the return value should look like:
 <details>
   <summary markdown="span">return value of gw_get_withdrawal</summary>
 
-```json
+```JSON
 {
   "jsonrpc": "2.0",
   "id": 2,
@@ -105,7 +105,7 @@ the return value should look like:
 
 </details>
 
-The `status` field could be `pending` or `committed`, indicating different state of the withdrawal.
+The `status` field could be `pending` or `committed`, indicating the different status of the withdrawal.
 
 Then a cell containing the assets is created on layer 1, to list all withdrawal cells requested by a layer 2 account, let's name it `AliceL2`, we can make a query using `@ckb-lumos/ckb-indexer` like this:
 
@@ -134,8 +134,8 @@ const collector = ckbIndexer.collector({ lock: searchParams.script });
 ### Step 2. Unlock Withdrawal Cells
 
 The second step is to unlock the asset created in step one, it needs to take some time(about 5 days) before one can unlock the assets for safety reasons.
-We will support fast withdraw in near future. When the waiting time is due, the receiver address can make a layer 1 transaction to unlock the asset cell,
-the transaction should take the withdrawal cell as input and another ckb cell to pay transaction fee, in the output withdraw cell, just change the lock of asset cell to receiver lock.
+We will support fast withdrawal in near future. When the waiting time is due, the receiver address can make a layer 1 transaction to unlock the asset cell,
+the transaction should take the withdrawal cell as input and another ckb cell to pay the transaction fee, in the output withdraw cell, just change the lock of the asset cell to the receiver lock.
 
 ![unlock](../image/unlock.png)
 
@@ -230,7 +230,7 @@ Here is an example:
 
 #### Cell Dependencies
 
-The cell deps should contain `rollup cellDep`, `lock cellDep` and `withdraw cellDep`.Remenber to add `sudt cellDep` if you have any sudt withdrawed, then other deps required by the receiver lock. You can get `withdraw cellDep` and `sudt cellDep` from some static config file, `lock cellDep` depends on which lock you would use, we use `omnilock` in the example, so we added `omnilock cellDep`. `rollup cellDep` should be obtained from mem pool:
+The `cell_deps` should contain `rollup cellDep`, `lock cellDep` and `withdraw cellDep`. Remember to add `sudt cellDep` if you have any SUDT withdrawn, then other `cellDep`s required by the receiver lock. You can get `withdraw cellDep` and `sudt cellDep` from some static config file, `lock cellDep` depends on which lock you would use, we use Omni-lock in the example, so we added `Omni-lock cellDep`. `rollup cellDep` should be obtained from mem pool:
 
 ```ts
 async function getRollupCellDep(): Promise<CellDep> {
