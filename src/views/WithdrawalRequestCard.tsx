@@ -6,7 +6,7 @@ import { Button, Popconfirm, Typography, notification, Modal } from "antd";
 import getTimePeriods from "../utils/getTimePeriods";
 import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import { Cell, HexNumber } from "@ckb-lumos/lumos";
-import { L1MappedErc20 } from "../light-godwoken/lightGodwokenType";
+import { ProxyERC20 } from "../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { Link } from "react-router-dom";
 const { Text } = Typography;
@@ -182,7 +182,7 @@ export interface IWithdrawalRequestCardProps {
   capacity: HexNumber;
   amount: HexNumber;
   cell: Cell;
-  erc20?: L1MappedErc20;
+  erc20?: ProxyERC20;
   now?: number;
 }
 

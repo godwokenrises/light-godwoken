@@ -139,9 +139,12 @@ const ConfirmModal = styled(Modal)`
   }
   .ant-modal-body {
     padding: 24px;
+<<<<<<< HEAD
     display: flex;
     flex-direction: column;
     align-items: center;
+=======
+>>>>>>> develop
   }
   .ant-modal-close-x {
     color: white;
@@ -153,6 +156,7 @@ const ConfirmModal = styled(Modal)`
   .tips {
     margin: 24px 0;
   }
+<<<<<<< HEAD
 
   .anticon-loading {
     font-size: 50px;
@@ -161,6 +165,8 @@ const ConfirmModal = styled(Modal)`
   .icon-container {
     padding-bottom: 20px;
   }
+=======
+>>>>>>> develop
 `;
 
 interface Token {
