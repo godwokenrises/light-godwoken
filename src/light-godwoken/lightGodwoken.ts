@@ -64,6 +64,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     const collectedCells: Cell[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
     for await (const cell of collector.collect()) {
+      console.log(cell);
       if ((!cell.data || cell.data === "0x" || cell.data === "0x0") && collectedCapatity < neededCapacity) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
         collectedCells.push(cell);
@@ -188,7 +189,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
 
       const exchangeSudtCell: Cell = {
         cell_output: {
-          capacity: "0x",
+          capacity: "0x0",
           lock: helpers.parseAddress(this.provider.l1Address),
           type: payload.sudtType,
         },
