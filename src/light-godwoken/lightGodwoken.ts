@@ -64,11 +64,11 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     const collectedCells: Cell[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
     for await (const cell of collector.collect()) {
-      if (!cell.data || cell.data === "0x" || cell.data === "0x0") {
+      if ((!cell.data || cell.data === "0x" || cell.data === "0x0")  && collectedCapatity < neededCapacity) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
         collectedCells.push(cell);
         if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
-      } else if (payload.sudtType && payload.sudtType.args === cell.cell_output.type?.args) {
+      } else if ((payload.sudtType && payload.sudtType.args === cell.cell_output.type?.args) && collectedSudtAmount < neededSudtAmount) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
         collectedSudtAmount += BigInt(utils.readBigUInt128LE(cell.data));
         collectedCells.push(cell);
@@ -167,19 +167,36 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       },
       data: "0x",
     };
+
+    // pay 0.0001 ckb for tx fee
+    const exchangeCapacity = BigInt(sumCapacity - BigInt(payload.capacity) - BigInt(100000))
     const exchangeCell: Cell = {
       cell_output: {
-        // pay 0.0001 ckb for tx fee
-        capacity: "0x" + BigInt(sumCapacity - BigInt(payload.capacity) - BigInt(100000)).toString(16),
+        capacity: "0x" + exchangeCapacity.toString(16),
         lock: helpers.parseAddress(this.provider.l1Address),
       },
       data: "0x",
     };
+
     if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
       outputCell.cell_output.type = payload.sudtType;
       outputCell.data = utils.toBigUInt128LE(BigInt(payload.amount));
-      exchangeCell.cell_output.type = payload.sudtType;
-      exchangeCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
+
+      const exchangeSudtCell: Cell = {
+        cell_output: {
+          capacity: "0x",
+          lock: helpers.parseAddress(this.provider.l1Address),
+          type: payload.sudtType,
+        },
+        data: "0x",
+      };
+      const sudtCapacity: bigint = helpers.minimalCellCapacity(exchangeSudtCell);
+
+      exchangeSudtCell.cell_output.capacity = "0x" + sudtCapacity.toString(16);
+      exchangeSudtCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
+
+      // minus sudt capacity from exchange cell
+      exchangeCell.cell_output.capacity = `0x${exchangeCapacity - sudtCapacity}`;
     }
 
     return [outputCell, exchangeCell];
