@@ -65,7 +65,11 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
     for await (const cell of collector.collect()) {
       console.log(cell);
-      if ((!cell.data || cell.data === "0x" || cell.data === "0x0") && collectedCapatity < neededCapacity) {
+      if (
+        !cell.cell_output.type &&
+        (!cell.data || cell.data === "0x" || cell.data === "0x0") &&
+        collectedCapatity < neededCapacity
+      ) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
         collectedCells.push(cell);
         if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
@@ -187,21 +191,21 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       outputCell.cell_output.type = payload.sudtType;
       outputCell.data = utils.toBigUInt128LE(BigInt(payload.amount));
 
+      const sudtData = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
       const exchangeSudtCell: Cell = {
         cell_output: {
           capacity: "0x0",
           lock: helpers.parseAddress(this.provider.l1Address),
           type: payload.sudtType,
         },
-        data: "0x",
+        data: sudtData,
       };
       const sudtCapacity: bigint = helpers.minimalCellCapacity(exchangeSudtCell);
 
       exchangeSudtCell.cell_output.capacity = "0x" + sudtCapacity.toString(16);
-      exchangeSudtCell.data = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
 
       // minus sudt capacity from exchange cell
-      exchangeCell.cell_output.capacity = `0x${exchangeCapacity - sudtCapacity}`;
+      exchangeCell.cell_output.capacity = `0x${(exchangeCapacity - sudtCapacity).toString(16)}`;
       return [outputCell, exchangeCell, exchangeSudtCell];
     }
 
