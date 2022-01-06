@@ -156,7 +156,7 @@ export default function RequestWithdrawal() {
 
   const sendWithDrawal = () => {
     setLoading(true);
-    const capacity = BigInt(ckbInput) * BigInt(Math.pow(10, 8));
+    const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (selectedSudt) {
@@ -180,7 +180,7 @@ export default function RequestWithdrawal() {
 
     e.on("sent", (txHash) => {
       setIsModalVisible(false);
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent` });
+      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
       setLoading(false);
     });
 
