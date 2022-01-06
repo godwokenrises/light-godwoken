@@ -25,7 +25,12 @@ export const Address: React.FC = () => {
   }, [lightGodwoken]);
 
   if (!lightGodwoken || !l2Address) return null;
-
+  const copyL1Address = () => {
+    navigator.clipboard.writeText(lightGodwoken?.provider.getL1Address() || "");
+  };
+  const copyL2Address = () => {
+    navigator.clipboard.writeText(lightGodwoken?.provider.getL2Address() || "");
+  };
   return (
     <Tooltip
       title={
@@ -35,7 +40,7 @@ export const Address: React.FC = () => {
             <Input.Group compact>
               <Input style={{ width: "calc(100% - 33px)" }} value={lightGodwoken.provider.getL2Address()} />
               <Tooltip title="copy git url">
-                <Button icon={<CopyOutlined />} />
+                <Button icon={<CopyOutlined />} onClick={copyL2Address} />
               </Tooltip>
             </Input.Group>
           </div>
@@ -48,7 +53,7 @@ export const Address: React.FC = () => {
             <Input.Group compact>
               <Input style={{ width: "calc(100% - 33px)" }} value={lightGodwoken.provider.getL1Address()} />
               <Tooltip title="copy git url">
-                <Button icon={<CopyOutlined />} />
+                <Button icon={<CopyOutlined />} onClick={copyL1Address} />
               </Tooltip>
             </Input.Group>
           </div>
