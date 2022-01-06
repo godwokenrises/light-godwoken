@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import { L1MappedErc20 } from "../types/type";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { L1Token } from "../light-godwoken/lightGodwokenType";
+import { SUDT } from "../light-godwoken/lightGodwokenType";
 import { Script } from "@ckb-lumos/lumos";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
@@ -191,7 +191,7 @@ export default function CurrencyInputPanel({
     const fetchData = async () => {
       if (lightGodwoken) {
         if (isL1) {
-          const tokenList: L1Token[] = lightGodwoken.getBuiltinL1TokenList();
+          const tokenList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
           setTokenList(tokenList);
           const types: Script[] = tokenList.map((token) => token.type);
           const balances = await lightGodwoken.getSudtBalances({ types });
