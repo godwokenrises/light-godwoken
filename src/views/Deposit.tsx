@@ -1,6 +1,6 @@
-import { CopyOutlined, PlusOutlined } from "@ant-design/icons";
+import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { Script } from "@ckb-lumos/lumos";
-import { Button, Modal, Typography } from "antd";
+import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
@@ -71,6 +71,9 @@ const L1WalletAddress = styled.div`
       color: rgb(255, 67, 66);
       padding-right: 5px;
     }
+    &:hover {
+      cursor: pointer;
+    }
   }
 `;
 const WithDrawalButton = styled.div`
@@ -136,6 +139,9 @@ const ConfirmModal = styled(Modal)`
   }
   .ant-modal-body {
     padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
   .ant-modal-close-x {
     color: white;
@@ -146,6 +152,14 @@ const ConfirmModal = styled(Modal)`
   }
   .tips {
     margin: 24px 0;
+  }
+
+  .anticon-loading {
+    font-size: 50px;
+    color: rgb(255, 67, 66);
+  }
+  .icon-container {
+    padding-bottom: 20px;
   }
 `;
 
@@ -181,7 +195,7 @@ export default function Deposit() {
         amount: amount,
         sudtType: selectedSudt?.type,
       });
-      console.log(hash);
+      notification.success({ message: `deposit Tx(${hash}) is successful` });
       setIsModalVisible(false);
     }
   };
@@ -202,6 +216,10 @@ export default function Deposit() {
     setSelectedSudt(value as SUDT);
   };
 
+  const copyAddress = () => {
+    navigator.clipboard.writeText(lightGodwoken?.provider.getL1Address() || "");
+  };
+
   return (
     <Page>
       <PageContent>
@@ -214,7 +232,7 @@ export default function Deposit() {
         <L1WalletAddress>
           <Text className="title">L1 Wallet Address</Text>
           <Text className="address">{lightGodwoken?.provider.getL1Address()}</Text>
-          <div className="copy">
+          <div className="copy" onClick={copyAddress}>
             <Text>Copy Address</Text>
             <CopyOutlined />
           </div>
@@ -240,6 +258,9 @@ export default function Deposit() {
         <div className="footer"></div>
       </PageContent>
       <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
+        <div className="icon-container">
+          <LoadingOutlined />
+        </div>
         <Text>Waiting For Confirmation</Text>
         <Text>
           Depositing {outputValue} {selectedSudt?.symbol} and {ckbInput} CKB
