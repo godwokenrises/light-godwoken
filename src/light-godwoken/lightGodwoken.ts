@@ -201,6 +201,7 @@ export default class DefaultLightGodwoken implements LightGodwoken {
 
       // minus sudt capacity from exchange cell
       exchangeCell.cell_output.capacity = `0x${exchangeCapacity - sudtCapacity}`;
+      return [outputCell, exchangeCell, exchangeSudtCell];
     }
 
     return [outputCell, exchangeCell];
