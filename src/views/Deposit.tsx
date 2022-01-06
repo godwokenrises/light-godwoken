@@ -45,6 +45,18 @@ const PageMain = styled.div`
     padding-top: 8px;
     padding-bottom: 8px;
   }
+  .l1-faucet {
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    .ant-typography {
+      color: white;
+      padding-right: 5px;
+    }
+    a {
+      color: rgb(255, 67, 66);
+    }
+  }
 `;
 const L1WalletAddress = styled.div`
   display: flex;
@@ -184,7 +196,7 @@ export default function Deposit() {
   const showModal = async () => {
     setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = BigInt(ckbInput) * BigInt(Math.pow(10, 8));
+      const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
       let amount = "0x0";
       if (selectedSudt) {
         amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
@@ -252,6 +264,12 @@ export default function Deposit() {
               Deposit
             </Button>
           </WithDrawalButton>
+          <div className="l1-faucet">
+            <Text>Need Layer 1 test tokens?</Text>
+            <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
+              CKB Testnet Faucet
+            </a>
+          </div>
         </PageMain>
         <div className="footer"></div>
       </PageContent>
