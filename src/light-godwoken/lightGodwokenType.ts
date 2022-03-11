@@ -41,6 +41,10 @@ export interface GetSudtBalances {
   types: Script[];
 }
 
+export interface GodwokenNetworkConfig {
+  testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
+}
+
 interface WithdrawListener {
   (event: "sending", listener: () => void): void;
   (event: "sent", listener: (txHash: Hash) => void): void;
@@ -96,6 +100,8 @@ export interface DepositPayload {
 
 type Promisable<T> = Promise<T> | T;
 
+export const CKB_SUDT_ID = 1;
+
 export interface LightGodwokenProvider {
   getL2Address(): Promisable<string>;
 
@@ -125,6 +131,8 @@ export interface LightGodwoken {
   deposit?: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+
+  withdrawV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 

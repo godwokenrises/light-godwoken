@@ -1,14 +1,6 @@
-import {
-  Hash,
-  HexNumber,
-  HexString,
-  PackedSince,
-  Script,
-} from "@ckb-lumos/base";
+import { Hash, HexNumber, HexString, PackedSince, Script } from "@ckb-lumos/base";
 import { normalizers, Reader } from "ckb-js-toolkit";
-import { L2Transaction,
-  WithdrawalRequest, WithdrawalRequestExtra, WithdrawalRequestV1
-} from "./types";
+import { L2Transaction, WithdrawalRequest, WithdrawalRequestExtra, WithdrawalRequestV1 } from "./types";
 
 // Taken for now from https://github.com/xxuejie/ckb-js-toolkit/blob/68f5ff709f78eb188ee116b2887a362123b016cc/src/normalizers.js#L17-L69,
 // later we can think about exposing those functions directly.
@@ -20,11 +12,7 @@ function normalizeHexNumber(length: number) {
         intValue = "0" + intValue;
       }
       if (intValue.length / 2 > length) {
-        throw new Error(
-          `${debugPath} is ${
-            intValue.length / 2
-          } bytes long, expected length is ${length}!`
-        );
+        throw new Error(`${debugPath} is ${intValue.length / 2} bytes long, expected length is ${length}!`);
       }
       const view = new DataView(new ArrayBuffer(length));
       for (let i = 0; i < intValue.length / 2; i++) {
@@ -46,9 +34,7 @@ function normalizeRawData(length: number) {
   return function (debugPath: string, value: any) {
     value = new Reader(value).toArrayBuffer();
     if (length > 0 && value.byteLength !== length) {
-      throw new Error(
-        `${debugPath} has invalid length ${value.byteLength}, required: ${length}`
-      );
+      throw new Error(`${debugPath} has invalid length ${value.byteLength}, required: ${length}`);
     }
     return value;
   };
@@ -82,10 +68,7 @@ export interface DepositRequest {
   script: Script;
 }
 
-export function NormalizeDepositRequest(
-  request: object,
-  { debugPath = "deposit_request" } = {}
-) {
+export function NormalizeDepositRequest(request: object, { debugPath = "deposit_request" } = {}) {
   return normalizeObject(debugPath, request, {
     capacity: normalizeHexNumber(8),
     amount: normalizeHexNumber(16),
@@ -100,10 +83,7 @@ export interface DepositLockArgs {
   cancel_timeout: PackedSince;
 }
 
-export function NormalizeDepositLockArgs(
-  args: object,
-  { debugPath = "deposit_lock_args" } = {}
-) {
+export function NormalizeDepositLockArgs(args: object, { debugPath = "deposit_lock_args" } = {}) {
   return normalizeObject(debugPath, args, {
     owner_lock_hash: normalizeRawData(32),
     layer2_lock: toNormalize(normalizers.NormalizeScript),
@@ -116,10 +96,7 @@ export interface HeaderInfo {
   block_hash: Hash;
 }
 
-export function NormalizeHeaderInfo(
-  headerInfo: object,
-  { debugPath = "header_info" } = {}
-) {
+export function NormalizeHeaderInfo(headerInfo: object, { debugPath = "header_info" } = {}) {
   return normalizeObject(debugPath, headerInfo, {
     number: normalizeHexNumber(8),
     block_hash: normalizeRawData(32),
@@ -132,10 +109,7 @@ export interface CustodianLockArgs {
   deposit_lock_args: DepositLockArgs;
 }
 
-export function NormalizeCustodianLockArgs(
-  args: object,
-  { debugPath = "custondian_lock_args" } = {}
-) {
+export function NormalizeCustodianLockArgs(args: object, { debugPath = "custondian_lock_args" } = {}) {
   return normalizeObject(debugPath, args, {
     deposit_block_hash: normalizeRawData(32),
     deposit_block_number: normalizeHexNumber(8),
@@ -143,10 +117,7 @@ export function NormalizeCustodianLockArgs(
   });
 }
 
-export function NormalizeRawL2Transaction(
-  rawL2Transaction: object,
-  { debugPath = "raw_l2_transaction" } = {}
-) {
+export function NormalizeRawL2Transaction(rawL2Transaction: object, { debugPath = "raw_l2_transaction" } = {}) {
   return normalizeObject(debugPath, rawL2Transaction, {
     from_id: normalizeHexNumber(4),
     to_id: normalizeHexNumber(4),
@@ -155,20 +126,14 @@ export function NormalizeRawL2Transaction(
   });
 }
 
-export function NormalizeL2Transaction(
-  l2Transaction: L2Transaction,
-  { debugPath = "l2_transaction" } = {}
-) {
+export function NormalizeL2Transaction(l2Transaction: L2Transaction, { debugPath = "l2_transaction" } = {}) {
   return normalizeObject(debugPath, l2Transaction, {
     raw: toNormalize(NormalizeRawL2Transaction),
     signature: normalizeRawData(-1),
   });
 }
 
-export function NormalizeRawWithdrawalRequest(
-  raw_request: object,
-  { debugPath = "raw_withdrawal_request" } = {}
-) {
+export function NormalizeRawWithdrawalRequest(raw_request: object, { debugPath = "raw_withdrawal_request" } = {}) {
   return normalizeObject(debugPath, raw_request, {
     nonce: normalizeHexNumber(4),
     capacity: normalizeHexNumber(8),
@@ -183,10 +148,7 @@ export function NormalizeRawWithdrawalRequest(
   });
 }
 
-export function NormalizeRawWithdrawalRequestV1(
-  raw_request_v1: object,
-  { debugPath = "raw_withdrawal_request" } = {}
-) {
+export function NormalizeRawWithdrawalRequestV1(raw_request_v1: object, { debugPath = "raw_withdrawal_request" } = {}) {
   return normalizeObject(debugPath, raw_request_v1, {
     nonce: normalizeHexNumber(4),
     chain_id: normalizeHexNumber(8),
@@ -206,7 +168,7 @@ export function NormalizeRawWithdrawalRequestV1(
 
 export function NormalizeWithdrawalRequestV1(
   request_v1: WithdrawalRequestV1,
-  { debugPath = "withdrawal_request" } = {}
+  { debugPath = "withdrawal_request" } = {},
 ) {
   return normalizeObject(debugPath, request_v1, {
     raw: toNormalize(NormalizeRawWithdrawalRequestV1),
@@ -216,7 +178,7 @@ export function NormalizeWithdrawalRequestV1(
 
 export function NormalizeWithdrawalReqExtra(
   withdrawalReqExtra: WithdrawalRequestExtra,
-  { debugPath = "withdrawal_request" } = {}
+  { debugPath = "withdrawal_request" } = {},
 ) {
   return normalizeObject(debugPath, withdrawalReqExtra, {
     request: toNormalize(NormalizeWithdrawalRequestV1),
@@ -224,10 +186,7 @@ export function NormalizeWithdrawalReqExtra(
   });
 }
 
-export function NormalizeWithdrawalRequest(
-  request: WithdrawalRequest,
-  { debugPath = "withdrawal_request" } = {}
-) {
+export function NormalizeWithdrawalRequest(request: WithdrawalRequest, { debugPath = "withdrawal_request" } = {}) {
   return normalizeObject(debugPath, request, {
     raw: toNormalize(NormalizeRawWithdrawalRequest),
     signature: normalizeRawData(65),
@@ -246,10 +205,7 @@ export function NormalizeFee(fee: object, { debugPath = "fee" } = {}) {
   });
 }
 
-export function NormalizeCreateAccount(
-  createAccount: object,
-  { debugPath = "create_account" } = {}
-) {
+export function NormalizeCreateAccount(createAccount: object, { debugPath = "create_account" } = {}) {
   return normalizeObject(debugPath, createAccount, {
     script: toNormalize(normalizers.NormalizeScript),
     fee: toNormalize(NormalizeFee),
@@ -260,10 +216,7 @@ export interface SUDTQuery {
   short_address: HexString;
 }
 
-export function NormalizeSUDTQuery(
-  sudt_query: object,
-  { debugPath = "sudt_query" } = {}
-) {
+export function NormalizeSUDTQuery(sudt_query: object, { debugPath = "sudt_query" } = {}) {
   return normalizeObject(debugPath, sudt_query, {
     short_address: normalizeRawData(20),
   });
@@ -275,10 +228,7 @@ export interface SUDTTransfer {
   fee: HexNumber;
 }
 
-export function NormalizeSUDTTransfer(
-  sudt_transfer: object,
-  { debugPath = "sudt_transfer" } = {}
-) {
+export function NormalizeSUDTTransfer(sudt_transfer: object, { debugPath = "sudt_transfer" } = {}) {
   return normalizeObject(debugPath, sudt_transfer, {
     to: normalizeRawData(20),
     amount: normalizeHexNumber(16),
@@ -286,10 +236,7 @@ export function NormalizeSUDTTransfer(
   });
 }
 
-export function NormalizeWithdrawalLockArgs(
-  withdrawal_lock_args: object,
-  { debugPath = "withdrawal_lock_args" } = {}
-) {
+export function NormalizeWithdrawalLockArgs(withdrawal_lock_args: object, { debugPath = "withdrawal_lock_args" } = {}) {
   return normalizeObject(debugPath, withdrawal_lock_args, {
     // the original deposit info
     // used for helping programs generate reverted custodian cell
@@ -312,7 +259,7 @@ export function NormalizeWithdrawalLockArgs(
 
 export function NormalizeUnlockWithdrawalViaFinalize(
   unlock_withdrawal_finalize: object,
-  { debugPath = "unlock_withdrawal_finalize" } = {}
+  { debugPath = "unlock_withdrawal_finalize" } = {},
 ) {
   return normalizeObject(debugPath, unlock_withdrawal_finalize, {});
 }

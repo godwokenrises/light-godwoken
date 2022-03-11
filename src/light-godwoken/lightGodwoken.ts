@@ -12,8 +12,15 @@ import {
   toolkit,
   utils,
   WitnessArgs,
+  BI,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
+import {
+  Godwoken as GodwokenV1,
+  RawWithdrawalRequestV1,
+  WithdrawalRequestExtra,
+  WithdrawalRequestV1,
+} from "./godwoken-v1/src/index";
 import EventEmitter from "events";
 import * as secp256k1 from "secp256k1";
 import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
@@ -42,6 +49,7 @@ import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResult,
+  CKB_SUDT_ID,
 } from "./lightGodwokenType";
 import {
   SerializeDepositLockArgs,
@@ -426,6 +434,148 @@ export default class DefaultLightGodwoken implements LightGodwoken {
     return eventEmitter;
   }
 
+  withdrawV1WithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.withdrawV1(eventEmitter, payload);
+    return eventEmitter;
+  }
+
+  async withdrawV1(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+    eventEmitter.emit("sending");
+    const godwokenWeb3 = new GodwokenV1(this.provider.config.GW_POLYJUICE_RPC_URL);
+    const chainId = await godwokenWeb3.getChainId();
+    const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
+    const ownerLock = helpers.parseAddress(ownerCkbAddress);
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    const ethAddress = this.provider.l2Address;
+    const l2AccountScript: Script = {
+      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
+    };
+    const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
+
+    const address = layer2AccountScriptHash.slice(0, 42);
+    const balance = await godwokenWeb3.getBalance(CKB_SUDT_ID, address);
+    if (BI.from(balance).lt(BI.from(payload.capacity))) {
+      throw new Error(`Insufficient balance(${balance}) on Godwoken`);
+    }
+    const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
+    const nonce: number = await godwokenWeb3.getNonce(fromId!);
+
+    const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
+      chain_id: chainId,
+      nonce: BI.from(nonce).toHexString(),
+      capacity: payload.capacity,
+      amount: payload.amount,
+      sudt_script_hash: payload.sudt_script_hash,
+      account_script_hash: layer2AccountScriptHash,
+      owner_lock_hash: ownerLockHash,
+      fee: "0x0",
+    };
+    const typedMsg = {
+      domain: {
+        name: "Godwoken",
+        version: "1",
+        chainId: Number(chainId),
+      },
+      message: {
+        accountScriptHash: layer2AccountScriptHash,
+        nonce,
+        chainId: Number(chainId),
+        fee: 0,
+        layer1OwnerLock: {
+          codeHash: ownerLock.code_hash,
+          hashType: ownerLock.hash_type,
+          args: ownerLock.args,
+        },
+        withdraw: {
+          ckbCapacity: BI.from(payload.capacity).toNumber(),
+          UDTAmount: BI.from(payload.amount).toNumber(),
+          UDTScriptHash: payload.sudt_script_hash,
+        },
+      },
+      primaryType: "Withdrawal" as const,
+      types: {
+        EIP712Domain: [
+          { name: "name", type: "string" },
+          { name: "version", type: "string" },
+          { name: "chainId", type: "uint256" },
+        ],
+        Withdrawal: [
+          { name: "accountScriptHash", type: "bytes32" },
+          { name: "nonce", type: "uint256" },
+          { name: "chainId", type: "uint256" },
+          { name: "fee", type: "uint256" },
+          { name: "layer1OwnerLock", type: "Script" },
+          { name: "withdraw", type: "WithdrawalAsset" },
+        ],
+        Script: [
+          { name: "codeHash", type: "bytes32" },
+          { name: "hashType", type: "string" },
+          { name: "args", type: "bytes" },
+        ],
+        WithdrawalAsset: [
+          { name: "ckbCapacity", type: "uint256" },
+          { name: "UDTAmount", type: "uint256" },
+          { name: "UDTScriptHash", type: "bytes32" },
+        ],
+      },
+    };
+    console.log("typedMsg:", typedMsg);
+
+    // sign message
+    //  const privateKey = Buffer.from(privKey.slice(2), 'hex');
+    //  const signature = signTypedData({
+    //    privateKey,
+    //    data: typedMsg,
+    //    version: SignTypedDataVersion.V4
+    //  });
+
+    console.log("this.provider.l2Address: ", this.provider.l2Address);
+    console.log("this.provider.l2Address: ", this.provider.web3.utils.isAddress(this.provider.l2Address));
+    console.log("this.provider.web3!.currentProvider: ", this.provider.web3, this.provider.web3!.currentProvider);
+
+    // (this.provider.web3!.currentProvider! as any).send({
+    //   method: 'eth_signTypedData',
+    //   params: [typedMsg, this.provider.l2Address],
+    //   from: this.provider.l2Address,
+    // }, function (err: any, result: any) {
+    //   if (err) return console.error(err)
+    //   if (result) {
+    //     return console.error(result)
+    //     // 0x4355c47d63924e8a72e509b65029052eb6c299d53a04e167c5775fd466751c9d07299936d304c153f6443dfa05f40ff007d72911b6f72307f996231605b915621c
+    //   }
+    // })
+
+    let signedMessage = await this.provider.ethereum.request({
+      method: "eth_signTypedData_v4",
+      params: [this.provider.l2Address, JSON.stringify(typedMsg)],
+    });
+
+    // construct WithdrawalRequestExx tra
+    const withdrawalReq: WithdrawalRequestV1 = {
+      raw: rawWithdrawalRequest,
+      signature: signedMessage,
+    };
+    const withdrawalReqExtra: WithdrawalRequestExtra = {
+      request: withdrawalReq,
+      owner_lock: ownerLock,
+    };
+    console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
+
+    // submit WithdrawalRequestExtra
+    const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
+    console.log("result:", result);
+
+    if (result !== null) {
+      const errorMessage = (result as any).message;
+      if (errorMessage !== undefined && errorMessage !== null) {
+        throw new Error(errorMessage);
+      }
+    }
+  }
+
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const rollupTypeHash = ROLLUP_CONFIG.rollup_type_hash;
@@ -698,7 +848,8 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       });
       let collectedSum = BigInt(0);
       for await (const cell of collector.collect()) {
-        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+        // collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+        collectedSum += BigInt(0);
       }
       result.balances.push("0x" + collectedSum.toString(16));
     }

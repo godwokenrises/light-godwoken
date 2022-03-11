@@ -30,7 +30,7 @@ import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
 
 export const POLYJUICE_CONFIG = {
-  web3Url: PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL,
+  web3Url: PROVIDER_CONFIG.GODWOKEN_V1.GW_POLYJUICE_RPC_URL,
   abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
 };
 
@@ -47,21 +47,24 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum;
   web3;
   godwokenClient;
+  config;
 
-  constructor(ethAddress: Address, ethereum: any, env = "AGGRON") {
-    if (env === "AGGRON") {
+  constructor(ethAddress: Address, ethereum: any, env = "GODWOKEN_V1") {
+    if (env === "AGGRON" || env === "GODWOKEN_V1") {
       config.initializeConfig(config.predefined.AGGRON4);
-      this.ckbIndexer = new Indexer(PROVIDER_CONFIG.AGGRON.CKB_INDEXER_URL, PROVIDER_CONFIG.AGGRON.CKB_RPC_URL);
-      this.rpc = new RPC(PROVIDER_CONFIG.AGGRON.CKB_RPC_URL);
-      this.godwokenClient = new GodwokenClient(PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL);
     } else if (env === "LINA") {
       config.initializeConfig(config.predefined.LINA);
-      this.ckbIndexer = new Indexer(PROVIDER_CONFIG.LINA.CKB_INDEXER_URL, PROVIDER_CONFIG.LINA.CKB_RPC_URL);
-      this.rpc = new RPC(PROVIDER_CONFIG.LINA.CKB_RPC_URL);
-      this.godwokenClient = new GodwokenClient(PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL);
     } else {
       throw new Error("env not defined, please use AGGRON or LINA.");
     }
+    const configObj = PROVIDER_CONFIG[`${env}`];
+    console.log("configObj", configObj);
+
+    this.config = configObj;
+    this.ckbIndexer = new Indexer(configObj.CKB_INDEXER_URL, configObj.CKB_RPC_URL);
+    this.rpc = new RPC(configObj.CKB_RPC_URL);
+    this.godwokenClient = new GodwokenClient(configObj.GW_POLYJUICE_RPC_URL);
+
     this.ethereum = ethereum;
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);

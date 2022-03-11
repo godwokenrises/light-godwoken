@@ -1,5 +1,5 @@
-import { RPC, Reader } from "ckb-js-toolkit";
-import { Hash, HexString, Script, utils } from "@ckb-lumos/base";
+import * as normalizer from "./normalizer";
+import * as core from "../schemas";
 import {
   NormalizeL2Transaction,
   NormalizeRawL2Transaction,
@@ -10,7 +10,8 @@ import {
 import {
   L2Transaction,
   RawL2Transaction,
-  RawWithdrawalRequest, WithdrawalRequest,
+  RawWithdrawalRequest,
+  WithdrawalRequest,
   WithdrawalRequestExtra,
   RunResult,
   Uint128,
@@ -19,16 +20,14 @@ import {
   Fee,
   LastL2BlockCommittedInfo,
 } from "./types";
-export * from "./types";
+import { SerializeRawWithdrawalRequestV1, SerializeWithdrawalRequestExtra } from "./schema_v1";
+import { RPC, Reader } from "ckb-js-toolkit";
+import { Hash, HexString, Script, utils } from "@ckb-lumos/base";
 import keccak256 from "keccak256";
+export * from "./types";
 
-import * as core from "../schemas";
-import {
-  SerializeRawWithdrawalRequestV1, SerializeWithdrawalRequestExtra
-} from "./schema_v1";
-
-import * as normalizer from "./normalizer";
-export { core, normalizer, SerializeRawWithdrawalRequestV1, WithdrawalRequestExtra };
+export { core, normalizer, SerializeRawWithdrawalRequestV1 };
+export type { WithdrawalRequestExtra };
 
 export function numberToUInt32LE(value: number): HexString {
   const buf = Buffer.alloc(4);
@@ -77,11 +76,11 @@ export class Godwoken {
 
   /**
    * chain_id: u64 = (compatible_chain_id << 32) | creator_id
-   * 
+   *
    * e.g. 0x315DA00000005 = 868,450,977,185,797
    */
   async getChainId(): Promise<string> {
-    const result = await this.rpc['eth_chainId']();
+    const result = await this.rpc["eth_chainId"]();
     console.debug("chain_id:", result);
     return result;
   }
@@ -93,9 +92,7 @@ export class Godwoken {
   }
 
   async _send(l2tx: L2Transaction, method_name: string) {
-    const data = new Reader(
-      core.SerializeL2Transaction(NormalizeL2Transaction(l2tx))
-    ).serializeJson();
+    const data = new Reader(core.SerializeL2Transaction(NormalizeL2Transaction(l2tx))).serializeJson();
     return await this.rpcCall(method_name, data);
   }
 
@@ -108,22 +105,18 @@ export class Godwoken {
   }
 
   async executeRawL2Transaction(rawL2Tx: RawL2Transaction): Promise<RunResult> {
-    const hex = new Reader(
-      core.SerializeRawL2Transaction(NormalizeRawL2Transaction(rawL2Tx))
-    ).serializeJson();
+    const hex = new Reader(core.SerializeRawL2Transaction(NormalizeRawL2Transaction(rawL2Tx))).serializeJson();
     return await this.rpcCall("execute_raw_l2transaction", hex);
   }
 
   async submitWithdrawalRequest(request: WithdrawalRequest): Promise<void> {
-    const data = new Reader(
-      core.SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))
-    ).serializeJson();
+    const data = new Reader(core.SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
   async submitWithdrawalReqV1(reqExtra: WithdrawalRequestExtra): Promise<Hash> {
     const data = new Reader(
-      SerializeWithdrawalRequestExtra(normalizer.NormalizeWithdrawalReqExtra(reqExtra))
+      SerializeWithdrawalRequestExtra(normalizer.NormalizeWithdrawalReqExtra(reqExtra)),
     ).serializeJson();
     return await this.rpcCall("submit_withdrawal_request", data);
   }
@@ -156,9 +149,7 @@ export class Godwoken {
     return await this.rpcCall("get_storage_at", account_id_hex, key);
   }
 
-  async getAccountIdByScriptHash(
-    script_hash: Hash
-  ): Promise<Uint32 | undefined> {
+  async getAccountIdByScriptHash(script_hash: Hash): Promise<Uint32 | undefined> {
     const id = await this.rpcCall("get_account_id_by_script_hash", script_hash);
     return id ? +id : undefined;
   }
@@ -205,24 +196,14 @@ export class GodwokenUtils {
   generateTransactionMessageWithoutPrefixToSign(
     raw_l2tx: RawL2Transaction,
     sender_script_hash: Hash,
-    receiver_script_hash: Hash
+    receiver_script_hash: Hash,
   ): Hash {
-    const raw_tx_data = core.SerializeRawL2Transaction(
-      NormalizeRawL2Transaction(raw_l2tx)
-    );
+    const raw_tx_data = core.SerializeRawL2Transaction(NormalizeRawL2Transaction(raw_l2tx));
     const rollup_type_hash = Buffer.from(this.rollup_type_hash.slice(2), "hex");
     const senderScriptHash = Buffer.from(sender_script_hash.slice(2), "hex");
-    const receiverScriptHash = Buffer.from(
-      receiver_script_hash.slice(2),
-      "hex"
-    );
+    const receiverScriptHash = Buffer.from(receiver_script_hash.slice(2), "hex");
     const data = toArrayBuffer(
-      Buffer.concat([
-        rollup_type_hash,
-        senderScriptHash,
-        receiverScriptHash,
-        toBuffer(raw_tx_data),
-      ])
+      Buffer.concat([rollup_type_hash, senderScriptHash, receiverScriptHash, toBuffer(raw_tx_data)]),
     );
     const message = utils.ckbHash(data).serializeJson();
     return message;
@@ -231,44 +212,30 @@ export class GodwokenUtils {
   generateTransactionMessageToSign(
     raw_l2tx: RawL2Transaction,
     sender_script_hash: Hash,
-    receiver_script_hash: Hash
+    receiver_script_hash: Hash,
   ): Hash {
     const message = this.generateTransactionMessageWithoutPrefixToSign(
       raw_l2tx,
       sender_script_hash,
-      receiver_script_hash
+      receiver_script_hash,
     );
     const prefix_buf = Buffer.from(`\x19Ethereum Signed Message:\n32`);
-    const buf = Buffer.concat([
-      prefix_buf,
-      Buffer.from(message.slice(2), "hex"),
-    ]);
+    const buf = Buffer.concat([prefix_buf, Buffer.from(message.slice(2), "hex")]);
     return `0x${keccak256(buf).toString("hex")}`;
   }
 
-  generateWithdrawalMessageWithoutPrefixToSign(
-    raw_request: RawWithdrawalRequest
-  ): Hash {
-    const raw_request_data = core.SerializeRawWithdrawalRequest(
-      NormalizeRawWithdrawalRequest(raw_request)
-    );
+  generateWithdrawalMessageWithoutPrefixToSign(raw_request: RawWithdrawalRequest): Hash {
+    const raw_request_data = core.SerializeRawWithdrawalRequest(NormalizeRawWithdrawalRequest(raw_request));
     const rollup_type_hash = Buffer.from(this.rollup_type_hash.slice(2), "hex");
-    const data = toArrayBuffer(
-      Buffer.concat([rollup_type_hash, toBuffer(raw_request_data)])
-    );
+    const data = toArrayBuffer(Buffer.concat([rollup_type_hash, toBuffer(raw_request_data)]));
     const message = utils.ckbHash(data).serializeJson();
     return message;
   }
 
   generateWithdrawalMessageToSign(raw_request: RawWithdrawalRequest): Hash {
-    const message = this.generateWithdrawalMessageWithoutPrefixToSign(
-      raw_request
-    );
+    const message = this.generateWithdrawalMessageWithoutPrefixToSign(raw_request);
     const prefix_buf = Buffer.from(`\x19Ethereum Signed Message:\n32`);
-    const buf = Buffer.concat([
-      prefix_buf,
-      Buffer.from(message.slice(2), "hex"),
-    ]);
+    const buf = Buffer.concat([prefix_buf, Buffer.from(message.slice(2), "hex")]);
     return `0x${keccak256(buf).toString("hex")}`;
   }
 
@@ -277,7 +244,7 @@ export class GodwokenUtils {
     nonce: Uint32,
     script: Script,
     sudt_id: Uint32 = 1,
-    fee_amount: Uint128 = BigInt(0)
+    fee_amount: Uint128 = BigInt(0),
   ): RawL2Transaction {
     const create_account = {
       script,
@@ -288,7 +255,7 @@ export class GodwokenUtils {
     };
     const enum_tag = "0x00000000";
     const create_account_part = new Reader(
-      core.SerializeCreateAccount(NormalizeCreateAccount(create_account))
+      core.SerializeCreateAccount(NormalizeCreateAccount(create_account)),
     ).serializeJson();
     const args = enum_tag + create_account_part.slice(2);
     return {
@@ -309,7 +276,7 @@ export class GodwokenUtils {
     sell_capacity: Uint64,
     owner_lock_hash: Hash,
     payment_lock_hash: Hash,
-    fee: Fee
+    fee: Fee,
   ): RawWithdrawalRequest {
     return {
       nonce: "0x" + BigInt(nonce).toString(16),
