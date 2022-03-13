@@ -12,16 +12,8 @@ import {
   toolkit,
   utils,
   WitnessArgs,
-  BI,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import {
-  Godwoken as GodwokenV1,
-  RawWithdrawalRequestV1,
-  WithdrawalRequestExtra,
-  WithdrawalRequestV1,
-} from "./godwoken-v1/src/index";
-import EventEmitter from "events";
 import * as secp256k1 from "secp256k1";
 import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
 import { TOKEN_LIST } from "./constants/tokens";
@@ -31,7 +23,6 @@ import {
   NormalizeWithdrawalLockArgs,
   RawWithdrawalRequest,
   WithdrawalLockArgs,
-  WithdrawalRequest,
 } from "./godwoken/normalizer";
 import LightGodwokenProvider, { POLYJUICE_CONFIG } from "./lightGodwokenProvider";
 import {
@@ -49,7 +40,6 @@ import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResult,
-  CKB_SUDT_ID,
 } from "./lightGodwokenType";
 import {
   SerializeDepositLockArgs,
@@ -58,11 +48,12 @@ import {
   SerializeWithdrawalLockArgs,
 } from "./schemas/index.esm";
 
-export default class DefaultLightGodwoken implements LightGodwoken {
+export default abstract class DefaultLightGodwoken implements LightGodwoken {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+  abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
   async deposit(payload: DepositPayload): Promise<string> {
     const neededCapacity = BigInt(payload.capacity);
@@ -426,244 +417,6 @@ export default class DefaultLightGodwoken implements LightGodwoken {
       },
       script_type: "lock",
     };
-  }
-
-  withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
-    const eventEmitter = new EventEmitter();
-    this.withdraw(eventEmitter, payload);
-    return eventEmitter;
-  }
-
-  withdrawV1WithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
-    const eventEmitter = new EventEmitter();
-    this.withdrawV1(eventEmitter, payload);
-    return eventEmitter;
-  }
-
-  async withdrawV1(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
-    const godwokenWeb3 = new GodwokenV1(this.provider.config.GW_POLYJUICE_RPC_URL);
-    const chainId = await godwokenWeb3.getChainId();
-    const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
-    const ownerLock = helpers.parseAddress(ownerCkbAddress);
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    const ethAddress = this.provider.l2Address;
-    const l2AccountScript: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
-    };
-    const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
-
-    const address = layer2AccountScriptHash.slice(0, 42);
-    const balance = await godwokenWeb3.getBalance(CKB_SUDT_ID, address);
-    if (BI.from(balance).lt(BI.from(payload.capacity))) {
-      throw new Error(`Insufficient balance(${balance}) on Godwoken`);
-    }
-    const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await godwokenWeb3.getNonce(fromId!);
-
-    const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
-      chain_id: chainId,
-      nonce: BI.from(nonce).toHexString(),
-      capacity: payload.capacity,
-      amount: payload.amount,
-      sudt_script_hash: payload.sudt_script_hash,
-      account_script_hash: layer2AccountScriptHash,
-      owner_lock_hash: ownerLockHash,
-      fee: "0x0",
-    };
-    const typedMsg = {
-      domain: {
-        name: "Godwoken",
-        version: "1",
-        chainId: Number(chainId),
-      },
-      message: {
-        accountScriptHash: layer2AccountScriptHash,
-        nonce,
-        chainId: Number(chainId),
-        fee: 0,
-        layer1OwnerLock: {
-          codeHash: ownerLock.code_hash,
-          hashType: ownerLock.hash_type,
-          args: ownerLock.args,
-        },
-        withdraw: {
-          ckbCapacity: BI.from(payload.capacity).toNumber(),
-          UDTAmount: BI.from(payload.amount).toNumber(),
-          UDTScriptHash: payload.sudt_script_hash,
-        },
-      },
-      primaryType: "Withdrawal" as const,
-      types: {
-        EIP712Domain: [
-          { name: "name", type: "string" },
-          { name: "version", type: "string" },
-          { name: "chainId", type: "uint256" },
-        ],
-        Withdrawal: [
-          { name: "accountScriptHash", type: "bytes32" },
-          { name: "nonce", type: "uint256" },
-          { name: "chainId", type: "uint256" },
-          { name: "fee", type: "uint256" },
-          { name: "layer1OwnerLock", type: "Script" },
-          { name: "withdraw", type: "WithdrawalAsset" },
-        ],
-        Script: [
-          { name: "codeHash", type: "bytes32" },
-          { name: "hashType", type: "string" },
-          { name: "args", type: "bytes" },
-        ],
-        WithdrawalAsset: [
-          { name: "ckbCapacity", type: "uint256" },
-          { name: "UDTAmount", type: "uint256" },
-          { name: "UDTScriptHash", type: "bytes32" },
-        ],
-      },
-    };
-    console.log("typedMsg:", typedMsg);
-
-    // sign message
-    //  const privateKey = Buffer.from(privKey.slice(2), 'hex');
-    //  const signature = signTypedData({
-    //    privateKey,
-    //    data: typedMsg,
-    //    version: SignTypedDataVersion.V4
-    //  });
-
-    console.log("this.provider.l2Address: ", this.provider.l2Address);
-    console.log("this.provider.l2Address: ", this.provider.web3.utils.isAddress(this.provider.l2Address));
-    console.log("this.provider.web3!.currentProvider: ", this.provider.web3, this.provider.web3!.currentProvider);
-
-    // (this.provider.web3!.currentProvider! as any).send({
-    //   method: 'eth_signTypedData',
-    //   params: [typedMsg, this.provider.l2Address],
-    //   from: this.provider.l2Address,
-    // }, function (err: any, result: any) {
-    //   if (err) return console.error(err)
-    //   if (result) {
-    //     return console.error(result)
-    //     // 0x4355c47d63924e8a72e509b65029052eb6c299d53a04e167c5775fd466751c9d07299936d304c153f6443dfa05f40ff007d72911b6f72307f996231605b915621c
-    //   }
-    // })
-
-    let signedMessage = await this.provider.ethereum.request({
-      method: "eth_signTypedData_v4",
-      params: [this.provider.l2Address, JSON.stringify(typedMsg)],
-    });
-
-    // construct WithdrawalRequestExx tra
-    const withdrawalReq: WithdrawalRequestV1 = {
-      raw: rawWithdrawalRequest,
-      signature: signedMessage,
-    };
-    const withdrawalReqExtra: WithdrawalRequestExtra = {
-      request: withdrawalReq,
-      owner_lock: ownerLock,
-    };
-    console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
-
-    // submit WithdrawalRequestExtra
-    const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
-    console.log("result:", result);
-
-    if (result !== null) {
-      const errorMessage = (result as any).message;
-      if (errorMessage !== undefined && errorMessage !== null) {
-        throw new Error(errorMessage);
-      }
-    }
-  }
-
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
-    const rollupTypeHash = ROLLUP_CONFIG.rollup_type_hash;
-    const ethAccountTypeHash = SCRIPTS.eth_account_lock.script_type_hash;
-    console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
-
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    const ethAddress = this.provider.l2Address;
-    const l2AccountScript: Script = {
-      code_hash: ethAccountTypeHash,
-      hash_type: "type",
-      args: rollupTypeHash + ethAddress.slice(2),
-    };
-    const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    console.log("account script hash:", accountScriptHash);
-    const fromId = await this.provider.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
-    if (!fromId) {
-      throw new Error("account not found");
-    }
-    const isSudt = payload.sudt_script_hash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
-    const minCapacity = this.minimalWithdrawalCapacity(isSudt);
-    if (BigInt(payload.capacity) < BigInt(minCapacity)) {
-      throw new Error(
-        `Withdrawal required ${BigInt(minCapacity)} shannons at least, provided ${BigInt(payload.capacity)}.`,
-      );
-    }
-    const nonce: HexNumber = await this.provider.godwokenClient.getNonce(fromId);
-    console.log("nonce:", nonce);
-    const sellCapacity: HexNumber = "0x0";
-    const sellAmount: HexNumber = "0x0";
-    const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
-    const feeSudtId: HexNumber = "0x1";
-    const feeAmount: HexNumber = "0x0";
-    const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce: "0x" + BigInt(nonce).toString(16),
-      capacity: "0x" + BigInt(payload.capacity).toString(16),
-      amount: "0x" + BigInt(payload.amount).toString(16),
-      sudt_script_hash: payload.sudt_script_hash,
-      account_script_hash: accountScriptHash,
-      sell_amount: sellAmount,
-      sell_capacity: sellCapacity,
-      owner_lock_hash: ownerLockHash,
-      payment_lock_hash: paymentLockHash,
-      fee: {
-        sudt_id: feeSudtId,
-        amount: feeAmount,
-      },
-    };
-    console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
-    const message = this.generateWithdrawalMessageToSign(rawWithdrawalRequest, rollupTypeHash);
-    console.log("message:", message);
-    const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
-    console.log("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
-    const withdrawalRequest: WithdrawalRequest = {
-      raw: rawWithdrawalRequest,
-      signature: signatureMetamaskPersonalSign,
-    };
-    console.log("withdrawalRequest:", withdrawalRequest);
-    // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
-    let result: unknown;
-    try {
-      result = await this.provider.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
-    } catch (e) {
-      eventEmitter.emit("error", e);
-      return;
-    }
-    eventEmitter.emit("sent", result);
-    console.log("withdrawal request result:", result);
-    const maxLoop = 100;
-    let loop = 0;
-    const nIntervId = setInterval(async () => {
-      loop++;
-      const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
-      if (withdrawal && withdrawal.status === "pending") {
-        console.log("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", result);
-      }
-      if (withdrawal && withdrawal.status === "committed") {
-        console.log("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", result);
-        clearInterval(nIntervId);
-      }
-      if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", result);
-        clearInterval(nIntervId);
-      }
-    }, 10000);
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {

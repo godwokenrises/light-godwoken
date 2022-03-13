@@ -132,8 +132,6 @@ export interface LightGodwoken {
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
-  withdrawV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
-
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 
   getL1CkbBalance: (payload?: GetL1CkbBalancePayload) => Promise<HexNumber>;

@@ -169,7 +169,7 @@ export default function RequestWithdrawal() {
     let e: WithdrawalEventEmitter;
     try {
       if (version === "v1") {
-        e = lightGodwoken.withdrawV1WithEvent({
+        e = lightGodwoken.withdrawWithEvent({
           capacity: "0x" + capacity.toString(16),
           amount: amount,
           sudt_script_hash: sudt_script_hash,
