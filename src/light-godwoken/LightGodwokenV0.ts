@@ -3,10 +3,14 @@ import { Hash, helpers, HexNumber, HexString, Script, utils } from "@ckb-lumos/l
 import EventEmitter from "events";
 import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
 import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
-import { WithdrawalEventEmitter, WithdrawalEventEmitterPayload } from "./lightGodwokenType";
+import { GodwokenVersion, WithdrawalEventEmitter, WithdrawalEventEmitterPayload } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 
 export default class LightGodwokenV0 extends DefaultLightGodwoken {
+  getVersion(): GodwokenVersion {
+    return GodwokenVersion.V0;
+  }
+
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
     this.withdraw(eventEmitter, payload);

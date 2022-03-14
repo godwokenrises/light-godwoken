@@ -116,8 +116,15 @@ export interface LightGodwokenProvider {
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
 }
 
+export enum GodwokenVersion {
+  V0 = "v0",
+  V1 = "v1",
+}
+
 export interface LightGodwoken {
   provider: LightGodwokenProvider;
+
+  getVersion: () => GodwokenVersion;
 
   /**
    * get producing 1 block time

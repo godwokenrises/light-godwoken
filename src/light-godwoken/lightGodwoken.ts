@@ -40,6 +40,7 @@ import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResult,
+  GodwokenVersion,
 } from "./lightGodwokenType";
 import {
   SerializeDepositLockArgs,
@@ -53,6 +54,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+  abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
   async deposit(payload: DepositPayload): Promise<string> {
@@ -601,7 +603,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
       });
       let collectedSum = BigInt(0);
       for await (const cell of collector.collect()) {
-        // collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
         collectedSum += BigInt(0);
       }
       result.balances.push("0x" + collectedSum.toString(16));

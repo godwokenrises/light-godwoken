@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { LightGodwokenV1 } from "./light-godwoken/index";
+import { LightGodwokenV1, LightGodwoken } from "./light-godwoken/index";
 import DefaultLightGodwokenProvider from "./light-godwoken/lightGodwokenProvider";
 import detectEthereumProvider from "@metamask/detect-provider";
-import { LightGodwoken } from "./light-godwoken";
 const Page: React.FunctionComponent = () => {
   const [lightGodwoken, setLightGodwoken] = useState<LightGodwoken>();
   useEffect(() => {
@@ -12,7 +11,7 @@ const Page: React.FunctionComponent = () => {
 
         if (!accounts || !accounts[0]) return;
 
-        const instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+        const instance = new LightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum));
         setLightGodwoken(instance);
       });
 
