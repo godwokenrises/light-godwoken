@@ -23,7 +23,7 @@ export const LAYER1_CONFIG = {
     index: "0x0",
     dep_type: "code",
   },
-}
+};
 
 export const OMNI_LOCK_CELL_DEP: CellDep = {
   out_point: {
@@ -33,15 +33,15 @@ export const OMNI_LOCK_CELL_DEP: CellDep = {
   dep_type: LAYER1_CONFIG.omni_lock.dep_type as DepType,
 };
 
-export const SECP256K1_BLACK160_CELL_DEP: CellDep ={
+export const SECP256K1_BLACK160_CELL_DEP: CellDep = {
   out_point: {
     tx_hash: LAYER1_CONFIG.secp256k1_blake160.tx_hash,
     index: LAYER1_CONFIG.secp256k1_blake160.index,
   },
   dep_type: LAYER1_CONFIG.secp256k1_blake160.dep_type as DepType,
-}
+};
 
-export const SUDT_CELL_DEP: CellDep ={
+export const SUDT_CELL_DEP: CellDep = {
   out_point: {
     tx_hash: LAYER1_CONFIG.sudt.tx_hash,
     index: LAYER1_CONFIG.sudt.index,

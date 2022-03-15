@@ -1,4 +1,4 @@
-import * as LocalLayer2Config from './localLayer2Config'
+import * as LocalLayer2Config from "./localLayer2Config";
 const SCRIPTS_V0 = {
   deposit_lock: {
     script_type_hash: "0x5a2506bb68d81a11dcadad4cb7eae62a17c43c619fe47ac8037bc8ce2dd90360",
@@ -121,7 +121,7 @@ export type Layer2Env = "local" | "testnet_v1" | "testnet_v0" | "mainnet";
 
 export const getLayer2Config = (env: Layer2Env = "testnet_v1"): Layer2Config => {
   console.log(`getLayer2Config env: ${env}`);
-  
+
   if (env === "testnet_v0") {
     return {
       SCRIPTS: SCRIPTS_V0,

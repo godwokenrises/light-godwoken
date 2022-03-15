@@ -173,10 +173,10 @@ export const SCRIPTS = {
 
 export const ROLLUP_CONFIG = {
   rollup_type_hash: "0xac6737b05b357756fd7c17bb583672967a186515d9815af0f3b221943c13d167",
-  "rollup_type_script": {
-    "code_hash": "0x5826d84d9345d6688602762773662aec64d765b4cbc01284b4de1aa361dfc300",
-    "hash_type": "type",
-    "args": "0x53d7905bfe0aeb1aba147cb12d3b45c6974ade43e1f21fa350c5498624fac362"
+  rollup_type_script: {
+    code_hash: "0x5826d84d9345d6688602762773662aec64d765b4cbc01284b4de1aa361dfc300",
+    hash_type: "type",
+    args: "0x53d7905bfe0aeb1aba147cb12d3b45c6974ade43e1f21fa350c5498624fac362",
   },
   genesis: {
     timestamp: 1647264360462,

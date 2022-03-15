@@ -240,6 +240,33 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return rollupCell;
   }
 
+  getLayer2LockScript(): Script {
+    const layer2Lock: Script = {
+      code_hash: SCRIPTS.eth_account_lock.script_type_hash as string,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+    };
+    return layer2Lock;
+  }
+
+  getLayer2LockScriptHash(): Hash {
+    const accountScriptHash = utils.computeScriptHash(this.getLayer2LockScript());
+    console.log("accountScriptHash", accountScriptHash);
+    return accountScriptHash;
+  }
+
+  getLayer1LockScriptHash(): Hash {
+    const ownerCKBLock = helpers.parseAddress(this.l1Address);
+    const ownerLock: Script = {
+      code_hash: ownerCKBLock.code_hash,
+      args: ownerCKBLock.args,
+      hash_type: ownerCKBLock.hash_type as HashType,
+    };
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    console.log("ownerLockHash", ownerLockHash);
+    return ownerLockHash;
+  }
+
   async getLastFinalizedBlockNumber(): Promise<number> {
     const rollupCell = await this.getRollupCell();
     if (!rollupCell === undefined) {

@@ -1,15 +1,4 @@
-import {
-  Cell,
-  Hash,
-  HashType,
-  helpers,
-  HexNumber,
-  HexString,
-  Script,
-  toolkit,
-  utils,
-} from "@ckb-lumos/lumos";
-import { core as godwokenCore } from "@polyjuice-provider/godwoken";
+import { Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getLayer2Config } from "./constants/index";
 import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
@@ -51,6 +40,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+  abstract listWithdraw(): Promise<WithdrawResult[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
@@ -77,7 +67,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         collectedSudtAmount < neededSudtAmount
       ) {
         collectedCapatity += BigInt(cell.cell_output.capacity);
-        collectedSudtAmount += BigInt(utils.readBigUInt128LE(cell.data));
+        collectedSudtAmount += BigInt(utils.readBigUInt128LECompatible(cell.data).toBigInt());
         collectedCells.push(cell);
         if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
       }
@@ -120,11 +110,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
     const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
-    const layer2Lock: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + this.provider.l2Address.slice(2).toLowerCase(),
-    };
+    const layer2Lock: Script = this.provider.getLayer2LockScript();
+
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
@@ -194,88 +181,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
    */
   getBlockProduceTime(): number {
     return 45 * 1000;
-  }
-
-  async listWithdraw(): Promise<WithdrawResult[]> {
-    const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    console.log("searchParams is:", searchParams);
-    const collectedCells: WithdrawResult[] = [];
-    const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
-    const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-
-    const ownerCKBLock = helpers.parseAddress(this.provider.l1Address);
-    const ownerLock: Script = {
-      code_hash: ownerCKBLock.code_hash,
-      args: ownerCKBLock.args,
-      hash_type: ownerCKBLock.hash_type as HashType,
-    };
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-
-    for await (const cell of collector.collect()) {
-      const rawLockArgs = cell.cell_output.lock.args;
-      const lockArgs = new godwokenCore.WithdrawalLockArgs(new toolkit.Reader(`0x${rawLockArgs.slice(66)}`));
-
-      if (lockArgs == null) {
-        continue;
-      }
-
-      const withdrawBlock = Number(lockArgs.getWithdrawalBlockNumber().toLittleEndianBigUint64());
-      const containsOwnerLock = cell.cell_output.lock.args.includes(ownerLockHash.substring(2));
-
-      let sudtTypeHash = "0x" + "00".repeat(32);
-      let erc20: ProxyERC20 | undefined = undefined;
-      let amount: HexNumber = "0x0";
-
-      if (cell.cell_output.type) {
-        const sudtType: Script = {
-          code_hash: cell.cell_output.type.code_hash,
-          args: cell.cell_output.type.args,
-          hash_type: cell.cell_output.type.hash_type as HashType,
-        };
-        sudtTypeHash = utils.computeScriptHash(sudtType);
-        const builtinErc20List = this.getBuiltinErc20List();
-        erc20 = builtinErc20List.find((e) => e.sudt_script_hash === sudtTypeHash);
-        amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
-      }
-
-      if (containsOwnerLock) {
-        collectedCells.push({
-          cell,
-          withdrawalBlockNumber: withdrawBlock,
-          remainingBlockNumber: Math.max(0, withdrawBlock - lastFinalizedBlockNumber),
-          capacity: cell.cell_output.capacity,
-          amount,
-          sudt_script_hash: sudtTypeHash,
-          erc20,
-        });
-      }
-    }
-    const sortedWithdrawals = collectedCells.sort((a, b) => {
-      return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
-    });
-    console.log("found withdraw cells:", sortedWithdrawals);
-    return sortedWithdrawals;
-  }
-
-  getWithdrawalCellSearchParams(ethAddress: string) {
-    if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
-      throw new Error("eth address format error!");
-    }
-    const layer2Lock: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash as string,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2).toLowerCase(),
-    };
-    const accountScriptHash = utils.computeScriptHash(layer2Lock);
-
-    return {
-      script: {
-        code_hash: SCRIPTS.withdrawal_lock.script_type_hash,
-        hash_type: "type" as HashType,
-        args: `${ROLLUP_CONFIG.rollup_type_hash}${accountScriptHash.slice(2)}`,
-      },
-      script_type: "lock",
-    };
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {

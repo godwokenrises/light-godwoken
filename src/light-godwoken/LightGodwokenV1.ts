@@ -1,4 +1,4 @@
-import { helpers, Script, utils, BI } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber } from "@ckb-lumos/lumos";
 import {
   Godwoken as GodwokenV1,
   RawWithdrawalRequestV1,
@@ -13,6 +13,8 @@ import {
   CKB_SUDT_ID,
   GodwokenVersion,
   LightGodwokenV1,
+  ProxyERC20,
+  WithdrawResult,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
@@ -20,6 +22,89 @@ const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
     return "v1";
+  }
+  async listWithdraw(): Promise<WithdrawResult[]> {
+    const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
+    console.log("searchParams is:", searchParams);
+    const collectedCells: WithdrawResult[] = [];
+    const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
+    const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
+
+    const ownerLockHash = this.provider.getLayer1LockScriptHash();
+
+    for await (const cell of collector.collect()) {
+      console.log("iteration --> cell is:", cell);
+
+      // // a rollup_type_hash exists before this args, to make args friendly to prefix search
+      // struct WithdrawalLockArgs {
+      //   withdrawal_block_hash: Byte32,
+      //   withdrawal_block_number: Uint64,
+      //   account_script_hash: Byte32,
+      //   // layer1 lock to withdraw after challenge period
+      //   owner_lock_hash: Byte32,
+      // }
+
+      // according to the args shape:
+      // withdrawal_block_number byte location is 64~72
+      // owner_lock_hash byte location is 104~136
+      const rawLockArgs = cell.cell_output.lock.args;
+      if (rawLockArgs === null || rawLockArgs === undefined) {
+        console.warn("cell args is not valid", cell);
+        continue;
+      }
+      const lockArgsOwnerScriptHash = rawLockArgs.slice(210, 274);
+      console.log("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
+
+      const withdrawBlock = utils.readBigUInt64LECompatible(`0x${rawLockArgs.slice(130, 146)}`);
+      console.log("withdrawBlock is:", withdrawBlock.toNumber());
+
+      let sudtTypeHash = "0x" + "00".repeat(32);
+      let erc20: ProxyERC20 | undefined = undefined;
+      let amount: HexNumber = "0x0";
+
+      if (cell.cell_output.type) {
+        const sudtType: Script = {
+          code_hash: cell.cell_output.type.code_hash,
+          args: cell.cell_output.type.args,
+          hash_type: cell.cell_output.type.hash_type as HashType,
+        };
+        sudtTypeHash = utils.computeScriptHash(sudtType);
+        const builtinErc20List = this.getBuiltinErc20List();
+        erc20 = builtinErc20List.find((e) => e.sudt_script_hash === sudtTypeHash);
+        amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
+      }
+
+      if (lockArgsOwnerScriptHash === ownerLockHash.slice(2)) {
+        collectedCells.push({
+          cell,
+          withdrawalBlockNumber: withdrawBlock.toNumber(),
+          remainingBlockNumber: Math.max(0, withdrawBlock.toNumber() - lastFinalizedBlockNumber),
+          capacity: cell.cell_output.capacity,
+          amount,
+          sudt_script_hash: sudtTypeHash,
+          erc20,
+        });
+      }
+    }
+    const sortedWithdrawals = collectedCells.sort((a, b) => {
+      return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
+    });
+    console.log("found withdraw cells:", sortedWithdrawals);
+    return sortedWithdrawals;
+  }
+
+  getWithdrawalCellSearchParams(ethAddress: string) {
+    if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
+      throw new Error("eth address format error!");
+    }
+    return {
+      script: {
+        code_hash: SCRIPTS.withdrawal_lock.script_type_hash,
+        hash_type: "type" as HashType,
+        args: "0x",
+      },
+      script_type: "lock",
+    };
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {

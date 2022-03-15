@@ -4,6 +4,7 @@ import {
   core,
   DepType,
   Hash,
+  HashType,
   helpers,
   HexNumber,
   HexString,
@@ -13,7 +14,7 @@ import {
   WitnessArgs,
 } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { getLayer2Config } from "./constants/index";
+import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
 import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
 import DefaultLightGodwoken from "./lightGodwoken";
@@ -23,13 +24,94 @@ import {
   WithdrawalEventEmitterPayload,
   GodwokenVersion,
   LightGodwokenV0,
+  WithdrawResult,
+  ProxyERC20,
 } from "./lightGodwokenType";
+import { getLayer2Config } from "./constants/index";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   getVersion(): GodwokenVersion {
     return "v0";
+  }
+
+  async listWithdraw(): Promise<WithdrawResult[]> {
+    const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
+    console.log("searchParams is:", searchParams);
+    const collectedCells: WithdrawResult[] = [];
+    const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
+    const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
+
+    const ownerCKBLock = helpers.parseAddress(this.provider.l1Address);
+    const ownerLock: Script = {
+      code_hash: ownerCKBLock.code_hash,
+      args: ownerCKBLock.args,
+      hash_type: ownerCKBLock.hash_type as HashType,
+    };
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    console.log("ownerLockHash is:", ownerLockHash);
+
+    for await (const cell of collector.collect()) {
+      const rawLockArgs = cell.cell_output.lock.args;
+      const lockArgs = new godwokenCore.WithdrawalLockArgs(new toolkit.Reader(`0x${rawLockArgs.slice(66)}`));
+
+      if (lockArgs == null) {
+        continue;
+      }
+
+      const withdrawBlock = Number(lockArgs.getWithdrawalBlockNumber().toLittleEndianBigUint64());
+      const containsOwnerLock = cell.cell_output.lock.args.includes(ownerLockHash.substring(2));
+
+      let sudtTypeHash = "0x" + "00".repeat(32);
+      let erc20: ProxyERC20 | undefined = undefined;
+      let amount: HexNumber = "0x0";
+
+      if (cell.cell_output.type) {
+        const sudtType: Script = {
+          code_hash: cell.cell_output.type.code_hash,
+          args: cell.cell_output.type.args,
+          hash_type: cell.cell_output.type.hash_type as HashType,
+        };
+        sudtTypeHash = utils.computeScriptHash(sudtType);
+        const builtinErc20List = this.getBuiltinErc20List();
+        erc20 = builtinErc20List.find((e) => e.sudt_script_hash === sudtTypeHash);
+        amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
+      }
+
+      if (containsOwnerLock) {
+        collectedCells.push({
+          cell,
+          withdrawalBlockNumber: withdrawBlock,
+          remainingBlockNumber: Math.max(0, withdrawBlock - lastFinalizedBlockNumber),
+          capacity: cell.cell_output.capacity,
+          amount,
+          sudt_script_hash: sudtTypeHash,
+          erc20,
+        });
+      }
+    }
+    const sortedWithdrawals = collectedCells.sort((a, b) => {
+      return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
+    });
+    console.log("found withdraw cells:", sortedWithdrawals);
+    return sortedWithdrawals;
+  }
+
+  getWithdrawalCellSearchParams(ethAddress: string) {
+    if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
+      throw new Error("eth address format error!");
+    }
+    const accountScriptHash = this.provider.getLayer2LockScriptHash();
+
+    return {
+      script: {
+        code_hash: SCRIPTS.withdrawal_lock.script_type_hash,
+        hash_type: "type" as HashType,
+        args: `${ROLLUP_CONFIG.rollup_type_hash}${accountScriptHash.slice(2)}`,
+      },
+      script_type: "lock",
+    };
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
