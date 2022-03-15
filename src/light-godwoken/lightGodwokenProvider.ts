@@ -1,4 +1,4 @@
-import { SCRIPTS } from "./constants/index";
+import { getLayer2Config } from "./constants/index";
 import {
   Address,
   Indexer,
@@ -17,7 +17,6 @@ import {
   CellDep,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import { ROLLUP_CONFIG } from "./constants";
 import { PROVIDER_CONFIG } from "./constants/providerConfig";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
@@ -28,6 +27,9 @@ import { LightGodwokenProvider } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
+import { LAYER1_CONFIG } from "./constants/layer1ConfigUtils";
+
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
 export const POLYJUICE_CONFIG = {
   web3Url: PROVIDER_CONFIG.GODWOKEN_V1.GW_POLYJUICE_RPC_URL,
@@ -111,8 +113,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: SCRIPTS.omni_lock.code_hash,
-      hash_type: SCRIPTS.omni_lock.hash_type as HashType,
+      code_hash: LAYER1_CONFIG.omni_lock.code_hash,
+      hash_type: LAYER1_CONFIG.omni_lock.hash_type as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner

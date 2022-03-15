@@ -1,14 +1,35 @@
-import { Hash, helpers, HexNumber, HexString, Script, utils } from "@ckb-lumos/lumos";
-
+import {
+  Cell,
+  CellDep,
+  core,
+  DepType,
+  Hash,
+  helpers,
+  HexNumber,
+  HexString,
+  Script,
+  toolkit,
+  utils,
+  WitnessArgs,
+} from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
+import { getLayer2Config } from "./constants/index";
+import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
 import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
-import { GodwokenVersion, WithdrawalEventEmitter, WithdrawalEventEmitterPayload } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
+import {
+  UnlockPayload,
+  WithdrawalEventEmitter,
+  WithdrawalEventEmitterPayload,
+  GodwokenVersion,
+  LightGodwokenV0,
+} from "./lightGodwokenType";
+import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
-export default class LightGodwokenV0 extends DefaultLightGodwoken {
+export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   getVersion(): GodwokenVersion {
-    return GodwokenVersion.V0;
+    return "v0";
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
@@ -105,5 +126,103 @@ export default class LightGodwokenV0 extends DefaultLightGodwoken {
         clearInterval(nIntervId);
       }
     }, 10000);
+  }
+
+  async unlock(payload: UnlockPayload): Promise<Hash> {
+    const l1Address = this.provider.l1Address;
+    const l1Lock = helpers.parseAddress(l1Address);
+    const outputCells: Cell[] = [];
+    if (payload.cell.cell_output.type) {
+      const dummySudtCell = {
+        cell_output: {
+          capacity: "0x0",
+          lock: l1Lock,
+          type: payload.cell.cell_output.type,
+        },
+        data: payload.cell.data,
+      };
+      const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
+      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
+
+      outputCells.push({
+        cell_output: {
+          capacity: `0x${capacityLeft.toString(16)}`,
+          lock: l1Lock,
+        },
+        data: "0x",
+      });
+      outputCells.push({
+        cell_output: {
+          capacity: `0x${sudtCapacity.toString(16)}`,
+          lock: l1Lock,
+          type: payload.cell.cell_output.type,
+        },
+        data: payload.cell.data,
+      });
+    } else {
+      outputCells.push({
+        cell_output: {
+          capacity: payload.cell.cell_output.capacity,
+          lock: l1Lock,
+          type: payload.cell.cell_output.type,
+        },
+        data: payload.cell.data,
+      });
+    }
+    const data =
+      "0x00000000" +
+      new toolkit.Reader(SerializeUnlockWithdrawalViaFinalize(toolkit.normalizers.NormalizeWitnessArgs({})))
+        .serializeJson()
+        .slice(2);
+    const newWitnessArgs: WitnessArgs = {
+      lock: data,
+    };
+    const withdrawalWitness = new toolkit.Reader(
+      core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
+    ).serializeJson();
+
+    let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
+    const withdrawalLockDep: CellDep = {
+      out_point: {
+        tx_hash: SCRIPTS.withdrawal_lock.cell_dep.out_point.tx_hash,
+        index: SCRIPTS.withdrawal_lock.cell_dep.out_point.index,
+      },
+      dep_type: SCRIPTS.withdrawal_lock.cell_dep.dep_type as DepType,
+    };
+    const rollupCellDep: CellDep = await this.provider.getRollupCellDep();
+    txSkeleton = txSkeleton
+      .update("inputs", (inputs) => {
+        return inputs.push(payload.cell);
+      })
+      .update("outputs", (outputs) => {
+        return outputs.push(...outputCells);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(withdrawalLockDep);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(rollupCellDep);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(OMNI_LOCK_CELL_DEP);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(SECP256K1_BLACK160_CELL_DEP);
+      })
+      .update("witnesses", (witnesses) => {
+        return witnesses.push(withdrawalWitness);
+      });
+
+    if (payload.cell.cell_output.type) {
+      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
+        return cell_deps.push(SUDT_CELL_DEP);
+      });
+    }
+
+    txSkeleton = await this.injectCapacity(txSkeleton, l1Lock, BigInt(0));
+
+    const signedTx = await this.provider.signL1Transaction(txSkeleton);
+    const txHash = await this.provider.sendL1Transaction(signedTx);
+    return txHash;
   }
 }

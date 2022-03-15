@@ -116,12 +116,9 @@ export interface LightGodwokenProvider {
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
 }
 
-export enum GodwokenVersion {
-  V0 = "v0",
-  V1 = "v1",
-}
+export type GodwokenVersion = "v0" | "v1";
 
-export interface LightGodwoken {
+export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
   getVersion: () => GodwokenVersion;
@@ -131,11 +128,9 @@ export interface LightGodwoken {
    */
   getBlockProduceTime: () => Promise<number> | number;
 
-  unlock: (payload: UnlockPayload) => Promise<Hash>;
-
   listWithdraw: () => Promise<WithdrawResult[]>;
 
-  deposit?: (payload: DepositPayload) => Promise<Hash>;
+  deposit: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
@@ -151,3 +146,8 @@ export interface LightGodwoken {
 
   getSudtBalances: (payload: GetSudtBalances) => Promise<GetSudtBalancesResult>;
 }
+
+export interface LightGodwokenV0 extends LightGodwokenBase {
+  unlock: (payload: UnlockPayload) => Promise<Hash>;
+}
+export type LightGodwokenV1 = LightGodwokenBase;

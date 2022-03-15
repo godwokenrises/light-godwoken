@@ -1,8 +1,5 @@
 import {
   Cell,
-  CellDep,
-  core,
-  DepType,
   Hash,
   HashType,
   helpers,
@@ -11,11 +8,11 @@ import {
   Script,
   toolkit,
   utils,
-  WitnessArgs,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import * as secp256k1 from "secp256k1";
-import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
+import { getLayer2Config } from "./constants/index";
+import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
 import { TOKEN_LIST } from "./constants/tokens";
 import {
   NormalizeDepositLockArgs,
@@ -35,21 +32,21 @@ import {
   GetSudtBalancesResult,
   ProxyERC20,
   SUDT,
-  LightGodwoken,
-  UnlockPayload,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResult,
   GodwokenVersion,
+  LightGodwokenBase,
 } from "./lightGodwokenType";
 import {
   SerializeDepositLockArgs,
   SerializeRawWithdrawalRequest,
-  SerializeUnlockWithdrawalViaFinalize,
   SerializeWithdrawalLockArgs,
 } from "./schemas/index.esm";
 
-export default abstract class DefaultLightGodwoken implements LightGodwoken {
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
+
+export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
@@ -92,20 +89,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
       throw new Error(`Not enough SUDT, expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
     }
 
-    const omniLockCellDep: CellDep = {
-      out_point: {
-        tx_hash: SCRIPTS.omni_lock.tx_hash,
-        index: SCRIPTS.omni_lock.index,
-      },
-      dep_type: SCRIPTS.omni_lock.dep_type as DepType,
-    };
-    const secp256k1CellDep: CellDep = {
-      out_point: {
-        tx_hash: SCRIPTS.secp256k1_blake160.tx_hash,
-        index: SCRIPTS.secp256k1_blake160.index,
-      },
-      dep_type: SCRIPTS.secp256k1_blake160.dep_type as DepType,
-    };
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
 
@@ -117,22 +100,15 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
         return outputs.push(...outputCell);
       })
       .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(omniLockCellDep);
+        return cell_deps.push(OMNI_LOCK_CELL_DEP);
       })
       .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(secp256k1CellDep);
+        return cell_deps.push(SECP256K1_BLACK160_CELL_DEP);
       });
 
     if (payload.sudtType) {
-      const sudtCellDep: CellDep = {
-        out_point: {
-          tx_hash: SCRIPTS.sudt.tx_hash,
-          index: SCRIPTS.sudt.index,
-        },
-        dep_type: SCRIPTS.sudt.dep_type as DepType,
-      };
       txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(sudtCellDep);
+        return cell_deps.push(SUDT_CELL_DEP);
       });
     }
 
@@ -218,125 +194,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
    */
   getBlockProduceTime(): number {
     return 45 * 1000;
-  }
-
-  async unlock(payload: UnlockPayload): Promise<Hash> {
-    const l1Address = this.provider.l1Address;
-    const l1Lock = helpers.parseAddress(l1Address);
-    const outputCells: Cell[] = [];
-    if (payload.cell.cell_output.type) {
-      const dummySudtCell = {
-        cell_output: {
-          capacity: "0x0",
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      };
-      const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
-      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
-
-      outputCells.push({
-        cell_output: {
-          capacity: `0x${capacityLeft.toString(16)}`,
-          lock: l1Lock,
-        },
-        data: "0x",
-      });
-      outputCells.push({
-        cell_output: {
-          capacity: `0x${sudtCapacity.toString(16)}`,
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      });
-    } else {
-      outputCells.push({
-        cell_output: {
-          capacity: payload.cell.cell_output.capacity,
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      });
-    }
-    const data =
-      "0x00000000" +
-      new toolkit.Reader(SerializeUnlockWithdrawalViaFinalize(toolkit.normalizers.NormalizeWitnessArgs({})))
-        .serializeJson()
-        .slice(2);
-    const newWitnessArgs: WitnessArgs = {
-      lock: data,
-    };
-    const withdrawalWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
-    ).serializeJson();
-
-    let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
-    const omniLockCellDep: CellDep = {
-      out_point: {
-        tx_hash: SCRIPTS.omni_lock.tx_hash,
-        index: SCRIPTS.omni_lock.index,
-      },
-      dep_type: SCRIPTS.omni_lock.dep_type as DepType,
-    };
-    const secp256k1CellDep: CellDep = {
-      out_point: {
-        tx_hash: SCRIPTS.secp256k1_blake160.tx_hash,
-        index: SCRIPTS.secp256k1_blake160.index,
-      },
-      dep_type: SCRIPTS.secp256k1_blake160.dep_type as DepType,
-    };
-    const withdrawalLockDep: CellDep = {
-      out_point: {
-        tx_hash: SCRIPTS.withdrawal_lock.cell_dep.out_point.tx_hash,
-        index: SCRIPTS.withdrawal_lock.cell_dep.out_point.index,
-      },
-      dep_type: SCRIPTS.withdrawal_lock.cell_dep.dep_type as DepType,
-    };
-    const rollupCellDep: CellDep = await this.provider.getRollupCellDep();
-    txSkeleton = txSkeleton
-      .update("inputs", (inputs) => {
-        return inputs.push(payload.cell);
-      })
-      .update("outputs", (outputs) => {
-        return outputs.push(...outputCells);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(withdrawalLockDep);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(rollupCellDep);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(omniLockCellDep);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(secp256k1CellDep);
-      })
-      .update("witnesses", (witnesses) => {
-        return witnesses.push(withdrawalWitness);
-      });
-
-    if (payload.cell.cell_output.type) {
-      const sudtCellDep: CellDep = {
-        out_point: {
-          tx_hash: SCRIPTS.sudt.tx_hash,
-          index: SCRIPTS.sudt.index,
-        },
-        dep_type: SCRIPTS.sudt.dep_type as DepType,
-      };
-      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(sudtCellDep);
-      });
-    }
-
-    txSkeleton = await this.injectCapacity(txSkeleton, l1Lock, BigInt(0));
-
-    const signedTx = await this.provider.signL1Transaction(txSkeleton);
-    const txHash = await this.provider.sendL1Transaction(signedTx);
-    return txHash;
   }
 
   async listWithdraw(): Promise<WithdrawResult[]> {
@@ -603,7 +460,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwoken {
       });
       let collectedSum = BigInt(0);
       for await (const cell of collector.collect()) {
-        collectedSum += BigInt(utils.readBigUInt128LE(cell.data));
+        collectedSum += BigInt(utils.readBigUInt128LECompatible(cell.data).toBigInt());
         collectedSum += BigInt(0);
       }
       result.balances.push("0x" + collectedSum.toString(16));

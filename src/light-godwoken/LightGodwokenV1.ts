@@ -6,18 +6,20 @@ import {
   WithdrawalRequestV1,
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
-import { ROLLUP_CONFIG, SCRIPTS } from "./constants";
+import { getLayer2Config } from "./constants/index";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   CKB_SUDT_ID,
   GodwokenVersion,
+  LightGodwokenV1,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
-export default class LightGodwokenV1 extends DefaultLightGodwoken {
+export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
-    return GodwokenVersion.V1;
+    return "v1";
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
