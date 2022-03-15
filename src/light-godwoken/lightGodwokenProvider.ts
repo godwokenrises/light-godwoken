@@ -1,4 +1,4 @@
-import { SCRIPTS } from "./constants/index";
+import { getLayer2Config } from "./constants/index";
 import {
   Address,
   Indexer,
@@ -17,7 +17,6 @@ import {
   CellDep,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import { ROLLUP_CONFIG } from "./constants";
 import { PROVIDER_CONFIG } from "./constants/providerConfig";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
@@ -28,9 +27,12 @@ import { LightGodwokenProvider } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
+import { LAYER1_CONFIG } from "./constants/layer1ConfigUtils";
+
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
 export const POLYJUICE_CONFIG = {
-  web3Url: PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL,
+  web3Url: PROVIDER_CONFIG.GODWOKEN_V1.GW_POLYJUICE_RPC_URL,
   abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
 };
 
@@ -47,21 +49,24 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum;
   web3;
   godwokenClient;
+  config;
 
-  constructor(ethAddress: Address, ethereum: any, env = "AGGRON") {
-    if (env === "AGGRON") {
+  constructor(ethAddress: Address, ethereum: any, env = "GODWOKEN_V1") {
+    if (env === "AGGRON" || env === "GODWOKEN_V1") {
       config.initializeConfig(config.predefined.AGGRON4);
-      this.ckbIndexer = new Indexer(PROVIDER_CONFIG.AGGRON.CKB_INDEXER_URL, PROVIDER_CONFIG.AGGRON.CKB_RPC_URL);
-      this.rpc = new RPC(PROVIDER_CONFIG.AGGRON.CKB_RPC_URL);
-      this.godwokenClient = new GodwokenClient(PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL);
     } else if (env === "LINA") {
       config.initializeConfig(config.predefined.LINA);
-      this.ckbIndexer = new Indexer(PROVIDER_CONFIG.LINA.CKB_INDEXER_URL, PROVIDER_CONFIG.LINA.CKB_RPC_URL);
-      this.rpc = new RPC(PROVIDER_CONFIG.LINA.CKB_RPC_URL);
-      this.godwokenClient = new GodwokenClient(PROVIDER_CONFIG.LINA.GW_POLYJUICE_RPC_URL);
     } else {
       throw new Error("env not defined, please use AGGRON or LINA.");
     }
+    const configObj = PROVIDER_CONFIG[`${env}`];
+    console.log("configObj", configObj);
+
+    this.config = configObj;
+    this.ckbIndexer = new Indexer(configObj.CKB_INDEXER_URL, configObj.CKB_RPC_URL);
+    this.rpc = new RPC(configObj.CKB_RPC_URL);
+    this.godwokenClient = new GodwokenClient(configObj.GW_POLYJUICE_RPC_URL);
+
     this.ethereum = ethereum;
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
@@ -108,8 +113,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: SCRIPTS.omni_lock.code_hash,
-      hash_type: SCRIPTS.omni_lock.hash_type as HashType,
+      code_hash: LAYER1_CONFIG.omni_lock.code_hash,
+      hash_type: LAYER1_CONFIG.omni_lock.hash_type as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner
@@ -233,6 +238,33 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       }
     }
     return rollupCell;
+  }
+
+  getLayer2LockScript(): Script {
+    const layer2Lock: Script = {
+      code_hash: SCRIPTS.eth_account_lock.script_type_hash as string,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+    };
+    return layer2Lock;
+  }
+
+  getLayer2LockScriptHash(): Hash {
+    const accountScriptHash = utils.computeScriptHash(this.getLayer2LockScript());
+    console.log("accountScriptHash", accountScriptHash);
+    return accountScriptHash;
+  }
+
+  getLayer1LockScriptHash(): Hash {
+    const ownerCKBLock = helpers.parseAddress(this.l1Address);
+    const ownerLock: Script = {
+      code_hash: ownerCKBLock.code_hash,
+      args: ownerCKBLock.args,
+      hash_type: ownerCKBLock.hash_type as HashType,
+    };
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    console.log("ownerLockHash", ownerLockHash);
+    return ownerLockHash;
   }
 
   async getLastFinalizedBlockNumber(): Promise<number> {

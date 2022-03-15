@@ -41,6 +41,10 @@ export interface GetSudtBalances {
   types: Script[];
 }
 
+export interface GodwokenNetworkConfig {
+  testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
+}
+
 interface WithdrawListener {
   (event: "sending", listener: () => void): void;
   (event: "sent", listener: (txHash: Hash) => void): void;
@@ -96,6 +100,8 @@ export interface DepositPayload {
 
 type Promisable<T> = Promise<T> | T;
 
+export const CKB_SUDT_ID = 1;
+
 export interface LightGodwokenProvider {
   getL2Address(): Promisable<string>;
 
@@ -110,19 +116,21 @@ export interface LightGodwokenProvider {
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
 }
 
-export interface LightGodwoken {
+export type GodwokenVersion = "v0" | "v1";
+
+export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
+
+  getVersion: () => GodwokenVersion;
 
   /**
    * get producing 1 block time
    */
   getBlockProduceTime: () => Promise<number> | number;
 
-  unlock: (payload: UnlockPayload) => Promise<Hash>;
-
   listWithdraw: () => Promise<WithdrawResult[]>;
 
-  deposit?: (payload: DepositPayload) => Promise<Hash>;
+  deposit: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
@@ -138,3 +146,8 @@ export interface LightGodwoken {
 
   getSudtBalances: (payload: GetSudtBalances) => Promise<GetSudtBalancesResult>;
 }
+
+export interface LightGodwokenV0 extends LightGodwokenBase {
+  unlock: (payload: UnlockPayload) => Promise<Hash>;
+}
+export type LightGodwokenV1 = LightGodwokenBase;

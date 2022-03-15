@@ -10,4 +10,9 @@ export const PROVIDER_CONFIG = {
     CKB_RPC_URL: "https://testnet.ckb.dev",
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
   },
+  GODWOKEN_V1: {
+    CKB_INDEXER_URL: "https://testnet.ckb.dev/indexer",
+    CKB_RPC_URL: "https://testnet.ckb.dev",
+    GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev",
+  },
 };

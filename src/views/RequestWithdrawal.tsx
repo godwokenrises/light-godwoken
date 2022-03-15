@@ -154,7 +154,7 @@ export default function RequestWithdrawal() {
     }
   }, [ckbInput]);
 
-  const sendWithDrawal = () => {
+  const sendWithDrawal = (version?: string) => {
     setLoading(true);
     const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
     let amount = "0x0";
@@ -168,11 +168,19 @@ export default function RequestWithdrawal() {
     }
     let e: WithdrawalEventEmitter;
     try {
-      e = lightGodwoken.withdrawWithEvent({
-        capacity: "0x" + capacity.toString(16),
-        amount: amount,
-        sudt_script_hash: sudt_script_hash,
-      });
+      if (version === "v1") {
+        e = lightGodwoken.withdrawWithEvent({
+          capacity: "0x" + capacity.toString(16),
+          amount: amount,
+          sudt_script_hash: sudt_script_hash,
+        });
+      } else {
+        e = lightGodwoken.withdrawWithEvent({
+          capacity: "0x" + capacity.toString(16),
+          amount: amount,
+          sudt_script_hash: sudt_script_hash,
+        });
+      }
     } catch (e) {
       console.log("withdrawal error:", e);
       return;
@@ -247,8 +255,13 @@ export default function RequestWithdrawal() {
           Withdrawal
         </div>
         <WithDrawalButton>
-          <Button className="submit-button" loading={loading} onClick={sendWithDrawal}>
+          <Button className="submit-button" loading={loading} onClick={() => sendWithDrawal()}>
             Request Withdrawal
+          </Button>
+        </WithDrawalButton>
+        <WithDrawalButton>
+          <Button className="submit-button" loading={loading} onClick={() => sendWithDrawal("v1")}>
+            Request Withdrawal v1
           </Button>
         </WithDrawalButton>
       </ConfirmModal>

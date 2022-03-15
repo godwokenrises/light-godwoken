@@ -2,7 +2,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { LightGodwoken } from "../light-godwoken";
-import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
+import { LightGodwoken as DefaultLightGodwoken } from "../light-godwoken/index";
 import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 
 export const LightGodwokenContext = createContext<LightGodwoken | null>(null);
