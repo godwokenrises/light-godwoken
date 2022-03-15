@@ -5,7 +5,6 @@ import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenConte
 import RequestWithdrawal from "./views/RequestWithdrawal";
 import Withdrawal from "./views/Withdrawal";
 import Deposit from "./views/Deposit";
-import V1 from "./v1";
 
 function App() {
   return (

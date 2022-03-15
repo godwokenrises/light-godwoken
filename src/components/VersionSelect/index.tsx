@@ -1,14 +1,13 @@
 import { Select } from "antd";
 import React, { useEffect } from "react";
 import { useState } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 const { Option } = Select;
 
 export const VersionSelect: React.FC = () => {
   const [version, setVersion] = useState<string>();
   const params = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   useEffect(() => {
     if (params.version) {
       setVersion(params.version.toString());

@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ConnectButton } from "../components/ConnectButton";
 import { VersionSelect } from "../components/VersionSelect";
@@ -24,11 +24,13 @@ const StyledPage = styled.div`
 `;
 
 const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
+  const params = useParams();
+
   return (
     <StyledPage>
       <div className="link">
-        <Link to="/deposit">Deposit</Link>
-        <Link to="/">Withdrawal</Link>
+        <Link to={"/" + params.version + "/deposit/"}>Deposit</Link>
+        <Link to={"/" + params.version}>Withdrawal</Link>
       </div>
       <div className="title">Light Godwoken</div>
       <div className="right-side">
