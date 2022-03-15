@@ -11,9 +11,9 @@ function App() {
     <LightGodwokenProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Withdrawal />}></Route>
-          <Route path="/request-withdrawal" element={<RequestWithdrawal />}></Route>
-          <Route path="/deposit" element={<Deposit />}></Route>
+          <Route path=":version/" element={<Withdrawal />}></Route>
+          <Route path=":version/request-withdrawal" element={<RequestWithdrawal />}></Route>
+          <Route path=":version/deposit" element={<Deposit />}></Route>
         </Routes>
       </Router>
     </LightGodwokenProvider>
