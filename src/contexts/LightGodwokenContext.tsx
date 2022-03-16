@@ -19,10 +19,10 @@ export const Provider: React.FC = (props) => {
 
         let instance: DefaultLightGodwokenV1 | DefaultLightGodwoken;
         if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
-          instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+          instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
           setLightGodwoken(instance);
         } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
-          instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+          instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
           setLightGodwoken(instance);
         }
       });
@@ -32,9 +32,9 @@ export const Provider: React.FC = (props) => {
 
         let instance: DefaultLightGodwokenV1 | DefaultLightGodwoken;
         if (location.pathname.startsWith("/v0")) {
-          instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+          instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
         } else {
-          instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+          instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
         }
         setLightGodwoken(instance);
       });

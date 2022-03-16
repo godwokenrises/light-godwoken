@@ -12,7 +12,7 @@ const Page: React.FunctionComponent = () => {
 
         if (!accounts || !accounts[0]) return;
 
-        const instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+        const instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
         setLightGodwoken(instance);
       });
 
@@ -21,7 +21,9 @@ const Page: React.FunctionComponent = () => {
 
         if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
 
-        const provider = new LightGodwokenV1(new DefaultLightGodwokenProvider(ethereum.selectedAddress, ethereum));
+        const provider = new LightGodwokenV1(
+          new DefaultLightGodwokenProvider(ethereum.selectedAddress, ethereum, "v1"),
+        );
         setLightGodwoken(provider);
       });
     });
