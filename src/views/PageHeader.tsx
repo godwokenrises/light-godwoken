@@ -4,6 +4,8 @@ import styled from "styled-components";
 import { ConnectButton } from "../components/ConnectButton";
 import { VersionSelect } from "../components/VersionSelect";
 import { claim } from "../utils/claimSudt";
+import { Button } from "antd";
+
 const StyledPage = styled.div`
   display: flex;
   align-items: center;
@@ -38,7 +40,9 @@ const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
       <div className="right-side">
         <ConnectButton />
         <VersionSelect />
-        <button onClick={cliamSudt}>cliam</button>
+        <Button onClick={cliamSudt} style={{ display: "none" }}>
+          cliam
+        </Button>
       </div>
     </StyledPage>
   );

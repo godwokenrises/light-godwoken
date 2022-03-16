@@ -14,7 +14,7 @@ function App() {
           <Route path=":version/request-withdrawal" element={<RequestWithdrawal />}></Route>
           <Route path=":version/deposit" element={<Deposit />}></Route>
         </Routes>
-      </LightGodwokenProvider >
+      </LightGodwokenProvider>
     </Router>
   );
 }
