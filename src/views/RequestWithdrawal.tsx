@@ -1,7 +1,7 @@
 import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
@@ -137,7 +137,7 @@ export default function RequestWithdrawal() {
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const lightGodwoken = useLightGodwoken();
-
+  const params = useParams();
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -206,7 +206,7 @@ export default function RequestWithdrawal() {
     <Page>
       <PageContent>
         <PageHeader className="header">
-          <Link to="/">
+          <Link to={"/" + params.version}>
             <ArrowLeftOutlined />
           </Link>
           <Text>Request Withdrawal</Text>
