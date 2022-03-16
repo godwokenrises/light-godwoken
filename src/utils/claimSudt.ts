@@ -27,7 +27,7 @@ export function generateLayer1SUDTTypeScript(args: string): SnakeScript {
   };
 }
 export const claim = async () => {
-  const ckitProvider = new CkitProvider("https://testnet.ckb.dev/indexer", "https://testnet.ckb.dev/rpc");
+  const ckitProvider = new CkitProvider("https://mainnet.ckb.dev/indexer", "https://mainnet.ckb.dev/rpc");
   await ckitProvider.init(predefined.Aggron);
   const usdcIssuerProvider = new PWRawProvider(REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY);
   usdcIssuerProvider.init();

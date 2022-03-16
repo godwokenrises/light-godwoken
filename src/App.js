@@ -5,18 +5,17 @@ import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenConte
 import RequestWithdrawal from "./views/RequestWithdrawal";
 import Withdrawal from "./views/Withdrawal";
 import Deposit from "./views/Deposit";
-
 function App() {
   return (
-    <LightGodwokenProvider>
-      <Router>
+    <Router>
+      <LightGodwokenProvider>
         <Routes>
           <Route path=":version/" element={<Withdrawal />}></Route>
           <Route path=":version/request-withdrawal" element={<RequestWithdrawal />}></Route>
           <Route path=":version/deposit" element={<Deposit />}></Route>
         </Routes>
-      </Router>
-    </LightGodwokenProvider>
+      </LightGodwokenProvider >
+    </Router>
   );
 }
 

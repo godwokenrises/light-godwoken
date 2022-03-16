@@ -1,6 +1,6 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   LightGodwokenV1 as DefaultLightGodwokenV1,
   LightGodwoken as DefaultLightGodwoken,
@@ -11,29 +11,27 @@ export const LightGodwokenContext = createContext<DefaultLightGodwokenV1 | Defau
 LightGodwokenContext.displayName = "LightGodwokenContext";
 export const Provider: React.FC = (props) => {
   const [lightGodwoken, setLightGodwoken] = useState<DefaultLightGodwokenV1 | DefaultLightGodwoken>();
-  const params = useParams();
-  const version = params.version;
-  console.log("version", version);
+  const location = useLocation();
   useEffect(() => {
-    console.log("params.version", params.version);
     detectEthereumProvider().then((ethereum: any) => {
       ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         if (!accounts || !accounts[0]) return;
 
         let instance: DefaultLightGodwokenV1 | DefaultLightGodwoken;
-        if (params.version === "v0") {
+        if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
           instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum));
-        } else {
+          setLightGodwoken(instance);
+        } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
           instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
+          setLightGodwoken(instance);
         }
-        setLightGodwoken(instance);
       });
 
       ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
         if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
 
         let instance: DefaultLightGodwokenV1 | DefaultLightGodwoken;
-        if (params.version === "v0") {
+        if (location.pathname.startsWith("/v0")) {
           instance = new DefaultLightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum));
         } else {
           instance = new DefaultLightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum));
@@ -41,7 +39,7 @@ export const Provider: React.FC = (props) => {
         setLightGodwoken(instance);
       });
     });
-  }, [params.version]);
+  }, [lightGodwoken, location.pathname]);
 
   return <LightGodwokenContext.Provider value={lightGodwoken || null}>{props.children}</LightGodwokenContext.Provider>;
 };
