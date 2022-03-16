@@ -3,7 +3,7 @@ import styled from "styled-components";
 import WithdrawalRequestCard from "./WithdrawalRequestCard";
 import { useEffect, useState } from "react";
 import { WithdrawResult } from "../types/type";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { useClock } from "../hooks/useClock";
 const PageContent = styled.div`
@@ -83,6 +83,7 @@ const ResultList = styled.div`
 const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
   const [withdrawList, setWithdrawList] = useState<WithdrawResult[]>([]);
   const lightGodwoken = useLightGodwoken();
+  const params = useParams();
   const now = useClock();
   useEffect(() => {
     const fetchWithdrawList = async () => {
@@ -102,7 +103,7 @@ const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
             To withdraw assets back to Layer 1, you need to have CKB balance in your L1 Wallet Address
           </div>
           <div className="button-container">
-            <Link to="/request-withdrawal" className="request-button">
+            <Link to={"/" + params.version + "/request-withdrawal"} className="request-button">
               Request Withdrawal
             </Link>
           </div>

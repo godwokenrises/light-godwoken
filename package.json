@@ -5,6 +5,7 @@
   "homepage": "https://zhangyouxin.github.io/light-godwoken",
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
+    "@ckitjs/ckit": "^0.1.0",
     "@ckb-lumos/base": "^0.18.0-rc3",
     "@ckb-lumos/lumos": "^0.18.0-rc5",
     "@lay2/pw-core": "0.4.0-alpha.12",

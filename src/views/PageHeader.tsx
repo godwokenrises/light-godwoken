@@ -1,7 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ConnectButton } from "../components/ConnectButton";
+import { VersionSelect } from "../components/VersionSelect";
+import { claim } from "../utils/claimSudt";
+import { Button } from "antd";
 
 const StyledPage = styled.div`
   display: flex;
@@ -12,8 +15,10 @@ const StyledPage = styled.div`
   background: radial-gradient(89.56% 89.56% at 50.04% 10.44%, rgb(60, 58, 75) 0%, rgb(28, 27, 37) 92.56%);
   margin-bottom: 20px;
   color: white;
-  .address:hover {
-    cursor: pointer;
+  .right-side {
+    > &:hover {
+      cursor: pointer;
+    }
   }
   a + a {
     padding-left: 10px;
@@ -21,15 +26,23 @@ const StyledPage = styled.div`
 `;
 
 const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
+  const params = useParams();
+  const cliamSudt = () => {
+    claim();
+  };
   return (
     <StyledPage>
       <div className="link">
-        <Link to="/deposit">Deposit</Link>
-        <Link to="/">Withdrawal</Link>
+        <Link to={"/" + params.version + "/deposit/"}>Deposit</Link>
+        <Link to={"/" + params.version}>Withdrawal</Link>
       </div>
       <div className="title">Light Godwoken</div>
-      <div className="address">
+      <div className="right-side">
         <ConnectButton />
+        <VersionSelect />
+        <Button onClick={cliamSudt} style={{ display: "none" }}>
+          cliam
+        </Button>
       </div>
     </StyledPage>
   );
