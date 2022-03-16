@@ -1,7 +1,9 @@
 import { Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { AbiItems } from "@polyjuice-provider/base";
 import * as secp256k1 from "secp256k1";
 import { getLayer2Config } from "./constants/index";
 import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
+import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { TOKEN_LIST } from "./constants/tokens";
 import {
   NormalizeDepositLockArgs,
@@ -10,7 +12,7 @@ import {
   RawWithdrawalRequest,
   WithdrawalLockArgs,
 } from "./godwoken/normalizer";
-import LightGodwokenProvider, { POLYJUICE_CONFIG } from "./lightGodwokenProvider";
+import LightGodwokenProvider from "./lightGodwokenProvider";
 import {
   DepositPayload,
   GetErc20Balances,
@@ -33,13 +35,12 @@ import {
   SerializeWithdrawalLockArgs,
 } from "./schemas/index.esm";
 
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
-
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+  abstract getBlockProduceTime(): number | Promise<number>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
   abstract listWithdraw(): Promise<WithdrawResult[]>;
@@ -122,6 +123,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const depositLockArgsHexString: HexString = new toolkit.Reader(
       SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
     ).serializeJson();
+
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLayer2Config();
+
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
@@ -176,13 +180,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
 
     return [outputCell, exchangeCell];
-  }
-
-  /**
-   * get producing 1 block time
-   */
-  getBlockProduceTime(): number {
-    return 45 * 1000;
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
@@ -305,7 +302,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let promises = [];
     for (let index = 0; index < payload.addresses.length; index++) {
       const address = payload.addresses[index];
-      const usdcContract = new this.provider.web3.eth.Contract(POLYJUICE_CONFIG.abiItems, address);
+      const usdcContract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
       const usdcBalancePromise = usdcContract.methods.balanceOf(this.provider.l2Address).call();
       promises.push(usdcBalancePromise);
     }

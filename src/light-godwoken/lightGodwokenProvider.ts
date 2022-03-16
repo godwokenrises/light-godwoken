@@ -1,4 +1,4 @@
-import { getLayer2Config } from "./constants/index";
+import { getLayer2Config, Layer2Config } from "./constants/index";
 import {
   Address,
   Indexer,
@@ -29,18 +29,6 @@ import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
 import { LAYER1_CONFIG } from "./constants/layer1ConfigUtils";
 
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
-
-export const POLYJUICE_CONFIG = {
-  web3Url: PROVIDER_CONFIG.GODWOKEN_V1.GW_POLYJUICE_RPC_URL,
-  abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
-};
-
-export const polyjuiceProvider = new PolyjuiceHttpProvider(
-  POLYJUICE_CONFIG.web3Url,
-  POLYJUICE_CONFIG as PolyjuiceConfig,
-);
-
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
   l1Address: Address = "";
@@ -50,9 +38,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   web3;
   godwokenClient;
   config;
-
+  SCRIPTS;
+  ROLLUP_CONFIG;
   constructor(ethAddress: Address, ethereum: any, env: LightGodwokenProviderConfig) {
     let configObj = PROVIDER_CONFIG.GODWOKEN_V1;
+    const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config(env);
+    this.SCRIPTS = SCRIPTS;
+    this.ROLLUP_CONFIG = ROLLUP_CONFIG;
     if (env === "v0") {
       config.initializeConfig(config.predefined.AGGRON4);
       configObj = PROVIDER_CONFIG.AGGRON;
@@ -81,6 +73,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.l1Address = this.generateL1Address(this.l2Address);
     });
 
+    const polyjuiceProvider = new PolyjuiceHttpProvider(configObj.GW_POLYJUICE_RPC_URL, {
+      web3Url: configObj.GW_POLYJUICE_RPC_URL,
+      abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
+    });
+
     this.web3 = new Web3(polyjuiceProvider);
   }
 
@@ -94,6 +91,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
   getL1Address(): string {
     return this.l1Address;
+  }
+  getLayer2Config(): Layer2Config {
+    return { SCRIPTS: this.SCRIPTS, ROLLUP_CONFIG: this.ROLLUP_CONFIG };
   }
 
   static async CreateProvider(ethereum: any, version: LightGodwokenProviderConfig): Promise<LightGodwokenProvider> {
@@ -213,7 +213,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     }
 
     let rollupIndex = tx.transaction.outputs.findIndex((o: any) => {
-      return o.type && utils.computeScriptHash(o.type) === ROLLUP_CONFIG.rollup_type_hash;
+      return o.type && utils.computeScriptHash(o.type) === this.ROLLUP_CONFIG.rollup_type_hash;
     });
     return {
       out_point: {
@@ -227,9 +227,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   async getRollupCell(): Promise<Cell | undefined> {
     const queryOptions = {
       type: {
-        code_hash: ROLLUP_CONFIG.rollup_type_script.code_hash as Hash,
-        hash_type: ROLLUP_CONFIG.rollup_type_script.hash_type as HashType,
-        args: ROLLUP_CONFIG.rollup_type_script.args as HexString,
+        code_hash: this.ROLLUP_CONFIG.rollup_type_script.code_hash as Hash,
+        hash_type: this.ROLLUP_CONFIG.rollup_type_script.hash_type as HashType,
+        args: this.ROLLUP_CONFIG.rollup_type_script.args as HexString,
       },
     };
     const collector = this.ckbIndexer.collector(queryOptions);
@@ -247,9 +247,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScript(): Script {
     const layer2Lock: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash as string,
+      code_hash: this.SCRIPTS.eth_account_lock.script_type_hash as string,
       hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+      args: this.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
     };
     return layer2Lock;
   }

@@ -31,11 +31,14 @@ import {
 import { getLayer2Config } from "./constants/index";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { TOKEN_LIST } from "./constants/tokens";
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v0");
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   getVersion(): GodwokenVersion {
     return "v0";
+  }
+  getBlockProduceTime(): number {
+    return 45 * 1000;
   }
 
   getBuiltinErc20List(): ProxyERC20[] {

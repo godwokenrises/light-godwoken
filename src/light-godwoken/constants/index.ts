@@ -117,17 +117,17 @@ export type Layer2Config = {
   };
 };
 
-export type Layer2Env = "local" | "testnet_v1" | "testnet_v0" | "mainnet";
+export type Layer2Env = "local" | "v1" | "v0" | "mainnet";
 
-export const getLayer2Config = (env: Layer2Env = "testnet_v1"): Layer2Config => {
+export const getLayer2Config = (env: Layer2Env): Layer2Config => {
   console.log(`getLayer2Config env: ${env}`);
 
-  if (env === "testnet_v0") {
+  if (env === "v0") {
     return {
       SCRIPTS: SCRIPTS_V0,
       ROLLUP_CONFIG: ROLLUP_CONFIG_V0,
     };
-  } else if (env === "testnet_v1") {
+  } else if (env === "v1") {
     return {
       SCRIPTS: SCRIPTS_V1,
       ROLLUP_CONFIG: ROLLUP_CONFIG_V1,
