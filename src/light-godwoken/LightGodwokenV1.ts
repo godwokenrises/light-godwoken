@@ -18,11 +18,14 @@ import {
   SUDT,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
+const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
 
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
     return "v1";
+  }
+  getBlockProduceTime(): number {
+    return 30 * 1000;
   }
   getBuiltinSUDTList(): SUDT[] {
     return [];
