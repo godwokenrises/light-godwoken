@@ -40,6 +40,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+  abstract getBuiltinErc20List(): ProxyERC20[];
+  abstract getBuiltinSUDTList(): SUDT[];
   abstract listWithdraw(): Promise<WithdrawResult[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
@@ -296,46 +298,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       collectedSum += BigInt(cell.cell_output.capacity);
     }
     return "0x" + collectedSum.toString(16);
-  }
-
-  getBuiltinErc20List(): ProxyERC20[] {
-    const map: ProxyERC20[] = [];
-    TOKEN_LIST.forEach((token) => {
-      const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
-      };
-      const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
-      map.push({
-        name: token.name,
-        symbol: token.symbol,
-        decimals: token.decimals,
-        address: token.address,
-        tokenURI: token.tokenURI,
-        sudt_script_hash: tokenScriptHash,
-      });
-    });
-    return map;
-  }
-
-  getBuiltinSUDTList(): SUDT[] {
-    const map: SUDT[] = [];
-    TOKEN_LIST.forEach((token) => {
-      const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
-      };
-      map.push({
-        type: tokenL1Script,
-        name: token.name,
-        symbol: token.symbol,
-        decimals: token.decimals,
-        tokenURI: token.tokenURI,
-      });
-    });
-    return map;
   }
 
   async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {

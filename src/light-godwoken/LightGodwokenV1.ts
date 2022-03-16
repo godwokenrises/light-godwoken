@@ -1,4 +1,4 @@
-import { helpers, Script, utils, BI, HashType, HexNumber } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash } from "@ckb-lumos/lumos";
 import {
   Godwoken as GodwokenV1,
   RawWithdrawalRequestV1,
@@ -15,6 +15,7 @@ import {
   LightGodwokenV1,
   ProxyERC20,
   WithdrawResult,
+  SUDT,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
@@ -22,6 +23,12 @@ const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
     return "v1";
+  }
+  getBuiltinSUDTList(): SUDT[] {
+    return [];
+  }
+  getBuiltinErc20List(): ProxyERC20[] {
+    return [];
   }
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
@@ -220,8 +227,29 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (result !== null) {
       const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        throw new Error(errorMessage);
+        eventEmitter.emit("error", errorMessage);
       }
     }
+    eventEmitter.emit("sent", result);
+    console.log("withdrawal request result:", result);
+    const maxLoop = 100;
+    let loop = 0;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      const withdrawal: any = await this.getWithdrawal(result as Hash);
+      if (withdrawal && withdrawal.status === "pending") {
+        console.log("withdrawal pending:", withdrawal);
+        eventEmitter.emit("pending", result);
+      }
+      if (withdrawal && withdrawal.status === "committed") {
+        console.log("withdrawal committed:", withdrawal);
+        eventEmitter.emit("success", result);
+        clearInterval(nIntervId);
+      }
+      if (withdrawal === null && loop > maxLoop) {
+        eventEmitter.emit("fail", result);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
   }
 }
