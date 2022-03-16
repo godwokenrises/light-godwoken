@@ -1,10 +1,8 @@
-import { Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import { AbiItems } from "@polyjuice-provider/base";
 import * as secp256k1 from "secp256k1";
-import { getLayer2Config } from "./constants/index";
 import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
-import { TOKEN_LIST } from "./constants/tokens";
 import {
   NormalizeDepositLockArgs,
   NormalizeRawWithdrawalRequest,

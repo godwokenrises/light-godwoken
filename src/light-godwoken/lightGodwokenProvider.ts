@@ -20,7 +20,7 @@ import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PROVIDER_CONFIG } from "./constants/providerConfig";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
-import { AbiItems, PolyjuiceConfig } from "@polyjuice-provider/base";
+import { AbiItems } from "@polyjuice-provider/base";
 import { GodwokenClient } from "./godwoken/godwoken";
 import Web3 from "web3";
 import { LightGodwokenProvider, LightGodwokenProviderConfig } from "./lightGodwokenType";
