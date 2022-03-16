@@ -48,7 +48,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
   async deposit(payload: DepositPayload): Promise<string> {
-    const neededCapacity = BigInt(payload.capacity);
+    const neededCapacity = BigInt(payload.capacity) + BigInt(6400000000);
     const neededSudtAmount = payload.amount ? BigInt(payload.amount) : BigInt(0);
     let collectedCapatity = BigInt(0);
     let collectedSudtAmount = BigInt(0);
@@ -292,7 +292,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
     let collectedSum = BigInt(0);
     for await (const cell of collector.collect()) {
-      collectedSum += BigInt(cell.cell_output.capacity);
+      if (!cell.cell_output.type && (!cell.data || cell.data === "0x" || cell.data === "0x0")) {
+        collectedSum += BigInt(cell.cell_output.capacity);
+      }
     }
     return "0x" + collectedSum.toString(16);
   }
