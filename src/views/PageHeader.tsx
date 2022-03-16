@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ConnectButton } from "../components/ConnectButton";
 import { VersionSelect } from "../components/VersionSelect";
-
+import { claim } from "../utils/claimSudt";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;
@@ -25,7 +25,9 @@ const StyledPage = styled.div`
 
 const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
   const params = useParams();
-
+  const cliamSudt = () => {
+    claim();
+  };
   return (
     <StyledPage>
       <div className="link">
@@ -36,6 +38,7 @@ const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
       <div className="right-side">
         <ConnectButton />
         <VersionSelect />
+        <button onClick={cliamSudt}>cliam</button>
       </div>
     </StyledPage>
   );
