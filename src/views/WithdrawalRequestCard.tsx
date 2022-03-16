@@ -9,6 +9,7 @@ import { Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { Link } from "react-router-dom";
+import DefaultLightGodwokenV1 from "../light-godwoken/LightGodwokenV1";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   background: rgb(39, 37, 52);
@@ -246,6 +247,9 @@ const WithdrawalRequestCard = ({
   }, [amount, erc20]);
 
   const unlock = async () => {
+    if (lightGodwoken instanceof DefaultLightGodwokenV1) {
+      return;
+    }
     setIsUnlocking(true);
     const txHash = await lightGodwoken?.unlock({ cell });
     setIsUnlocking(false);
