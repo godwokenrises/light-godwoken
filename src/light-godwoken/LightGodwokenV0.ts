@@ -26,14 +26,56 @@ import {
   LightGodwokenV0,
   WithdrawResult,
   ProxyERC20,
+  SUDT,
 } from "./lightGodwokenType";
 import { getLayer2Config } from "./constants/index";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
+import { TOKEN_LIST } from "./constants/tokens";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config();
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   getVersion(): GodwokenVersion {
     return "v0";
+  }
+
+  getBuiltinErc20List(): ProxyERC20[] {
+    const map: ProxyERC20[] = [];
+    TOKEN_LIST.forEach((token) => {
+      const tokenL1Script: Script = {
+        code_hash: token.l1Lock.code_hash,
+        args: token.l1Lock.args,
+        hash_type: token.l1Lock.hash_type as HashType,
+      };
+      const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
+      map.push({
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        address: token.address,
+        tokenURI: token.tokenURI,
+        sudt_script_hash: tokenScriptHash,
+      });
+    });
+    return map;
+  }
+
+  getBuiltinSUDTList(): SUDT[] {
+    const map: SUDT[] = [];
+    TOKEN_LIST.forEach((token) => {
+      const tokenL1Script: Script = {
+        code_hash: token.l1Lock.code_hash,
+        args: token.l1Lock.args,
+        hash_type: token.l1Lock.hash_type as HashType,
+      };
+      map.push({
+        type: tokenL1Script,
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        tokenURI: token.tokenURI,
+      });
+    });
+    return map;
   }
 
   async listWithdraw(): Promise<WithdrawResult[]> {

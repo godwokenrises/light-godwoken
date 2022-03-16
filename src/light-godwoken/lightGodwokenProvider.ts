@@ -23,7 +23,7 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems, PolyjuiceConfig } from "@polyjuice-provider/base";
 import { GodwokenClient } from "./godwoken/godwoken";
 import Web3 from "web3";
-import { LightGodwokenProvider } from "./lightGodwokenType";
+import { LightGodwokenProvider, LightGodwokenProviderConfig } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
@@ -51,15 +51,20 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   godwokenClient;
   config;
 
-  constructor(ethAddress: Address, ethereum: any, env = "GODWOKEN_V1") {
-    if (env === "AGGRON" || env === "GODWOKEN_V1") {
+  constructor(ethAddress: Address, ethereum: any, env: LightGodwokenProviderConfig) {
+    let configObj = PROVIDER_CONFIG.GODWOKEN_V1;
+    if (env === "v0") {
       config.initializeConfig(config.predefined.AGGRON4);
-    } else if (env === "LINA") {
+      configObj = PROVIDER_CONFIG.AGGRON;
+    } else if (env === "v1") {
+      config.initializeConfig(config.predefined.AGGRON4);
+      configObj = PROVIDER_CONFIG.GODWOKEN_V1;
+    } else if (env === "mainnet") {
       config.initializeConfig(config.predefined.LINA);
+      configObj = PROVIDER_CONFIG.LINA;
     } else {
       throw new Error("env not defined, please use AGGRON or LINA.");
     }
-    const configObj = PROVIDER_CONFIG[`${env}`];
     console.log("configObj", configObj);
 
     this.config = configObj;
@@ -91,7 +96,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return this.l1Address;
   }
 
-  static async CreateProvider(ethereum: any): Promise<LightGodwokenProvider> {
+  static async CreateProvider(ethereum: any, version: LightGodwokenProviderConfig): Promise<LightGodwokenProvider> {
     if (!ethereum || !ethereum.isMetaMask) {
       throw new Error("please provide metamask ethereum object");
     }
@@ -99,7 +104,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       .request({ method: "eth_requestAccounts" })
       .then((accounts: any) => {
         console.log("eth_requestAccounts", accounts);
-        return new DefaultLightGodwokenProvider(accounts[0], ethereum);
+        return new DefaultLightGodwokenProvider(accounts[0], ethereum, version);
       })
       .catch((error: any) => {
         if (error.code === 4001) {
