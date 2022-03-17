@@ -9,6 +9,8 @@ import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { SUDT } from "../light-godwoken/lightGodwokenType";
 import { Script } from "@ckb-lumos/lumos";
+import { useQuery } from "react-query";
+
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -178,8 +180,6 @@ export default function CurrencyInputPanel({
 }: CurrencyInputPanelProps) {
   const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
   const [showMaxButton, setShowMaxButton] = useState(false);
-  const [tokenList, setTokenList] = useState<Token[]>();
-  const [balancesList, setBalancesList] = useState<string[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [selectedIndex, setSelectedIndex] = useState<number>();
   const lightGodwoken = useLightGodwoken();
@@ -187,26 +187,44 @@ export default function CurrencyInputPanel({
     setIsModalVisible(true);
   };
   const [isModalVisible, setIsModalVisible] = useState(false);
-  useEffect(() => {
-    const fetchData = async () => {
-      if (lightGodwoken) {
-        if (isL1) {
-          const tokenList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
-          setTokenList(tokenList);
-          const types: Script[] = tokenList.map((token) => token.type);
-          const balances = await lightGodwoken.getSudtBalances({ types });
-          setBalancesList(balances.balances);
-        } else {
-          const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
-          setTokenList(results);
-          const addressList = results.map((erc20) => erc20.address);
-          const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
-          setBalancesList(balances.balances);
-        }
+
+  const tokenListQuery = useQuery(
+    ["tokenListQuery", { isL1 }],
+    () => {
+      if (!lightGodwoken) {
+        throw new Error("");
       }
-    };
-    fetchData();
-  }, [lightGodwoken, isL1]);
+      const sudtList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
+      const rec20List: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
+      return isL1 ? sudtList : rec20List;
+    },
+    {
+      enabled: !!lightGodwoken,
+    },
+  );
+  const tokenList: Token[] = tokenListQuery.data || [];
+
+  const balanceQuery = useQuery(
+    ["balanceQuery", { isL1 }],
+    () => {
+      if (!lightGodwoken) {
+        throw new Error("");
+      }
+      if (isL1) {
+        const tokenList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
+        const types: Script[] = tokenList.map((token) => token.type);
+        return lightGodwoken.getSudtBalances({ types });
+      } else {
+        const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
+        const addressList = results.map((erc20) => erc20.address);
+        return lightGodwoken.getErc20Balances({ addresses: addressList });
+      }
+    },
+    {
+      enabled: !!lightGodwoken,
+    },
+  );
+  const balancesList = balanceQuery.data?.balances || [];
 
   useEffect(() => {
     if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
