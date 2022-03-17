@@ -8,7 +8,7 @@ import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmou
 import { Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import DefaultLightGodwokenV1 from "../light-godwoken/LightGodwokenV1";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
@@ -199,6 +199,7 @@ const WithdrawalRequestCard = ({
   const [blockProduceTime, setBlockProduceTime] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const params = useParams();
   const lightGodwoken = useLightGodwoken();
 
   const handleToggleShowMore = useCallback(() => {
@@ -287,9 +288,11 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         {isMature ? (
-          <PrimaryButton className="withdraw-button" onClick={showCurrencySelectModal}>
-            withdraw
-          </PrimaryButton>
+          params.version === "v0" && (
+            <PrimaryButton className="withdraw-button" onClick={showCurrencySelectModal}>
+              withdraw
+            </PrimaryButton>
+          )
         ) : shouldShowMore ? (
           <div className="time">
             <UpOutlined />
