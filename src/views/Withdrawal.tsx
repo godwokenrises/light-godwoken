@@ -1,11 +1,7 @@
 import Page from "./Page";
 import styled from "styled-components";
-import { useQuery } from "react-query";
-import WithdrawalRequestCard from "./WithdrawalRequestCard";
 import { Link, useParams } from "react-router-dom";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { useClock } from "../hooks/useClock";
-import { LoadingOutlined } from "@ant-design/icons";
+import { WithDrawalList } from "../components/Withdrawal/List";
 const PageContent = styled.div`
   width: 436px;
   background: rgb(39, 37, 52);
@@ -68,46 +64,6 @@ const ResultList = styled.div`
     line-height: 1.5;
   }
 `;
-
-const WithdrawalList = styled.div`
-  max-height: calc(100vh - 400px);
-  overflow-y: auto;
-  background-color: rgb(16, 12, 24);
-  padding: 24px;
-  border-bottom-left-radius: 24px;
-  border-bottom-right-radius: 24px;
-  & > div {
-    margin-bottom: 16px;
-  }
-`;
-function WithDrawalList() {
-  const lightGodwoken = useLightGodwoken();
-  const now = useClock();
-  const { data: withDrawalList } = useQuery(
-    ["queryWithdrawList", { version: lightGodwoken?.getVersion() }],
-    () => {
-      return lightGodwoken?.listWithdraw();
-    },
-    {
-      enabled: !!lightGodwoken,
-    },
-  );
-
-  if (!withDrawalList) {
-    return (
-      <WithdrawalList>
-        <LoadingOutlined />
-      </WithdrawalList>
-    );
-  }
-  return (
-    <WithdrawalList>
-      {withDrawalList.map((withdraw, index) => (
-        <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
-      ))}
-    </WithdrawalList>
-  );
-}
 
 const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
   const params = useParams();

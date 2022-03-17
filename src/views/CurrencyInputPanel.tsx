@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { Typography, Modal, List } from "antd";
-import { FixedHeightRow } from "./WithdrawalRequestCard";
+import { FixedHeightRow } from "../components/Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";

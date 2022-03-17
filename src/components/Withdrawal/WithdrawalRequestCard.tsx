@@ -3,13 +3,13 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { Button, Popconfirm, Typography, notification, Modal } from "antd";
-import getTimePeriods from "../utils/getTimePeriods";
-import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
+import getTimePeriods from "../../utils/getTimePeriods";
+import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Cell, HexNumber } from "@ckb-lumos/lumos";
-import { ProxyERC20 } from "../light-godwoken/lightGodwokenType";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
+import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Link, useParams } from "react-router-dom";
-import DefaultLightGodwokenV1 from "../light-godwoken/LightGodwokenV1";
+import DefaultLightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   background: rgb(39, 37, 52);
