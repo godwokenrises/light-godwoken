@@ -7,6 +7,8 @@ import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "./CKBInputPanel";
 import CurrencyInputPanel from "./CurrencyInputPanel";
 import Page from "./Page";
+import { useQuery } from "react-query";
+import { getDisplayAmount } from "../utils/formatTokenAmount";
 
 const { Text } = Typography;
 
@@ -184,6 +186,30 @@ interface Token {
 interface SUDT extends Token {
   type: Script;
 }
+function L2Balance() {
+  const lightGodwoken = useLightGodwoken();
+
+  const l2Address = lightGodwoken?.provider.l2Address;
+  const { data: balance } = useQuery(
+    ["queryL2Balance", { address: l2Address }],
+    () => {
+      return lightGodwoken?.getL2CkbBalance();
+    },
+    {
+      enabled: !!lightGodwoken,
+    },
+  );
+
+  if (!l2Address) return null;
+  if (!balance) {
+    return (
+      <span>
+        <LoadingOutlined />
+      </span>
+    );
+  }
+  return <span>L2 Balance: {getDisplayAmount(BigInt(balance), 8)} CKB</span>;
+}
 
 export default function Deposit() {
   const [ckbInput, setCkbInput] = useState("");
@@ -264,6 +290,9 @@ export default function Deposit() {
               Deposit
             </Button>
           </WithDrawalButton>
+          <div>
+            <L2Balance />
+          </div>
           <div className="l1-faucet">
             <Text>Need Layer 1 test tokens?</Text>
             <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
