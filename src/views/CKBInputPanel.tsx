@@ -1,9 +1,11 @@
+import { LoadingOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
+import { useQuery } from "react-query";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -56,19 +58,19 @@ interface CKBInputPanelProps {
 }
 export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
-  const [ckbBalance, setCkbBalance] = useState("");
   const lightGodwoken = useLightGodwoken();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const balance = isL1
-        ? (await lightGodwoken?.getL1CkbBalance()) || ""
-        : (await lightGodwoken?.getL2CkbBalance()) || "";
-      setCkbBalance(balance);
-    };
-    fetchData();
-  }, [lightGodwoken, isL1]);
+  const query = useQuery(
+    ["queryBalance", { isL1: isL1 }],
+    () => {
+      return isL1 ? lightGodwoken?.getL1CkbBalance() : lightGodwoken?.getL2CkbBalance();
+    },
+    {
+      enabled: !!lightGodwoken,
+    },
+  );
 
+  const ckbBalance = query.data || "";
   useEffect(() => {
     if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {
       setShowMaxButton(true);
@@ -85,7 +87,9 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBIn
     <StyleWrapper>
       <Row className="first-row">
         <Typography.Text>{label}</Typography.Text>
-        <Typography.Text>Balance: {getDisplayAmount(BigInt(ckbBalance), 8) || ""}</Typography.Text>
+        <Typography.Text>
+          Balance: {query.isLoading ? <LoadingOutlined /> : getDisplayAmount(BigInt(ckbBalance), 8)}
+        </Typography.Text>
       </Row>
       <Row className="input-wrapper">
         <NumericalInput
