@@ -235,6 +235,7 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
+        console.error(e);
         notification.error({ message: `must Retain at least 64 CKB!` });
       }
 
