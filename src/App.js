@@ -1,6 +1,6 @@
 import "antd/dist/antd.css";
 import React from "react";
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClient, QueryClientProvider } from "react-query";
 import { HashRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
 import RequestWithdrawal from "./views/RequestWithdrawal";

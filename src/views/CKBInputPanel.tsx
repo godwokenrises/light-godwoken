@@ -80,7 +80,7 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBIn
   }, [value, ckbBalance]);
 
   const handelMaxClick = () => {
-    onUserInput(getDisplayAmount(BigInt(ckbBalance), 8));
+    onUserInput(getDisplayAmount(BigInt(ckbBalance) - BigInt(6400000000), 8));
     setShowMaxButton(false);
   };
   return (

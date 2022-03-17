@@ -227,12 +227,17 @@ export default function Deposit() {
       if (selectedSudt) {
         amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
       }
-      const hash = await lightGodwoken.deposit({
-        capacity: "0x" + capacity.toString(16),
-        amount: amount,
-        sudtType: selectedSudt?.type,
-      });
-      notification.success({ message: `deposit Tx(${hash}) is successful` });
+      try {
+        const hash = await lightGodwoken.deposit({
+          capacity: "0x" + capacity.toString(16),
+          amount: amount,
+          sudtType: selectedSudt?.type,
+        });
+        notification.success({ message: `deposit Tx(${hash}) is successful` });
+      } catch (e) {
+        notification.error({ message: `must Retain at least 64 CKB!` });
+      }
+
       setIsModalVisible(false);
     }
   };
