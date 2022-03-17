@@ -5,9 +5,9 @@
   "homepage": "https://zhangyouxin.github.io/light-godwoken",
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
-    "@ckitjs/ckit": "^0.1.0",
     "@ckb-lumos/base": "^0.18.0-rc6",
     "@ckb-lumos/lumos": "^0.18.0-rc6",
+    "@ckitjs/ckit": "^0.1.0",
     "@lay2/pw-core": "0.4.0-alpha.12",
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/providers": "^8.1.1",
@@ -22,7 +22,7 @@
     "antd": "^4.17.3",
     "bootstrap": "^5.1.3",
     "ckb-js-toolkit": "^0.10.2",
-    "ethers": "^5.6.0",
+    "ethers": "^5.6.1",
     "events": "^3.3.0",
     "jsbi": "^4.1.0",
     "keccak256": "^1.0.6",
@@ -33,7 +33,8 @@
     "react-router-dom": "^6.1.1",
     "react-scripts": "4.0.3",
     "styled-components": "^5.3.3",
-    "web-vitals": "^2.1.2"
+    "web-vitals": "^2.1.2",
+    "web3": "^1.7.1"
   },
   "scripts": {
     "start": "react-scripts start",

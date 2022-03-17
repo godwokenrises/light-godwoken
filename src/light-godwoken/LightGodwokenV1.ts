@@ -16,10 +16,14 @@ import {
   ProxyERC20,
   WithdrawResult,
   SUDT,
+  GetErc20Balances,
+  GetErc20BalancesResult,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
+import { getTokenList } from "./constants/tokens";
+import { ethers } from "ethers";
+import ERC20 from "./constants/ERC20.json";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
-
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
     return "v1";
@@ -28,10 +32,65 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return 30 * 1000;
   }
   getBuiltinSUDTList(): SUDT[] {
-    return [];
+    const map: SUDT[] = [];
+    getTokenList().v1.forEach((token) => {
+      const tokenL1Script: Script = {
+        code_hash: token.l1Lock.code_hash,
+        args: token.l1Lock.args,
+        hash_type: token.l1Lock.hash_type as HashType,
+      };
+      map.push({
+        type: tokenL1Script,
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        tokenURI: token.tokenURI,
+      });
+    });
+    return map;
   }
   getBuiltinErc20List(): ProxyERC20[] {
-    return [];
+    const map: ProxyERC20[] = [];
+    getTokenList().v1.forEach((token) => {
+      const tokenL1Script: Script = {
+        code_hash: token.l1Lock.code_hash,
+        args: token.l1Lock.args,
+        hash_type: token.l1Lock.hash_type as HashType,
+      };
+      const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
+      map.push({
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+        address: token.address,
+        tokenURI: token.tokenURI,
+        sudt_script_hash: tokenScriptHash,
+      });
+    });
+    return map;
+  }
+  async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const result: GetErc20BalancesResult = { balances: [] };
+    if (!window.ethereum) {
+      return result;
+    }
+    let promises = [];
+    const ethersProvider = new ethers.providers.Web3Provider(window.ethereum as any);
+    for (let index = 0; index < payload.addresses.length; index++) {
+      const address = payload.addresses[index];
+      const contract = new ethers.Contract(address, ERC20.abi, ethersProvider);
+      const result = contract.callStatic.balanceOf(this.provider.l2Address, {
+        from: this.provider.l2Address,
+        gasPrice: "0",
+      });
+      promises.push(result);
+    }
+    await Promise.all(promises).then((values) => {
+      values.forEach((value) => {
+        result.balances.push("0x" + Number(value).toString(16));
+      });
+    });
+    return result;
   }
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
@@ -174,7 +233,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         },
         withdraw: {
           ckbCapacity: BI.from(payload.capacity).toNumber(),
-          UDTAmount: BI.from(payload.amount).toNumber(),
+          UDTAmount: BI.from(payload.amount).toString(),
           UDTScriptHash: payload.sudt_script_hash,
         },
       },
