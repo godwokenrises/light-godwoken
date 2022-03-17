@@ -27,10 +27,14 @@ import {
   WithdrawResult,
   ProxyERC20,
   SUDT,
+  GetErc20Balances,
+  GetErc20BalancesResult,
 } from "./lightGodwokenType";
 import { getLayer2Config } from "./constants/index";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
-import { TOKEN_LIST } from "./constants/tokens";
+import { getTokenList } from "./constants/tokens";
+import { AbiItems } from "@polyjuice-provider/base";
+import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v0");
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
@@ -43,7 +47,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
-    TOKEN_LIST.forEach((token) => {
+    getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: token.l1Lock.code_hash,
         args: token.l1Lock.args,
@@ -64,7 +68,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
-    TOKEN_LIST.forEach((token) => {
+    getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: token.l1Lock.code_hash,
         args: token.l1Lock.args,
@@ -79,6 +83,23 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       });
     });
     return map;
+  }
+
+  async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const result: GetErc20BalancesResult = { balances: [] };
+    let promises = [];
+    for (let index = 0; index < payload.addresses.length; index++) {
+      const address = payload.addresses[index];
+      const contract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
+      const usdcBalancePromise = contract.methods.balanceOf(this.provider.l2Address).call();
+      promises.push(usdcBalancePromise);
+    }
+    await Promise.all(promises).then((values) => {
+      values.forEach((value) => {
+        result.balances.push("0x" + Number(value).toString(16));
+      });
+    });
+    return result;
   }
 
   async listWithdraw(): Promise<WithdrawResult[]> {

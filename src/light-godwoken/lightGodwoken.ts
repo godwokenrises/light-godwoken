@@ -1,8 +1,6 @@
 import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
-import { AbiItems } from "@polyjuice-provider/base";
 import * as secp256k1 from "secp256k1";
 import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
-import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import {
   NormalizeDepositLockArgs,
   NormalizeRawWithdrawalRequest,
@@ -38,6 +36,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
+
+  abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
@@ -295,23 +295,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     return "0x" + collectedSum.toString(16);
-  }
-
-  async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
-    const result: GetErc20BalancesResult = { balances: [] };
-    let promises = [];
-    for (let index = 0; index < payload.addresses.length; index++) {
-      const address = payload.addresses[index];
-      const usdcContract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
-      const usdcBalancePromise = usdcContract.methods.balanceOf(this.provider.l2Address).call();
-      promises.push(usdcBalancePromise);
-    }
-    await Promise.all(promises).then((values) => {
-      values.forEach((value) => {
-        result.balances.push("0x" + Number(value).toString(16));
-      });
-    });
-    return result;
   }
 
   async getSudtBalances(payload: GetSudtBalances): Promise<GetSudtBalancesResult> {
