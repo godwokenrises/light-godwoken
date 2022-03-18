@@ -47,18 +47,6 @@ const PageMain = styled.div`
     padding-top: 8px;
     padding-bottom: 8px;
   }
-  .l1-faucet {
-    display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-    .ant-typography {
-      color: white;
-      padding-right: 5px;
-    }
-    a {
-      color: rgb(255, 67, 66);
-    }
-  }
 `;
 const L1WalletAddress = styled.div`
   display: flex;
@@ -298,12 +286,6 @@ export default function Deposit() {
           </WithDrawalButton>
           <div>
             <L2Balance />
-          </div>
-          <div className="l1-faucet">
-            <Text>Need Layer 1 test tokens?</Text>
-            <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
-              CKB Testnet Faucet
-            </a>
           </div>
         </PageMain>
         <div className="footer"></div>
