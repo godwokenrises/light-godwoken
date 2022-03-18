@@ -38,7 +38,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "craco build",
+    "build": "craco --max_old_space_size=4096 build",
     "test": "craco test",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
     "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
