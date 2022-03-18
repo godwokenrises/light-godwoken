@@ -54,9 +54,10 @@ interface CKBInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
   isL1?: boolean;
+  isDeposit?: boolean;
   label?: string;
 }
-export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBInputPanelProps) {
+export default function CKBInputPanel({ value, onUserInput, label, isL1, isDeposit }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
   const lightGodwoken = useLightGodwoken();
 
@@ -80,7 +81,8 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1 }: CKBIn
   }, [value, ckbBalance]);
 
   const handelMaxClick = () => {
-    onUserInput(getDisplayAmount(BigInt(ckbBalance) - BigInt(6400000000), 8));
+    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    onUserInput(getDisplayAmount(maxAmount, 8));
     setShowMaxButton(false);
   };
   return (
