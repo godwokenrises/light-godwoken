@@ -37,6 +37,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     this.provider = provider;
   }
 
+  abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
   abstract getBuiltinErc20List(): ProxyERC20[];
@@ -279,11 +280,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     };
     const capacity: bigint = helpers.minimalCellCapacity(cell);
     return "0x" + capacity.toString(16);
-  }
-
-  async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
-    const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
-    return "0x" + Number(balance).toString(16);
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<HexNumber> {
