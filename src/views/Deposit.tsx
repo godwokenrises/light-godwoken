@@ -224,7 +224,9 @@ export default function Deposit() {
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
         console.error(e);
-        notification.error({ message: `must Retain at least 64 CKB!` });
+        notification.error({
+          message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
+        });
       }
 
       setIsModalVisible(false);
