@@ -236,11 +236,11 @@ export default function RequestWithdrawal() {
       <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="text-pair">
           <Text>Block wait</Text>
-          <Text>10000</Text>
+          <Text>{params.version === "v0" ? "10000" : "50"}</Text>
         </div>
         <div className="text-pair">
           <Text>Estimated time</Text>
-          <Text>{params.version === "vo" ? "5 days" : "30mins"}</Text>
+          <Text>{params.version === "v0" ? "5 days" : "30mins"}</Text>
         </div>
         <div className="tips">
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
