@@ -33,7 +33,9 @@ export const Provider: React.FC = (props) => {
   const location = useLocation();
   useEffect(() => {
     detectEthereumProvider().then((ethereum: any) => {
-      addNetwork(ethereum);
+      if (location.pathname.startsWith("/v1")) {
+        addNetwork(ethereum);
+      }
       ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         if (!accounts || !accounts[0]) return;
 
