@@ -210,10 +210,10 @@ export default function Deposit() {
   const showModal = async () => {
     setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
+      const capacity = BigInt(BigInt(ckbInput) * BigInt(Math.pow(10, 8)));
       let amount = "0x0";
       if (selectedSudt) {
-        amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
+        amount = "0x" + BigInt(BigInt(outputValue) * BigInt(Math.pow(10, selectedSudt.decimals))).toString(16);
       }
       try {
         const hash = await lightGodwoken.deposit({
