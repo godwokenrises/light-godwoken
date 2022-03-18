@@ -280,7 +280,7 @@ export default function Deposit() {
           </div>
         </L1WalletAddress>
         <PageMain className="main">
-          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Deposit" isL1></CKBInputPanel>
+          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Deposit" isL1 isDeposit></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
