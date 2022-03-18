@@ -2,7 +2,7 @@ import { CkitProvider, MintOptions, MintSudtBuilder, predefined } from "@ckitjs/
 import { SnakeScript, HashType } from "@lay2/pw-core";
 import { HexString } from "@ckb-lumos/base";
 import { Secp256k1Signer } from "@ckitjs/ckit/dist/wallets/Secp256k1Wallet";
-import { Button, notification } from "antd";
+import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import Link from "antd/lib/typography/Link";
 
