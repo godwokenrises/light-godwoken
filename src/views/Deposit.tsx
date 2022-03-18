@@ -210,10 +210,10 @@ export default function Deposit() {
   const showModal = async () => {
     setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
+      const capacity = BigInt(BigInt(ckbInput) * BigInt(Math.pow(10, 8)));
       let amount = "0x0";
       if (selectedSudt) {
-        amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
+        amount = "0x" + BigInt(BigInt(outputValue) * BigInt(Math.pow(10, selectedSudt.decimals))).toString(16);
       }
       try {
         const hash = await lightGodwoken.deposit({
@@ -224,7 +224,9 @@ export default function Deposit() {
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
         console.error(e);
-        notification.error({ message: `must Retain at least 64 CKB!` });
+        notification.error({
+          message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
+        });
       }
 
       setIsModalVisible(false);
