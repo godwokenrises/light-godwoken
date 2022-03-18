@@ -37,7 +37,7 @@ export const claim = async (recipientAddr: string) => {
   const recipients: MintOptions["recipients"] = [
     {
       recipient: recipientAddr,
-      additionalCapacity: Math.ceil(Math.random() * 10 ** 8).toString(),
+      additionalCapacity: "0",
       amount: BigInt(1000 * 10 ** 18).toString(),
       capacityPolicy: "createCell",
     },
