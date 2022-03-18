@@ -1,6 +1,6 @@
 import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { Script } from "@ckb-lumos/lumos";
-import { Button, Modal, notification, Typography } from "antd";
+import { Button, message, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
@@ -249,6 +249,7 @@ export default function Deposit() {
 
   const copyAddress = () => {
     navigator.clipboard.writeText(lightGodwoken?.provider.getL1Address() || "");
+    message.success("copied L1 address to clipboard");
   };
   return (
     <Page>
