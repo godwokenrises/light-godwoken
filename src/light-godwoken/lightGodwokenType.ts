@@ -117,7 +117,7 @@ export interface LightGodwokenProvider {
 }
 
 export type GodwokenVersion = "v0" | "v1";
-export type LightGodwokenProviderConfig = "v0" | "v1" | "mainnet";
+export type LightGodwokenProviderConfig = "v0" | "v1";
 
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;

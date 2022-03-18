@@ -18,10 +18,10 @@ import {
   SUDT,
   GetErc20Balances,
   GetErc20BalancesResult,
+  GetL2CkbBalancePayload,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
-import { ethers } from "ethers";
 import ERC20 from "./constants/ERC20.json";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
@@ -31,6 +31,13 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getBlockProduceTime(): number {
     return 30 * 1000;
   }
+
+  async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
+    const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    console.log("get v1 l2 ckb balance", this.provider, balance);
+    return "0x" + Number(balance).toString(16);
+  }
+
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
     getTokenList().v1.forEach((token) => {
@@ -74,16 +81,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (!window.ethereum) {
       return result;
     }
+    const Contract = require("web3-eth-contract");
+    Contract.setProvider(this.provider.godwokenRpc);
+
     let promises = [];
-    const ethersProvider = new ethers.providers.Web3Provider(window.ethereum as any);
     for (let index = 0; index < payload.addresses.length; index++) {
       const address = payload.addresses[index];
-      const contract = new ethers.Contract(address, ERC20.abi, ethersProvider);
-      const result = contract.callStatic.balanceOf(this.provider.l2Address, {
-        from: this.provider.l2Address,
-        gasPrice: "0",
-      });
-      promises.push(result);
+      const contract = new Contract(ERC20.abi, address);
+      const balance = contract.methods
+        .balanceOf(this.provider.l2Address)
+        .call({ from: this.provider.l2Address, gasPrice: "0" });
+      promises.push(balance);
     }
     await Promise.all(promises).then((values) => {
       values.forEach((value) => {

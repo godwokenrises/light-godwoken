@@ -29,6 +29,7 @@ import {
   SUDT,
   GetErc20Balances,
   GetErc20BalancesResult,
+  GetL2CkbBalancePayload,
 } from "./lightGodwokenType";
 import { getLayer2Config } from "./constants/index";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
@@ -43,6 +44,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
   getBlockProduceTime(): number {
     return 45 * 1000;
+  }
+
+  async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
+    const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    return "0x" + Number(balance).toString(16);
   }
 
   getBuiltinErc20List(): ProxyERC20[] {

@@ -34,6 +34,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   l1Address: Address = "";
   ckbIndexer;
   rpc;
+  godwokenRpc;
   ethereum;
   web3;
   godwokenClient;
@@ -48,20 +49,23 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (env === "v0") {
       config.initializeConfig(config.predefined.AGGRON4);
       configObj = PROVIDER_CONFIG.AGGRON;
+      const polyjuiceProvider = new PolyjuiceHttpProvider(configObj.GW_POLYJUICE_RPC_URL, {
+        web3Url: configObj.GW_POLYJUICE_RPC_URL,
+        abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
+      });
+      this.web3 = new Web3(polyjuiceProvider);
     } else if (env === "v1") {
       config.initializeConfig(config.predefined.AGGRON4);
       configObj = PROVIDER_CONFIG.GODWOKEN_V1;
-    } else if (env === "mainnet") {
-      config.initializeConfig(config.predefined.LINA);
-      configObj = PROVIDER_CONFIG.LINA;
+      this.web3 = new Web3(window.ethereum as any);
     } else {
       throw new Error("env not defined, please use AGGRON or LINA.");
     }
     console.log("configObj", configObj);
-
     this.config = configObj;
     this.ckbIndexer = new Indexer(configObj.CKB_INDEXER_URL, configObj.CKB_RPC_URL);
     this.rpc = new RPC(configObj.CKB_RPC_URL);
+    this.godwokenRpc = configObj.GW_POLYJUICE_RPC_URL;
     this.godwokenClient = new GodwokenClient(configObj.GW_POLYJUICE_RPC_URL);
 
     this.ethereum = ethereum;
@@ -72,13 +76,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.l2Address = accounts[0];
       this.l1Address = this.generateL1Address(this.l2Address);
     });
-
-    const polyjuiceProvider = new PolyjuiceHttpProvider(configObj.GW_POLYJUICE_RPC_URL, {
-      web3Url: configObj.GW_POLYJUICE_RPC_URL,
-      abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
-    });
-
-    this.web3 = new Web3(polyjuiceProvider);
   }
 
   async sendWithdrawTransaction(withdrawalRequest: WithdrawalRequest): Promise<string> {
