@@ -81,7 +81,7 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
   }, [value, ckbBalance]);
 
   const handelMaxClick = () => {
-    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
     onUserInput(getDisplayAmount(maxAmount, 8));
     setShowMaxButton(false);
   };
