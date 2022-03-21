@@ -174,7 +174,11 @@ export default function RequestWithdrawal() {
         sudt_script_hash: sudt_script_hash,
       });
     } catch (e) {
-      console.log("withdrawal error:", e);
+      if (e instanceof Error) {
+        notification.error({
+          message: e.message,
+        });
+      }
       return;
     }
 
