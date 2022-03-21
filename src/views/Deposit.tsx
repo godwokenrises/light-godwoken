@@ -223,12 +223,18 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
-        console.error(e);
-        notification.error({
-          message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
-        });
+        if (e instanceof Error) {
+          if (e.message.startsWith("Not enough CKB:")) {
+            notification.error({
+              message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
+            });
+          } else if (e.message.startsWith("Not enough SUDT:")) {
+            notification.error({
+              message: e.message,
+            });
+          }
+        }
       }
-
       setIsModalVisible(false);
     }
   };

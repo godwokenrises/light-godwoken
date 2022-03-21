@@ -75,10 +75,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     if (collectedCapatity < neededCapacity) {
-      throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedCapatity} `);
+      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity} `);
     }
     if (collectedSudtAmount < neededSudtAmount) {
-      throw new Error(`Not enough SUDT, expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
+      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
