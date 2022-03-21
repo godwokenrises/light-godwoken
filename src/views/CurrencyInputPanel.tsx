@@ -161,7 +161,6 @@ interface CurrencyInputPanelProps {
   hideBalance?: boolean;
   hideInput?: boolean;
   showCommonBases?: boolean;
-  disableInput?: boolean;
   autoFocus?: boolean;
   transparent?: boolean;
   isL1?: boolean;
@@ -169,7 +168,6 @@ interface CurrencyInputPanelProps {
 }
 export default function CurrencyInputPanel({
   autoFocus,
-  disableInput,
   value,
   onUserInput,
   label,
@@ -182,6 +180,7 @@ export default function CurrencyInputPanel({
   const [balancesList, setBalancesList] = useState<string[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [selectedIndex, setSelectedIndex] = useState<number>();
+  const [disableInput, setDisableInput] = useState<boolean>(true);
   const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
     setIsModalVisible(true);
@@ -232,6 +231,7 @@ export default function CurrencyInputPanel({
     setIsModalVisible(false);
   };
   const handleErc20Selected = (index: number, erc20: Token) => {
+    setDisableInput(false);
     setSelectedCurrency(erc20);
     onSelectedChange(erc20);
     setIsModalVisible(false);
@@ -253,6 +253,7 @@ export default function CurrencyInputPanel({
         <NumericalInput
           autoFocus={autoFocus}
           disabled={disableInput}
+          placeholder={disableInput ? "Please Select sUDT First" : "0.0"}
           className="token-amount-input"
           value={value}
           onUserInput={(val) => {

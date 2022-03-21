@@ -31,7 +31,7 @@ const StyledInput = styled.input<{ error?: boolean; fontSize?: string; align?: s
   }
 
   :disabled {
-    cursor: text;
+    cursor: not-allowed;
   }
 `;
 
