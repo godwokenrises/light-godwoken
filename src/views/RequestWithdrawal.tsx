@@ -201,6 +201,11 @@ export default function RequestWithdrawal() {
       setLoading(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
+
+    e.on("fail", (result: unknown) => {
+      setLoading(false);
+      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+    });
   };
   const handleSelectedChange = (value: Token) => {
     setSelectedSudt(value as L1MappedErc20);

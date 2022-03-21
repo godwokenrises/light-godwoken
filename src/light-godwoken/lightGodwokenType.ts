@@ -51,6 +51,7 @@ interface WithdrawListener {
   (event: "pending", listener: (txHash: Hash) => void): void;
   (event: "success", listener: (txHash: Hash) => void): void;
   (event: "error", listener: (e: Error) => void): void;
+  (event: "fail", listener: (e: Error) => void): void;
 }
 
 export interface WithdrawalEventEmitter {
