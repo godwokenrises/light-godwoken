@@ -9,6 +9,7 @@ import CurrencyInputPanel from "./CurrencyInputPanel";
 import Page from "./Page";
 import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
+import { Amount } from "@ckitjs/ckit/dist/helpers";
 
 const { Text } = Typography;
 
@@ -210,10 +211,10 @@ export default function Deposit() {
   const showModal = async () => {
     setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = BigInt(BigInt(ckbInput) * BigInt(Math.pow(10, 8)));
+      const capacity = Amount.from(ckbInput, 8);
       let amount = "0x0";
-      if (selectedSudt) {
-        amount = "0x" + BigInt(BigInt(outputValue) * BigInt(Math.pow(10, selectedSudt.decimals))).toString(16);
+      if (selectedSudt && outputValue) {
+        amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
       }
       try {
         const hash = await lightGodwoken.deposit({
@@ -223,6 +224,7 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
+        console.error(e);
         if (e instanceof Error) {
           if (e.message.startsWith("Not enough CKB:")) {
             notification.error({

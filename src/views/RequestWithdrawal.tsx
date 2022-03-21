@@ -1,4 +1,5 @@
 import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -156,11 +157,11 @@ export default function RequestWithdrawal() {
 
   const sendWithDrawal = () => {
     setLoading(true);
-    const capacity = BigInt(Number(ckbInput) * Math.pow(10, 8));
+    const capacity = Amount.from(ckbInput, 8);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
-    if (selectedSudt) {
-      amount = "0x" + BigInt(Number(outputValue) * Math.pow(10, selectedSudt.decimals)).toString(16);
+    if (selectedSudt && outputValue) {
+      amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
     if (!lightGodwoken) {
@@ -198,6 +199,11 @@ export default function RequestWithdrawal() {
     });
 
     e.on("error", (result: unknown) => {
+      setLoading(false);
+      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+    });
+
+    e.on("fail", (result: unknown) => {
       setLoading(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
