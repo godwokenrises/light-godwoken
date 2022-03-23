@@ -280,11 +280,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       },
     };
     console.log("typedMsg:", typedMsg);
-
-    let signedMessage = await this.provider.ethereum.request({
-      method: "eth_signTypedData_v4",
-      params: [this.provider.l2Address, JSON.stringify(typedMsg)],
-    });
+    let signedMessage;
+    try {
+      signedMessage = await this.provider.ethereum.request({
+        method: "eth_signTypedData_v4",
+        params: [this.provider.l2Address, JSON.stringify(typedMsg)],
+      });
+    } catch (e) {
+      eventEmitter.emit("error", "transaction need to be sign first");
+    }
 
     // construct WithdrawalRequestExx tra
     const withdrawalReq: WithdrawalRequestV1 = {
@@ -300,7 +304,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     // submit WithdrawalRequestExtra
     const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
     console.log("result:", result);
-
     if (result !== null) {
       const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
