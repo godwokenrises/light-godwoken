@@ -175,11 +175,13 @@ export default function RequestWithdrawal() {
         sudt_script_hash: sudt_script_hash,
       });
     } catch (e) {
+      setIsModalVisible(false);
       if (e instanceof Error) {
         notification.error({
           message: e.message,
         });
       }
+      setLoading(false);
       return;
     }
 
@@ -200,11 +202,13 @@ export default function RequestWithdrawal() {
 
     e.on("error", (result: unknown) => {
       setLoading(false);
+      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
 
     e.on("fail", (result: unknown) => {
       setLoading(false);
+      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
   };

@@ -3,7 +3,7 @@ import { Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { getDisplayAmount } from "../utils/formatTokenAmount";
+import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
 import { useQuery } from "react-query";
 
