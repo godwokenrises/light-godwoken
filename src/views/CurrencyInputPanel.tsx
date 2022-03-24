@@ -286,7 +286,7 @@ export default function CurrencyInputPanel({
             renderItem={(erc20, index) => (
               <List.Item
                 className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => handleErc20Selected(index, erc20)}
+                onClick={() => balancesList.length && handleErc20Selected(index, erc20)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
