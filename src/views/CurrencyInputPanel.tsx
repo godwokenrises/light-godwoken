@@ -2,13 +2,9 @@ import styled from "styled-components";
 import { Typography, Modal, List } from "antd";
 import { FixedHeightRow } from "../components/Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
-import { DownOutlined } from "@ant-design/icons";
+import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
-import { L1MappedErc20 } from "../types/type";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { SUDT } from "../light-godwoken/lightGodwokenType";
-import { Script } from "@ckb-lumos/lumos";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -157,13 +153,10 @@ interface CurrencyInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
   label?: string;
-  disableCurrencySelect?: boolean;
-  hideBalance?: boolean;
-  hideInput?: boolean;
-  showCommonBases?: boolean;
   autoFocus?: boolean;
-  transparent?: boolean;
-  isL1?: boolean;
+  balancesList: string[] | undefined;
+  tokenList: Token[] | undefined;
+  dataLoading: boolean;
   onSelectedChange: (value: Token, balance: string) => void;
 }
 export default function CurrencyInputPanel({
@@ -171,40 +164,19 @@ export default function CurrencyInputPanel({
   value,
   onUserInput,
   label,
-  isL1,
+  balancesList,
+  tokenList,
+  dataLoading,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
   const [showMaxButton, setShowMaxButton] = useState(false);
-  const [tokenList, setTokenList] = useState<Token[]>();
-  const [balancesList, setBalancesList] = useState<string[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
-  const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
     setIsModalVisible(true);
   };
   const [isModalVisible, setIsModalVisible] = useState(false);
-  useEffect(() => {
-    const fetchData = async () => {
-      if (lightGodwoken) {
-        if (isL1) {
-          const tokenList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
-          setTokenList(tokenList);
-          const types: Script[] = tokenList.map((token) => token.type);
-          const balances = await lightGodwoken.getSudtBalances({ types });
-          setBalancesList(balances.balances);
-        } else {
-          const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
-          setTokenList(results);
-          const addressList = results.map((erc20) => erc20.address);
-          const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
-          setBalancesList(balances.balances);
-        }
-      }
-    };
-    fetchData();
-  }, [lightGodwoken, isL1]);
 
   useEffect(() => {
     if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
@@ -286,7 +258,7 @@ export default function CurrencyInputPanel({
             renderItem={(erc20, index) => (
               <List.Item
                 className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => balancesList.length && handleErc20Selected(index, erc20)}
+                onClick={() => !dataLoading && handleErc20Selected(index, erc20)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
@@ -297,7 +269,11 @@ export default function CurrencyInputPanel({
                     </div>
                   </div>
                   <div>
-                    {balancesList.length ? getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals) : ""}
+                    {dataLoading ? (
+                      <LoadingOutlined />
+                    ) : (
+                      balancesList && getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals)
+                    )}
                   </div>
                 </FixedHeightRow>
               </List.Item>

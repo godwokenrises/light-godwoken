@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useCKBBalance } from "../hooks/useCKBBalance";
+import { useERC20Balance } from "../hooks/useERC20Balance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
@@ -142,6 +143,9 @@ export default function RequestWithdrawal() {
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(false);
   const params = useParams();
+  const erc20BalanceQuery = useERC20Balance();
+
+  const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -264,7 +268,10 @@ export default function RequestWithdrawal() {
             value={sudtValue}
             onUserInput={setSudtValue}
             label="sUDT(optional)"
+            balancesList={erc20BalanceQuery.data?.balances}
+            tokenList={tokenList}
             onSelectedChange={handleSelectedChange}
+            dataLoading={erc20BalanceQuery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
             <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>

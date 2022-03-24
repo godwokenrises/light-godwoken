@@ -11,6 +11,7 @@ import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useCKBBalance } from "../hooks/useCKBBalance";
+import { useSUDTBalance } from "../hooks/useSUDTBalance";
 
 const { Text } = Typography;
 
@@ -209,7 +210,9 @@ export default function Deposit() {
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
+  const sudtBalanceQUery = useSUDTBalance();
   const query = useCKBBalance(true);
+  const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
 
   const showModal = async () => {
     if (lightGodwoken) {
@@ -314,7 +317,9 @@ export default function Deposit() {
             onUserInput={setOutputValue}
             label="sUDT(optional)"
             onSelectedChange={handleSelectedChange}
-            isL1
+            balancesList={sudtBalanceQUery.data?.balances}
+            tokenList={tokenList}
+            dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
             <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
