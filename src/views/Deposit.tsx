@@ -285,14 +285,16 @@ export default function Deposit() {
   }, [ckbBalance, ckbInput]);
 
   useEffect(() => {
-    if (ckbInput === "" || ckbBalance === undefined) {
+    if (
+      sudtInput &&
+      selectedSudtBalance &&
+      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
+    ) {
       setSubmitButtonDisable(true);
-    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lt(Amount.from(ckbBalance))) {
-      setSubmitButtonDisable(false);
     } else {
-      setSubmitButtonDisable(true);
+      setSubmitButtonDisable(false);
     }
-  }, [ckbBalance, ckbInput]);
+  }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
   const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as SUDT);
