@@ -158,7 +158,10 @@ export default function RequestWithdrawal() {
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
       setSubmitButtonDisable(true);
-    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))) {
+    } else if (
+      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+    ) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
@@ -174,26 +177,6 @@ export default function RequestWithdrawal() {
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithDrawal = () => {
-    const validateInput = (ckb: string, sudt: string) => {
-      if (!query.data) {
-        throw new Error("No CKB balance Data");
-      }
-      if (sudtBalance === undefined) {
-        throw new Error("No sudt balance Data");
-      }
-      console.log(Amount.from(ckb), Amount.from(query.data), Amount.from(ckb).lt(Amount.from(query.data)));
-      if (Amount.from(ckb).gt(Amount.from(query.data))) {
-        notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
-        return false;
-      }
-      if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(sudtBalance, selectedSudt?.decimals))) {
-        notification.error({
-          message: `You Don't have enough ${selectedSudt?.symbol}, Please check your balance and type again`,
-        });
-        return false;
-      }
-      return true;
-    };
     const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -205,10 +188,7 @@ export default function RequestWithdrawal() {
       setIsModalVisible(false);
       return;
     }
-    if (!validateInput(capacity, amount)) {
-      setIsModalVisible(false);
-      return;
-    }
+
     setLoading(true);
     let e: WithdrawalEventEmitter;
     try {

@@ -222,28 +222,6 @@ export default function Deposit() {
       if (selectedSudt && sudtInput) {
         amount = "0x" + Amount.from(sudtInput, selectedSudt.decimals).toString(16);
       }
-      const validateInput = (ckb: string, sudt: string) => {
-        if (query.data === undefined) {
-          throw new Error("No CKB balance Data");
-        }
-        if (selectedSudtBalance === undefined) {
-          throw new Error("No sudt balance Data");
-        }
-        if (Amount.from(ckb).gt(Amount.from(query.data))) {
-          notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
-          return false;
-        }
-        if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance, selectedSudt?.decimals))) {
-          notification.error({
-            message: `You Don't have enough ${selectedSudt?.symbol}, Please check your balance and type again`,
-          });
-          return false;
-        }
-        return true;
-      };
-      if (!validateInput(capacity, amount)) {
-        return;
-      }
       setIsModalVisible(true);
       try {
         const hash = await lightGodwoken.deposit({
@@ -277,7 +255,10 @@ export default function Deposit() {
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
       setSubmitButtonDisable(true);
-    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))) {
+    } else if (
+      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+    ) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
