@@ -6,7 +6,7 @@ import {
   WithdrawalRequestV1,
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
-import { CkbAmount } from "@ckitjs/ckit/dist/helpers";
+import { Amount, CkbAmount } from "@ckitjs/ckit/dist/helpers";
 import { getLayer2Config } from "./constants/index";
 import {
   WithdrawalEventEmitter,
@@ -101,6 +101,19 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return result;
   }
+  async getErc20Balance(address: string): Promise<string> {
+    if (!window.ethereum) {
+      return "result";
+    }
+    const Contract = require("web3-eth-contract");
+    Contract.setProvider(this.provider.godwokenRpc);
+    const contract = new Contract(ERC20.abi, address);
+    const balance = contract.methods
+      .balanceOf(this.provider.l2Address)
+      .call({ from: this.provider.l2Address, gasPrice: "0" });
+    return balance;
+  }
+
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
     console.log("searchParams is:", searchParams);
@@ -211,11 +224,28 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (BI.from(balance).lt(BI.from(payload.capacity))) {
       eventEmitter.emit(
         "error",
-        `Godwoken balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
+        `Godwoken CKB balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
           payload.capacity,
         ).humanize()}`,
       );
-      throw new Error(`Insufficient balance(${balance}) on Godwoken`);
+      throw new Error(`Insufficient CKB balance(${balance}) on Godwoken`);
+    }
+
+    const builtinErc20List = this.getBuiltinErc20List();
+    const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
+    if (!erc20) {
+      throw new Error("SUDT not exit");
+    }
+    const sudtBalance = await this.getErc20Balance(erc20.address);
+    if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
+      eventEmitter.emit(
+        "error",
+        `Godwoken ${erc20.symbol} balance ${Amount.from(balance, erc20.decimals).humanize()} is less than ${Amount.from(
+          payload.amount,
+          erc20.decimals,
+        ).humanize()}`,
+      );
+      throw new Error(`Insufficient ${erc20.symbol} balance(${balance}) on Godwoken`);
     }
     const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
     const nonce: number = await godwokenWeb3.getNonce(fromId!);
