@@ -10,6 +10,7 @@ import Page from "./Page";
 import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
+import { useCKBBalance } from "../hooks/useCKBBalance";
 
 const { Text } = Typography;
 
@@ -207,18 +208,32 @@ export default function Deposit() {
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const lightGodwoken = useLightGodwoken();
+  const query = useCKBBalance(true);
 
   const showModal = async () => {
     setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = Amount.from(ckbInput, 8);
+      const capacity = Amount.from(ckbInput, 8).toHex();
       let amount = "0x0";
       if (selectedSudt && outputValue) {
         amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
       }
+      const validateInput = (ckb: string, sudt: string) => {
+        if (!query.data) {
+          throw new Error("No CKB balance Data");
+        }
+        if (Amount.from(ckb).gt(Amount.from(query.data))) {
+          notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
+          return false;
+        }
+        return true;
+      };
+      if (!validateInput(capacity, amount)) {
+        return "";
+      }
       try {
         const hash = await lightGodwoken.deposit({
-          capacity: "0x" + capacity.toString(16),
+          capacity: capacity,
           amount: amount,
           sudtType: selectedSudt?.type,
         });

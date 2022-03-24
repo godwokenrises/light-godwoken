@@ -4,6 +4,7 @@ import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { useCKBBalance } from "../hooks/useCKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
@@ -138,6 +139,7 @@ export default function RequestWithdrawal() {
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const lightGodwoken = useLightGodwoken();
+  const query = useCKBBalance(false);
   const params = useParams();
   const showModal = () => {
     setIsModalVisible(true);
@@ -156,8 +158,18 @@ export default function RequestWithdrawal() {
   }, [ckbInput]);
 
   const sendWithDrawal = () => {
-    setLoading(true);
-    const capacity = Amount.from(ckbInput, 8);
+    const validateInput = (ckb: string, sudt: string) => {
+      if (!query.data) {
+        throw new Error("No CKB balance Data");
+      }
+      console.log(Amount.from(ckb), Amount.from(query.data), Amount.from(ckb).lt(Amount.from(query.data)));
+      if (Amount.from(ckb).gt(Amount.from(query.data))) {
+        notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
+        return false;
+      }
+      return true;
+    };
+    const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (selectedSudt && sudtValue) {
@@ -167,10 +179,14 @@ export default function RequestWithdrawal() {
     if (!lightGodwoken) {
       return;
     }
+    if (!validateInput(capacity, amount)) {
+      return;
+    }
+    setLoading(true);
     let e: WithdrawalEventEmitter;
     try {
       e = lightGodwoken.withdrawWithEvent({
-        capacity: "0x" + capacity.toString(16),
+        capacity: capacity,
         amount: amount,
         sudt_script_hash: sudt_script_hash,
       });
