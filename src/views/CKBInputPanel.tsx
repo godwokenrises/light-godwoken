@@ -6,6 +6,7 @@ import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
 import { useQuery } from "react-query";
+import { useCKBBalance } from "../hooks/useCKBBalance";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -59,18 +60,8 @@ interface CKBInputPanelProps {
 }
 export default function CKBInputPanel({ value, onUserInput, label, isL1, isDeposit }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
-  const lightGodwoken = useLightGodwoken();
-
-  const query = useQuery(
-    ["queryBalance", { isL1: isL1 }],
-    () => {
-      return isL1 ? lightGodwoken?.getL1CkbBalance() : lightGodwoken?.getL2CkbBalance();
-    },
-    {
-      enabled: !!lightGodwoken,
-    },
-  );
-
+  const query = useCKBBalance(!!isL1);
+  
   const ckbBalance = query.data || "";
   useEffect(() => {
     if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {
