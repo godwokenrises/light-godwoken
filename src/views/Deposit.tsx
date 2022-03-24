@@ -207,7 +207,7 @@ export default function Deposit() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
-  const [sudtBalance, setSudtBalance] = useState<string>();
+  const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(true);
 
@@ -222,14 +222,14 @@ export default function Deposit() {
         if (query.data === undefined) {
           throw new Error("No CKB balance Data");
         }
-        if (sudtBalance === undefined) {
+        if (selectedSudtBalance === undefined) {
           throw new Error("No sudt balance Data");
         }
         if (Amount.from(ckb).gt(Amount.from(query.data))) {
           notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
           return false;
         }
-        if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(sudtBalance, selectedSudt?.decimals))) {
+        if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance, selectedSudt?.decimals))) {
           notification.error({
             message: `You Don't have enough ${selectedSudt?.symbol}, Please check your balance and type again`,
           });
@@ -280,7 +280,7 @@ export default function Deposit() {
 
   const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as SUDT);
-    setSudtBalance(balance);
+    setSelectedSudtBalance(balance);
   };
 
   const copyAddress = () => {
