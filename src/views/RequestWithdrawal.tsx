@@ -142,6 +142,7 @@ export default function RequestWithdrawal() {
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(false);
+  const ckbBalance = query.data;
   const params = useParams();
   const erc20BalanceQuery = useERC20Balance();
 
@@ -155,12 +156,22 @@ export default function RequestWithdrawal() {
   };
 
   useEffect(() => {
-    if (Number(ckbInput) >= 400) {
+    if (ckbInput === "" || ckbBalance === undefined) {
+      setSubmitButtonDisable(true);
+    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
     }
-  }, [ckbInput]);
+  }, [ckbBalance, ckbInput]);
+
+  useEffect(() => {
+    if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
+      setSubmitButtonDisable(true);
+    } else {
+      setSubmitButtonDisable(false);
+    }
+  }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithDrawal = () => {
     const validateInput = (ckb: string, sudt: string) => {

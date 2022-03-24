@@ -277,7 +277,7 @@ export default function Deposit() {
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
       setSubmitButtonDisable(true);
-    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lt(Amount.from(ckbBalance))) {
+    } else if (Amount.from(ckbInput).gte(Amount.from(400)) && Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
