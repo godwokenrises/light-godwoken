@@ -207,11 +207,11 @@ export default function Deposit() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
+  const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(true);
 
   const showModal = async () => {
-    setIsModalVisible(true);
     if (lightGodwoken) {
       const capacity = Amount.from(ckbInput, 8).toHex();
       let amount = "0x0";
@@ -219,18 +219,28 @@ export default function Deposit() {
         amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
       }
       const validateInput = (ckb: string, sudt: string) => {
-        if (!query.data) {
+        if (query.data === undefined) {
           throw new Error("No CKB balance Data");
+        }
+        if (sudtBalance === undefined) {
+          throw new Error("No sudt balance Data");
         }
         if (Amount.from(ckb).gt(Amount.from(query.data))) {
           notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
           return false;
         }
+        if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(sudtBalance, selectedSudt?.decimals))) {
+          notification.error({
+            message: `You Don't have enough ${selectedSudt?.name}, Please check your balance and type again`,
+          });
+          return false;
+        }
         return true;
       };
       if (!validateInput(capacity, amount)) {
-        return "";
+        return;
       }
+      setIsModalVisible(true);
       try {
         const hash = await lightGodwoken.deposit({
           capacity: capacity,
@@ -268,8 +278,9 @@ export default function Deposit() {
     }
   }, [ckbInput]);
 
-  const handleSelectedChange = (value: Token) => {
+  const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as SUDT);
+    setSudtBalance(balance);
   };
 
   const copyAddress = () => {

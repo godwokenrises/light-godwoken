@@ -2,10 +2,8 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
-import { useQuery } from "react-query";
 import { useCKBBalance } from "../hooks/useCKBBalance";
 
 const StyleWrapper = styled.div`
@@ -61,7 +59,7 @@ interface CKBInputPanelProps {
 export default function CKBInputPanel({ value, onUserInput, label, isL1, isDeposit }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
   const query = useCKBBalance(!!isL1);
-  
+
   const ckbBalance = query.data || "";
   useEffect(() => {
     if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {

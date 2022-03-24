@@ -164,7 +164,7 @@ interface CurrencyInputPanelProps {
   autoFocus?: boolean;
   transparent?: boolean;
   isL1?: boolean;
-  onSelectedChange: (value: Token) => void;
+  onSelectedChange: (value: Token, balance: string) => void;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -224,13 +224,13 @@ export default function CurrencyInputPanel({
   const handleErc20Selected = (index: number, erc20: Token) => {
     setDisableInput(false);
     setSelectedCurrency(erc20);
-    onSelectedChange(erc20);
     setIsModalVisible(false);
     setShowMaxButton(true);
     onUserInput("");
 
     if (balancesList && balancesList.length && index !== undefined && erc20) {
       const balance = balancesList[index];
+      onSelectedChange(erc20, balance);
       const currencyBalance = getFullDisplayAmount(BigInt(balance), erc20.decimals);
       setCurrencyBalance(currencyBalance);
     }
