@@ -231,7 +231,7 @@ export default function Deposit() {
         }
         if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(sudtBalance, selectedSudt?.decimals))) {
           notification.error({
-            message: `You Don't have enough ${selectedSudt?.name}, Please check your balance and type again`,
+            message: `You Don't have enough ${selectedSudt?.symbol}, Please check your balance and type again`,
           });
           return false;
         }

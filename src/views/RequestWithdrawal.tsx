@@ -138,6 +138,7 @@ export default function RequestWithdrawal() {
   const [loading, setLoading] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
+  const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(false);
   const params = useParams();
@@ -162,9 +163,18 @@ export default function RequestWithdrawal() {
       if (!query.data) {
         throw new Error("No CKB balance Data");
       }
+      if (sudtBalance === undefined) {
+        throw new Error("No sudt balance Data");
+      }
       console.log(Amount.from(ckb), Amount.from(query.data), Amount.from(ckb).lt(Amount.from(query.data)));
       if (Amount.from(ckb).gt(Amount.from(query.data))) {
         notification.error({ message: "You Don't have enough CKB, Please check your CKB balance and type again" });
+        return false;
+      }
+      if (Amount.from(sudt, selectedSudt?.decimals).gt(Amount.from(sudtBalance, selectedSudt?.decimals))) {
+        notification.error({
+          message: `You Don't have enough ${selectedSudt?.symbol}, Please check your balance and type again`,
+        });
         return false;
       }
       return true;
@@ -177,9 +187,11 @@ export default function RequestWithdrawal() {
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
     if (!lightGodwoken) {
+      setIsModalVisible(false);
       return;
     }
     if (!validateInput(capacity, amount)) {
+      setIsModalVisible(false);
       return;
     }
     setLoading(true);
@@ -228,8 +240,9 @@ export default function RequestWithdrawal() {
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
   };
-  const handleSelectedChange = (value: Token) => {
+  const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as L1MappedErc20);
+    setSudtBalance(balance);
   };
 
   return (
