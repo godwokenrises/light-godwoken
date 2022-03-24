@@ -224,6 +224,7 @@ export default function CurrencyInputPanel({
           placeholder={disableInput ? "Please Select sUDT First" : "0.0"}
           className="token-amount-input"
           value={value}
+          decimal={selectedCurrency?.decimals}
           onUserInput={(val) => {
             onUserInput(val);
           }}

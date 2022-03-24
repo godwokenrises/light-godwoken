@@ -38,20 +38,24 @@ const StyledInput = styled.input<{ error?: boolean; fontSize?: string; align?: s
 export function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
-const inputRegex = RegExp(`^\\d*(?:\\\\[.])?\\d*$`); // match escaped "." characters via in a non-capturing group
-
+const DEFAULT_DECIMAL = 8;
 export const Input = React.memo(function InnerInput({
   value,
   onUserInput,
   placeholder,
+  decimal,
   ...rest
 }: {
   value: string | number;
   onUserInput: (input: string) => void;
   error?: boolean;
   fontSize?: string;
+  decimal?: number;
   align?: "right" | "left";
 } & Omit<React.HTMLProps<HTMLInputElement>, "ref" | "onChange" | "as">) {
+  const targetDecimal = decimal || DEFAULT_DECIMAL;
+  const inputRegex = RegExp(`^\\d*(?:\\\\[.])?\\d{0,${targetDecimal}}$`); // match escaped "." characters via in a non-capturing group
+
   const enforcer = (nextUserInput: string) => {
     if (nextUserInput === "" || inputRegex.test(escapeRegExp(nextUserInput))) {
       onUserInput(nextUserInput);
@@ -73,7 +77,6 @@ export const Input = React.memo(function InnerInput({
       autoCorrect="off"
       // text-specific options
       type="text"
-      pattern="^[0-9]*[.,]?[0-9]*$"
       placeholder={placeholder || "0.0"}
       minLength={1}
       maxLength={79}

@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
 import { useCKBBalance } from "../hooks/useCKBBalance";
+import { Amount } from "@ckitjs/ckit/dist/helpers";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -62,12 +63,16 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
 
   const ckbBalance = query.data || "";
   useEffect(() => {
-    if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {
+    if (value === "" || ckbBalance === "") {
+      return;
+    }
+    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+    if (!Amount.from(value, 8).eq(Amount.from(maxAmount))) {
       setShowMaxButton(true);
     } else {
       setShowMaxButton(false);
     }
-  }, [value, ckbBalance]);
+  }, [value, ckbBalance, isDeposit]);
 
   const handelMaxClick = () => {
     const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);

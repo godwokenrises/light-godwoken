@@ -257,7 +257,7 @@ export default function Deposit() {
       setSubmitButtonDisable(true);
     } else if (
       Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6500000000))
     ) {
       setSubmitButtonDisable(false);
     } else {
