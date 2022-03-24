@@ -179,7 +179,6 @@ export default function CurrencyInputPanel({
   const [tokenList, setTokenList] = useState<Token[]>();
   const [balancesList, setBalancesList] = useState<string[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
-  const [selectedIndex, setSelectedIndex] = useState<number>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
   const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
@@ -215,14 +214,6 @@ export default function CurrencyInputPanel({
     }
   }, [value, selectedCurrencyBalance, selectedCurrency]);
 
-  useEffect(() => {
-    if (balancesList && balancesList.length && selectedIndex !== undefined && selectedCurrency) {
-      const balance = balancesList[selectedIndex];
-      const currencyBalance = getFullDisplayAmount(BigInt(balance), selectedCurrency.decimals);
-      setCurrencyBalance(currencyBalance);
-    }
-  }, [selectedIndex, balancesList, selectedCurrency]);
-
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -237,7 +228,12 @@ export default function CurrencyInputPanel({
     setIsModalVisible(false);
     setShowMaxButton(true);
     onUserInput("");
-    setSelectedIndex(index);
+
+    if (balancesList && balancesList.length && index !== undefined && erc20) {
+      const balance = balancesList[index];
+      const currencyBalance = getFullDisplayAmount(BigInt(balance), erc20.decimals);
+      setCurrencyBalance(currencyBalance);
+    }
   };
   const handelMaxClick = () => {
     onUserInput(selectedCurrencyBalance);
