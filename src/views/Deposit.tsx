@@ -10,6 +10,8 @@ import Page from "./Page";
 import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
+import { useCKBBalance } from "../hooks/useCKBBalance";
+import { useSUDTBalance } from "../hooks/useSUDTBalance";
 
 const { Text } = Typography;
 
@@ -202,23 +204,28 @@ function L2Balance() {
 
 export default function Deposit() {
   const [ckbInput, setCkbInput] = useState("");
-  const [outputValue, setOutputValue] = useState("");
+  const [sudtInput, setSudtInputValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
+  const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
+  const sudtBalanceQUery = useSUDTBalance();
+  const query = useCKBBalance(true);
+  const ckbBalance = query.data;
+  const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
 
   const showModal = async () => {
-    setIsModalVisible(true);
     if (lightGodwoken) {
-      const capacity = Amount.from(ckbInput, 8);
+      const capacity = Amount.from(ckbInput, 8).toHex();
       let amount = "0x0";
-      if (selectedSudt && outputValue) {
-        amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
+      if (selectedSudt && sudtInput) {
+        amount = "0x" + Amount.from(sudtInput, selectedSudt.decimals).toString(16);
       }
+      setIsModalVisible(true);
       try {
         const hash = await lightGodwoken.deposit({
-          capacity: "0x" + capacity.toString(16),
+          capacity: capacity,
           amount: amount,
           sudtType: selectedSudt?.type,
         });
@@ -246,15 +253,33 @@ export default function Deposit() {
   };
 
   useEffect(() => {
-    if (Number(ckbInput) >= 400) {
+    if (ckbInput === "" || ckbBalance === undefined) {
+      setSubmitButtonDisable(true);
+    } else if (
+      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6500000000))
+    ) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
     }
-  }, [ckbInput]);
+  }, [ckbBalance, ckbInput]);
 
-  const handleSelectedChange = (value: Token) => {
+  useEffect(() => {
+    if (
+      sudtInput &&
+      selectedSudtBalance &&
+      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
+    ) {
+      setSubmitButtonDisable(true);
+    } else {
+      setSubmitButtonDisable(false);
+    }
+  }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
+
+  const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as SUDT);
+    setSelectedSudtBalance(balance);
   };
 
   const copyAddress = () => {
@@ -284,11 +309,13 @@ export default function Deposit() {
             <PlusOutlined />
           </div>
           <CurrencyInputPanel
-            value={outputValue}
-            onUserInput={setOutputValue}
+            value={sudtInput}
+            onUserInput={setSudtInputValue}
             label="sUDT(optional)"
             onSelectedChange={handleSelectedChange}
-            isL1
+            balancesList={sudtBalanceQUery.data?.balances}
+            tokenList={tokenList}
+            dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
             <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
@@ -307,7 +334,7 @@ export default function Deposit() {
         </div>
         <Text>Waiting For Confirmation</Text>
         <Text>
-          Depositing {outputValue} {selectedSudt?.symbol} and {ckbInput} CKB
+          Depositing {sudtInput} {selectedSudt?.symbol} and {ckbInput} CKB
         </Text>
         <div className="tips">Confirm this transaction in your wallet</div>
       </ConfirmModal>

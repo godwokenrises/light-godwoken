@@ -2,10 +2,10 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { getDisplayAmount } from "../utils/formatTokenAmount";
+import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
-import { useQuery } from "react-query";
+import { useCKBBalance } from "../hooks/useCKBBalance";
+import { Amount } from "@ckitjs/ckit/dist/helpers";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -59,29 +59,30 @@ interface CKBInputPanelProps {
 }
 export default function CKBInputPanel({ value, onUserInput, label, isL1, isDeposit }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
-  const lightGodwoken = useLightGodwoken();
-
-  const query = useQuery(
-    ["queryBalance", { isL1: isL1 }],
-    () => {
-      return isL1 ? lightGodwoken?.getL1CkbBalance() : lightGodwoken?.getL2CkbBalance();
-    },
-    {
-      enabled: !!lightGodwoken,
-    },
-  );
+  const query = useCKBBalance(!!isL1);
 
   const ckbBalance = query.data || "";
   useEffect(() => {
-    if (value !== getDisplayAmount(BigInt(ckbBalance), 8)) {
-      setShowMaxButton(true);
-    } else {
-      setShowMaxButton(false);
+    if (value === "" && ckbBalance === "") {
+      return;
     }
-  }, [value, ckbBalance]);
+    if (value === "" && ckbBalance) {
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      setShowMaxButton(!!(maxAmount > 0));
+    }
+    if (value && ckbBalance) {
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      if (maxAmount < 0 || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
+        setShowMaxButton(false);
+      } else {
+        setShowMaxButton(true);
+      }
+    }
+  }, [value, ckbBalance, isDeposit]);
 
   const handelMaxClick = () => {
     const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+    // ?Todo change to use Amount.humanize()
     onUserInput(getDisplayAmount(maxAmount, 8));
     setShowMaxButton(false);
   };

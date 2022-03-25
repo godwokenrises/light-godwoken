@@ -2,13 +2,9 @@ import styled from "styled-components";
 import { Typography, Modal, List } from "antd";
 import { FixedHeightRow } from "../components/Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
-import { DownOutlined } from "@ant-design/icons";
+import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
-import { L1MappedErc20 } from "../types/type";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { SUDT } from "../light-godwoken/lightGodwokenType";
-import { Script } from "@ckb-lumos/lumos";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -157,55 +153,30 @@ interface CurrencyInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
   label?: string;
-  disableCurrencySelect?: boolean;
-  hideBalance?: boolean;
-  hideInput?: boolean;
-  showCommonBases?: boolean;
   autoFocus?: boolean;
-  transparent?: boolean;
-  isL1?: boolean;
-  onSelectedChange: (value: Token) => void;
+  balancesList: string[] | undefined;
+  tokenList: Token[] | undefined;
+  dataLoading: boolean;
+  onSelectedChange: (value: Token, balance: string) => void;
 }
 export default function CurrencyInputPanel({
   autoFocus,
   value,
   onUserInput,
   label,
-  isL1,
+  balancesList,
+  tokenList,
+  dataLoading,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
   const [showMaxButton, setShowMaxButton] = useState(false);
-  const [tokenList, setTokenList] = useState<Token[]>();
-  const [balancesList, setBalancesList] = useState<string[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
-  const [selectedIndex, setSelectedIndex] = useState<number>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
-  const lightGodwoken = useLightGodwoken();
   const showCurrencySelectModal = () => {
     setIsModalVisible(true);
   };
   const [isModalVisible, setIsModalVisible] = useState(false);
-  useEffect(() => {
-    const fetchData = async () => {
-      if (lightGodwoken) {
-        if (isL1) {
-          const tokenList: SUDT[] = lightGodwoken.getBuiltinSUDTList();
-          setTokenList(tokenList);
-          const types: Script[] = tokenList.map((token) => token.type);
-          const balances = await lightGodwoken.getSudtBalances({ types });
-          setBalancesList(balances.balances);
-        } else {
-          const results: L1MappedErc20[] = lightGodwoken.getBuiltinErc20List();
-          setTokenList(results);
-          const addressList = results.map((erc20) => erc20.address);
-          const balances = await lightGodwoken.getErc20Balances({ addresses: addressList });
-          setBalancesList(balances.balances);
-        }
-      }
-    };
-    fetchData();
-  }, [lightGodwoken, isL1]);
 
   useEffect(() => {
     if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
@@ -214,14 +185,6 @@ export default function CurrencyInputPanel({
       setShowMaxButton(false);
     }
   }, [value, selectedCurrencyBalance, selectedCurrency]);
-
-  useEffect(() => {
-    if (balancesList && balancesList.length && selectedIndex !== undefined && selectedCurrency) {
-      const balance = balancesList[selectedIndex];
-      const currencyBalance = getFullDisplayAmount(BigInt(balance), selectedCurrency.decimals);
-      setCurrencyBalance(currencyBalance);
-    }
-  }, [selectedIndex, balancesList, selectedCurrency]);
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -233,11 +196,16 @@ export default function CurrencyInputPanel({
   const handleErc20Selected = (index: number, erc20: Token) => {
     setDisableInput(false);
     setSelectedCurrency(erc20);
-    onSelectedChange(erc20);
     setIsModalVisible(false);
     setShowMaxButton(true);
     onUserInput("");
-    setSelectedIndex(index);
+
+    if (balancesList && balancesList.length && index !== undefined && erc20) {
+      const balance = balancesList[index];
+      onSelectedChange(erc20, balance);
+      const currencyBalance = getFullDisplayAmount(BigInt(balance), erc20.decimals);
+      setCurrencyBalance(currencyBalance);
+    }
   };
   const handelMaxClick = () => {
     onUserInput(selectedCurrencyBalance);
@@ -256,6 +224,7 @@ export default function CurrencyInputPanel({
           placeholder={disableInput ? "Please Select sUDT First" : "0.0"}
           className="token-amount-input"
           value={value}
+          decimal={selectedCurrency?.decimals}
           onUserInput={(val) => {
             onUserInput(val);
           }}
@@ -290,7 +259,7 @@ export default function CurrencyInputPanel({
             renderItem={(erc20, index) => (
               <List.Item
                 className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => handleErc20Selected(index, erc20)}
+                onClick={() => !dataLoading && handleErc20Selected(index, erc20)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
@@ -301,7 +270,11 @@ export default function CurrencyInputPanel({
                     </div>
                   </div>
                   <div>
-                    {balancesList.length ? getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals) : ""}
+                    {dataLoading ? (
+                      <LoadingOutlined />
+                    ) : (
+                      balancesList && getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals)
+                    )}
                   </div>
                 </FixedHeightRow>
               </List.Item>

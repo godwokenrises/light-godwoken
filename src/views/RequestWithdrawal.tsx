@@ -4,6 +4,8 @@ import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
+import { useCKBBalance } from "../hooks/useCKBBalance";
+import { useERC20Balance } from "../hooks/useERC20Balance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
@@ -132,13 +134,19 @@ interface Token {
 
 export default function RequestWithdrawal() {
   const [ckbInput, setCkbInput] = useState("");
-  const [outputValue, setOutputValue] = useState("");
+  const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
+  const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
+  const query = useCKBBalance(false);
+  const ckbBalance = query.data;
   const params = useParams();
+  const erc20BalanceQuery = useERC20Balance();
+
+  const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -148,38 +156,55 @@ export default function RequestWithdrawal() {
   };
 
   useEffect(() => {
-    if (Number(ckbInput) >= 400) {
+    if (ckbInput === "" || ckbBalance === undefined) {
+      setSubmitButtonDisable(true);
+    } else if (
+      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+    ) {
       setSubmitButtonDisable(false);
     } else {
       setSubmitButtonDisable(true);
     }
-  }, [ckbInput]);
+  }, [ckbBalance, ckbInput]);
+
+  useEffect(() => {
+    if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
+      setSubmitButtonDisable(true);
+    } else {
+      setSubmitButtonDisable(false);
+    }
+  }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithDrawal = () => {
-    setLoading(true);
-    const capacity = Amount.from(ckbInput, 8);
+    const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
-    if (selectedSudt && outputValue) {
-      amount = "0x" + Amount.from(outputValue, selectedSudt.decimals).toString(16);
+    if (selectedSudt && sudtValue) {
+      amount = "0x" + Amount.from(sudtValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
     if (!lightGodwoken) {
+      setIsModalVisible(false);
       return;
     }
+
+    setLoading(true);
     let e: WithdrawalEventEmitter;
     try {
       e = lightGodwoken.withdrawWithEvent({
-        capacity: "0x" + capacity.toString(16),
+        capacity: capacity,
         amount: amount,
         sudt_script_hash: sudt_script_hash,
       });
     } catch (e) {
+      setIsModalVisible(false);
       if (e instanceof Error) {
         notification.error({
           message: e.message,
         });
       }
+      setLoading(false);
       return;
     }
 
@@ -200,16 +225,19 @@ export default function RequestWithdrawal() {
 
     e.on("error", (result: unknown) => {
       setLoading(false);
+      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
 
     e.on("fail", (result: unknown) => {
       setLoading(false);
+      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
   };
-  const handleSelectedChange = (value: Token) => {
+  const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as L1MappedErc20);
+    setSudtBalance(balance);
   };
 
   return (
@@ -228,10 +256,13 @@ export default function RequestWithdrawal() {
             <PlusOutlined />
           </div>
           <CurrencyInputPanel
-            value={outputValue}
-            onUserInput={setOutputValue}
+            value={sudtValue}
+            onUserInput={setSudtValue}
             label="sUDT(optional)"
+            balancesList={erc20BalanceQuery.data?.balances}
+            tokenList={tokenList}
             onSelectedChange={handleSelectedChange}
+            dataLoading={erc20BalanceQuery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
             <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
