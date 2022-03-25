@@ -137,7 +137,8 @@ export default function RequestWithdrawal() {
   const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
+  const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
+  const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
@@ -157,22 +158,22 @@ export default function RequestWithdrawal() {
 
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     } else if (
       Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
       Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
     ) {
-      setSubmitButtonDisable(false);
+      setIsCKBValueValidate(true);
     } else {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     }
   }, [ckbBalance, ckbInput]);
 
   useEffect(() => {
     if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
-      setSubmitButtonDisable(true);
+      setIsSudtValueValidate(false);
     } else {
-      setSubmitButtonDisable(false);
+      setIsSudtValueValidate(true);
     }
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
@@ -265,7 +266,11 @@ export default function RequestWithdrawal() {
             dataLoading={erc20BalanceQuery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
-            <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
+            <Button
+              className="submit-button"
+              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              onClick={showModal}
+            >
               Request Withdrawal
             </Button>
           </WithDrawalButton>
