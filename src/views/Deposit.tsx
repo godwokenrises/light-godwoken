@@ -258,7 +258,7 @@ export default function Deposit() {
       setIsCKBValueValidate(false);
     } else if (
       Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6500000000))
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6400000000))
     ) {
       setIsCKBValueValidate(true);
     } else {

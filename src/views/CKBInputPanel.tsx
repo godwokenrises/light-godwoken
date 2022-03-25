@@ -67,11 +67,11 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
       return;
     }
     if (value === "" && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
       setShowMaxButton(!!(maxAmount > 0));
     }
     if (value && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
       if (maxAmount < 0 || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
         setShowMaxButton(false);
       } else {
@@ -81,7 +81,7 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
   }, [value, ckbBalance, isDeposit]);
 
   const handelMaxClick = () => {
-    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
     onUserInput(getFullDisplayAmount(BigInt(maxAmount), 8, { maxDecimalPlace: 8 }));
     setShowMaxButton(false);
   };
