@@ -63,19 +63,26 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
 
   const ckbBalance = query.data || "";
   useEffect(() => {
-    if (value === "" || ckbBalance === "") {
+    if (value === "" && ckbBalance === "") {
       return;
     }
-    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
-    if (!Amount.from(value, 8).eq(Amount.from(maxAmount))) {
-      setShowMaxButton(true);
-    } else {
-      setShowMaxButton(false);
+    if (value === "" && ckbBalance) {
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      setShowMaxButton(!!(maxAmount > 0));
+    }
+    if (value && ckbBalance) {
+      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+      if (maxAmount < 0 || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
+        setShowMaxButton(false);
+      } else {
+        setShowMaxButton(true);
+      }
     }
   }, [value, ckbBalance, isDeposit]);
 
   const handelMaxClick = () => {
     const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6500000000) : BigInt(ckbBalance);
+    // ?Todo change to use Amount.humanize()
     onUserInput(getDisplayAmount(maxAmount, 8));
     setShowMaxButton(false);
   };
