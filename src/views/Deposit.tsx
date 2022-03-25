@@ -206,7 +206,8 @@ export default function Deposit() {
   const [ckbInput, setCkbInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
+  const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
+  const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
@@ -254,14 +255,14 @@ export default function Deposit() {
 
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     } else if (
       Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
       Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6500000000))
     ) {
-      setSubmitButtonDisable(false);
+      setIsCKBValueValidate(true);
     } else {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     }
   }, [ckbBalance, ckbInput]);
 
@@ -271,9 +272,9 @@ export default function Deposit() {
       selectedSudtBalance &&
       Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
     ) {
-      setSubmitButtonDisable(true);
+      setIsSudtValueValidate(false);
     } else {
-      setSubmitButtonDisable(false);
+      setIsSudtValueValidate(true);
     }
   }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
@@ -318,7 +319,11 @@ export default function Deposit() {
             dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
-            <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
+            <Button
+              className="submit-button"
+              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              onClick={showModal}
+            >
               Deposit
             </Button>
           </WithDrawalButton>
