@@ -1,7 +1,7 @@
 import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { Script } from "@ckb-lumos/lumos";
 import { Button, message, Modal, notification, Typography } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "./CKBInputPanel";
@@ -249,6 +249,26 @@ export default function Deposit() {
     }
   };
 
+  const inputError = useMemo(() => {
+    if (ckbInput === "") {
+      return "Enter CKB Amount";
+    }
+    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+      return "Minimum 400 CKB";
+    }
+    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+      return "Insufficient CKB Amount";
+    }
+    if (
+      sudtInput &&
+      selectedSudtBalance &&
+      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
+    ) {
+      return `Insufficient ${selectedSudt?.symbol} Amount`;
+    }
+    return void 0;
+  }, [ckbInput, ckbBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+
   const handleCancel = () => {
     setIsModalVisible(false);
   };
@@ -324,7 +344,7 @@ export default function Deposit() {
               disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
               onClick={showModal}
             >
-              Deposit
+              {inputError || "Deposit"}
             </Button>
           </WithDrawalButton>
           <div>

@@ -1,7 +1,7 @@
 import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { Button, Modal, notification, Typography } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useCKBBalance } from "../hooks/useCKBBalance";
@@ -241,6 +241,22 @@ export default function RequestWithdrawal() {
     setSudtBalance(balance);
   };
 
+  const inputError = useMemo(() => {
+    if (ckbInput === "") {
+      return "Enter CKB Amount";
+    }
+    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+      return "Minimum 400 CKB";
+    }
+    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+      return "Insufficient CKB Amount";
+    }
+    if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
+      return `Insufficient ${selectedSudt?.symbol} Amount`;
+    }
+    return void 0;
+  }, [ckbInput, ckbBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+
   return (
     <Page>
       <PageContent>
@@ -271,7 +287,7 @@ export default function RequestWithdrawal() {
               disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
               onClick={showModal}
             >
-              Request Withdrawal
+              {inputError || "Request Withdrawal"}
             </Button>
           </WithDrawalButton>
         </PageMain>
