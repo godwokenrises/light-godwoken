@@ -169,7 +169,7 @@ export default function CurrencyInputPanel({
   dataLoading,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
-  const [selectedCurrencyBalance, setCurrencyBalance] = useState("");
+  const [selectedCurrencyBalance, setCurrencyBalance] = useState<string>();
   const [showMaxButton, setShowMaxButton] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
@@ -203,19 +203,29 @@ export default function CurrencyInputPanel({
     if (balancesList && balancesList.length && index !== undefined && erc20) {
       const balance = balancesList[index];
       onSelectedChange(erc20, balance);
-      const currencyBalance = getFullDisplayAmount(BigInt(balance), erc20.decimals);
-      setCurrencyBalance(currencyBalance);
+      setCurrencyBalance(balance);
     }
   };
   const handelMaxClick = () => {
-    onUserInput(selectedCurrencyBalance);
+    if (selectedCurrencyBalance === undefined) {
+      throw new Error("Currency Balance Not Found");
+    }
+    onUserInput(
+      getFullDisplayAmount(BigInt(selectedCurrencyBalance), selectedCurrency?.decimals, {
+        maxDecimalPlace: selectedCurrency?.decimals,
+      }),
+    );
     setShowMaxButton(false);
   };
   return (
     <StyleWrapper>
       <Row className="first-row">
         <Typography.Text>{label}</Typography.Text>
-        <Typography.Text>{selectedCurrencyBalance || ""}</Typography.Text>
+        <Typography.Text>
+          {selectedCurrencyBalance
+            ? getFullDisplayAmount(BigInt(selectedCurrencyBalance), selectedCurrency?.decimals)
+            : ""}
+        </Typography.Text>
       </Row>
       <Row className="input-wrapper">
         <NumericalInput
