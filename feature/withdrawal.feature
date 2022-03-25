@@ -2,7 +2,7 @@
         Given I have "1000" CKB in Godwoken L2
         When I typed "2000" to From
         Then I Click "Withdrawal" button
-        And I should see "Godwoken balance 1,000 is less than 2,000" error message
+        And I should see "Withdrawal" button disabled
     Scenario Outline: Attempt to withdrawal ckb and sudt over max amout
         Given I have assets in Godwoken L2
             | asset | amount |
@@ -11,8 +11,8 @@
         When I typed "2000" to ckb input
         Then I typed "2000" to sudt input
         Then I Click "Withdrawal" button
-        And I should see "Godwoken balance 1,000 is less than 2,000" error message
-    Scenario Outline: Attempt to withdrawal sudt over max amout(faild now)
+        And I should see "Withdrawal" button disabled
+    Scenario Outline: Attempt to withdrawal sudt over max amout
         Given I have assets in Godwoken L2
             | asset | amount |
             | CKB   | 1000   |
@@ -20,7 +20,7 @@
         When I typed "400" to ckb input
         Then I typed "2000" to sudt input
         Then I Click "Withdrawal" button
-        And I should see "Godwoken balance 1,000 is less than 2,000" error message
+        And I should see "Withdrawal" button disabled
     Scenario Outline: should close modal and show error if cancal sign transaction
         Given I have assets in Godwoken L2
             | asset | amount |

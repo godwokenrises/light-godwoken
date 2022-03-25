@@ -83,13 +83,13 @@ Feature: Deposite From L1 to L2
         Given I have "1000" CKB
         When I typed "1000" to From
         Then I Click "Deposit" button
-        And I should see "For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future." error message
+        And I should see "Deposit" button disabled
 
     Scenario Outline: Attempt to deposit sudt over deposit max amout
         Given I have "1000" USDC
         When I typed "2000" to From
         Then I Click "Deposit" button
-        And I should see "Not enough SUDT:expected: 2000000000000000000000, actual: 1000000000000000000000 " error message
+        And I should see "Deposit" button disabled
 
     Scenario Outline: Attempt to deposit ckb and sudt over deposit max amout
         Given I have assets
@@ -99,4 +99,4 @@ Feature: Deposite From L1 to L2
         When I typed "2000" to ckb input
         Then I typed "2000" to sudt input
         Then I Click "Deposit" button
-        And I should see "For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future." error message
+        And I should see "Deposit" button disabled
