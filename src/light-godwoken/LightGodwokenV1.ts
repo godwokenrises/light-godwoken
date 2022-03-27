@@ -6,7 +6,7 @@ import {
   WithdrawalRequestV1,
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
-import { Amount, CkbAmount } from "@ckitjs/ckit/dist/helpers";
+import { CkbAmount } from "@ckitjs/ckit/dist/helpers";
 import { getLayer2Config } from "./constants/index";
 import {
   WithdrawalEventEmitter,
@@ -24,6 +24,7 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
+import { createObjectCodec, Byte32, Uint64, enhancePack, toArrayBuffer } from "@ckb-lumos/experiment-codec/";
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
@@ -114,6 +115,31 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return balance;
   }
 
+  withdrawalLockArgsCodec = createObjectCodec({
+    rollupHash: Byte32,
+    withdrawalBlockhash: Byte32,
+    withdrawalBlockNumber: Uint64,
+    accountScriptHash: Byte32,
+    ownerLockHash: Byte32,
+    // script: table({
+    //   code_hash: Byte32,
+    //   hash_type: Byte32,
+    //   args: Bytes,
+    // },["code_hash", "hash_type", "args"]),
+  });
+  enhancedWithdrawalLockArgsCodec = enhancePack(
+    this.withdrawalLockArgsCodec,
+    () => new ArrayBuffer(0),
+    (buf: ArrayBuffer) => ({
+      rollupHash: buf.slice(0, 32),
+      withdrawalBlockhash: buf.slice(32, 64),
+      withdrawalBlockNumber: buf.slice(64, 72),
+      accountScriptHash: buf.slice(72, 104),
+      ownerLockHash: buf.slice(104, 136),
+      script: buf.slice(136),
+    }),
+  );
+
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
     console.log("searchParams is:", searchParams);
@@ -125,28 +151,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     for await (const cell of collector.collect()) {
       console.log("iteration --> cell is:", cell);
-
-      // // a rollup_type_hash exists before this args, to make args friendly to prefix search
-      // struct WithdrawalLockArgs {
-      //   withdrawal_block_hash: Byte32,
-      //   withdrawal_block_number: Uint64,
-      //   account_script_hash: Byte32,
-      //   // layer1 lock to withdraw after challenge period
-      //   owner_lock_hash: Byte32,
-      // }
-
-      // according to the args shape:
-      // withdrawal_block_number byte location is 64~72
-      // owner_lock_hash byte location is 104~136
       const rawLockArgs = cell.cell_output.lock.args;
       if (rawLockArgs === null || rawLockArgs === undefined) {
         console.warn("cell args is not valid", cell);
         continue;
       }
-      const lockArgsOwnerScriptHash = rawLockArgs.slice(210, 274);
+      const unpackedWithdrawalArgs = this.enhancedWithdrawalLockArgsCodec.unpack(toArrayBuffer(rawLockArgs));
+      const lockArgsOwnerScriptHash = unpackedWithdrawalArgs.ownerLockHash;
       console.log("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
-
-      const withdrawBlock = utils.readBigUInt64LECompatible(`0x${rawLockArgs.slice(130, 146)}`);
+      const withdrawBlock = unpackedWithdrawalArgs.withdrawalBlockNumber;
       console.log("withdrawBlock is:", withdrawBlock.toNumber());
 
       let sudtTypeHash = "0x" + "00".repeat(32);
@@ -165,7 +178,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
       }
 
-      if (lockArgsOwnerScriptHash === ownerLockHash.slice(2)) {
+      if (lockArgsOwnerScriptHash === ownerLockHash) {
         collectedCells.push({
           cell,
           withdrawalBlockNumber: withdrawBlock.toNumber(),
@@ -231,22 +244,22 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       throw new Error(`Insufficient CKB balance(${balance}) on Godwoken`);
     }
 
-    const builtinErc20List = this.getBuiltinErc20List();
-    const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
-    if (!erc20) {
-      throw new Error("SUDT not exit");
-    }
-    const sudtBalance = await this.getErc20Balance(erc20.address);
-    if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken ${erc20.symbol} balance ${Amount.from(balance, erc20.decimals).humanize()} is less than ${Amount.from(
-          payload.amount,
-          erc20.decimals,
-        ).humanize()}`,
-      );
-      throw new Error(`Insufficient ${erc20.symbol} balance(${balance}) on Godwoken`);
-    }
+    // const builtinErc20List = this.getBuiltinErc20List();
+    // const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
+    // if (!erc20) {
+    //   throw new Error("SUDT not exit");
+    // }
+    // const sudtBalance = await this.getErc20Balance(erc20.address);
+    // if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
+    //   eventEmitter.emit(
+    //     "error",
+    //     `Godwoken ${erc20.symbol} balance ${Amount.from(balance, erc20.decimals).humanize()} is less than ${Amount.from(
+    //       payload.amount,
+    //       erc20.decimals,
+    //     ).humanize()}`,
+    //   );
+    //   throw new Error(`Insufficient ${erc20.symbol} balance(${balance}) on Godwoken`);
+    // }
     const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
     const nonce: number = await godwokenWeb3.getNonce(fromId!);
 
