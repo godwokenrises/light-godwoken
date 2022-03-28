@@ -1,7 +1,7 @@
 import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { Script } from "@ckb-lumos/lumos";
 import { Button, message, Modal, notification, Typography } from "antd";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "./CKBInputPanel";
@@ -206,7 +206,8 @@ export default function Deposit() {
   const [ckbInput, setCkbInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [submitButtonDisable, setSubmitButtonDisable] = useState(true);
+  const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
+  const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
@@ -248,20 +249,40 @@ export default function Deposit() {
     }
   };
 
+  const inputError = useMemo(() => {
+    if (ckbInput === "") {
+      return "Enter CKB Amount";
+    }
+    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+      return "Minimum 400 CKB";
+    }
+    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+      return "Insufficient CKB Amount";
+    }
+    if (
+      sudtInput &&
+      selectedSudtBalance &&
+      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
+    ) {
+      return `Insufficient ${selectedSudt?.symbol} Amount`;
+    }
+    return void 0;
+  }, [ckbInput, ckbBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
   useEffect(() => {
     if (ckbInput === "" || ckbBalance === undefined) {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     } else if (
       Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6500000000))
+      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6400000000))
     ) {
-      setSubmitButtonDisable(false);
+      setIsCKBValueValidate(true);
     } else {
-      setSubmitButtonDisable(true);
+      setIsCKBValueValidate(false);
     }
   }, [ckbBalance, ckbInput]);
 
@@ -271,9 +292,9 @@ export default function Deposit() {
       selectedSudtBalance &&
       Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
     ) {
-      setSubmitButtonDisable(true);
+      setIsSudtValueValidate(false);
     } else {
-      setSubmitButtonDisable(false);
+      setIsSudtValueValidate(true);
     }
   }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
@@ -318,8 +339,12 @@ export default function Deposit() {
             dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
           <WithDrawalButton>
-            <Button className="submit-button" disabled={submitButtonDisable} onClick={showModal}>
-              Deposit
+            <Button
+              className="submit-button"
+              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              onClick={showModal}
+            >
+              {inputError || "Deposit"}
             </Button>
           </WithDrawalButton>
           <div>
