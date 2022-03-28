@@ -1,10 +1,6 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash } from "@ckb-lumos/lumos";
-import {
-  Godwoken as GodwokenV1,
-  RawWithdrawalRequestV1,
-  WithdrawalRequestExtra,
-  WithdrawalRequestV1,
-} from "./godwoken-v1/src/index";
+import { helpers, Script, utils, HashType, HexNumber, Hash } from "@ckb-lumos/lumos";
+import { BI } from "@ckb-lumos/bi";
+import { Godwoken as GodwokenV1, WithdrawalLockArgsCodec, WithdrawalRequestExtraCodec } from "./godwoken-v1/index";
 import EventEmitter from "events";
 import { CkbAmount } from "@ckitjs/ckit/dist/helpers";
 import { getLayer2Config } from "./constants/index";
@@ -24,7 +20,8 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
-import { createObjectCodec, Byte32, Uint64, enhancePack, toArrayBuffer } from "@ckb-lumos/experiment-codec/";
+import { toArrayBuffer, toHex } from "@ckb-lumos/experiment-codec/";
+
 const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
@@ -115,31 +112,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return balance;
   }
 
-  withdrawalLockArgsCodec = createObjectCodec({
-    rollupHash: Byte32,
-    withdrawalBlockhash: Byte32,
-    withdrawalBlockNumber: Uint64,
-    accountScriptHash: Byte32,
-    ownerLockHash: Byte32,
-    // script: table({
-    //   code_hash: Byte32,
-    //   hash_type: Byte32,
-    //   args: Bytes,
-    // },["code_hash", "hash_type", "args"]),
-  });
-  enhancedWithdrawalLockArgsCodec = enhancePack(
-    this.withdrawalLockArgsCodec,
-    () => new ArrayBuffer(0),
-    (buf: ArrayBuffer) => ({
-      rollupHash: buf.slice(0, 32),
-      withdrawalBlockhash: buf.slice(32, 64),
-      withdrawalBlockNumber: buf.slice(64, 72),
-      accountScriptHash: buf.slice(72, 104),
-      ownerLockHash: buf.slice(104, 136),
-      script: buf.slice(136),
-    }),
-  );
-
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
     console.log("searchParams is:", searchParams);
@@ -156,7 +128,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         console.warn("cell args is not valid", cell);
         continue;
       }
-      const unpackedWithdrawalArgs = this.enhancedWithdrawalLockArgsCodec.unpack(toArrayBuffer(rawLockArgs));
+      const unpackedWithdrawalArgs = WithdrawalLockArgsCodec.unpack(toArrayBuffer(rawLockArgs));
       const lockArgsOwnerScriptHash = unpackedWithdrawalArgs.ownerLockHash;
       console.log("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
       const withdrawBlock = unpackedWithdrawalArgs.withdrawalBlockNumber;
@@ -219,6 +191,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
+    console.log("withdraw payload is:", payload);
+
     const godwokenWeb3 = new GodwokenV1(this.provider.config.GW_POLYJUICE_RPC_URL);
     const chainId = await godwokenWeb3.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
@@ -237,9 +211,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (BI.from(balance).lt(BI.from(payload.capacity))) {
       eventEmitter.emit(
         "error",
-        `Godwoken CKB balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
-          payload.capacity,
-        ).humanize()}`,
+        `Godwoken CKB balance ${CkbAmount.fromShannon(
+          balance.toBigInt(),
+        ).humanize()} is less than ${CkbAmount.fromShannon(payload.capacity).humanize()}`,
       );
       throw new Error(`Insufficient CKB balance(${balance}) on Godwoken`);
     }
@@ -263,16 +237,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
     const nonce: number = await godwokenWeb3.getNonce(fromId!);
 
-    const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
-      chain_id: chainId,
-      nonce: BI.from(nonce).toHexString(),
-      capacity: payload.capacity,
-      amount: payload.amount,
-      sudt_script_hash: payload.sudt_script_hash,
-      account_script_hash: layer2AccountScriptHash,
-      owner_lock_hash: ownerLockHash,
-      fee: "0x0",
-    };
     const typedMsg = {
       domain: {
         name: "Godwoken",
@@ -333,19 +297,25 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       eventEmitter.emit("error", "transaction need to be sign first");
     }
 
-    // construct WithdrawalRequestExx tra
-    const withdrawalReq: WithdrawalRequestV1 = {
-      raw: rawWithdrawalRequest,
-      signature: signedMessage,
-    };
-    const withdrawalReqExtra: WithdrawalRequestExtra = {
-      request: withdrawalReq,
+    const withdrawalReqNew = WithdrawalRequestExtraCodec.pack({
+      request: {
+        raw: {
+          nonce: BI.from(nonce).toNumber(),
+          chain_id: BI.from(chainId),
+          capacity: BI.from(payload.capacity),
+          amount: BI.from(payload.amount),
+          sudt_script_hash: payload.sudt_script_hash,
+          account_script_hash: layer2AccountScriptHash,
+          owner_lock_hash: ownerLockHash,
+          fee: BI.from(0),
+        },
+        signature: signedMessage,
+      },
       owner_lock: ownerLock,
-    };
-    console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
-
+    });
+    console.log("WithdrawalRequestExtra serialized new:", toHex(withdrawalReqNew));
     // submit WithdrawalRequestExtra
-    const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
+    const result = await godwokenWeb3.submitWithdrawalReqV1(toHex(withdrawalReqNew));
     console.log("result:", result);
     if (result !== null) {
       const errorMessage = (result as any).message;
