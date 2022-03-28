@@ -231,22 +231,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       throw new Error(`Insufficient CKB balance(${balance}) on Godwoken`);
     }
 
-    const builtinErc20List = this.getBuiltinErc20List();
-    const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
-    if (!erc20) {
-      throw new Error("SUDT not exit");
+    if (BI.from(payload.amount).gt(0)) {
+      await this.validateSUDTAmount(payload, eventEmitter);
     }
-    const sudtBalance = await this.getErc20Balance(erc20.address);
-    if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken ${erc20.symbol} balance ${Amount.from(balance, erc20.decimals).humanize()} is less than ${Amount.from(
-          payload.amount,
-          erc20.decimals,
-        ).humanize()}`,
-      );
-      throw new Error(`Insufficient ${erc20.symbol} balance(${balance}) on Godwoken`);
-    }
+
     const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
     const nonce: number = await godwokenWeb3.getNonce(fromId!);
 
@@ -361,5 +349,24 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         clearInterval(nIntervId);
       }
     }, 10000);
+  }
+
+  async validateSUDTAmount(payload: WithdrawalEventEmitterPayload, eventEmitter: EventEmitter) {
+    const builtinErc20List = this.getBuiltinErc20List();
+    const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
+    if (!erc20) {
+      throw new Error("SUDT not exit");
+    }
+    const sudtBalance = await this.getErc20Balance(erc20.address);
+    if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
+      eventEmitter.emit(
+        "error",
+        `Godwoken ${erc20.symbol} balance ${Amount.from(
+          sudtBalance,
+          erc20.decimals,
+        ).humanize()} is less than ${Amount.from(payload.amount, erc20.decimals).humanize()}`,
+      );
+      throw new Error(`Insufficient ${erc20.symbol} balance(${sudtBalance}) on Godwoken`);
+    }
   }
 }
