@@ -2,6 +2,15 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
+  GODWOKEN_V1_BLOCK_EXPLORER_URL,
+  GODWOKEN_V1_CHAIN_ID,
+  GODWOKEN_V1_CHAIN_NAME,
+  GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
+  GODWOKEN_V1_NATIVE_CURRENCY_NAME,
+  GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
+  GODWOKEN_V1_RPC_URL,
+} from "../config";
+import {
   LightGodwokenV1 as DefaultLightGodwokenV1,
   LightGodwoken as DefaultLightGodwoken,
 } from "../light-godwoken/index";
@@ -12,15 +21,15 @@ LightGodwokenContext.displayName = "LightGodwokenContext";
 const addNetwork = (ethereum: any) => {
   const params = [
     {
-      chainId: "0x315db00000006",
-      chainName: "GodwokenV11",
+      chainId: GODWOKEN_V1_CHAIN_ID,
+      chainName: GODWOKEN_V1_CHAIN_NAME,
       nativeCurrency: {
-        name: "pETH",
-        symbol: "pETH",
-        decimals: 18,
+        name: GODWOKEN_V1_NATIVE_CURRENCY_NAME,
+        symbol: GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
+        decimals: GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
       },
-      rpcUrls: ["https://godwoken-testnet-web3-v1-rpc.ckbapp.dev"],
-      blockExplorerUrls: ["https://v1.aggron.gwscan.com/"],
+      rpcUrls: [GODWOKEN_V1_RPC_URL],
+      blockExplorerUrls: [GODWOKEN_V1_BLOCK_EXPLORER_URL],
     },
   ];
   ethereum
@@ -28,6 +37,7 @@ const addNetwork = (ethereum: any) => {
     .then(() => console.log("Success"))
     .catch((error: Error) => console.log("Error", error.message));
 };
+
 export const Provider: React.FC = (props) => {
   const [lightGodwoken, setLightGodwoken] = useState<DefaultLightGodwokenV1 | DefaultLightGodwoken>();
   const location = useLocation();

@@ -4,8 +4,8 @@ import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { useCKBBalance } from "../hooks/useCKBBalance";
 import { useERC20Balance } from "../hooks/useERC20Balance";
+import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
@@ -43,7 +43,7 @@ const PageMain = styled.div`
     padding-bottom: 8px;
   }
 `;
-const WithDrawalButton = styled.div`
+const WithdrawalButton = styled.div`
   margin-top: 20px;
   display: flex;
   justify-content: center;
@@ -133,7 +133,7 @@ interface Token {
 }
 
 export default function RequestWithdrawal() {
-  const [ckbInput, setCkbInput] = useState("");
+  const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -142,8 +142,8 @@ export default function RequestWithdrawal() {
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
-  const query = useCKBBalance(false);
-  const ckbBalance = query.data;
+  const query = useL2CKBBalance();
+  const CKBBalance = query.data;
   const params = useParams();
   const erc20BalanceQuery = useERC20Balance();
 
@@ -157,17 +157,17 @@ export default function RequestWithdrawal() {
   };
 
   useEffect(() => {
-    if (ckbInput === "" || ckbBalance === undefined) {
+    if (CKBInput === "" || CKBBalance === undefined) {
       setIsCKBValueValidate(false);
     } else if (
-      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
     ) {
       setIsCKBValueValidate(true);
     } else {
       setIsCKBValueValidate(false);
     }
-  }, [ckbBalance, ckbInput]);
+  }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
     if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
@@ -177,8 +177,8 @@ export default function RequestWithdrawal() {
     }
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
-  const sendWithDrawal = () => {
-    const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
+  const sendWithdrawal = () => {
+    const capacity = "0x" + Amount.from(CKBInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (selectedSudt && sudtValue) {
@@ -242,20 +242,20 @@ export default function RequestWithdrawal() {
   };
 
   const inputError = useMemo(() => {
-    if (ckbInput === "") {
+    if (CKBInput === "") {
       return "Enter CKB Amount";
     }
-    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
       return "Minimum 400 CKB";
     }
-    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
       return "Insufficient CKB Amount";
     }
     if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
       return `Insufficient ${selectedSudt?.symbol} Amount`;
     }
     return void 0;
-  }, [ckbInput, ckbBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+  }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   return (
     <Page>
@@ -268,7 +268,13 @@ export default function RequestWithdrawal() {
           <QuestionCircleOutlined />
         </PageHeader>
         <PageMain className="main">
-          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Withdraw"></CKBInputPanel>
+          <CKBInputPanel
+            value={CKBInput}
+            onUserInput={setCKBInput}
+            label="Withdraw"
+            isLoading={query.isLoading}
+            CKBBalance={CKBBalance}
+          ></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
@@ -281,15 +287,15 @@ export default function RequestWithdrawal() {
             onSelectedChange={handleSelectedChange}
             dataLoading={erc20BalanceQuery.isLoading}
           ></CurrencyInputPanel>
-          <WithDrawalButton>
+          <WithdrawalButton>
             <Button
               className="submit-button"
-              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
               onClick={showModal}
             >
               {inputError || "Request Withdrawal"}
             </Button>
-          </WithDrawalButton>
+          </WithdrawalButton>
         </PageMain>
         <div className="footer">
           {/* <ProgressStepper currentStep={0} steps={withdrawalSteps}></ProgressStepper> */}
@@ -308,11 +314,11 @@ export default function RequestWithdrawal() {
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
           Withdrawal
         </div>
-        <WithDrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => sendWithDrawal()}>
+        <WithdrawalButton>
+          <Button className="submit-button" loading={loading} onClick={() => sendWithdrawal()}>
             Request Withdrawal
           </Button>
-        </WithDrawalButton>
+        </WithdrawalButton>
       </ConfirmModal>
     </Page>
   );

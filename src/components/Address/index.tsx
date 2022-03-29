@@ -44,10 +44,6 @@ export const Address: React.FC = () => {
               </Tooltip>
             </Input.Group>
           </div>
-          {/* <div className="text-pair">
-            <Text>L2 CKB Balance</Text>
-            <Text>{getFullDisplayAmount(BigInt(l2CkbBalance), 8)}</Text>
-          </div> */}
           <div className="address-content">
             <label htmlFor="">L1 WALLET ADDRESS</label>
             <Input.Group compact>

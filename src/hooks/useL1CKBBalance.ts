@@ -1,13 +1,13 @@
 import { useQuery, UseQueryResult } from "react-query";
 import { useLightGodwoken } from "./useLightGodwoken";
 
-export const useCKBBalance = (isL1: boolean): UseQueryResult<string> => {
+export const useL1CKBBalance = (): UseQueryResult<string> => {
   const lightGodwoken = useLightGodwoken();
 
   return useQuery(
-    ["queryBalance", { isL1 }],
+    ["queryL1CKBBalance"],
     () => {
-      return isL1 ? lightGodwoken?.getL1CkbBalance() : lightGodwoken?.getL2CkbBalance();
+      return lightGodwoken?.getL1CkbBalance();
     },
     {
       enabled: !!lightGodwoken,

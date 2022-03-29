@@ -226,7 +226,7 @@ const WithdrawalRequestCard = ({
     minutes: minutesLeft,
     seconds: secondsLeft,
   } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
-  const [ckbAmount, ckbFullAmount] = useMemo(() => {
+  const [CKBAmount, ckbFullAmount] = useMemo(() => {
     if (capacity === "0") {
       console.error("[warn] a withdrawal request cell with zero capacity");
       return ["", ""];
@@ -284,7 +284,7 @@ const WithdrawalRequestCard = ({
           <div className="number">
             {sudtAmount}
             {sudtAmount === "" ? "" : " and "}
-            {ckbAmount}
+            {CKBAmount}
           </div>
         </div>
         {isMature ? (

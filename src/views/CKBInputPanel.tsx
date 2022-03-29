@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
-import { useCKBBalance } from "../hooks/useCKBBalance";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
+import { BI } from "@ckb-lumos/lumos";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -53,35 +53,41 @@ const Row = styled.div`
 interface CKBInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
-  isL1?: boolean;
-  isDeposit?: boolean;
   label?: string;
+  maxAmount?: string;
+  CKBBalance?: string;
+  isLoading?: boolean;
 }
-export default function CKBInputPanel({ value, onUserInput, label, isL1, isDeposit }: CKBInputPanelProps) {
+export default function CKBInputPanel({
+  value,
+  onUserInput,
+  label,
+  CKBBalance,
+  isLoading,
+  maxAmount: inputMaxAmount,
+}: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
-  const query = useCKBBalance(!!isL1);
-
-  const ckbBalance = query.data || "";
+  const maxAmount = inputMaxAmount || CKBBalance;
   useEffect(() => {
-    if (value === "" && ckbBalance === "") {
+    if (value === "" && maxAmount === "") {
       return;
     }
-    if (value === "" && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
-      setShowMaxButton(!!(maxAmount > 0));
+    if (value === "" && maxAmount) {
+      setShowMaxButton(!!BI.from(maxAmount).gt(0));
     }
-    if (value && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
-      if (maxAmount < 0 || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
+    if (value && maxAmount) {
+      if (BI.from(maxAmount).lte(0) || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
         setShowMaxButton(false);
       } else {
         setShowMaxButton(true);
       }
     }
-  }, [value, ckbBalance, isDeposit]);
+  }, [value, CKBBalance, maxAmount]);
 
   const handelMaxClick = () => {
-    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    if (!maxAmount) {
+      throw new Error("No maxAmount");
+    }
     onUserInput(getFullDisplayAmount(BigInt(maxAmount), 8, { maxDecimalPlace: 8 }));
     setShowMaxButton(false);
   };
@@ -90,7 +96,8 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
       <Row className="first-row">
         <Typography.Text>{label}</Typography.Text>
         <Typography.Text>
-          Balance: {query.isLoading ? <LoadingOutlined /> : getDisplayAmount(BigInt(ckbBalance), 8)}
+          Balance:{" "}
+          {isLoading || CKBBalance === undefined ? <LoadingOutlined /> : getDisplayAmount(BigInt(CKBBalance), 8)}
         </Typography.Text>
       </Row>
       <Row className="input-wrapper">
