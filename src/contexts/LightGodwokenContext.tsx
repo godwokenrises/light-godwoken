@@ -9,6 +9,7 @@ import {
   GODWOKEN_V1_NATIVE_CURRENCY_NAME,
   GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
   GODWOKEN_V1_RPC_URL,
+  CKB_RPC_URL,
 } from "../config";
 import {
   LightGodwokenV1 as DefaultLightGodwokenV1,
@@ -18,7 +19,6 @@ import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvide
 
 export const LightGodwokenContext = createContext<DefaultLightGodwokenV1 | DefaultLightGodwoken | null>(null);
 LightGodwokenContext.displayName = "LightGodwokenContext";
-
 const addNetwork = (ethereum: any) => {
   const params = [
     {
