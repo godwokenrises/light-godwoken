@@ -5,6 +5,7 @@ import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
+import { Token } from "../../light-godwoken/lightGodwokenType";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -142,13 +143,6 @@ const Row = styled.div`
     font-weight: 600;
   }
 `;
-interface Token {
-  name: string;
-  symbol: string;
-  decimals: number;
-  tokenURI: string;
-}
-
 interface CurrencyInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
@@ -173,9 +167,7 @@ export default function CurrencyInputPanel({
   const [showMaxButton, setShowMaxButton] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
-  const showCurrencySelectModal = () => {
-    setIsModalVisible(true);
-  };
+
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
@@ -188,6 +180,10 @@ export default function CurrencyInputPanel({
 
   const handleOk = () => {
     setIsModalVisible(false);
+  };
+
+  const showCurrencySelectModal = () => {
+    setIsModalVisible(true);
   };
 
   const handleCancel = () => {
