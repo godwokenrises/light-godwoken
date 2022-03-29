@@ -1,4 +1,4 @@
-import Page from "./Page";
+import Page from "../components/Layout/Page";
 import styled from "styled-components";
 import { Link, useParams } from "react-router-dom";
 import { WithdrawalList } from "../components/Withdrawal/List";

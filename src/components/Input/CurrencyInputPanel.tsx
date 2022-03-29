@@ -1,10 +1,10 @@
 import styled from "styled-components";
 import { Typography, Modal, List } from "antd";
-import { FixedHeightRow } from "../components/Withdrawal/WithdrawalRequestCard";
+import { FixedHeightRow } from "../Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
-import { getFullDisplayAmount } from "../utils/formatTokenAmount";
+import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
