@@ -226,25 +226,22 @@ const WithdrawalRequestCard = ({
     minutes: minutesLeft,
     seconds: secondsLeft,
   } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
-  const [CKBAmount, ckbFullAmount] = useMemo(() => {
+  const [CKBAmount] = useMemo(() => {
     if (capacity === "0") {
       console.error("[warn] a withdrawal request cell with zero capacity");
       return ["", ""];
     }
     const capacityBI = BigInt(capacity);
-    return [`${getDisplayAmount(capacityBI, 8)} CKB`, `${getFullDisplayAmount(capacityBI, 8)} CKB`];
+    return [`${getDisplayAmount(capacityBI, 8)} CKB`];
   }, [capacity]);
 
-  const [sudtAmount, sudtFullAmount] = useMemo(() => {
+  const [sudtAmount] = useMemo(() => {
     if (amount === "" || !erc20) {
       return ["", ""];
     }
     const amountBI = BigInt(amount);
 
-    return [
-      `${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`,
-      `${getFullDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`,
-    ];
+    return [`${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`];
   }, [amount, erc20]);
 
   const unlock = async () => {
