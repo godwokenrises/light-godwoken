@@ -34,7 +34,6 @@ const addNetwork = (ethereum: any) => {
   ];
   ethereum
     .request({ method: "wallet_addEthereumChain", params })
-    .then(() => console.log("Success"))
     .catch((error: Error) => console.log("Error", error.message));
 };
 
