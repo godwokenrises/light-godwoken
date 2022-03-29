@@ -1,9 +1,9 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { ClaimSudt } from "../components/ClaimSudt";
-import { ConnectButton } from "../components/ConnectButton";
-import { VersionSelect } from "../components/VersionSelect";
+import { ClaimSudt } from "../ClaimSudt";
+import { ConnectButton } from "../ConnectButton";
+import { VersionSelect } from "../VersionSelect";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;

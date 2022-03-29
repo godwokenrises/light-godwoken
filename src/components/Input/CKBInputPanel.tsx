@@ -2,7 +2,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { getDisplayAmount, getFullDisplayAmount } from "../utils/formatTokenAmount";
+import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { BI } from "@ckb-lumos/lumos";

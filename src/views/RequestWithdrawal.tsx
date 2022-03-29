@@ -9,9 +9,9 @@ import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
-import CKBInputPanel from "./CKBInputPanel";
-import CurrencyInputPanel from "./CurrencyInputPanel";
-import Page from "./Page";
+import CKBInputPanel from "../components/Input/CKBInputPanel";
+import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
+import Page from "../components/Layout/Page";
 
 const { Text } = Typography;
 
