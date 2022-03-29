@@ -1,5 +1,5 @@
 import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
-import { Script } from "@ckb-lumos/lumos";
+import { BI, Script } from "@ckb-lumos/lumos";
 import { Button, message, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -10,8 +10,8 @@ import Page from "./Page";
 import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
-import { useCKBBalance } from "../hooks/useCKBBalance";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
+import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 
 const { Text } = Typography;
 
@@ -212,8 +212,9 @@ export default function Deposit() {
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const sudtBalanceQUery = useSUDTBalance();
-  const query = useCKBBalance(true);
-  const CKBBalance = query.data;
+  const CKBBalanceQuery = useL1CKBBalance();
+  const CKBBalance = CKBBalanceQuery.data;
+  const maxAmount = CKBBalance ? BI.from(CKBBalance).add(-6400000000).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
 
   const showModal = async () => {
@@ -325,7 +326,14 @@ export default function Deposit() {
           </div>
         </L1WalletAddress>
         <PageMain className="main">
-          <CKBInputPanel value={CKBInput} onUserInput={setCKBInput} label="Deposit" isL1 isDeposit></CKBInputPanel>
+          <CKBInputPanel
+            value={CKBInput}
+            onUserInput={setCKBInput}
+            label="Deposit"
+            isLoading={CKBBalanceQuery.isLoading}
+            CKBBalance={CKBBalance}
+            maxAmount={maxAmount}
+          ></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>

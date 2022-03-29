@@ -4,8 +4,8 @@ import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
-import { useCKBBalance } from "../hooks/useCKBBalance";
 import { useERC20Balance } from "../hooks/useERC20Balance";
+import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
@@ -142,7 +142,7 @@ export default function RequestWithdrawal() {
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
-  const query = useCKBBalance(false);
+  const query = useL2CKBBalance();
   const CKBBalance = query.data;
   const params = useParams();
   const erc20BalanceQuery = useERC20Balance();
@@ -268,7 +268,13 @@ export default function RequestWithdrawal() {
           <QuestionCircleOutlined />
         </PageHeader>
         <PageMain className="main">
-          <CKBInputPanel value={CKBInput} onUserInput={setCKBInput} label="Withdraw"></CKBInputPanel>
+          <CKBInputPanel
+            value={CKBInput}
+            onUserInput={setCKBInput}
+            label="Withdraw"
+            isLoading={query.isLoading}
+            CKBBalance={CKBBalance}
+          ></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
