@@ -43,7 +43,7 @@ const PageMain = styled.div`
     padding-bottom: 8px;
   }
 `;
-const WithDrawalButton = styled.div`
+const WithdrawalButton = styled.div`
   margin-top: 20px;
   display: flex;
   justify-content: center;
@@ -177,7 +177,7 @@ export default function RequestWithdrawal() {
     }
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
-  const sendWithDrawal = () => {
+  const sendsendWithdrawal = () => {
     const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -281,7 +281,7 @@ export default function RequestWithdrawal() {
             onSelectedChange={handleSelectedChange}
             dataLoading={erc20BalanceQuery.isLoading}
           ></CurrencyInputPanel>
-          <WithDrawalButton>
+          <WithdrawalButton>
             <Button
               className="submit-button"
               disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
@@ -289,7 +289,7 @@ export default function RequestWithdrawal() {
             >
               {inputError || "Request Withdrawal"}
             </Button>
-          </WithDrawalButton>
+          </WithdrawalButton>
         </PageMain>
         <div className="footer">
           {/* <ProgressStepper currentStep={0} steps={withdrawalSteps}></ProgressStepper> */}
@@ -308,11 +308,11 @@ export default function RequestWithdrawal() {
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
           Withdrawal
         </div>
-        <WithDrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => sendWithDrawal()}>
+        <WithdrawalButton>
+          <Button className="submit-button" loading={loading} onClick={() => sendsendWithdrawal()}>
             Request Withdrawal
           </Button>
-        </WithDrawalButton>
+        </WithdrawalButton>
       </ConfirmModal>
     </Page>
   );

@@ -81,7 +81,7 @@ const L1WalletAddress = styled.div`
     }
   }
 `;
-const WithDrawalButton = styled.div`
+const WithdrawalButton = styled.div`
   margin-top: 20px;
   display: flex;
   justify-content: center;
@@ -338,7 +338,7 @@ export default function Deposit() {
             tokenList={tokenList}
             dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
-          <WithDrawalButton>
+          <WithdrawalButton>
             <Button
               className="submit-button"
               disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
@@ -346,7 +346,7 @@ export default function Deposit() {
             >
               {inputError || "Deposit"}
             </Button>
-          </WithDrawalButton>
+          </WithdrawalButton>
           <div>
             <L2Balance />
           </div>

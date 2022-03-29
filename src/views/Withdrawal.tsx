@@ -1,7 +1,7 @@
 import Page from "./Page";
 import styled from "styled-components";
 import { Link, useParams } from "react-router-dom";
-import { WithDrawalList } from "../components/Withdrawal/List";
+import { WithdrawalList } from "../components/Withdrawal/List";
 const PageContent = styled.div`
   width: 436px;
   background: rgb(39, 37, 52);
@@ -85,7 +85,7 @@ const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
         <ResultList className="withdrawal-request">
           <div className="header">Your Withdrawal Requests</div>
           <div className="list">
-            <WithDrawalList></WithDrawalList>
+            <WithdrawalList></WithdrawalList>
           </div>
         </ResultList>
       </PageContent>

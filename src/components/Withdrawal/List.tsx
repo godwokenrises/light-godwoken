@@ -17,7 +17,7 @@ const WithdrawalListDiv = styled.div`
   }
 `;
 
-export const WithDrawalList: React.FC = () => {
+export const WithdrawalList: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
   const { data: withDrawalList } = useQuery(
