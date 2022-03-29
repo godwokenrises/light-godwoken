@@ -9,7 +9,6 @@ import {
   GODWOKEN_V1_NATIVE_CURRENCY_NAME,
   GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
   GODWOKEN_V1_RPC_URL,
-  CKB_RPC_URL,
 } from "../config";
 import {
   LightGodwokenV1 as DefaultLightGodwokenV1,
