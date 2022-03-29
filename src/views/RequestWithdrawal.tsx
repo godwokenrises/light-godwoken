@@ -133,7 +133,7 @@ interface Token {
 }
 
 export default function RequestWithdrawal() {
-  const [ckbInput, setCkbInput] = useState("");
+  const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -143,7 +143,7 @@ export default function RequestWithdrawal() {
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const query = useCKBBalance(false);
-  const ckbBalance = query.data;
+  const CKBBalance = query.data;
   const params = useParams();
   const erc20BalanceQuery = useERC20Balance();
 
@@ -157,17 +157,17 @@ export default function RequestWithdrawal() {
   };
 
   useEffect(() => {
-    if (ckbInput === "" || ckbBalance === undefined) {
+    if (CKBInput === "" || CKBBalance === undefined) {
       setIsCKBValueValidate(false);
     } else if (
-      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance))
+      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
     ) {
       setIsCKBValueValidate(true);
     } else {
       setIsCKBValueValidate(false);
     }
-  }, [ckbBalance, ckbInput]);
+  }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
     if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
@@ -178,7 +178,7 @@ export default function RequestWithdrawal() {
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendsendWithdrawal = () => {
-    const capacity = "0x" + Amount.from(ckbInput, 8).toString(16);
+    const capacity = "0x" + Amount.from(CKBInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (selectedSudt && sudtValue) {
@@ -242,20 +242,20 @@ export default function RequestWithdrawal() {
   };
 
   const inputError = useMemo(() => {
-    if (ckbInput === "") {
+    if (CKBInput === "") {
       return "Enter CKB Amount";
     }
-    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
       return "Minimum 400 CKB";
     }
-    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
       return "Insufficient CKB Amount";
     }
     if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
       return `Insufficient ${selectedSudt?.symbol} Amount`;
     }
     return void 0;
-  }, [ckbInput, ckbBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+  }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   return (
     <Page>
@@ -268,7 +268,7 @@ export default function RequestWithdrawal() {
           <QuestionCircleOutlined />
         </PageHeader>
         <PageMain className="main">
-          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Withdraw"></CKBInputPanel>
+          <CKBInputPanel value={CKBInput} onUserInput={setCKBInput} label="Withdraw"></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
@@ -284,7 +284,7 @@ export default function RequestWithdrawal() {
           <WithdrawalButton>
             <Button
               className="submit-button"
-              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
               onClick={showModal}
             >
               {inputError || "Request Withdrawal"}

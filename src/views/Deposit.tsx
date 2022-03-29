@@ -203,7 +203,7 @@ function L2Balance() {
 }
 
 export default function Deposit() {
-  const [ckbInput, setCkbInput] = useState("");
+  const [CKBInput, setCKBInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
@@ -213,12 +213,12 @@ export default function Deposit() {
   const lightGodwoken = useLightGodwoken();
   const sudtBalanceQUery = useSUDTBalance();
   const query = useCKBBalance(true);
-  const ckbBalance = query.data;
+  const CKBBalance = query.data;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
 
   const showModal = async () => {
     if (lightGodwoken) {
-      const capacity = Amount.from(ckbInput, 8).toHex();
+      const capacity = Amount.from(CKBInput, 8).toHex();
       let amount = "0x0";
       if (selectedSudt && sudtInput) {
         amount = "0x" + Amount.from(sudtInput, selectedSudt.decimals).toString(16);
@@ -250,13 +250,13 @@ export default function Deposit() {
   };
 
   const inputError = useMemo(() => {
-    if (ckbInput === "") {
+    if (CKBInput === "") {
       return "Enter CKB Amount";
     }
-    if (Amount.from(ckbInput, 8).lt(Amount.from(400, 8))) {
+    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
       return "Minimum 400 CKB";
     }
-    if (ckbBalance && Amount.from(ckbInput, 8).gt(Amount.from(ckbBalance))) {
+    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
       return "Insufficient CKB Amount";
     }
     if (
@@ -267,24 +267,24 @@ export default function Deposit() {
       return `Insufficient ${selectedSudt?.symbol} Amount`;
     }
     return void 0;
-  }, [ckbInput, ckbBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+  }, [CKBInput, CKBBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
   useEffect(() => {
-    if (ckbInput === "" || ckbBalance === undefined) {
+    if (CKBInput === "" || CKBBalance === undefined) {
       setIsCKBValueValidate(false);
     } else if (
-      Amount.from(ckbInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(ckbInput, 8).lte(Amount.from(ckbBalance).minus(6400000000))
+      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
+      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance).minus(6400000000))
     ) {
       setIsCKBValueValidate(true);
     } else {
       setIsCKBValueValidate(false);
     }
-  }, [ckbBalance, ckbInput]);
+  }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
     if (
@@ -325,7 +325,7 @@ export default function Deposit() {
           </div>
         </L1WalletAddress>
         <PageMain className="main">
-          <CKBInputPanel value={ckbInput} onUserInput={setCkbInput} label="Deposit" isL1 isDeposit></CKBInputPanel>
+          <CKBInputPanel value={CKBInput} onUserInput={setCKBInput} label="Deposit" isL1 isDeposit></CKBInputPanel>
           <div className="icon">
             <PlusOutlined />
           </div>
@@ -341,7 +341,7 @@ export default function Deposit() {
           <WithdrawalButton>
             <Button
               className="submit-button"
-              disabled={!ckbInput || !isCKBValueValidate || !isSudtValueValidate}
+              disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
               onClick={showModal}
             >
               {inputError || "Deposit"}
@@ -359,7 +359,7 @@ export default function Deposit() {
         </div>
         <Text>Waiting For Confirmation</Text>
         <Text>
-          Depositing {sudtInput} {selectedSudt?.symbol} and {ckbInput} CKB
+          Depositing {sudtInput} {selectedSudt?.symbol} and {CKBInput} CKB
         </Text>
         <div className="tips">Confirm this transaction in your wallet</div>
       </ConfirmModal>

@@ -61,27 +61,27 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
   const [showMaxButton, setShowMaxButton] = useState(true);
   const query = useCKBBalance(!!isL1);
 
-  const ckbBalance = query.data || "";
+  const CKBBalance = query.data || "";
   useEffect(() => {
-    if (value === "" && ckbBalance === "") {
+    if (value === "" && CKBBalance === "") {
       return;
     }
-    if (value === "" && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    if (value === "" && CKBBalance) {
+      const maxAmount = isDeposit ? BigInt(CKBBalance) - BigInt(6400000000) : BigInt(CKBBalance);
       setShowMaxButton(!!(maxAmount > 0));
     }
-    if (value && ckbBalance) {
-      const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    if (value && CKBBalance) {
+      const maxAmount = isDeposit ? BigInt(CKBBalance) - BigInt(6400000000) : BigInt(CKBBalance);
       if (maxAmount < 0 || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
         setShowMaxButton(false);
       } else {
         setShowMaxButton(true);
       }
     }
-  }, [value, ckbBalance, isDeposit]);
+  }, [value, CKBBalance, isDeposit]);
 
   const handelMaxClick = () => {
-    const maxAmount = isDeposit ? BigInt(ckbBalance) - BigInt(6400000000) : BigInt(ckbBalance);
+    const maxAmount = isDeposit ? BigInt(CKBBalance) - BigInt(6400000000) : BigInt(CKBBalance);
     onUserInput(getFullDisplayAmount(BigInt(maxAmount), 8, { maxDecimalPlace: 8 }));
     setShowMaxButton(false);
   };
@@ -90,7 +90,7 @@ export default function CKBInputPanel({ value, onUserInput, label, isL1, isDepos
       <Row className="first-row">
         <Typography.Text>{label}</Typography.Text>
         <Typography.Text>
-          Balance: {query.isLoading ? <LoadingOutlined /> : getDisplayAmount(BigInt(ckbBalance), 8)}
+          Balance: {query.isLoading ? <LoadingOutlined /> : getDisplayAmount(BigInt(CKBBalance), 8)}
         </Typography.Text>
       </Row>
       <Row className="input-wrapper">
