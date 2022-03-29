@@ -348,7 +348,6 @@ export default function Deposit() {
             <L2Balance />
           </div>
         </PageMain>
-        <div className="footer"></div>
       </PageContent>
       <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="icon-container">
