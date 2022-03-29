@@ -5,6 +5,7 @@ import { Secp256k1Signer } from "@ckitjs/ckit/dist/wallets/Secp256k1Wallet";
 import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import Link from "antd/lib/typography/Link";
+import { BI } from "@ckb-lumos/lumos";
 
 const REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY = "0xb60bf0787fa97c52bb62d41131757954d5bda2f2054fb0c5efa172fa6b945296";
 const REACT_APP_CKB_SUDT_SCRIPT_CODE_HASH = "0x5e7a36a77e68eecc013dfa2fe6a23f3b6c344b04005808694ae6dd45eea4cfd5";
@@ -38,7 +39,7 @@ export const claim = async (recipientAddr: string) => {
     {
       recipient: recipientAddr,
       additionalCapacity: "0",
-      amount: BigInt(1000 * 10 ** 18).toString(),
+      amount: BI.from(1000).mul(BI.from(10).pow(18)).toString(),
       capacityPolicy: "createCell",
     },
   ];
