@@ -177,7 +177,7 @@ export default function RequestWithdrawal() {
     }
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
-  const sendsendWithdrawal = () => {
+  const sendWithdrawal = () => {
     const capacity = "0x" + Amount.from(CKBInput, 8).toString(16);
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -309,7 +309,7 @@ export default function RequestWithdrawal() {
           Withdrawal
         </div>
         <WithdrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => sendsendWithdrawal()}>
+          <Button className="submit-button" loading={loading} onClick={() => sendWithdrawal()}>
             Request Withdrawal
           </Button>
         </WithdrawalButton>
