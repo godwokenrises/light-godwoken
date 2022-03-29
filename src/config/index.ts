@@ -1,0 +1,4 @@
+export const CKB_RPC_URL = process.env.REACT_APP_CKB_RPC_URL!;
+export const CKB_INDEXER_URL = process.env.REACT_APP_CKB_INDEXER_URL!;
+export const CKB_USDC_ISSUER_PRIVATE_KEY = process.env.REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY!;
+export const CKB_SUDT_SCRIPT_CODE_HASH = process.env.REACT_APP_CKB_SUDT_SCRIPT_CODE_HASH!;

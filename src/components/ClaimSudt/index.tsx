@@ -6,10 +6,7 @@ import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import Link from "antd/lib/typography/Link";
 import { BI } from "@ckb-lumos/lumos";
-
-const REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY = "0xb60bf0787fa97c52bb62d41131757954d5bda2f2054fb0c5efa172fa6b945296";
-const REACT_APP_CKB_SUDT_SCRIPT_CODE_HASH = "0x5e7a36a77e68eecc013dfa2fe6a23f3b6c344b04005808694ae6dd45eea4cfd5";
-const REACT_APP_CKB_SUDT_SCRIPT_HASH_TYPE: HashType = "type" as HashType;
+import { CKB_INDEXER_URL, CKB_RPC_URL, CKB_SUDT_SCRIPT_CODE_HASH, CKB_USDC_ISSUER_PRIVATE_KEY } from "../../config";
 
 export function randomHexString(lengthWithOut0x: number): HexString {
   return "0x" + [...Array(lengthWithOut0x)].map(() => Math.floor(Math.random() * 16).toString(16)).join("");
@@ -17,20 +14,19 @@ export function randomHexString(lengthWithOut0x: number): HexString {
 
 export function generateLayer1SUDTTypeScript(args: string): SnakeScript {
   return {
-    code_hash: REACT_APP_CKB_SUDT_SCRIPT_CODE_HASH,
-    hash_type: REACT_APP_CKB_SUDT_SCRIPT_HASH_TYPE,
+    code_hash: CKB_SUDT_SCRIPT_CODE_HASH,
+    hash_type: HashType.type,
     args,
   };
 }
 
 export const claim = async (recipientAddr: string) => {
-  const provider = new CkitProvider("https://testnet.ckb.dev/indexer", "https://testnet.ckb.dev/rpc");
+  console.log(CKB_INDEXER_URL, CKB_RPC_URL);
+  const provider = new CkitProvider(CKB_INDEXER_URL, CKB_RPC_URL);
   await provider.init(predefined.Aggron);
 
-  const issuerPrivateKey = REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY;
-
   const { SECP256K1_BLAKE160 } = provider.config.SCRIPTS;
-  const issuerSigner = new Secp256k1Signer(issuerPrivateKey, provider, {
+  const issuerSigner = new Secp256k1Signer(CKB_USDC_ISSUER_PRIVATE_KEY, provider, {
     code_hash: SECP256K1_BLAKE160.CODE_HASH,
     hash_type: SECP256K1_BLAKE160.HASH_TYPE,
   });
