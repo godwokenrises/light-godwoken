@@ -7,7 +7,6 @@ import {
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
 import { Amount, CkbAmount } from "@ckitjs/ckit/dist/helpers";
-import { getLayer2Config } from "./constants/index";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -24,7 +23,6 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   getVersion(): GodwokenVersion {
     return "v1";
@@ -188,9 +186,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
       throw new Error("eth address format error!");
     }
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
       script: {
-        code_hash: SCRIPTS.withdrawal_lock.script_type_hash,
+        code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
         hash_type: "type" as HashType,
         args: "0x",
       },
@@ -206,16 +205,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
-    const godwokenWeb3 = new GodwokenV1(this.provider.config.GW_POLYJUICE_RPC_URL);
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const godwokenWeb3 = new GodwokenV1(layer2Config.GW_POLYJUICE_RPC_URL);
     const chainId = await godwokenWeb3.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
     const ownerLock = helpers.parseAddress(ownerCkbAddress);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
+      code_hash: layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
       hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
+      args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
     };
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
 

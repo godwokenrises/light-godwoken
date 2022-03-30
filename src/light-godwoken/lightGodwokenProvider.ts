@@ -1,4 +1,4 @@
-import { getLayer2Config, Layer2Config } from "./constants/index";
+import { LightGodwokenConfig, predefined as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,
@@ -15,9 +15,9 @@ import {
   HashType,
   Script,
   CellDep,
+  Output,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import { PROVIDER_CONFIG } from "./constants/providerConfig";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
@@ -27,7 +27,6 @@ import { LightGodwokenProvider, LightGodwokenProviderConfig } from "./lightGodwo
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
-import { LAYER1_CONFIG } from "./constants/layer1ConfigUtils";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -38,35 +37,35 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum;
   web3;
   godwokenClient;
-  config;
-  SCRIPTS;
-  ROLLUP_CONFIG;
-  constructor(ethAddress: Address, ethereum: any, env: LightGodwokenProviderConfig) {
-    let configObj = PROVIDER_CONFIG.GODWOKEN_V1;
-    const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config(env);
-    this.SCRIPTS = SCRIPTS;
-    this.ROLLUP_CONFIG = ROLLUP_CONFIG;
+  lightGodwokenConfig;
+  constructor(
+    ethAddress: Address,
+    ethereum: any,
+    env: LightGodwokenProviderConfig,
+    lightGodwokenConfig?: LightGodwokenConfig,
+  ) {
+    config.initializeConfig(config.predefined.AGGRON4);
     if (env === "v0") {
-      config.initializeConfig(config.predefined.AGGRON4);
-      configObj = PROVIDER_CONFIG.AGGRON;
-      const polyjuiceProvider = new PolyjuiceHttpProvider(configObj.GW_POLYJUICE_RPC_URL, {
-        web3Url: configObj.GW_POLYJUICE_RPC_URL,
+      this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig.v0;
+      const layer2Config = this.lightGodwokenConfig.layer2Config;
+      const polyjuiceProvider = new PolyjuiceHttpProvider(layer2Config.GW_POLYJUICE_RPC_URL, {
+        web3Url: layer2Config.GW_POLYJUICE_RPC_URL,
         abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
       });
       this.web3 = new Web3(polyjuiceProvider);
     } else if (env === "v1") {
-      config.initializeConfig(config.predefined.AGGRON4);
-      configObj = PROVIDER_CONFIG.GODWOKEN_V1;
+      this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig.v1;
       this.web3 = new Web3(window.ethereum as any);
     } else {
-      throw new Error("env not defined, please use AGGRON or LINA.");
+      throw new Error("unsupported env");
     }
-    console.log("configObj", configObj);
-    this.config = configObj;
-    this.ckbIndexer = new Indexer(configObj.CKB_INDEXER_URL, configObj.CKB_RPC_URL);
-    this.rpc = new RPC(configObj.CKB_RPC_URL);
-    this.godwokenRpc = configObj.GW_POLYJUICE_RPC_URL;
-    this.godwokenClient = new GodwokenClient(configObj.GW_POLYJUICE_RPC_URL);
+
+    console.log("lightGodwokenConfig", lightGodwokenConfig);
+    const { layer1Config, layer2Config } = this.lightGodwokenConfig;
+    this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
+    this.rpc = new RPC(layer1Config.CKB_RPC_URL);
+    this.godwokenRpc = layer2Config.GW_POLYJUICE_RPC_URL;
+    this.godwokenClient = new GodwokenClient(layer2Config.GW_POLYJUICE_RPC_URL);
 
     this.ethereum = ethereum;
     this.l2Address = ethAddress;
@@ -89,8 +88,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   getL1Address(): string {
     return this.l1Address;
   }
-  getLayer2Config(): Layer2Config {
-    return { SCRIPTS: this.SCRIPTS, ROLLUP_CONFIG: this.ROLLUP_CONFIG };
+  getLightGodwokenConfig(): LightGodwokenConfig {
+    return this.lightGodwokenConfig;
   }
 
   static async CreateProvider(ethereum: any, version: LightGodwokenProviderConfig): Promise<LightGodwokenProvider> {
@@ -115,8 +114,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: LAYER1_CONFIG.omni_lock.code_hash,
-      hash_type: LAYER1_CONFIG.omni_lock.hash_type as HashType,
+      code_hash: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.code_hash,
+      hash_type: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.hash_type as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner
@@ -209,8 +208,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       throw new Error("Last submitted tx not found!");
     }
 
-    let rollupIndex = tx.transaction.outputs.findIndex((o: any) => {
-      return o.type && utils.computeScriptHash(o.type) === this.ROLLUP_CONFIG.rollup_type_hash;
+    let rollupIndex = tx.transaction.outputs.findIndex((output: Output) => {
+      return (
+        output.type &&
+        utils.computeScriptHash(output.type) === this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG.rollup_type_hash
+      );
     });
     return {
       out_point: {
@@ -222,11 +224,12 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   async getRollupCell(): Promise<Cell | undefined> {
+    const rollupConfig = this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG;
     const queryOptions = {
       type: {
-        code_hash: this.ROLLUP_CONFIG.rollup_type_script.code_hash as Hash,
-        hash_type: this.ROLLUP_CONFIG.rollup_type_script.hash_type as HashType,
-        args: this.ROLLUP_CONFIG.rollup_type_script.args as HexString,
+        code_hash: rollupConfig.rollup_type_script.code_hash as Hash,
+        hash_type: rollupConfig.rollup_type_script.hash_type as HashType,
+        args: rollupConfig.rollup_type_script.args as HexString,
       },
     };
     const collector = this.ckbIndexer.collector(queryOptions);
@@ -244,9 +247,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScript(): Script {
     const layer2Lock: Script = {
-      code_hash: this.SCRIPTS.eth_account_lock.script_type_hash as string,
+      code_hash: this.lightGodwokenConfig.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
       hash_type: "type",
-      args: this.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+      args:
+        this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
     };
     return layer2Lock;
   }
