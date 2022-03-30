@@ -10,6 +10,7 @@ import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Link, useParams } from "react-router-dom";
 import DefaultLightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
+import DefaultLightGodwokenV0 from "../../light-godwoken/LightGodwokenV0";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   background: rgb(39, 37, 52);
@@ -245,17 +246,16 @@ const WithdrawalRequestCard = ({
   }, [amount, erc20]);
 
   const unlock = async () => {
-    if (lightGodwoken instanceof DefaultLightGodwokenV1) {
-      return;
+    if (lightGodwoken instanceof DefaultLightGodwokenV0) {
+      setIsUnlocking(true);
+      const txHash = await lightGodwoken?.unlock({ cell });
+      setIsUnlocking(false);
+      const linkToExplorer = () => {
+        window.open(`https://explorer.nervos.org/aggron/transaction/${txHash}`, "_blank");
+      };
+      setIsModalVisible(false);
+      notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
     }
-    setIsUnlocking(true);
-    const txHash = await lightGodwoken?.unlock({ cell });
-    setIsUnlocking(false);
-    const linkToExplorer = () => {
-      window.open(`https://explorer.nervos.org/aggron/transaction/${txHash}`, "_blank");
-    };
-    setIsModalVisible(false);
-    notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
   };
 
   const showCurrencySelectModal = () => {
