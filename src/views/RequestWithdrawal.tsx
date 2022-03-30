@@ -297,9 +297,6 @@ export default function RequestWithdrawal() {
             </Button>
           </WithdrawalButton>
         </PageMain>
-        <div className="footer">
-          {/* <ProgressStepper currentStep={0} steps={withdrawalSteps}></ProgressStepper> */}
-        </div>
       </PageContent>
       <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="text-pair">

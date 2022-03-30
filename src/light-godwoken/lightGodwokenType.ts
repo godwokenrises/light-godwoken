@@ -8,7 +8,7 @@ export interface GetL2CkbBalancePayload {
 export interface GetL1CkbBalancePayload {
   l1Address?: string;
 }
-interface Token {
+export interface Token {
   name: string;
   symbol: string;
   decimals: number;

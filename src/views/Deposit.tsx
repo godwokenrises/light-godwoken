@@ -7,11 +7,11 @@ import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import Page from "../components/Layout/Page";
-import { useQuery } from "react-query";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
+import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 
 const { Text } = Typography;
 
@@ -178,20 +178,8 @@ interface SUDT extends Token {
   type: Script;
 }
 function L2Balance() {
-  const lightGodwoken = useLightGodwoken();
+  const { data: balance } = useL2CKBBalance();
 
-  const l2Address = lightGodwoken?.provider.l2Address;
-  const { data: balance } = useQuery(
-    ["queryL2Balance", { address: l2Address }],
-    () => {
-      return lightGodwoken?.getL2CkbBalance();
-    },
-    {
-      enabled: !!lightGodwoken,
-    },
-  );
-
-  if (!l2Address) return null;
   if (!balance) {
     return (
       <span>
@@ -359,7 +347,6 @@ export default function Deposit() {
             <L2Balance />
           </div>
         </PageMain>
-        <div className="footer"></div>
       </PageContent>
       <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="icon-container">
