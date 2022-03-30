@@ -2,7 +2,6 @@
   "name": "withdraw-demo",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://zhangyouxin.github.io/light-godwoken",
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
     "@ckb-lumos/base": "^0.18.0-rc6",
