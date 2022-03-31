@@ -7,7 +7,6 @@ import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import Unlock from "./Unlock";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   background: rgb(39, 37, 52);
@@ -74,6 +73,7 @@ export interface IWithdrawalRequestCardProps {
   cell: Cell;
   erc20?: ProxyERC20;
   now?: number;
+  unlockButton?: (cell: Cell) => JSX.Element;
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber,
@@ -82,6 +82,7 @@ const WithdrawalRequestCard = ({
   erc20,
   now = 0,
   cell,
+  unlockButton,
 }: IWithdrawalRequestCardProps) => {
   const [shouldShowMore, setShouldShowMore] = useState(false);
   const [blockProduceTime, setBlockProduceTime] = useState(0);
@@ -143,7 +144,7 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         {isMature ? (
-          <Unlock cell={cell} />
+          unlockButton && unlockButton(cell)
         ) : shouldShowMore ? (
           <div className="time">
             <UpOutlined />

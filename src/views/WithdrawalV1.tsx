@@ -1,7 +1,6 @@
 import Page from "../components/Layout/Page";
 import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
-import Unlock from "../components/Withdrawal/Unlock";
 
 const PageContent = styled.div`
   width: 436px;
@@ -70,7 +69,7 @@ interface Props {
   onViewChange: (viewName: string) => void;
 }
 
-const Withdrawal: React.FC<Props> = ({ onViewChange }) => {
+const WithdrawalV1: React.FC<Props> = ({ onViewChange }) => {
   const changeActiveView = () => {
     onViewChange("request-withdrawal");
   };
@@ -92,7 +91,7 @@ const Withdrawal: React.FC<Props> = ({ onViewChange }) => {
         <ResultList className="withdrawal-request">
           <div className="header">Your Withdrawal Requests</div>
           <div className="list">
-            <WithdrawalList unlockButton={(cell) => <Unlock cell={cell}></Unlock>}></WithdrawalList>
+            <WithdrawalList></WithdrawalList>
           </div>
         </ResultList>
       </PageContent>
@@ -100,4 +99,4 @@ const Withdrawal: React.FC<Props> = ({ onViewChange }) => {
   );
 };
 
-export default Withdrawal;
+export default WithdrawalV1;
