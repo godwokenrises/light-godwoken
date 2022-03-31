@@ -1,5 +1,5 @@
 import { CopyOutlined, LoadingOutlined, PlusOutlined } from "@ant-design/icons";
-import { BI, Script } from "@ckb-lumos/lumos";
+import { BI } from "@ckb-lumos/lumos";
 import { Button, message, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -12,6 +12,7 @@ import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
+import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 
 const { Text } = Typography;
 
@@ -167,16 +168,6 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-interface Token {
-  name: string;
-  symbol: string;
-  decimals: number;
-  tokenURI: string;
-}
-
-interface SUDT extends Token {
-  type: Script;
-}
 function L2Balance() {
   const { data: balance } = useL2CKBBalance();
 

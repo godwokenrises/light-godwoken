@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { useERC20Balance } from "../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
+import { Token, WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
@@ -124,13 +124,6 @@ const ConfirmModal = styled(Modal)`
     margin: 24px 0;
   }
 `;
-
-interface Token {
-  name: string;
-  symbol: string;
-  decimals: number;
-  tokenURI: string;
-}
 
 export default function RequestWithdrawal() {
   const [CKBInput, setCKBInput] = useState("");

@@ -2,6 +2,7 @@ import Page from "../components/Layout/Page";
 import styled from "styled-components";
 import { Link, useParams } from "react-router-dom";
 import { WithdrawalList } from "../components/Withdrawal/List";
+
 const PageContent = styled.div`
   width: 436px;
   background: rgb(39, 37, 52);
