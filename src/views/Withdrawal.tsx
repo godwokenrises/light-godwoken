@@ -1,6 +1,5 @@
 import Page from "../components/Layout/Page";
 import styled from "styled-components";
-import { Link, useParams } from "react-router-dom";
 import { WithdrawalList } from "../components/Withdrawal/List";
 
 const PageContent = styled.div`
@@ -66,8 +65,14 @@ const ResultList = styled.div`
   }
 `;
 
-const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
-  const params = useParams();
+interface Props {
+  onViewChange: (viewName: string) => void;
+}
+
+const Withdrawal: React.FC<Props> = ({ onViewChange }) => {
+  const changeActiveView = () => {
+    onViewChange("request-withdrawal");
+  };
 
   return (
     <Page>
@@ -78,9 +83,9 @@ const Withdrawal: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
             To withdraw assets back to Layer 1, you need to have CKB balance in your L1 Wallet Address
           </div>
           <div className="button-container">
-            <Link to={"/" + params.version + "/request-withdrawal"} className="request-button">
+            <div onClick={changeActiveView} className="request-button">
               Request Withdrawal
-            </Link>
+            </div>
           </div>
         </div>
         <ResultList className="withdrawal-request">

@@ -2,7 +2,7 @@ import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-de
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useERC20Balance } from "../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
@@ -29,6 +29,9 @@ const PageHeader = styled.div`
   a,
   .ant-typography {
     color: white;
+  }
+  .back-button:hover {
+    cursor: pointer;
   }
 `;
 const PageMain = styled.div`
@@ -124,8 +127,10 @@ const ConfirmModal = styled(Modal)`
     margin: 24px 0;
   }
 `;
-
-export default function RequestWithdrawal() {
+interface Props {
+  onViewChange: (viewName: string) => void;
+}
+const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -234,6 +239,10 @@ export default function RequestWithdrawal() {
     setSudtBalance(balance);
   };
 
+  const changeActiveView = () => {
+    onViewChange("withdrawal");
+  };
+
   const inputError = useMemo(() => {
     if (CKBInput === "") {
       return "Enter CKB Amount";
@@ -254,9 +263,9 @@ export default function RequestWithdrawal() {
     <Page>
       <PageContent>
         <PageHeader className="header">
-          <Link to={"/" + params.version}>
+          <span className="back-button" onClick={changeActiveView}>
             <ArrowLeftOutlined />
-          </Link>
+          </span>
           <Text>Request Withdrawal</Text>
           <QuestionCircleOutlined />
         </PageHeader>
@@ -312,4 +321,5 @@ export default function RequestWithdrawal() {
       </ConfirmModal>
     </Page>
   );
-}
+};
+export default RequestWithdrawal;
