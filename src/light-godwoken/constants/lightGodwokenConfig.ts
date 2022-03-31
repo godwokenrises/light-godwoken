@@ -1,4 +1,5 @@
 import { DepType, Hash, HashType, Hexadecimal } from "@ckb-lumos/lumos";
+import { GodwokenVersion } from "../lightGodwokenType";
 
 export type Layer2Config = {
   SCRIPTS: {
@@ -49,7 +50,7 @@ export type LightGodwokenConfig = {
   layer1Config: Layer1Config;
   layer2Config: Layer2Config;
 };
-export const predefined: { v0: LightGodwokenConfig; v1: LightGodwokenConfig } = {
+export const predefined: Record<GodwokenVersion, LightGodwokenConfig> = {
   v0: {
     layer1Config: {
       SCRIPTS: {

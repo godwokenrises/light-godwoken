@@ -23,7 +23,7 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import { GodwokenClient } from "./godwoken/godwoken";
 import Web3 from "web3";
-import { LightGodwokenProvider, LightGodwokenProviderConfig } from "./lightGodwokenType";
+import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
 import { WithdrawalRequest } from "./godwoken/normalizer";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { TransactionWithStatus } from "@ckb-lumos/base";
@@ -38,15 +38,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   web3;
   godwokenClient;
   lightGodwokenConfig;
-  constructor(
-    ethAddress: Address,
-    ethereum: any,
-    env: LightGodwokenProviderConfig,
-    lightGodwokenConfig?: LightGodwokenConfig,
-  ) {
+  constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfig) {
     config.initializeConfig(config.predefined.AGGRON4);
+    this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig[env];
+
     if (env === "v0") {
-      this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig.v0;
       const layer2Config = this.lightGodwokenConfig.layer2Config;
       const polyjuiceProvider = new PolyjuiceHttpProvider(layer2Config.GW_POLYJUICE_RPC_URL, {
         web3Url: layer2Config.GW_POLYJUICE_RPC_URL,
@@ -54,7 +50,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       });
       this.web3 = new Web3(polyjuiceProvider);
     } else if (env === "v1") {
-      this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig.v1;
       this.web3 = new Web3(window.ethereum as any);
     } else {
       throw new Error("unsupported env");
@@ -92,7 +87,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return this.lightGodwokenConfig;
   }
 
-  static async CreateProvider(ethereum: any, version: LightGodwokenProviderConfig): Promise<LightGodwokenProvider> {
+  static async CreateProvider(ethereum: any, version: GodwokenVersion): Promise<LightGodwokenProvider> {
     if (!ethereum || !ethereum.isMetaMask) {
       throw new Error("please provide metamask ethereum object");
     }
