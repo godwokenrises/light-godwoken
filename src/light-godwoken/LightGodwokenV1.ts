@@ -7,7 +7,6 @@ import {
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
 import { Amount, CkbAmount } from "@ckitjs/ckit/dist/helpers";
-import { getLayer2Config } from "./constants/index";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -24,8 +23,13 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
-const { SCRIPTS, ROLLUP_CONFIG } = getLayer2Config("v1");
+import LightGodwokenProvider from "./lightGodwokenProvider";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
+  godwokenClient;
+  constructor(provider: LightGodwokenProvider) {
+    super(provider);
+    this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+  }
   getVersion(): GodwokenVersion {
     return "v1";
   }
@@ -83,7 +87,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return result;
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.godwokenRpc);
+    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
 
     let promises = [];
     for (let index = 0; index < payload.addresses.length; index++) {
@@ -106,7 +110,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return "result";
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.godwokenRpc);
+    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     const contract = new Contract(ERC20.abi, address);
     const balance = contract.methods
       .balanceOf(this.provider.l2Address)
@@ -188,14 +192,21 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
       throw new Error("eth address format error!");
     }
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
       script: {
-        code_hash: SCRIPTS.withdrawal_lock.script_type_hash,
+        code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
         hash_type: "type" as HashType,
         args: "0x",
       },
       script_type: "lock",
     };
+  }
+
+  async getWithdrawal(txHash: Hash): Promise<unknown> {
+    const result = this.godwokenClient.getWithdrawal(txHash);
+    console.log("getWithdrawal result:", result);
+    return result;
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
@@ -204,23 +215,27 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
+  async getChainId(): Promise<HexNumber> {
+    return this.godwokenClient.getChainId();
+  }
+
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
-    const godwokenWeb3 = new GodwokenV1(this.provider.config.GW_POLYJUICE_RPC_URL);
-    const chainId = await godwokenWeb3.getChainId();
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const chainId = await this.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
     const ownerLock = helpers.parseAddress(ownerCkbAddress);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
-      code_hash: SCRIPTS.eth_account_lock.script_type_hash,
+      code_hash: layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
       hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
+      args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
     };
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
 
     const address = layer2AccountScriptHash.slice(0, 42);
-    const balance = await godwokenWeb3.getBalance(CKB_SUDT_ID, address);
+    const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
     if (BI.from(balance).lt(BI.from(payload.capacity))) {
       eventEmitter.emit(
         "error",
@@ -235,8 +250,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       await this.validateSUDTAmount(payload, eventEmitter);
     }
 
-    const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await godwokenWeb3.getNonce(fromId!);
+    const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
+    const nonce: number = await this.godwokenClient.getNonce(fromId!);
 
     const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
       chain_id: chainId,
@@ -320,7 +335,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
 
     // submit WithdrawalRequestExtra
-    const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
+    const result = await this.godwokenClient.submitWithdrawalReqV1(withdrawalReqExtra);
     console.log("result:", result);
     if (result !== null) {
       const errorMessage = (result as any).message;
