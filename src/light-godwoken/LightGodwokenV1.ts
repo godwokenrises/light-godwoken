@@ -23,9 +23,9 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
-import LightGodwokenProvider from './lightGodwokenProvider'
+import LightGodwokenProvider from "./lightGodwokenProvider";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
-  godwokenClient
+  godwokenClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);

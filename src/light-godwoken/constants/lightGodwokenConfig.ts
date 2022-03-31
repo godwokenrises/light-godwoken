@@ -1,32 +1,22 @@
-import { DepType, Hash, HashType, Hexadecimal } from "@ckb-lumos/lumos";
+import { CellDep, DepType, Hash, HashType, Hexadecimal, Script } from "@ckb-lumos/lumos";
 import { GodwokenVersion } from "../lightGodwokenType";
 
 export type Layer2Config = {
   SCRIPTS: {
     deposit_lock: {
-      script_type_hash: string;
+      script_type_hash: Hash;
     };
     withdrawal_lock: {
-      script_type_hash: string;
-      cell_dep: {
-        out_point: {
-          tx_hash: string;
-          index: string;
-        };
-        dep_type: string;
-      };
+      script_type_hash: Hash;
+      cell_dep: CellDep;
     };
     eth_account_lock: {
-      script_type_hash: string;
+      script_type_hash: Hash;
     };
   };
   ROLLUP_CONFIG: {
-    rollup_type_hash: string;
-    rollup_type_script: {
-      code_hash: string;
-      hash_type: string;
-      args: string;
-    };
+    rollup_type_hash: Hash;
+    rollup_type_script: Script;
   };
   GW_POLYJUICE_RPC_URL: string;
 };

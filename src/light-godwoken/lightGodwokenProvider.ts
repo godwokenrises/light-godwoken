@@ -169,9 +169,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const rollupConfig = this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG;
     const queryOptions = {
       type: {
-        code_hash: rollupConfig.rollup_type_script.code_hash as Hash,
-        hash_type: rollupConfig.rollup_type_script.hash_type as HashType,
-        args: rollupConfig.rollup_type_script.args as HexString,
+        code_hash: rollupConfig.rollup_type_script.code_hash,
+        hash_type: rollupConfig.rollup_type_script.hash_type,
+        args: rollupConfig.rollup_type_script.args,
       },
     };
     const collector = this.ckbIndexer.collector(queryOptions);
