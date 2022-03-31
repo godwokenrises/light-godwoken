@@ -23,7 +23,7 @@ interface Props {
 export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
-  const { data: withDrawalList } = useQuery(
+  const { data: withdrawalList } = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion() }],
     () => {
       return lightGodwoken?.listWithdraw();
@@ -33,7 +33,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
     },
   );
 
-  if (!withDrawalList) {
+  if (!withdrawalList) {
     return (
       <WithdrawalListDiv>
         <LoadingOutlined />
@@ -42,7 +42,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   }
   return (
     <WithdrawalListDiv>
-      {withDrawalList.map((withdraw, index) => (
+      {withdrawalList.map((withdraw, index) => (
         <WithdrawalRequestCard now={now} {...withdraw} key={index} unlockButton={unlockButton}></WithdrawalRequestCard>
       ))}
     </WithdrawalListDiv>
