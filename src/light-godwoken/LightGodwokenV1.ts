@@ -81,7 +81,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return result;
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.godwokenRpc);
+    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
 
     let promises = [];
     for (let index = 0; index < payload.addresses.length; index++) {
@@ -104,7 +104,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return "result";
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.godwokenRpc);
+    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     const contract = new Contract(ERC20.abi, address);
     const balance = contract.methods
       .balanceOf(this.provider.l2Address)
@@ -197,17 +197,29 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     };
   }
 
+  async getWithdrawal(txHash: Hash): Promise<unknown> {
+    const godwokenWeb3 = new GodwokenV1(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    const result = godwokenWeb3.getWithdrawal(txHash);
+    console.log("getWithdrawal result:", result);
+    return result;
+  }
+
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
     this.withdraw(eventEmitter, payload);
     return eventEmitter;
   }
 
+  async getChainId(): Promise<HexNumber> {
+    const godwokenWeb3 = new GodwokenV1(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    return godwokenWeb3.getChainId();
+  }
+
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const godwokenWeb3 = new GodwokenV1(layer2Config.GW_POLYJUICE_RPC_URL);
-    const chainId = await godwokenWeb3.getChainId();
+    const chainId = await this.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
     const ownerLock = helpers.parseAddress(ownerCkbAddress);
     const ownerLockHash = utils.computeScriptHash(ownerLock);

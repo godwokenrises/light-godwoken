@@ -182,12 +182,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return [outputCell, exchangeCell];
   }
 
-  async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const result = await this.provider.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
-    return result;
-  }
-
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
     let signedMessage = await this.provider.ethereum.request({
       method: "personal_sign",

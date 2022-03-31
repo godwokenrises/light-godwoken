@@ -1,5 +1,4 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script } from "@ckb-lumos/lumos";
-import { WithdrawalRequest } from "./godwoken/normalizer";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -108,9 +107,6 @@ export interface LightGodwokenProvider {
 
   getL1Address(): Promisable<string>;
 
-  // TODO the unknown is godwoken submit_withdrawal_tx
-  sendWithdrawTransaction: (withdrawalRequest: WithdrawalRequest) => Promise<Hash>;
-
   signL1Transaction: (tx: helpers.TransactionSkeletonType) => Promise<Transaction>;
 
   // now only supported omni lock, the other lock type will be supported later
@@ -151,4 +147,6 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   unlock: (payload: UnlockPayload) => Promise<Hash>;
 }
-export type LightGodwokenV1 = LightGodwokenBase;
+export interface LightGodwokenV1 extends LightGodwokenBase {
+  getChainId: () => Promise<HexNumber>;
+}

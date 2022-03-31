@@ -8,11 +8,13 @@ import {
   helpers,
   HexNumber,
   HexString,
+  Output,
   Script,
   toolkit,
   utils,
   WitnessArgs,
 } from "@ckb-lumos/lumos";
+import { TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
@@ -35,6 +37,7 @@ import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
+import { GodwokenClient } from "./godwoken/godwoken";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   getVersion(): GodwokenVersion {
@@ -184,6 +187,13 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     };
   }
 
+  async getWithdrawal(txHash: Hash): Promise<unknown> {
+    const godwokenClient = new GodwokenClient(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    const result = godwokenClient.getWithdrawal(txHash);
+    console.log("getWithdrawal result:", result);
+    return result;
+  }
+
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
     this.withdraw(eventEmitter, payload);
@@ -193,6 +203,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const godwokenClient = new GodwokenClient(layer2Config.GW_POLYJUICE_RPC_URL);
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
     console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
@@ -207,7 +218,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
     console.log("account script hash:", accountScriptHash);
-    const fromId = await this.provider.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
+    const fromId = await godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     if (!fromId) {
       throw new Error("account not found");
     }
@@ -218,7 +229,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         `Withdrawal required ${BigInt(minCapacity)} shannons at least, provided ${BigInt(payload.capacity)}.`,
       );
     }
-    const nonce: HexNumber = await this.provider.godwokenClient.getNonce(fromId);
+    const nonce: HexNumber = await godwokenClient.getNonce(fromId);
     console.log("nonce:", nonce);
     const sellCapacity: HexNumber = "0x0";
     const sellAmount: HexNumber = "0x0";
@@ -253,7 +264,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
-      result = await this.provider.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
+      result = await godwokenClient.submitWithdrawalRequest(withdrawalRequest);
     } catch (e) {
       eventEmitter.emit("error", e);
       return;
@@ -296,7 +307,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       };
       const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
       const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
-
       outputCells.push({
         cell_output: {
           capacity: `0x${capacityLeft.toString(16)}`,
@@ -343,7 +353,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       },
       dep_type: layer2Config.SCRIPTS.withdrawal_lock.cell_dep.dep_type as DepType,
     };
-    const rollupCellDep: CellDep = await this.provider.getRollupCellDep();
+    const rollupCellDep: CellDep = await this.getRollupCellDep();
     const { layer1Config } = this.provider.getLightGodwokenConfig();
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
@@ -373,11 +383,43 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
-
     txSkeleton = await this.injectCapacity(txSkeleton, l1Lock, BigInt(0));
-
     const signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
+  }
+
+  async getRollupCellDep(): Promise<CellDep> {
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const godwokenClient = new GodwokenClient(layer2Config.GW_POLYJUICE_RPC_URL);
+    const result = await godwokenClient.getLastSubmittedInfo();
+    const txHash = result.transaction_hash;
+    const tx = await this.getPendingTransaction(txHash);
+    if (tx == null) {
+      throw new Error("Last submitted tx not found!");
+    }
+    let rollupIndex = tx.transaction.outputs.findIndex((output: Output) => {
+      return output.type && utils.computeScriptHash(output.type) === layer2Config.ROLLUP_CONFIG.rollup_type_hash;
+    });
+    return {
+      out_point: {
+        tx_hash: txHash,
+        index: `0x${rollupIndex.toString(16)}`,
+      },
+      dep_type: "code",
+    };
+  }
+
+  async getPendingTransaction(txHash: Hash): Promise<TransactionWithStatus | null> {
+    let tx: TransactionWithStatus | null = null;
+    // retry 10 times, and sleep 1s
+    for (let i = 0; i < 10; i++) {
+      tx = await this.provider.ckbRpc.get_transaction(txHash);
+      if (tx != null) {
+        return tx;
+      }
+      await this.provider.asyncSleep(1000);
+    }
+    return null;
   }
 }
