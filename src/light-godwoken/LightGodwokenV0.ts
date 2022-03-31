@@ -38,8 +38,14 @@ import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
+import LightGodwokenProvider from './lightGodwokenProvider'
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
+  godwokenClient
+  constructor(provider: LightGodwokenProvider) {
+    super(provider);
+    this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+  }
   getVersion(): GodwokenVersion {
     return "v0";
   }
@@ -188,8 +194,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const godwokenClient = new GodwokenClient(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    const result = godwokenClient.getWithdrawal(txHash);
+    const result = this.godwokenClient.getWithdrawal(txHash);
     console.log("getWithdrawal result:", result);
     return result;
   }
@@ -203,7 +208,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const godwokenClient = new GodwokenClient(layer2Config.GW_POLYJUICE_RPC_URL);
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
     console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
@@ -218,7 +222,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
     console.log("account script hash:", accountScriptHash);
-    const fromId = await godwokenClient.getAccountIdByScriptHash(accountScriptHash);
+    const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     if (!fromId) {
       throw new Error("account not found");
     }
@@ -229,7 +233,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         `Withdrawal required ${BigInt(minCapacity)} shannons at least, provided ${BigInt(payload.capacity)}.`,
       );
     }
-    const nonce: HexNumber = await godwokenClient.getNonce(fromId);
+    const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
     console.log("nonce:", nonce);
     const sellCapacity: HexNumber = "0x0";
     const sellAmount: HexNumber = "0x0";
@@ -264,7 +268,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
-      result = await godwokenClient.submitWithdrawalRequest(withdrawalRequest);
+      result = await this.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
     } catch (e) {
       eventEmitter.emit("error", e);
       return;

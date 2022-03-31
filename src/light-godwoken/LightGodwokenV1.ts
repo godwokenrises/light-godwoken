@@ -23,7 +23,13 @@ import {
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
+import LightGodwokenProvider from './lightGodwokenProvider'
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
+  godwokenClient
+  constructor(provider: LightGodwokenProvider) {
+    super(provider);
+    this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+  }
   getVersion(): GodwokenVersion {
     return "v1";
   }
@@ -198,8 +204,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const godwokenWeb3 = new GodwokenV1(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    const result = godwokenWeb3.getWithdrawal(txHash);
+    const result = this.godwokenClient.getWithdrawal(txHash);
     console.log("getWithdrawal result:", result);
     return result;
   }
@@ -211,14 +216,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async getChainId(): Promise<HexNumber> {
-    const godwokenWeb3 = new GodwokenV1(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    return godwokenWeb3.getChainId();
+    return this.godwokenClient.getChainId();
   }
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const godwokenWeb3 = new GodwokenV1(layer2Config.GW_POLYJUICE_RPC_URL);
     const chainId = await this.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
     const ownerLock = helpers.parseAddress(ownerCkbAddress);
@@ -232,7 +235,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
 
     const address = layer2AccountScriptHash.slice(0, 42);
-    const balance = await godwokenWeb3.getBalance(CKB_SUDT_ID, address);
+    const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
     if (BI.from(balance).lt(BI.from(payload.capacity))) {
       eventEmitter.emit(
         "error",
@@ -247,8 +250,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       await this.validateSUDTAmount(payload, eventEmitter);
     }
 
-    const fromId = await godwokenWeb3.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await godwokenWeb3.getNonce(fromId!);
+    const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
+    const nonce: number = await this.godwokenClient.getNonce(fromId!);
 
     const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
       chain_id: chainId,
@@ -332,7 +335,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
 
     // submit WithdrawalRequestExtra
-    const result = await godwokenWeb3.submitWithdrawalReqV1(withdrawalReqExtra);
+    const result = await this.godwokenClient.submitWithdrawalReqV1(withdrawalReqExtra);
     console.log("result:", result);
     if (result !== null) {
       const errorMessage = (result as any).message;
