@@ -39,6 +39,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   godwokenClient;
   lightGodwokenConfig;
   constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfig) {
+    if (lightGodwokenConfig) {
+      validateLightGodwokenConfig(lightGodwokenConfig);
+    }
     config.initializeConfig(config.predefined.AGGRON4);
     this.lightGodwokenConfig = lightGodwokenConfig ? lightGodwokenConfig : predefinedLightGodwokenConfig[env];
 
@@ -281,5 +284,22 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   async asyncSleep(ms = 0) {
     return new Promise((r) => setTimeout(r, ms));
+  }
+}
+function validateLightGodwokenConfig(
+  lightGodwokenConfig: LightGodwokenConfig,
+): asserts lightGodwokenConfig is LightGodwokenConfig {
+  if (
+    !lightGodwokenConfig ||
+    !lightGodwokenConfig.layer2Config ||
+    !lightGodwokenConfig.layer2Config.SCRIPTS ||
+    !lightGodwokenConfig.layer2Config.ROLLUP_CONFIG ||
+    !lightGodwokenConfig.layer2Config.GW_POLYJUICE_RPC_URL ||
+    !lightGodwokenConfig.layer1Config ||
+    !lightGodwokenConfig.layer1Config.SCRIPTS ||
+    !lightGodwokenConfig.layer1Config.CKB_INDEXER_URL ||
+    !lightGodwokenConfig.layer1Config.CKB_RPC_URL
+  ) {
+    throw new Error("lightGodwokenConfig not valid.");
   }
 }
