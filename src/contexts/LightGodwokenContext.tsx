@@ -25,8 +25,8 @@ export const Provider: React.FC = (props) => {
           instance = new LightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
           setLightGodwoken(instance);
         } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
-          instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
-          setLightGodwoken(instance);
+          const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
+          setLightGodwoken(lightGodwokenV1);
         }
       });
 
