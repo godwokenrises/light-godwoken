@@ -4,6 +4,9 @@ import Deposit from "./Deposit";
 import { useState } from "react";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import WithdrawalV1 from "./WithdrawalV1";
+import { LightGodwokenV1 } from "../light-godwoken";
+import { addNetwork } from "../utils/addNetwork";
+import { useChainId } from "../hooks/useChainId";
 
 interface Props {
   activateView?: string;
@@ -12,6 +15,10 @@ interface Props {
 export default function LightGodwokenApp(props: Props) {
   const [activeView, setActiveView] = useState(props.activateView || "withdrawal");
   const lightGodwoken = useLightGodwoken();
+  const { data: chainId } = useChainId();
+  if (lightGodwoken instanceof LightGodwokenV1 && chainId) {
+    addNetwork(lightGodwoken.provider.ethereum, chainId);
+  }
 
   const changeActiveView = (viewName: string) => {
     setActiveView(viewName);

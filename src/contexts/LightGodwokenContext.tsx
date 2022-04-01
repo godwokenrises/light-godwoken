@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { LightGodwokenV1, LightGodwoken } from "../light-godwoken/index";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
-import { addNetwork } from "../utils/addNetwork";
 
 export const LightGodwokenContext = createContext<DefaultLightGodwoken | null>(null);
 LightGodwokenContext.displayName = "LightGodwokenContext";
@@ -14,9 +13,6 @@ export const Provider: React.FC = (props) => {
   const location = useLocation();
   useEffect(() => {
     detectEthereumProvider().then((ethereum: any) => {
-      if (location.pathname.startsWith("/v1")) {
-        addNetwork(ethereum);
-      }
       ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
         if (!accounts || !accounts[0]) return;
 
