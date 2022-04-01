@@ -4,10 +4,18 @@ import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import Link from "antd/lib/typography/Link";
 import { BI } from "@ckb-lumos/lumos";
-import { CKB_INDEXER_URL, CKB_RPC_URL, CKB_USDC_ISSUER_PRIVATE_KEY } from "../../config";
+import { CKB_USDC_ISSUER_PRIVATE_KEY } from "../../config";
 
-const claim = async (recipientAddr: string) => {
-  const provider = new CkitProvider(CKB_INDEXER_URL, CKB_RPC_URL);
+const claim = async ({
+  recipientAddr,
+  CKBIndexerUrl,
+  CKBRpcUrl,
+}: {
+  recipientAddr: string;
+  CKBIndexerUrl: string;
+  CKBRpcUrl: string;
+}) => {
+  const provider = new CkitProvider(CKBIndexerUrl, CKBRpcUrl);
   await provider.init(predefined.Aggron);
 
   const { SECP256K1_BLAKE160 } = provider.config.SCRIPTS;
@@ -32,12 +40,20 @@ const claim = async (recipientAddr: string) => {
 
 export const ClaimSudt: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
+  const config = lightGodwoken?.provider.getLightGodwokenConfig();
 
   const claimSudt = async () => {
     if (!lightGodwoken) {
       throw new Error("LightGodwoken Not Found!");
     }
-    const txHash = await claim(lightGodwoken.provider.l1Address);
+    if (!config) {
+      throw new Error("can not find light godwoken config");
+    }
+    const txHash = await claim({
+      recipientAddr: lightGodwoken.provider.l1Address,
+      CKBIndexerUrl: config.layer1Config.CKB_INDEXER_URL,
+      CKBRpcUrl: config.layer1Config.CKB_RPC_URL,
+    });
     notification.success({ message: `deposit Tx(${txHash}) is successful` });
   };
   return <Link onClick={claimSudt}>Claim SUDT</Link>;

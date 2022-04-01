@@ -4,6 +4,7 @@ import { useQuery } from "react-query";
 import styled from "styled-components";
 import { LoadingOutlined } from "@ant-design/icons";
 import WithdrawalRequestCard from "./WithdrawalRequestCard";
+import { Cell } from "@ckb-lumos/base";
 
 const WithdrawalListDiv = styled.div`
   max-height: calc(100vh - 400px);
@@ -16,11 +17,13 @@ const WithdrawalListDiv = styled.div`
     margin-bottom: 16px;
   }
 `;
-
-export const WithdrawalList: React.FC = () => {
+interface Props {
+  unlockButton?: (cell: Cell) => JSX.Element;
+}
+export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
-  const { data: withDrawalList } = useQuery(
+  const { data: withdrawalList } = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion() }],
     () => {
       return lightGodwoken?.listWithdraw();
@@ -30,7 +33,7 @@ export const WithdrawalList: React.FC = () => {
     },
   );
 
-  if (!withDrawalList) {
+  if (!withdrawalList) {
     return (
       <WithdrawalListDiv>
         <LoadingOutlined />
@@ -39,8 +42,8 @@ export const WithdrawalList: React.FC = () => {
   }
   return (
     <WithdrawalListDiv>
-      {withDrawalList.map((withdraw, index) => (
-        <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+      {withdrawalList.map((withdraw, index) => (
+        <WithdrawalRequestCard now={now} {...withdraw} key={index} unlockButton={unlockButton}></WithdrawalRequestCard>
       ))}
     </WithdrawalListDiv>
   );

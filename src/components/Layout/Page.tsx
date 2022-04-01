@@ -1,6 +1,5 @@
 import React from "react";
 import styled from "styled-components";
-import PageHeader from "./PageHeader";
 
 const StyledPage = styled.div`
   display: flex;
@@ -12,12 +11,7 @@ const StyledPage = styled.div`
 `;
 
 const Page: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ children, ...props }) => {
-  return (
-    <StyledPage {...props}>
-      <PageHeader></PageHeader>
-      {children}
-    </StyledPage>
-  );
+  return <StyledPage {...props}>{children}</StyledPage>;
 };
 
 export default Page;

@@ -2,12 +2,12 @@ import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-de
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useERC20Balance } from "../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
+import { Token, WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../types/type";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
@@ -29,6 +29,9 @@ const PageHeader = styled.div`
   a,
   .ant-typography {
     color: white;
+  }
+  .back-button:hover {
+    cursor: pointer;
   }
 `;
 const PageMain = styled.div`
@@ -124,15 +127,10 @@ const ConfirmModal = styled(Modal)`
     margin: 24px 0;
   }
 `;
-
-interface Token {
-  name: string;
-  symbol: string;
-  decimals: number;
-  tokenURI: string;
+interface Props {
+  onViewChange: (viewName: string) => void;
 }
-
-export default function RequestWithdrawal() {
+const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -241,6 +239,10 @@ export default function RequestWithdrawal() {
     setSudtBalance(balance);
   };
 
+  const changeActiveView = () => {
+    onViewChange("withdrawal");
+  };
+
   const inputError = useMemo(() => {
     if (CKBInput === "") {
       return "Enter CKB Amount";
@@ -258,12 +260,12 @@ export default function RequestWithdrawal() {
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   return (
-    <Page>
+    <>
       <PageContent>
         <PageHeader className="header">
-          <Link to={"/" + params.version}>
+          <span className="back-button" onClick={changeActiveView}>
             <ArrowLeftOutlined />
-          </Link>
+          </span>
           <Text>Request Withdrawal</Text>
           <QuestionCircleOutlined />
         </PageHeader>
@@ -317,6 +319,7 @@ export default function RequestWithdrawal() {
           </Button>
         </WithdrawalButton>
       </ConfirmModal>
-    </Page>
+    </>
   );
-}
+};
+export default RequestWithdrawal;
