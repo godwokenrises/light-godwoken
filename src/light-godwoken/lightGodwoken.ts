@@ -1,6 +1,6 @@
 import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
-import { OMNI_LOCK_CELL_DEP, SECP256K1_BLACK160_CELL_DEP, SUDT_CELL_DEP } from "./constants/layer1ConfigUtils";
+import { getCellDep } from "./constants/configUtils";
 import {
   NormalizeDepositLockArgs,
   NormalizeRawWithdrawalRequest,
@@ -84,6 +84,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
 
+    const { layer1Config } = this.provider.getLightGodwokenConfig();
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
         return inputs.push(...collectedCells);
@@ -92,15 +93,15 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         return outputs.push(...outputCell);
       })
       .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(OMNI_LOCK_CELL_DEP);
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.omni_lock));
       })
       .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(SECP256K1_BLACK160_CELL_DEP);
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
       });
 
     if (payload.sudtType) {
       txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(SUDT_CELL_DEP);
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
 
@@ -123,7 +124,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
     ).serializeJson();
 
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLayer2Config();
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
 
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
@@ -179,12 +180,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
 
     return [outputCell, exchangeCell];
-  }
-
-  async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const result = await this.provider.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
-    return result;
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
