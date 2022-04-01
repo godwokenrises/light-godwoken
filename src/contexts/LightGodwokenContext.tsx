@@ -1,39 +1,13 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  GODWOKEN_V1_BLOCK_EXPLORER_URL,
-  GODWOKEN_V1_CHAIN_ID,
-  GODWOKEN_V1_CHAIN_NAME,
-  GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
-  GODWOKEN_V1_NATIVE_CURRENCY_NAME,
-  GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
-  GODWOKEN_V1_RPC_URL,
-} from "../config";
 import { LightGodwokenV1, LightGodwoken } from "../light-godwoken/index";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
+import { addNetwork } from "../utils/addNetwork";
 
 export const LightGodwokenContext = createContext<DefaultLightGodwoken | null>(null);
 LightGodwokenContext.displayName = "LightGodwokenContext";
-const addNetwork = (ethereum: any) => {
-  const params = [
-    {
-      chainId: GODWOKEN_V1_CHAIN_ID,
-      chainName: GODWOKEN_V1_CHAIN_NAME,
-      nativeCurrency: {
-        name: GODWOKEN_V1_NATIVE_CURRENCY_NAME,
-        symbol: GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
-        decimals: GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
-      },
-      rpcUrls: [GODWOKEN_V1_RPC_URL],
-      blockExplorerUrls: [GODWOKEN_V1_BLOCK_EXPLORER_URL],
-    },
-  ];
-  ethereum
-    .request({ method: "wallet_addEthereumChain", params })
-    .catch((error: Error) => console.log("Error", error.message));
-};
 
 export const Provider: React.FC = (props) => {
   const [lightGodwoken, setLightGodwoken] = useState<DefaultLightGodwoken>();
