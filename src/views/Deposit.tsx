@@ -288,7 +288,7 @@ export default function Deposit() {
     message.success("copied L1 address to clipboard");
   };
   return (
-    <Page>
+    <>
       <PageContent>
         <PageHeader className="header">
           <Text className="title">Deposit To Layer2</Text>
@@ -349,6 +349,6 @@ export default function Deposit() {
         </Text>
         <div className="tips">Confirm this transaction in your wallet</div>
       </ConfirmModal>
-    </Page>
+    </>
   );
 }

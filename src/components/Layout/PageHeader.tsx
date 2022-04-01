@@ -1,5 +1,4 @@
 import React from "react";
-import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { ClaimSudt } from "../ClaimSudt";
 import { ConnectButton } from "../ConnectButton";
@@ -13,16 +12,14 @@ const StyledPage = styled.div`
   background: radial-gradient(89.56% 89.56% at 50.04% 10.44%, rgb(60, 58, 75) 0%, rgb(28, 27, 37) 92.56%);
   margin-bottom: 20px;
   color: white;
-  .l1-faucet {
+  .link {
     display: flex;
-    flex-direction: column;
-    padding-top: 20px;
-    .ant-typography {
-      color: white;
-      padding-right: 5px;
-    }
-    a {
-      color: rgb(255, 67, 66);
+    color: #1890ff;
+    > div {
+      margin-right: 10px;
+      &:hover {
+        cursor: pointer;
+      }
     }
   }
   .right-side {
@@ -37,14 +34,21 @@ const StyledPage = styled.div`
     padding-left: 10px;
   }
 `;
-
-const PageHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = () => {
-  const params = useParams();
+interface Props {
+  onViewChange: (view: string) => void;
+}
+const PageHeader: React.FC<Props> = ({ onViewChange }) => {
+  const changeViewToDeposit = () => {
+    onViewChange("deposit");
+  };
+  const changeViewToWithDrawal = () => {
+    onViewChange("withdrawal");
+  };
   return (
     <StyledPage>
       <div className="link">
-        <Link to={"/" + params.version + "/deposit/"}>Deposit</Link>
-        <Link to={"/" + params.version}>Withdrawal</Link>
+        <div onClick={changeViewToDeposit}>Deposit</div>
+        <div onClick={changeViewToWithDrawal}>Withdrawal</div>
         <ClaimSudt />
         <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
           CKB Testnet Faucet

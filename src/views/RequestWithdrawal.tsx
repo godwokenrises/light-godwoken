@@ -260,7 +260,7 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   return (
-    <Page>
+    <>
       <PageContent>
         <PageHeader className="header">
           <span className="back-button" onClick={changeActiveView}>
@@ -319,7 +319,7 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
           </Button>
         </WithdrawalButton>
       </ConfirmModal>
-    </Page>
+    </>
   );
 };
 export default RequestWithdrawal;

@@ -75,7 +75,7 @@ const WithdrawalV1: React.FC<Props> = ({ onViewChange }) => {
   };
 
   return (
-    <Page>
+    <>
       <PageContent className="content">
         <div className="request-withdrawal">
           <div className="title">Withdrawal</div>
@@ -95,7 +95,7 @@ const WithdrawalV1: React.FC<Props> = ({ onViewChange }) => {
           </div>
         </ResultList>
       </PageContent>
-    </Page>
+    </>
   );
 };
 
