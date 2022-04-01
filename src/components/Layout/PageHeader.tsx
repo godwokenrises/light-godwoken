@@ -35,14 +35,14 @@ const StyledPage = styled.div`
   }
 `;
 interface Props {
-  onViewChange: (view: string) => void;
+  onViewChange?: (view: string) => void;
 }
 const PageHeader: React.FC<Props> = ({ onViewChange }) => {
   const changeViewToDeposit = () => {
-    onViewChange("deposit");
+    onViewChange && onViewChange("deposit");
   };
   const changeViewToWithDrawal = () => {
-    onViewChange("withdrawal");
+    onViewChange && onViewChange("withdrawal");
   };
   return (
     <StyledPage>
