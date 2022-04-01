@@ -11,7 +11,6 @@ import { Token, WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenTy
 import { L1MappedErc20 } from "../types/type";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
-import Page from "../components/Layout/Page";
 
 const { Text } = Typography;
 

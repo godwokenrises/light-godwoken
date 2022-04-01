@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
-import Page from "../components/Layout/Page";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
