@@ -80,7 +80,7 @@ const WithdrawalV1: React.FC<Props> = ({ onViewChange }) => {
         <div className="request-withdrawal">
           <div className="title">Withdrawal</div>
           <div className="description">
-            To withdraw assets back to Layer 1, you need to have CKB balance in your L1 Wallet Address
+            To withdraw assets back to Layer 1, you need to have CKB balance in your L2 Wallet Address
           </div>
           <div className="button-container">
             <div onClick={changeActiveView} className="request-button">
