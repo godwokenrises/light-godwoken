@@ -1,3 +1,4 @@
+import "antd/dist/antd.css";
 import RequestWithdrawal from "./RequestWithdrawal";
 import Withdrawal from "./Withdrawal";
 import Deposit from "./Deposit";

@@ -1,4 +1,3 @@
-import Page from "../components/Layout/Page";
 import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
 import Unlock from "../components/Withdrawal/Unlock";

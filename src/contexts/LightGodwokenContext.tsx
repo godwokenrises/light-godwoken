@@ -5,7 +5,7 @@ import { LightGodwokenV1, LightGodwoken } from "../light-godwoken/index";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 
-export const LightGodwokenContext = createContext<DefaultLightGodwoken | null>(null);
+export const LightGodwokenContext = createContext<DefaultLightGodwoken | undefined>(undefined);
 LightGodwokenContext.displayName = "LightGodwokenContext";
 
 export const Provider: React.FC = (props) => {
@@ -40,5 +40,7 @@ export const Provider: React.FC = (props) => {
     });
   }, [lightGodwoken, location.pathname]);
 
-  return <LightGodwokenContext.Provider value={lightGodwoken || null}>{props.children}</LightGodwokenContext.Provider>;
+  return (
+    <LightGodwokenContext.Provider value={lightGodwoken || undefined}>{props.children}</LightGodwokenContext.Provider>
+  );
 };
