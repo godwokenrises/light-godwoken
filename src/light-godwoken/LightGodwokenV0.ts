@@ -31,6 +31,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  BaseWithdrawalEventEmitterPayload,
 } from "./lightGodwokenType";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { getTokenList } from "./constants/tokens";
@@ -39,6 +40,7 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
+import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
@@ -205,7 +207,28 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+  withdrawToV1WithEvent(payload: BaseWithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.withdraw(
+      eventEmitter,
+      { ...payload, withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock()) },
+      true,
+    );
+    return eventEmitter;
+  }
+
+  getV1DepositLock(): Script {
+    const v1DepositLock = this.generateDepositLock(
+      new DefaultLightGodwokenProvider(this.provider.l2Address, this.provider.ethereum, "v1"),
+    );
+    return v1DepositLock;
+  }
+
+  async withdraw(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+    withdrawToV1 = false,
+  ): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;

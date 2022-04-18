@@ -28,8 +28,11 @@ export class GodwokenClient {
    * @param request
    * @returns
    */
-  async submitWithdrawalRequest(request: WithdrawalRequest): Promise<void> {
-    const data = new Reader(SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
+  async submitWithdrawalRequest(request: WithdrawalRequest, withdrawToV1 = false): Promise<void> {
+    let data = new Reader(SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
+    if (withdrawToV1) {
+      data = `${data}01`;
+    }
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
