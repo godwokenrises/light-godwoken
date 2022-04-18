@@ -57,7 +57,7 @@ export interface WithdrawalEventEmitter {
   on: WithdrawListener;
 }
 
-export interface WithdrawalEventEmitterPayload {
+export interface BaseWithdrawalEventEmitterPayload {
   // CKB capacity
   capacity: HexNumber;
   // L1 mapped sUDT amount
@@ -66,7 +66,8 @@ export interface WithdrawalEventEmitterPayload {
    * {@link L1MappedErc20}
    */
   sudt_script_hash: Hash;
-
+}
+export interface WithdrawalEventEmitterPayload extends BaseWithdrawalEventEmitterPayload {
   /**
    * withdraw to L1 address
    */
@@ -146,6 +147,7 @@ export interface LightGodwokenBase {
 
 export interface LightGodwokenV0 extends LightGodwokenBase {
   unlock: (payload: UnlockPayload) => Promise<Hash>;
+  withdrawToV1WithEvent: (payload: BaseWithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {
   getChainId: () => Promise<HexNumber>;
