@@ -110,10 +110,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txHash;
   }
 
-  generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+  generateDepositLock(provider = this.provider): Script {
+    const ownerLock: Script = helpers.parseAddress(provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
-    const layer2Lock: Script = this.provider.getLayer2LockScript();
+    const layer2Lock: Script = provider.getLayer2LockScript();
 
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
@@ -124,13 +124,18 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
     ).serializeJson();
 
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+    const { SCRIPTS, ROLLUP_CONFIG } = provider.getLightGodwokenConfig().layer2Config;
 
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
+    return depositLock;
+  }
+
+  generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
+    const depositLock = this.generateDepositLock();
     const sumCapacity = collectedCells.reduce((acc, cell) => acc + BigInt(cell.cell_output.capacity), BigInt(0));
     const sumSustAmount = collectedCells.reduce((acc, cell) => {
       if (cell.cell_output.type) {
