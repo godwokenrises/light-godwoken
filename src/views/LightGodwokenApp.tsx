@@ -1,5 +1,5 @@
 import "antd/dist/antd.css";
-import Withdrawal from "./Withdrawal";
+import Withdrawal from "./WithdrawalV0";
 import Deposit from "./Deposit";
 import { useEffect, useState } from "react";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
