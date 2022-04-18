@@ -107,7 +107,7 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-const RequestWithdrawal: React.FC = () => {
+const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [targetValue, setWithdrawalTarget] = useState("CKB_L1");
@@ -287,4 +287,4 @@ const RequestWithdrawal: React.FC = () => {
     </>
   );
 };
-export default RequestWithdrawal;
+export default RequestWithdrawalV0;

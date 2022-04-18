@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
 import Unlock from "../components/Withdrawal/Unlock";
-import RequestWithdrawal from "../components/Withdrawal/RequestWithdrawal";
+import RequestWithdrawal from "../components/Withdrawal/RequestWithdrawalV0";
 
 const PageContent = styled.div`
   width: 436px;
@@ -35,7 +35,7 @@ const ResultList = styled.div`
   }
 `;
 
-const Withdrawal: React.FC = () => {
+const WithdrawalV0: React.FC = () => {
   return (
     <>
       <PageContent className="content">
@@ -54,4 +54,4 @@ const Withdrawal: React.FC = () => {
   );
 };
 
-export default Withdrawal;
+export default WithdrawalV0;
