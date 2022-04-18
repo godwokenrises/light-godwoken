@@ -11,6 +11,7 @@ import { Token, WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenTy
 import { L1MappedErc20 } from "../types/type";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
+import WithdrawalTarget from "../components/WithdrawalTarget/Index";
 
 const { Text } = Typography;
 
@@ -132,6 +133,8 @@ interface Props {
 const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
+  const [targetValue, setWithdrawalTarget] = useState("CKB_L1");
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
@@ -257,7 +260,6 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
     }
     return void 0;
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
-
   return (
     <>
       <PageContent>
@@ -269,6 +271,7 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
           <QuestionCircleOutlined />
         </PageHeader>
         <PageMain className="main">
+          <WithdrawalTarget value={targetValue} onSelectedChange={setWithdrawalTarget}></WithdrawalTarget>
           <CKBInputPanel
             value={CKBInput}
             onUserInput={setCKBInput}
