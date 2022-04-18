@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
-import RequestWithdrawal from "../components/Withdrawal/RequestWithdrawal";
+import RequestWithdrawalV1 from "../components/Withdrawal/RequestWithdrawalV1";
 
 const PageContent = styled.div`
   width: 436px;
@@ -40,7 +40,7 @@ const WithdrawalV1: React.FC = () => {
       <PageContent className="content">
         <div className="request-withdrawal">
           <div className="title">Withdrawal</div>
-          <RequestWithdrawal></RequestWithdrawal>
+          <RequestWithdrawalV1></RequestWithdrawalV1>
         </div>
         <ResultList className="withdrawal-request">
           <div className="header">Withdrawal Requests List</div>
