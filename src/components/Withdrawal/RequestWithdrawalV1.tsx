@@ -10,7 +10,6 @@ import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwoke
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
-import WithdrawalTarget from "../WithdrawalTarget/Index";
 
 const { Text } = Typography;
 
@@ -107,10 +106,9 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-const RequestWithdrawal: React.FC = () => {
+const RequestWithdrawalV1: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
-  const [targetValue, setWithdrawalTarget] = useState("CKB_L1");
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -235,7 +233,6 @@ const RequestWithdrawal: React.FC = () => {
   return (
     <>
       <PageMain className="main">
-        <WithdrawalTarget value={targetValue} onSelectedChange={setWithdrawalTarget}></WithdrawalTarget>
         <CKBInputPanel
           value={CKBInput}
           onUserInput={setCKBInput}
@@ -268,11 +265,11 @@ const RequestWithdrawal: React.FC = () => {
       <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="text-pair">
           <Text>Block wait</Text>
-          <Text>10000</Text>
+          <Text>50</Text>
         </div>
         <div className="text-pair">
           <Text>Estimated time</Text>
-          <Text>5 days</Text>
+          <Text>30mins</Text>
         </div>
         <div className="tips">
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
@@ -287,4 +284,4 @@ const RequestWithdrawal: React.FC = () => {
     </>
   );
 };
-export default RequestWithdrawal;
+export default RequestWithdrawalV1;
