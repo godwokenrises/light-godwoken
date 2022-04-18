@@ -1,3 +1,4 @@
+import { HexString } from "@ckb-lumos/base";
 import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
@@ -227,10 +228,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return signature;
   }
 
-  generateWithdrawalMessageToSign(rawWithdrawalRequest: RawWithdrawalRequest, rollupTypeHash: Hash): Hash {
-    const serializedRawWithdrawalRequest: HexString = new toolkit.Reader(
-      SerializeRawWithdrawalRequest(NormalizeRawWithdrawalRequest(rawWithdrawalRequest)),
-    ).serializeJson();
+  generateWithdrawalMessageToSign(serializedRawWithdrawalRequest: HexString, rollupTypeHash: Hash): Hash {
     const data = new toolkit.Reader(rollupTypeHash + serializedRawWithdrawalRequest.slice(2)).toArrayBuffer();
     const message = utils.ckbHash(data).serializeJson();
     return message;
