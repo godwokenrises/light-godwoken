@@ -1,41 +1,21 @@
-import { ArrowLeftOutlined, PlusOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { Button, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { useERC20Balance } from "../hooks/useERC20Balance";
-import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { Token, WithdrawalEventEmitter } from "../light-godwoken/lightGodwokenType";
-import { L1MappedErc20 } from "../types/type";
-import CKBInputPanel from "../components/Input/CKBInputPanel";
-import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
-import WithdrawalTarget from "../components/WithdrawalTarget/Index";
+import { useERC20Balance } from "../../hooks/useERC20Balance";
+import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import { L1MappedErc20 } from "../../types/type";
+import CKBInputPanel from "../Input/CKBInputPanel";
+import CurrencyInputPanel from "../Input/CurrencyInputPanel";
+import WithdrawalTarget from "../WithdrawalTarget/Index";
 
 const { Text } = Typography;
 
-const PageContent = styled.div`
-  width: 436px;
-  background: rgb(39, 37, 52);
-  border-radius: 24px;
-  color: white;
-`;
-const PageHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding: 24px;
-  align-items: center;
-  a,
-  .ant-typography {
-    color: white;
-  }
-  .back-button:hover {
-    cursor: pointer;
-  }
-`;
 const PageMain = styled.div`
-  padding: 24px;
   grid-auto-rows: auto;
   row-gap: 8px;
   .icon {
@@ -127,10 +107,7 @@ const ConfirmModal = styled(Modal)`
     margin: 24px 0;
   }
 `;
-interface Props {
-  onViewChange: (viewName: string) => void;
-}
-const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
+const RequestWithdrawal: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [targetValue, setWithdrawalTarget] = useState("CKB_L1");
@@ -241,10 +218,6 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
     setSudtBalance(balance);
   };
 
-  const changeActiveView = () => {
-    onViewChange("withdrawal");
-  };
-
   const inputError = useMemo(() => {
     if (CKBInput === "") {
       return "Enter CKB Amount";
@@ -262,46 +235,37 @@ const RequestWithdrawal: React.FC<Props> = ({ onViewChange }) => {
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
   return (
     <>
-      <PageContent>
-        <PageHeader className="header">
-          <span className="back-button" onClick={changeActiveView}>
-            <ArrowLeftOutlined />
-          </span>
-          <Text>Request Withdrawal</Text>
-          <QuestionCircleOutlined />
-        </PageHeader>
-        <PageMain className="main">
-          <WithdrawalTarget value={targetValue} onSelectedChange={setWithdrawalTarget}></WithdrawalTarget>
-          <CKBInputPanel
-            value={CKBInput}
-            onUserInput={setCKBInput}
-            label="Withdraw"
-            isLoading={query.isLoading}
-            CKBBalance={CKBBalance}
-          ></CKBInputPanel>
-          <div className="icon">
-            <PlusOutlined />
-          </div>
-          <CurrencyInputPanel
-            value={sudtValue}
-            onUserInput={setSudtValue}
-            label="sUDT(optional)"
-            balancesList={erc20BalanceQuery.data?.balances}
-            tokenList={tokenList}
-            onSelectedChange={handleSelectedChange}
-            dataLoading={erc20BalanceQuery.isLoading}
-          ></CurrencyInputPanel>
-          <WithdrawalButton>
-            <Button
-              className="submit-button"
-              disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
-              onClick={showModal}
-            >
-              {inputError || "Request Withdrawal"}
-            </Button>
-          </WithdrawalButton>
-        </PageMain>
-      </PageContent>
+      <PageMain className="main">
+        <WithdrawalTarget value={targetValue} onSelectedChange={setWithdrawalTarget}></WithdrawalTarget>
+        <CKBInputPanel
+          value={CKBInput}
+          onUserInput={setCKBInput}
+          label="Withdraw"
+          isLoading={query.isLoading}
+          CKBBalance={CKBBalance}
+        ></CKBInputPanel>
+        <div className="icon">
+          <PlusOutlined />
+        </div>
+        <CurrencyInputPanel
+          value={sudtValue}
+          onUserInput={setSudtValue}
+          label="sUDT(optional)"
+          balancesList={erc20BalanceQuery.data?.balances}
+          tokenList={tokenList}
+          onSelectedChange={handleSelectedChange}
+          dataLoading={erc20BalanceQuery.isLoading}
+        ></CurrencyInputPanel>
+        <WithdrawalButton>
+          <Button
+            className="submit-button"
+            disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
+            onClick={showModal}
+          >
+            {inputError || "Request Withdrawal"}
+          </Button>
+        </WithdrawalButton>
+      </PageMain>
       <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="text-pair">
           <Text>Block wait</Text>

@@ -1,5 +1,4 @@
 import "antd/dist/antd.css";
-import RequestWithdrawal from "./RequestWithdrawal";
 import Withdrawal from "./Withdrawal";
 import Deposit from "./Deposit";
 import { useEffect, useState } from "react";
@@ -24,16 +23,12 @@ export default function LightGodwokenApp(props: Props) {
     addNetwork(lightGodwoken.provider.ethereum, chainId);
   }
 
-  const changeActiveView = (viewName: string) => {
-    setActiveView(viewName);
-  };
   const WithdrawalComp = lightGodwoken?.getVersion().toString() === "v0" ? Withdrawal : WithdrawalV1;
 
   return (
     {
-      withdrawal: <WithdrawalComp onViewChange={changeActiveView}></WithdrawalComp>,
+      withdrawal: <WithdrawalComp></WithdrawalComp>,
       deposit: <Deposit></Deposit>,
-      "request-withdrawal": <RequestWithdrawal onViewChange={changeActiveView}></RequestWithdrawal>,
     }[activeView] || <Deposit></Deposit>
   );
 }
