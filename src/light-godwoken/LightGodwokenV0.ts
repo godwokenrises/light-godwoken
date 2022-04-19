@@ -14,10 +14,10 @@ import {
   utils,
   WitnessArgs,
 } from "@ckb-lumos/lumos";
+import { BI } from "@ckb-lumos/bi";
 import { TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
   UnlockPayload,
@@ -31,6 +31,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  BaseWithdrawalEventEmitterPayload,
 } from "./lightGodwokenType";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { getTokenList } from "./constants/tokens";
@@ -39,6 +40,8 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
+import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
+import { RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
@@ -205,7 +208,28 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+  withdrawToV1WithEvent(payload: BaseWithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.withdraw(
+      eventEmitter,
+      { ...payload, withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock()) },
+      true,
+    );
+    return eventEmitter;
+  }
+
+  getV1DepositLock(): Script {
+    const v1DepositLock = this.generateDepositLock(
+      new DefaultLightGodwokenProvider(this.provider.l2Address, this.provider.ethereum, "v1"),
+    );
+    return v1DepositLock;
+  }
+
+  async withdraw(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+    withdrawToV1 = false,
+  ): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
@@ -240,35 +264,47 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
     const feeSudtId: HexNumber = "0x1";
     const feeAmount: HexNumber = "0x0";
-    const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce: "0x" + BigInt(nonce).toString(16),
-      capacity: "0x" + BigInt(payload.capacity).toString(16),
-      amount: "0x" + BigInt(payload.amount).toString(16),
+    const rawWithdrawalRequest = {
+      nonce: BI.from(nonce).toNumber(),
+      capacity: BI.from(payload.capacity),
+      amount: BI.from(payload.amount),
       sudt_script_hash: payload.sudt_script_hash,
       account_script_hash: accountScriptHash,
-      sell_amount: sellAmount,
-      sell_capacity: sellCapacity,
+      sell_amount: BI.from(sellAmount),
+      sell_capacity: BI.from(sellCapacity),
       owner_lock_hash: ownerLockHash,
       payment_lock_hash: paymentLockHash,
       fee: {
-        sudt_id: feeSudtId,
-        amount: feeAmount,
+        sudt_id: BI.from(feeSudtId).toNumber(),
+        amount: BI.from(feeAmount),
       },
     };
     console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
-    const message = this.generateWithdrawalMessageToSign(rawWithdrawalRequest, rollupTypeHash);
+    const message = this.generateWithdrawalMessageToSign(
+      new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
+      rollupTypeHash,
+    );
     console.log("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
     console.log("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
-    const withdrawalRequest: WithdrawalRequest = {
+    const withdrawalRequest = {
       raw: rawWithdrawalRequest,
       signature: signatureMetamaskPersonalSign,
     };
+
+    const withdrawalRequestExtra = {
+      request: withdrawalRequest,
+      owner: ownerLock,
+      withdraw_to_v1: withdrawToV1 ? 1 : 0,
+    };
+
     console.log("withdrawalRequest:", withdrawalRequest);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
-      result = await this.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
+      result = await this.godwokenClient.submitWithdrawalRequest(
+        new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
+      );
     } catch (e) {
       eventEmitter.emit("error", e);
       return;
