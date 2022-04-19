@@ -1,6 +1,7 @@
 import { Typography, Radio, RadioChangeEvent } from "antd";
 import React from "react";
 import styled from "styled-components";
+import { CKB_L1, GODWOKEN_V1 } from "./const";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -49,8 +50,8 @@ export default function WithdrawalTarget({ value, onSelectedChange }: Withdrawal
       </Row>
       <Row>
         <Radio.Group onChange={onChange} value={value}>
-          <Radio value={"CKB_L1"}>CKB L1</Radio>
-          <Radio value={"GodWoken_V1"}>GodWoken V1</Radio>
+          <Radio value={CKB_L1}>CKB L1</Radio>
+          <Radio value={GODWOKEN_V1}>GodWoken V1</Radio>
         </Radio.Group>
       </Row>
     </StyleWrapper>

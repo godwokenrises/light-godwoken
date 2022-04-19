@@ -7,10 +7,12 @@ import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import DefaultLightGodwokenV0 from "../../light-godwoken/LightGodwokenV0";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
-import WithdrawalTarget from "../WithdrawalTarget/Index";
+import WithdrawalTarget from "./WithdrawalTarget";
+import { CKB_L1 } from "./const";
 
 const { Text } = Typography;
 
@@ -110,7 +112,7 @@ const ConfirmModal = styled(Modal)`
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
-  const [targetValue, setWithdrawalTarget] = useState("CKB_L1");
+  const [targetValue, setWithdrawalTarget] = useState(CKB_L1);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -161,15 +163,17 @@ const RequestWithdrawalV0: React.FC = () => {
       amount = "0x" + Amount.from(sudtValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
-    if (!lightGodwoken) {
+    if (!lightGodwoken || !(lightGodwoken instanceof DefaultLightGodwokenV0)) {
       setIsModalVisible(false);
-      return;
+      throw new Error("LightGodwoken instance error");
     }
 
     setLoading(true);
     let e: WithdrawalEventEmitter;
+    const withdrawFunction =
+      targetValue === CKB_L1 ? lightGodwoken.withdrawWithEvent : lightGodwoken.withdrawToV1WithEvent;
     try {
-      e = lightGodwoken.withdrawWithEvent({
+      e = withdrawFunction({
         capacity: capacity,
         amount: amount,
         sudt_script_hash: sudt_script_hash,
