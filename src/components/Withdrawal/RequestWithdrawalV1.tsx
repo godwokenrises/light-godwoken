@@ -1,23 +1,22 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
-import { Button, notification, Typography } from "antd";
+import { notification } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import DefaultLightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
-import { ConfirmModal, PageMain, WithdrawalButton } from "./requestWithdrawalStyle";
-
-const { Text } = Typography;
+import { PageMain } from "./requestWithdrawalStyle";
+import SubmitWithdrawal from "./SubmitWithdrawal";
 
 const RequestWithdrawalV1: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
   const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
@@ -29,13 +28,6 @@ const RequestWithdrawalV1: React.FC = () => {
   const erc20BalanceQuery = useERC20Balance();
 
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
 
   useEffect(() => {
     if (CKBInput === "" || CKBBalance === undefined) {
@@ -66,9 +58,8 @@ const RequestWithdrawalV1: React.FC = () => {
       amount = "0x" + Amount.from(sudtValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
-    if (!lightGodwoken) {
-      setIsModalVisible(false);
-      return;
+    if (!lightGodwoken || !(lightGodwoken instanceof DefaultLightGodwokenV1)) {
+      throw new Error("LightGodwoken instance error");
     }
 
     setLoading(true);
@@ -80,7 +71,6 @@ const RequestWithdrawalV1: React.FC = () => {
         sudt_script_hash: sudt_script_hash,
       });
     } catch (e) {
-      setIsModalVisible(false);
       if (e instanceof Error) {
         notification.error({
           message: e.message,
@@ -91,7 +81,6 @@ const RequestWithdrawalV1: React.FC = () => {
     }
 
     e.on("sent", (txHash) => {
-      setIsModalVisible(false);
       notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
       setLoading(false);
     });
@@ -101,19 +90,16 @@ const RequestWithdrawalV1: React.FC = () => {
     });
 
     e.on("success", (txHash) => {
-      setIsModalVisible(false);
       notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
     });
 
     e.on("error", (result: unknown) => {
       setLoading(false);
-      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
 
     e.on("fail", (result: unknown) => {
       setLoading(false);
-      setIsModalVisible(false);
       notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
     });
   };
@@ -159,35 +145,15 @@ const RequestWithdrawalV1: React.FC = () => {
           onSelectedChange={handleSelectedChange}
           dataLoading={erc20BalanceQuery.isLoading}
         ></CurrencyInputPanel>
-        <WithdrawalButton>
-          <Button
-            className="submit-button"
-            disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
-            onClick={showModal}
-          >
-            {inputError || "Request Withdrawal"}
-          </Button>
-        </WithdrawalButton>
+        <SubmitWithdrawal
+          sendWithdrawal={sendWithdrawal}
+          blockWait="50"
+          estimatedTime="30 mins"
+          loading={loading}
+          buttonText={inputError}
+          disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
+        ></SubmitWithdrawal>
       </PageMain>
-      <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null}>
-        <div className="text-pair">
-          <Text>Block wait</Text>
-          <Text>50</Text>
-        </div>
-        <div className="text-pair">
-          <Text>Estimated time</Text>
-          <Text>30mins</Text>
-        </div>
-        <div className="tips">
-          Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
-          Withdrawal
-        </div>
-        <WithdrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => sendWithdrawal()}>
-            Request Withdrawal
-          </Button>
-        </WithdrawalButton>
-      </ConfirmModal>
     </>
   );
 };
