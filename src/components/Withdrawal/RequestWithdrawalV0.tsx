@@ -1,8 +1,7 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { Amount } from "@ckitjs/ckit/dist/helpers";
-import { Button, Modal, notification, Typography } from "antd";
+import { Button, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
@@ -13,101 +12,9 @@ import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import WithdrawalTarget from "./WithdrawalTarget";
 import { CKB_L1 } from "./const";
+import { ConfirmModal, PageMain, WithdrawalButton } from "./requestWithdrawalStyle";
 
 const { Text } = Typography;
-
-const PageMain = styled.div`
-  grid-auto-rows: auto;
-  row-gap: 8px;
-  .icon {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-`;
-const WithdrawalButton = styled.div`
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  .submit-button {
-    align-items: center;
-    border: 0px;
-    border-radius: 16px;
-    box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-    cursor: pointer;
-    display: inline-flex;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 600;
-    -webkit-box-pack: center;
-    justify-content: center;
-    letter-spacing: 0.03em;
-    line-height: 1;
-    opacity: 1;
-    outline: 0px;
-    transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-    height: 48px;
-    padding: 0px 24px;
-    background-color: rgb(255, 67, 66);
-    color: white;
-    width: 100%;
-    &:disabled {
-      background-color: rgb(60, 55, 66);
-      border-color: rgb(60, 55, 66);
-      box-shadow: none;
-      color: rgb(104, 102, 123);
-      cursor: not-allowed;
-    }
-  }
-  button:hover {
-    cursor: pointer;
-  }
-`;
-const ConfirmModal = styled(Modal)`
-  color: white;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: rgb(39, 37, 52);
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
-  }
-  .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title,
-  .ant-list-item {
-    color: white;
-  }
-  .ant-modal-body {
-    padding: 24px;
-  }
-  .ant-modal-close-x {
-    color: white;
-  }
-  .ant-typography {
-    color: white;
-    justify-content: space-between;
-  }
-  .text-pair {
-    padding-top: 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 24px;
-  }
-  .tips {
-    margin: 24px 0;
-  }
-`;
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
