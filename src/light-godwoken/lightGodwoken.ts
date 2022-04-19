@@ -1,4 +1,3 @@
-import { HexString } from "@ckb-lumos/base";
 import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
