@@ -1,5 +1,4 @@
 import {
-  BI,
   Cell,
   CellDep,
   core,
@@ -15,6 +14,7 @@ import {
   utils,
   WitnessArgs,
 } from "@ckb-lumos/lumos";
+import { BI } from "@ckb-lumos/bi";
 import { TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
