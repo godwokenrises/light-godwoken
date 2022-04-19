@@ -1210,6 +1210,13 @@
     js-xxhash "^1.0.4"
     lodash.isequal "^4.5.0"
 
+"@ckb-lumos/bi@0.17.0-rc10":
+  version "0.17.0-rc10"
+  resolved "https://registry.yarnpkg.com/@ckb-lumos/bi/-/bi-0.17.0-rc10.tgz#fe53c3611c77a3c29eb13f9c13a2d3027f626c31"
+  integrity sha512-1voj61qyv05LhYhiCRmvMIitPz9O/jE50C47YyrlYjBVXbFuLVeW+w9+sdQyxB60ooDQyqTUXzv2BFs42F2vhQ==
+  dependencies:
+    jsbi "^4.1.0"
+
 "@ckb-lumos/bi@0.18.0-rc6":
   version "0.18.0-rc6"
   resolved "https://registry.yarnpkg.com/@ckb-lumos/bi/-/bi-0.18.0-rc6.tgz#9c9754ebe7bd95ebcf907f5cac9e4619273d6056"
@@ -1235,6 +1242,13 @@
     "@ckb-lumos/toolkit" "0.18.0-rc6"
     cross-fetch "^3.1.4"
     events "^3.3.0"
+
+"@ckb-lumos/codec@^0.17.0-rc10":
+  version "0.17.0-rc10"
+  resolved "https://registry.yarnpkg.com/@ckb-lumos/codec/-/codec-0.17.0-rc10.tgz#1cfd13545233fb6d725a5eb8006fc7fd6a3407e1"
+  integrity sha512-yPCelxOzDh4Tc7AW5RoQT9NIMNo8NxejYZMrxPF3t/mQKgbFGAFpnfyEBiZEnRWTQT9uWCVQQTh3BTZ9AqO3tQ==
+  dependencies:
+    "@ckb-lumos/bi" "0.17.0-rc10"
 
 "@ckb-lumos/common-scripts@0.18.0-rc6":
   version "0.18.0-rc6"
