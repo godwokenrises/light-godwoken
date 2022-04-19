@@ -4,10 +4,8 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
-    "@ckb-lumos/base": "^0.17.0-rc10",
-    "@ckb-lumos/bi": "^0.17.0-rc10",
-    "@ckb-lumos/codec": "^0.17.0-rc10",
-    "@ckb-lumos/lumos": "^0.17.0-rc10",
+    "@ckb-lumos/base": "^0.18.0-rc6",
+    "@ckb-lumos/lumos": "^0.18.0-rc6",
     "@ckitjs/ckit": "^0.1.0",
     "@lay2/pw-core": "0.4.0-alpha.12",
     "@metamask/detect-provider": "^1.2.0",

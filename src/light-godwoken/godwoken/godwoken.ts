@@ -1,5 +1,7 @@
-import { RPC } from "ckb-js-toolkit";
+import { RPC, Reader } from "ckb-js-toolkit";
 import { Hash, HexNumber, HexString } from "@ckb-lumos/lumos";
+import { NormalizeWithdrawalRequest, WithdrawalRequest } from "./normalizer";
+import { SerializeWithdrawalRequest } from "../schemas/index.esm";
 
 interface LastL2BlockCommittedInfo {
   transaction_hash: Hash;
@@ -26,7 +28,8 @@ export class GodwokenClient {
    * @param request
    * @returns
    */
-  async submitWithdrawalRequest(data: HexString): Promise<void> {
+  async submitWithdrawalRequest(request: WithdrawalRequest): Promise<void> {
+    const data = new Reader(SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
