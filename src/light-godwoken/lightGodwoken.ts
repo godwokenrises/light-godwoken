@@ -1,4 +1,16 @@
-import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import {
+  Cell,
+  Hash,
+  helpers,
+  HexNumber,
+  HexString,
+  Script,
+  toolkit,
+  utils,
+  BI,
+  core,
+  Transaction,
+} from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
 import {
@@ -105,9 +117,42 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       });
     }
 
-    const signedTx = await this.provider.signL1Transaction(txSkeleton);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton);
+    const txFee = await this.calculateTxFee(signedTx);
+    txSkeleton = txSkeleton.update("outputs", (outputs) => {
+      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
+      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
+      return outputs;
+    });
+
+    signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
+  }
+
+  async calculateTxFee(tx: Transaction): Promise<BI> {
+    const feeRate = await this.provider.getMinFeeRate();
+    const size = this.getTransactionSizeByTx(tx);
+    const fee = this.calculateFeeCompatible(size, feeRate);
+    console.log(`tx size: ${size}, fee: ${fee}`);
+    return fee;
+  }
+
+  calculateFeeCompatible(size: number, feeRate: BI): BI {
+    const ratio = BI.from(1000);
+    const base = BI.from(size).mul(feeRate);
+    const fee = base.div(ratio);
+    if (fee.mul(ratio).lt(base)) {
+      return fee.add(1);
+    }
+    return BI.from(fee);
+  }
+
+  getTransactionSizeByTx(tx: Transaction): number {
+    const serializedTx = core.SerializeTransaction(toolkit.normalizers.NormalizeTransaction(tx));
+    // 4 is serialized offset bytesize
+    const size = serializedTx.byteLength + 4;
+    return size;
   }
 
   generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
@@ -147,8 +192,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       data: "0x",
     };
 
-    // pay 0.0001 ckb for tx fee
-    const exchangeCapacity = BigInt(sumCapacity - BigInt(payload.capacity) - BigInt(100000));
+    const exchangeCapacity = BigInt(sumCapacity - BigInt(payload.capacity));
     const exchangeCell: Cell = {
       cell_output: {
         capacity: "0x" + exchangeCapacity.toString(16),
@@ -176,7 +220,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // minus sudt capacity from exchange cell
       exchangeCell.cell_output.capacity = `0x${(exchangeCapacity - sudtCapacity).toString(16)}`;
-      return [outputCell, exchangeCell, exchangeSudtCell];
+      return [outputCell, exchangeSudtCell, exchangeCell];
     }
 
     return [outputCell, exchangeCell];
@@ -306,31 +350,39 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return result;
   }
 
-  async injectCapacity(
+  /**
+   *
+   * @param tx
+   * @param fromScript
+   * @param capacity
+   *
+   * collect some pure cells and apend them to both input and output sides of the tx.
+   * later we can pay tx fee from output side.
+   */
+  async appendPureCkbCell(
     tx: helpers.TransactionSkeletonType,
     fromScript: Script,
-    capacity: bigint,
+    capacity: BI,
   ): Promise<helpers.TransactionSkeletonType> {
-    // additional 0.001 ckb for tx fee
-    // the tx fee could calculated by tx size
-    // this is just a simple example
-    const neededCapacity = capacity + BigInt(100000);
+    const neededCapacity = capacity.toBigInt();
     let collectedSum = BigInt(0);
     const collectedCells: Cell[] = [];
-    const collector = this.provider.ckbIndexer.collector({ lock: fromScript, type: "empty" });
+    const collector = this.provider.ckbIndexer.collector({
+      lock: fromScript,
+      type: "empty",
+      outputDataLenRange: ["0x0", "0x1"],
+    });
     for await (const cell of collector.collect()) {
-      if (!cell.data || cell.data === "0x" || cell.data === "0x0" || cell.data === "0x00") {
-        collectedSum += BigInt(cell.cell_output.capacity);
-        collectedCells.push(cell);
-        if (collectedSum >= neededCapacity) break;
-      }
+      collectedSum += BigInt(cell.cell_output.capacity);
+      collectedCells.push(cell);
+      if (collectedSum >= neededCapacity) break;
     }
     if (collectedSum < neededCapacity) {
       throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `);
     }
     const changeOutput: Cell = {
       cell_output: {
-        capacity: "0x" + BigInt(collectedSum - neededCapacity).toString(16),
+        capacity: "0x" + BigInt(collectedSum).toString(16),
         lock: fromScript,
       },
       data: "0x",

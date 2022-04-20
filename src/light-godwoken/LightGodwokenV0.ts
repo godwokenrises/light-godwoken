@@ -1,4 +1,5 @@
 import {
+  BI,
   Cell,
   CellDep,
   core,
@@ -387,8 +388,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
-    txSkeleton = await this.injectCapacity(txSkeleton, l1Lock, BigInt(0));
-    const signedTx = await this.provider.signL1Transaction(txSkeleton);
+    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, BI.from(1000));
+    let signedTx = await this.provider.signL1Transaction(txSkeleton);
+    const txFee = await this.calculateTxFee(signedTx);
+    txSkeleton = txSkeleton.update("outputs", (outputs) => {
+      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
+      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
+      return outputs;
+    });
+    signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }

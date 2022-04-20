@@ -14,6 +14,7 @@ import {
   Cell,
   HashType,
   Script,
+  BI,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
@@ -63,6 +64,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.l2Address = accounts[0];
       this.l1Address = this.generateL1Address(this.l2Address);
     });
+  }
+
+  async getMinFeeRate(): Promise<BI> {
+    const feeRate = await this.ckbRpc.tx_pool_info();
+    return BI.from(feeRate.min_fee_rate);
   }
 
   getL2Address(): string {
@@ -132,6 +138,17 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     ).serializeJson();
     txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(`${signedWitness}`));
     const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
+    let inputCapacity = txSkeleton.inputs.reduce(
+      (acc, input) => acc.add(BI.from(input.cell_output.capacity)),
+      BI.from(0),
+    );
+    let outputCapacity = txSkeleton.outputs.reduce(
+      (acc, input) => acc.add(BI.from(input.cell_output.capacity)),
+      BI.from(0),
+    );
+    console.log("inputCapacity", inputCapacity.toString());
+    console.log("outputCapacity", outputCapacity.toString());
+    console.log("payed fee", outputCapacity.sub(inputCapacity).toString());
     return signedTx;
   }
 

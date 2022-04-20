@@ -1,4 +1,4 @@
-import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script } from "@ckb-lumos/lumos";
+import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI } from "@ckb-lumos/lumos";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -106,6 +106,8 @@ export interface LightGodwokenProvider {
   getL2Address(): Promisable<string>;
 
   getL1Address(): Promisable<string>;
+
+  getMinFeeRate(): Promise<BI>;
 
   signL1Transaction: (tx: helpers.TransactionSkeletonType) => Promise<Transaction>;
 
