@@ -75,7 +75,8 @@ const RequestWithdrawalV0: React.FC = () => {
           sudt_script_hash: sudt_script_hash,
         });
       } else {
-        e = lightGodwoken.withdrawToV1WithEvent({
+        //TODO need to migrate to withdrawToV1WithEvent later
+        e = lightGodwoken.withdrawWithEvent({
           capacity: capacity,
           amount: amount,
           sudt_script_hash: sudt_script_hash,
