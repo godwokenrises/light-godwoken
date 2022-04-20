@@ -6,8 +6,8 @@ import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
-import DefaultLightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 import { L1MappedErc20 } from "../../types/type";
+import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import { PageMain } from "./requestWithdrawalStyle";
@@ -58,7 +58,7 @@ const RequestWithdrawalV1: React.FC = () => {
       amount = "0x" + Amount.from(sudtValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
-    if (!lightGodwoken || !(lightGodwoken instanceof DefaultLightGodwokenV1)) {
+    if (!lightGodwoken || !isInstanceOfLightGodwokenV1(lightGodwoken)) {
       throw new Error("LightGodwoken instance error");
     }
 

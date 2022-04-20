@@ -6,7 +6,6 @@ import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
-import DefaultLightGodwokenV0 from "../../light-godwoken/LightGodwokenV0";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
@@ -14,6 +13,8 @@ import WithdrawalTarget from "./WithdrawalTarget";
 import { CKB_L1 } from "./const";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
+import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
+import { MockLightGodwokenV0Interface } from "../../contexts/MockLightGodwokenV0";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -61,22 +62,21 @@ const RequestWithdrawalV0: React.FC = () => {
       amount = "0x" + Amount.from(sudtValue, selectedSudt.decimals).toString(16);
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
-    if (!lightGodwoken || !(lightGodwoken instanceof DefaultLightGodwokenV0)) {
+    if (!lightGodwoken || !isInstanceOfLightGodwokenV0(lightGodwoken)) {
       throw new Error("LightGodwoken instance error");
     }
-
+    const lightGodwokenInstance = lightGodwoken as MockLightGodwokenV0Interface;
     setLoading(true);
     let e: WithdrawalEventEmitter;
     try {
       if (targetValue === CKB_L1) {
-        e = lightGodwoken.withdrawWithEvent({
+        e = lightGodwokenInstance.withdrawWithEvent({
           capacity: capacity,
           amount: amount,
           sudt_script_hash: sudt_script_hash,
         });
       } else {
-        //TODO need to migrate to withdrawToV1WithEvent later
-        e = lightGodwoken.withdrawWithEvent({
+        e = lightGodwokenInstance.withdrawToV1WithEvent({
           capacity: capacity,
           amount: amount,
           sudt_script_hash: sudt_script_hash,
@@ -98,7 +98,7 @@ const RequestWithdrawalV0: React.FC = () => {
     });
 
     e.on("pending", (result) => {
-      console.log("pending triggerd", result);
+      console.log("pending triggered", result);
     });
 
     e.on("success", (txHash) => {
