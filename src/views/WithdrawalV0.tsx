@@ -2,14 +2,17 @@ import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
 import Unlock from "../components/Withdrawal/Unlock";
 import RequestWithdrawal from "../components/Withdrawal/RequestWithdrawalV0";
+import { TransactionHistory } from "../components/TransactionHistory";
 
 const PageContent = styled.div`
   width: 436px;
   background: rgb(39, 37, 52);
   border-radius: 24px;
+  padding: 24px;
   color: white;
-  .request-withdrawal {
-    padding: 24px;
+  .header {
+    display: flex;
+    justify-content: space-between;
   }
   .title {
     font-size: 20px;
@@ -39,8 +42,11 @@ const WithdrawalV0: React.FC = () => {
   return (
     <>
       <PageContent className="content">
-        <div className="request-withdrawal">
+        <div className="header">
           <div className="title">Withdrawal</div>
+          <TransactionHistory></TransactionHistory>
+        </div>
+        <div className="request-withdrawal">
           <RequestWithdrawal></RequestWithdrawal>
         </div>
         <ResultList className="withdrawal-request">
