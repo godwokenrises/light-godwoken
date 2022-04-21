@@ -229,9 +229,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
     const isSudt = payload.sudt_script_hash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
-    if (BigInt(payload.capacity) < BigInt(minCapacity)) {
+    if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
       throw new Error(
-        `Withdrawal required ${BigInt(minCapacity)} shannons at least, provided ${BigInt(payload.capacity)}.`,
+        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
+          payload.capacity,
+        ).toString()}.`,
       );
     }
     const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
@@ -242,9 +244,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const feeSudtId: HexNumber = "0x1";
     const feeAmount: HexNumber = "0x0";
     const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce: "0x" + BigInt(nonce).toString(16),
-      capacity: "0x" + BigInt(payload.capacity).toString(16),
-      amount: "0x" + BigInt(payload.amount).toString(16),
+      nonce,
+      capacity: payload.capacity,
+      amount: payload.amount,
       sudt_script_hash: payload.sudt_script_hash,
       account_script_hash: accountScriptHash,
       sell_amount: sellAmount,
@@ -310,11 +312,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         },
         data: payload.cell.data,
       };
-      const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
-      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
+      const sudtCapacity = helpers.minimalCellCapacity(dummySudtCell);
+      const capacityLeft = BI.from(payload.cell.cell_output.capacity).sub(sudtCapacity);
       outputCells.push({
         cell_output: {
-          capacity: `0x${capacityLeft.toString(16)}`,
+          capacity: capacityLeft.toHexString(),
           lock: l1Lock,
         },
         data: "0x",
