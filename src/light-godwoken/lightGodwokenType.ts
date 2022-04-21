@@ -96,6 +96,7 @@ export interface DepositPayload {
   capacity: HexNumber;
   amount?: HexNumber;
   sudtType?: Script;
+  depositMax?: boolean;
 }
 
 type Promisable<T> = Promise<T> | T;

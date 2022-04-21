@@ -59,31 +59,37 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
   async deposit(payload: DepositPayload): Promise<string> {
-    const neededCapacity = BigInt(payload.capacity) + BigInt(6400000000);
+    let neededCapacity = BigInt(payload.capacity);
+    if (!payload.depositMax) {
+      // if user don't set depositMax, we will need to collect 64 more ckb for exchange
+      neededCapacity += BigInt(6400000000);
+    }
     const neededSudtAmount = payload.amount ? BigInt(payload.amount) : BigInt(0);
     let collectedCapatity = BigInt(0);
     let collectedSudtAmount = BigInt(0);
     const collectedCells: Cell[] = [];
-    const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
-    for await (const cell of collector.collect()) {
+    const ckbCollector = this.provider.ckbIndexer.collector({
+      lock: helpers.parseAddress(this.provider.l1Address),
+      type: "empty",
+      outputDataLenRange: ["0x0", "0x1"],
+    });
+    for await (const cell of ckbCollector.collect()) {
       console.log(cell);
-      if (
-        !cell.cell_output.type &&
-        (!cell.data || cell.data === "0x" || cell.data === "0x0") &&
-        collectedCapatity < neededCapacity
-      ) {
-        collectedCapatity += BigInt(cell.cell_output.capacity);
-        collectedCells.push(cell);
-        if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
-      } else if (
-        payload.sudtType &&
-        payload.sudtType.args === cell.cell_output.type?.args &&
-        collectedSudtAmount < neededSudtAmount
-      ) {
+      collectedCapatity += BigInt(cell.cell_output.capacity);
+      collectedCells.push(cell);
+      if (collectedCapatity >= neededCapacity) break;
+    }
+    if (!!payload.sudtType && neededSudtAmount > 0) {
+      const sudtCollector = this.provider.ckbIndexer.collector({
+        lock: helpers.parseAddress(this.provider.l1Address),
+        type: payload.sudtType,
+      });
+      for await (const cell of sudtCollector.collect()) {
+        console.log(cell);
         collectedCapatity += BigInt(cell.cell_output.capacity);
         collectedSudtAmount += BigInt(utils.readBigUInt128LECompatible(cell.data).toBigInt());
         collectedCells.push(cell);
-        if (collectedCapatity >= neededCapacity && collectedSudtAmount >= neededSudtAmount) break;
+        if (collectedSudtAmount >= neededSudtAmount) break;
       }
     }
     if (collectedCapatity < neededCapacity) {
@@ -204,7 +210,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
       outputCell.cell_output.type = payload.sudtType;
       outputCell.data = utils.toBigUInt128LE(BigInt(payload.amount));
+      let outputCells = [outputCell];
 
+      // contruct sudt exchange cell
       const sudtData = utils.toBigUInt128LE(sumSustAmount - BigInt(payload.amount));
       const exchangeSudtCell: Cell = {
         cell_output: {
@@ -215,15 +223,28 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         data: sudtData,
       };
       const sudtCapacity: bigint = helpers.minimalCellCapacity(exchangeSudtCell);
-
       exchangeSudtCell.cell_output.capacity = "0x" + sudtCapacity.toString(16);
 
-      // minus sudt capacity from exchange cell
-      exchangeCell.cell_output.capacity = `0x${(exchangeCapacity - sudtCapacity).toString(16)}`;
-      return [outputCell, exchangeSudtCell, exchangeCell];
-    }
+      // exchange sudt if any left after deposit
+      if (BI.from(sudtData).gt(BI.from(0))) {
+        outputCells = [exchangeCell].concat(...outputCells);
+        exchangeCell.cell_output.capacity = `0x${(exchangeCapacity - sudtCapacity).toString(16)}`;
+      } else {
+        exchangeCell.cell_output.capacity = `0x${exchangeCapacity.toString(16)}`;
+      }
 
-    return [outputCell, exchangeCell];
+      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+        outputCells = outputCells.concat(exchangeCell);
+      }
+
+      return outputCells;
+    } else {
+      let outputCells = [outputCell];
+      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+        outputCells = outputCells.concat(exchangeCell);
+      }
+      return outputCells;
+    }
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
