@@ -1,4 +1,5 @@
 import { HistoryOutlined } from "@ant-design/icons";
+import { BI } from "@ckb-lumos/lumos";
 import { Modal } from "antd";
 import React, { useState } from "react";
 import styled from "styled-components";
@@ -99,9 +100,9 @@ export const TransactionHistory: React.FC<Props> = (prop) => {
           {txHistory.map((history) => {
             return (
               <a target="_blank" href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`} rel="noreferrer">
-                {`${history.type} ${getDisplayAmount(BigInt(history.capacity))} CKB`}{" "}
+                {`${history.type} ${getDisplayAmount(BI.from(history.capacity))} CKB`}{" "}
                 {history.amount && history.amount !== "0x0"
-                  ? `and ${getDisplayAmount(BigInt(history.amount), history.decimals)} ${history.symbol}`
+                  ? `and ${getDisplayAmount(BI.from(history.amount), history.decimals)} ${history.symbol}`
                   : ""}
               </a>
             );

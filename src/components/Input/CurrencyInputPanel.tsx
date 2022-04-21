@@ -6,6 +6,7 @@ import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
+import { BI } from "@ckb-lumos/lumos";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
   border-radius: 16px;
@@ -207,7 +208,7 @@ export default function CurrencyInputPanel({
       throw new Error("Currency Balance Not Found");
     }
     onUserInput(
-      getFullDisplayAmount(BigInt(selectedCurrencyBalance), selectedCurrency?.decimals, {
+      getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
         maxDecimalPlace: selectedCurrency?.decimals,
       }),
     );
@@ -219,7 +220,7 @@ export default function CurrencyInputPanel({
         <Typography.Text>{label}</Typography.Text>
         <Typography.Text>
           {selectedCurrencyBalance
-            ? getFullDisplayAmount(BigInt(selectedCurrencyBalance), selectedCurrency?.decimals)
+            ? getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals)
             : ""}
         </Typography.Text>
       </Row>
@@ -279,7 +280,7 @@ export default function CurrencyInputPanel({
                     {dataLoading ? (
                       <LoadingOutlined />
                     ) : (
-                      balancesList && getFullDisplayAmount(BigInt(balancesList[index]), erc20.decimals)
+                      balancesList && getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals)
                     )}
                   </div>
                 </FixedHeightRow>

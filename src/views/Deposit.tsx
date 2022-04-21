@@ -185,7 +185,7 @@ function L2Balance() {
       </span>
     );
   }
-  return <span>L2 Balance: {getDisplayAmount(BigInt(balance), 8)} CKB</span>;
+  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), 8)} CKB</span>;
 }
 
 export default function Deposit() {
