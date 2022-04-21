@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
 
 type L1TxType = "deposit" | "withdrawal";
 
@@ -13,26 +14,21 @@ export interface L1TxHistoryInterface {
   recipient?: string;
 }
 
-export function useL1TxHistory(storageKey?: string) {
+export function useL1TxHistory(storageKey: string) {
   const [txHistory, setTxHistory] = useState<L1TxHistoryInterface[]>(() => []);
-
+  const [counterValue] = useLocalStorage(storageKey);
   useLayoutEffect(() => {
-    if (storageKey == null) {
-      return;
-    }
-
-    const rawData = localStorage.getItem(storageKey);
-    if (rawData == null) {
+    if (counterValue == null) {
       setTxHistory([]);
       return;
     }
 
     try {
-      setTxHistory(JSON.parse(rawData));
+      setTxHistory(JSON.parse(counterValue));
     } catch (err) {
       console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
     }
-  }, [storageKey]);
+  }, [counterValue, storageKey]);
 
   const addTxToHistory = useCallback(
     (newTxHistory: L1TxHistoryInterface) => {
@@ -40,15 +36,15 @@ export function useL1TxHistory(storageKey?: string) {
         return;
       }
 
-      const latestTxHistoryRaw = localStorage.getItem(storageKey) || "[]";
+      const latestTxHistoryRaw = counterValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        localStorage.setItem(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
+        writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }
     },
-    [storageKey],
+    [counterValue, storageKey],
   );
 
   return useMemo(
