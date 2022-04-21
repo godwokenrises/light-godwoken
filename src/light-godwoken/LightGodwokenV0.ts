@@ -40,13 +40,18 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-
+import { debug } from "./debug";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
   }
+
+  getChainId(): HexNumber {
+    return "0x116e1";
+  }
+
   getVersion(): GodwokenVersion {
     return "v0";
   }
@@ -118,7 +123,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    console.log("searchParams is:", searchParams);
+    debug("searchParams is:", searchParams);
     const collectedCells: WithdrawResult[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
@@ -130,7 +135,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       hash_type: ownerCKBLock.hash_type as HashType,
     };
     const ownerLockHash = utils.computeScriptHash(ownerLock);
-    console.log("ownerLockHash is:", ownerLockHash);
+    debug("ownerLockHash is:", ownerLockHash);
 
     for await (const cell of collector.collect()) {
       const rawLockArgs = cell.cell_output.lock.args;
@@ -174,7 +179,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sortedWithdrawals = collectedCells.sort((a, b) => {
       return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
     });
-    console.log("found withdraw cells:", sortedWithdrawals);
+    debug("found withdraw cells:", sortedWithdrawals);
     return sortedWithdrawals;
   }
 
@@ -196,7 +201,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
+    debug("getWithdrawal result:", result);
     return result;
   }
 
@@ -211,7 +216,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
-    console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
+    debug(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
 
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
@@ -222,7 +227,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       args: rollupTypeHash + ethAddress.slice(2),
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    console.log("account script hash:", accountScriptHash);
+    debug("account script hash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     if (!fromId) {
       throw new Error("account not found");
@@ -237,7 +242,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       );
     }
     const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
-    console.log("nonce:", nonce);
+    debug("nonce:", nonce);
     const sellCapacity: HexNumber = "0x0";
     const sellAmount: HexNumber = "0x0";
     const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
@@ -258,16 +263,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         amount: feeAmount,
       },
     };
-    console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
+    debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(rawWithdrawalRequest, rollupTypeHash);
-    console.log("message:", message);
+    debug("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
-    console.log("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
+    debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
     const withdrawalRequest: WithdrawalRequest = {
       raw: rawWithdrawalRequest,
       signature: signatureMetamaskPersonalSign,
     };
-    console.log("withdrawalRequest:", withdrawalRequest);
+    debug("withdrawalRequest:", withdrawalRequest);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
@@ -277,18 +282,18 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       return;
     }
     eventEmitter.emit("sent", result);
-    console.log("withdrawal request result:", result);
+    debug("withdrawal request result:", result);
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
       loop++;
       const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
-        console.log("withdrawal pending:", withdrawal);
+        debug("withdrawal pending:", withdrawal);
         eventEmitter.emit("pending", result);
       }
       if (withdrawal && withdrawal.status === "committed") {
-        console.log("withdrawal committed:", withdrawal);
+        debug("withdrawal committed:", withdrawal);
         eventEmitter.emit("success", result);
         clearInterval(nIntervId);
       }
@@ -391,7 +396,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       });
     }
     txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, BI.from(1000));
-    let signedTx = await this.provider.signL1Transaction(txSkeleton);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
       const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;

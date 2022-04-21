@@ -23,6 +23,7 @@ import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
 import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
+import { debug } from "./debug";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -39,7 +40,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     config.initializeConfig(config.predefined.AGGRON4);
     this.lightGodwokenConfig = lightGodwokenConfig || predefinedLightGodwokenConfig[env];
 
-    console.log("lightGodwokenConfig", lightGodwokenConfig);
+    debug("lightGodwokenConfig", lightGodwokenConfig);
     const { layer1Config, layer2Config } = this.lightGodwokenConfig;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
@@ -60,7 +61,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
     ethereum.on("accountsChanged", (accounts: any) => {
-      console.log("eth accounts changed", accounts);
+      debug("eth accounts changed", accounts);
       this.l2Address = accounts[0];
       this.l1Address = this.generateL1Address(this.l2Address);
     });
@@ -88,13 +89,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return ethereum
       .request({ method: "eth_requestAccounts" })
       .then((accounts: any) => {
-        console.log("eth_requestAccounts", accounts);
+        debug("eth_requestAccounts", accounts);
         return new DefaultLightGodwokenProvider(accounts[0], ethereum, version);
       })
       .catch((error: any) => {
         if (error.code === 4001) {
           // EIP-1193 userRejectedRequest error
-          console.log("Please connect to MetaMask.");
+          debug("Please connect to MetaMask.");
         } else {
           console.error(error);
         }
@@ -120,15 +121,21 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return await this.ckbRpc.send_transaction(tx, "passthrough");
   }
 
-  async signL1Transaction(txSkeleton: helpers.TransactionSkeletonType): Promise<Transaction> {
+  async signL1Transaction(txSkeleton: helpers.TransactionSkeletonType, dummySign = false): Promise<Transaction> {
     const message = this.generateMessage(txSkeleton);
-    let signedMessage = await this.ethereum.request({
-      method: "personal_sign",
-      params: [this.ethereum.selectedAddress, message],
-    });
+    debug("message before sign", message);
+    let signedMessage = `0x${"00".repeat(65)}`;
+
+    if (!dummySign) {
+      signedMessage = await this.ethereum.request({
+        method: "personal_sign",
+        params: [this.ethereum.selectedAddress, message],
+      });
+    }
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
+    debug("message after sign", signedMessage);
     const signedWitness = new toolkit.Reader(
       core.SerializeWitnessArgs({
         lock: SerializeRcLockWitnessLock({
@@ -146,9 +153,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       (acc, input) => acc.add(BI.from(input.cell_output.capacity)),
       BI.from(0),
     );
-    console.log("inputCapacity", inputCapacity.toString());
-    console.log("outputCapacity", outputCapacity.toString());
-    console.log("payed fee", outputCapacity.sub(inputCapacity).toString());
+    debug("inputCapacity", inputCapacity.toString());
+    debug("outputCapacity", outputCapacity.toString());
+    debug("payed fee", outputCapacity.sub(inputCapacity).toString());
     return signedTx;
   }
 
@@ -216,7 +223,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScriptHash(): Hash {
     const accountScriptHash = utils.computeScriptHash(this.getLayer2LockScript());
-    console.log("accountScriptHash", accountScriptHash);
+    debug("accountScriptHash", accountScriptHash);
     return accountScriptHash;
   }
 
@@ -228,7 +235,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       hash_type: ownerCKBLock.hash_type as HashType,
     };
     const ownerLockHash = utils.computeScriptHash(ownerLock);
-    console.log("ownerLockHash", ownerLockHash);
+    debug("ownerLockHash", ownerLockHash);
     return ownerLockHash;
   }
 
@@ -239,7 +246,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     }
     const globalState = new godwokenCore.GlobalState(new toolkit.Reader(rollupCell!.data));
     const lastFinalizedBlockNumber = Number(globalState.getLastFinalizedBlockNumber().toLittleEndianBigUint64());
-    console.log("last finalized block number: ", lastFinalizedBlockNumber);
+    debug("last finalized block number: ", lastFinalizedBlockNumber);
     return lastFinalizedBlockNumber;
   }
 

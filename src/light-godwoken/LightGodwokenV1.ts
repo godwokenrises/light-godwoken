@@ -24,6 +24,7 @@ import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
+import { debug } from "./debug";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -39,7 +40,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
     const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
-    console.log("get v1 l2 ckb balance", this.provider, balance);
+    debug("get v1 l2 ckb balance", this.provider, balance);
     return "0x" + Number(balance).toString(16);
   }
 
@@ -120,7 +121,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    console.log("searchParams is:", searchParams);
+    debug("searchParams is:", searchParams);
     const collectedCells: WithdrawResult[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
@@ -128,7 +129,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const ownerLockHash = this.provider.getLayer1LockScriptHash();
 
     for await (const cell of collector.collect()) {
-      console.log("iteration --> cell is:", cell);
+      debug("iteration --> cell is:", cell);
 
       // // a rollup_type_hash exists before this args, to make args friendly to prefix search
       // struct WithdrawalLockArgs {
@@ -148,10 +149,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         continue;
       }
       const lockArgsOwnerScriptHash = rawLockArgs.slice(210, 274);
-      console.log("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
+      debug("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
 
       const withdrawBlock = utils.readBigUInt64LECompatible(`0x${rawLockArgs.slice(130, 146)}`);
-      console.log("withdrawBlock is:", withdrawBlock.toNumber());
+      debug("withdrawBlock is:", withdrawBlock.toNumber());
 
       let sudtTypeHash = "0x" + "00".repeat(32);
       let erc20: ProxyERC20 | undefined = undefined;
@@ -184,7 +185,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const sortedWithdrawals = collectedCells.sort((a, b) => {
       return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
     });
-    console.log("found withdraw cells:", sortedWithdrawals);
+    debug("found withdraw cells:", sortedWithdrawals);
     return sortedWithdrawals;
   }
 
@@ -205,7 +206,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
+    debug("getWithdrawal result:", result);
     return result;
   }
 
@@ -312,7 +313,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         ],
       },
     };
-    console.log("typedMsg:", typedMsg);
+    debug("typedMsg:", typedMsg);
     let signedMessage;
     try {
       signedMessage = await this.provider.ethereum.request({
@@ -332,11 +333,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       request: withdrawalReq,
       owner_lock: ownerLock,
     };
-    console.log("WithdrawalRequestExtra:", withdrawalReqExtra);
+    debug("WithdrawalRequestExtra:", withdrawalReqExtra);
 
     // submit WithdrawalRequestExtra
     const result = await this.godwokenClient.submitWithdrawalReqV1(withdrawalReqExtra);
-    console.log("result:", result);
+    debug("result:", result);
     if (result !== null) {
       const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
@@ -344,18 +345,18 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       }
     }
     eventEmitter.emit("sent", result);
-    console.log("withdrawal request result:", result);
+    debug("withdrawal request result:", result);
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
       loop++;
       const withdrawal: any = await this.getWithdrawal(result as Hash);
       if (withdrawal && withdrawal.status === "pending") {
-        console.log("withdrawal pending:", withdrawal);
+        debug("withdrawal pending:", withdrawal);
         eventEmitter.emit("pending", result);
       }
       if (withdrawal && withdrawal.status === "committed") {
-        console.log("withdrawal committed:", withdrawal);
+        debug("withdrawal committed:", withdrawal);
         eventEmitter.emit("success", result);
         clearInterval(nIntervId);
       }

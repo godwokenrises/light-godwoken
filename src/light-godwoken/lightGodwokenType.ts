@@ -123,6 +123,8 @@ export interface LightGodwokenBase {
 
   getVersion: () => GodwokenVersion;
 
+  getChainId: () => Promise<HexNumber> | HexNumber;
+
   /**
    * get producing 1 block time
    */
@@ -150,6 +152,4 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   unlock: (payload: UnlockPayload) => Promise<Hash>;
 }
-export interface LightGodwokenV1 extends LightGodwokenBase {
-  getChainId: () => Promise<HexNumber>;
-}
+export interface LightGodwokenV1 extends LightGodwokenBase {}

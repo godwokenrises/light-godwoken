@@ -42,6 +42,7 @@ import {
   SerializeRawWithdrawalRequest,
   SerializeWithdrawalLockArgs,
 } from "./schemas/index.esm";
+import { debug } from "./debug";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -49,6 +50,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     this.provider = provider;
   }
 
+  abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
@@ -74,10 +76,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of ckbCollector.collect()) {
-      console.log(cell);
+      debug(cell);
       collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
       collectedCells.push(cell);
-      if (collectedCapatity >= neededCapacity) break;
+      if (collectedCapatity.gte(neededCapacity)) break;
     }
     if (!!payload.sudtType && neededSudtAmount.gt(BI.from(0))) {
       const sudtCollector = this.provider.ckbIndexer.collector({
@@ -85,17 +87,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         type: payload.sudtType,
       });
       for await (const cell of sudtCollector.collect()) {
-        console.log(cell);
+        debug(cell);
         collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
         collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
         collectedCells.push(cell);
-        if (collectedSudtAmount >= neededSudtAmount) break;
+        if (collectedSudtAmount.gte(neededSudtAmount)) break;
       }
     }
-    if (collectedCapatity < neededCapacity) {
+    if (collectedCapatity.lt(neededCapacity)) {
       throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity} `);
     }
-    if (collectedSudtAmount < neededSudtAmount) {
+    if (collectedSudtAmount.lt(neededSudtAmount)) {
       throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
     }
 
@@ -123,7 +125,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       });
     }
 
-    let signedTx = await this.provider.signL1Transaction(txSkeleton);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
       const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
@@ -140,7 +142,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const feeRate = await this.provider.getMinFeeRate();
     const size = this.getTransactionSizeByTx(tx);
     const fee = this.calculateFeeCompatible(size, feeRate);
-    console.log(`tx size: ${size}, fee: ${fee}`);
+    debug(`tx size: ${size}, fee: ${fee}`);
     return fee;
   }
 
@@ -394,9 +396,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     for await (const cell of collector.collect()) {
       collectedSum = collectedSum.add(cell.cell_output.capacity);
       collectedCells.push(cell);
-      if (collectedSum >= neededCapacity) break;
+      if (collectedSum.gte(neededCapacity)) break;
     }
-    if (collectedSum < neededCapacity) {
+    if (collectedSum.lt(neededCapacity)) {
       throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `);
     }
     const changeOutput: Cell = {
