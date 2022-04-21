@@ -64,13 +64,16 @@ const CKBModal = styled(Modal)`
     }
   }
 `;
+type Props = {
+  type: "withdrawal" | "deposit";
+};
 
-export const TransactionHistory: React.FC = () => {
+export const TransactionHistory: React.FC<Props> = (prop) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const lightGodwoken = useLightGodwoken();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
-  const { txHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
+  const { txHistory } = useL1TxHistory(`${chainId}/${l1Address}/${prop.type}`);
   const showModal = () => {
     setIsModalVisible(true);
   };
