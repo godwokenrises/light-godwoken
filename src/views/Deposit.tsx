@@ -192,7 +192,7 @@ export default function Deposit() {
   const sudtBalanceQUery = useSUDTBalance();
   const CKBBalanceQuery = useL1CKBBalance();
   const CKBBalance = CKBBalanceQuery.data;
-  const maxAmount = CKBBalance ? BI.from(CKBBalance).add(-6400000000).toString() : undefined;
+  const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
 
   const showModal = async () => {
@@ -211,11 +211,10 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
-        console.error(e);
         if (e instanceof Error) {
           if (e.message.startsWith("Not enough CKB:")) {
             notification.error({
-              message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
+              message: e.message,
             });
           } else if (e.message.startsWith("Not enough SUDT:")) {
             notification.error({
@@ -257,8 +256,7 @@ export default function Deposit() {
       setIsCKBValueValidate(false);
     } else if (
       Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(CKBBalance).gte(6400000000) &&
-      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance).minus(6400000000))
+      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
     ) {
       setIsCKBValueValidate(true);
     } else {
