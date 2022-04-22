@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { ClaimSudt } from "../ClaimSudt";
 import { ConnectButton } from "../ConnectButton";
@@ -14,12 +14,20 @@ const StyledPage = styled.div`
   color: white;
   .link {
     display: flex;
-    color: #1890ff;
-    > div {
+    color: white;
+    a {
+      color: white;
+      text-decoration: none;
       margin-right: 10px;
+    }
+    > div {
+      margin-right: 20px;
       &:hover {
         cursor: pointer;
       }
+    }
+    .active {
+      color: rgb(255, 67, 66);
     }
   }
   .right-side {
@@ -38,17 +46,24 @@ interface Props {
   onViewChange?: (view: string) => void;
 }
 const PageHeader: React.FC<Props> = ({ onViewChange }) => {
+  const [active, setActive] = useState("deposit");
   const changeViewToDeposit = () => {
+    setActive("deposit");
     onViewChange && onViewChange("deposit");
   };
-  const changeViewToWithDrawal = () => {
+  const changeViewToWithdrawal = () => {
+    setActive("withdrawal");
     onViewChange && onViewChange("withdrawal");
   };
   return (
     <StyledPage>
       <div className="link">
-        <div onClick={changeViewToDeposit}>Deposit</div>
-        <div onClick={changeViewToWithDrawal}>Withdrawal</div>
+        <div onClick={changeViewToDeposit} className={active === "deposit" ? "active" : ""}>
+          Deposit
+        </div>
+        <div onClick={changeViewToWithdrawal} className={active === "withdrawal" ? "active" : ""}>
+          Withdrawal
+        </div>
         <ClaimSudt />
         <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
           CKB Testnet Faucet
