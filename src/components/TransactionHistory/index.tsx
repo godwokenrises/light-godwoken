@@ -97,6 +97,7 @@ export const TransactionHistory: React.FC<Props> = (prop) => {
         footer={null}
       >
         <HistoryList>
+          {txHistory.length === 0 && "there is no transaction history"}
           {txHistory.map((history) => {
             return (
               <a target="_blank" href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`} rel="noreferrer">
