@@ -185,7 +185,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
     const sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
-    const sumSustAmount = collectedCells.reduce((acc, cell) => {
+    const sumSudtAmount = collectedCells.reduce((acc, cell) => {
       if (cell.cell_output.type) {
         return acc.add(utils.readBigUInt128LE(cell.data));
       } else {
@@ -215,20 +215,20 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       let outputCells = [outputCell];
 
       // contruct sudt exchange cell
-      const sudtData = utils.toBigUInt128LE(sumSustAmount.sub(payload.amount));
+      const sudtAmount = utils.toBigUInt128LE(sumSudtAmount.sub(payload.amount));
       const exchangeSudtCell: Cell = {
         cell_output: {
           capacity: "0x0",
           lock: helpers.parseAddress(this.provider.l1Address),
           type: payload.sudtType,
         },
-        data: sudtData,
+        data: sudtAmount,
       };
       const sudtCapacity = helpers.minimalCellCapacity(exchangeSudtCell);
       exchangeSudtCell.cell_output.capacity = "0x" + sudtCapacity.toString(16);
 
       // exchange sudt if any left after deposit
-      if (BI.from(sudtData).gt(BI.from(0))) {
+      if (BI.from(sudtAmount).gt(BI.from(0))) {
         outputCells = [exchangeCell].concat(...outputCells);
         exchangeCell.cell_output.capacity = exchangeCapacity.sub(sudtCapacity).toHexString();
       } else {

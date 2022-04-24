@@ -23,6 +23,17 @@ export class GodwokenClient {
   }
 
   /**
+   * chain_id: u64 = (compatible_chain_id << 32) | creator_id
+   *
+   * e.g. 0x315DA00000005 = 868,450,977,185,797
+   */
+  async getChainId(): Promise<string> {
+    const result = await this.rpc["eth_chainId"]();
+    console.debug("chain_id:", result);
+    return result;
+  }
+
+  /**
    * Serialize withdrawal request and submit to godwoken
    *
    * @param request

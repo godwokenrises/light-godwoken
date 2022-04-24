@@ -48,8 +48,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
   }
 
-  getChainId(): HexNumber {
-    return "0x116e1";
+  async getChainId(): Promise<HexNumber> {
+    return await this.godwokenClient.getChainId();
   }
 
   getVersion(): GodwokenVersion {
@@ -232,7 +232,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     if (!fromId) {
       throw new Error("account not found");
     }
-    const isSudt = payload.sudt_script_hash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const isSudt = !isHexStringEqual(
+      payload.sudt_script_hash,
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+    );
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
     if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
       throw new Error(
@@ -441,4 +444,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
     return null;
   }
+}
+function isHexStringEqual(strA: string, strB: string) {
+  return strA.toLowerCase() === strB.toLowerCase();
 }
