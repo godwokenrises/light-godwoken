@@ -60,7 +60,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
-  async deposit(payload: DepositPayload): Promise<string> {
+  async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
     if (!payload.depositMax) {
       // if user don't set depositMax, we will need to collect 64 more ckb for exchange
@@ -124,7 +124,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
+    return txSkeleton;
+  }
 
+  async payTxFee(txSkeleton: helpers.TransactionSkeletonType): Promise<helpers.TransactionSkeletonType> {
     let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
@@ -132,8 +135,13 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
       return outputs;
     });
+    return txSkeleton;
+  }
 
-    signedTx = await this.provider.signL1Transaction(txSkeleton);
+  async deposit(payload: DepositPayload): Promise<string> {
+    let txSkeleton = await this.generateDepositTx(payload);
+    txSkeleton = await this.payTxFee(txSkeleton);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }
