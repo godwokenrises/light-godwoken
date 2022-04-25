@@ -222,97 +222,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const chainId = await this.getChainId();
-    const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
-    const ownerLock = helpers.parseAddress(ownerCkbAddress);
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    const ethAddress = this.provider.l2Address;
-    const l2AccountScript: Script = {
-      code_hash: layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
-      hash_type: "type",
-      args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
-    };
-    const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
-
-    const address = layer2AccountScriptHash.slice(0, 42);
-    const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
-    if (BI.from(balance).lt(BI.from(payload.capacity))) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken CKB balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
-          payload.capacity,
-        ).humanize()}`,
-      );
-      throw new Error(`Insufficient CKB balance(${balance}) on Godwoken`);
-    }
-
-    if (BI.from(payload.amount).gt(0)) {
-      await this.validateSUDTAmount(payload, eventEmitter);
-    }
-
-    const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await this.godwokenClient.getNonce(fromId!);
-
-    const rawWithdrawalRequest: RawWithdrawalRequestV1 = {
-      chain_id: chainId,
-      nonce: BI.from(nonce).toHexString(),
-      capacity: payload.capacity,
-      amount: payload.amount,
-      sudt_script_hash: payload.sudt_script_hash,
-      account_script_hash: layer2AccountScriptHash,
-      owner_lock_hash: ownerLockHash,
-      fee: "0x0",
-    };
-    const typedMsg = {
-      domain: {
-        name: "Godwoken",
-        version: "1",
-        chainId: Number(chainId),
-      },
-      message: {
-        accountScriptHash: layer2AccountScriptHash,
-        nonce,
-        chainId: Number(chainId),
-        fee: 0,
-        layer1OwnerLock: {
-          codeHash: ownerLock.code_hash,
-          hashType: ownerLock.hash_type,
-          args: ownerLock.args,
-        },
-        withdraw: {
-          ckbCapacity: BI.from(payload.capacity).toNumber(),
-          UDTAmount: BI.from(payload.amount).toString(),
-          UDTScriptHash: payload.sudt_script_hash,
-        },
-      },
-      primaryType: "Withdrawal" as const,
-      types: {
-        EIP712Domain: [
-          { name: "name", type: "string" },
-          { name: "version", type: "string" },
-          { name: "chainId", type: "uint256" },
-        ],
-        Withdrawal: [
-          { name: "accountScriptHash", type: "bytes32" },
-          { name: "nonce", type: "uint256" },
-          { name: "chainId", type: "uint256" },
-          { name: "fee", type: "uint256" },
-          { name: "layer1OwnerLock", type: "Script" },
-          { name: "withdraw", type: "WithdrawalAsset" },
-        ],
-        Script: [
-          { name: "codeHash", type: "bytes32" },
-          { name: "hashType", type: "string" },
-          { name: "args", type: "bytes" },
-        ],
-        WithdrawalAsset: [
-          { name: "ckbCapacity", type: "uint256" },
-          { name: "UDTAmount", type: "uint256" },
-          { name: "UDTScriptHash", type: "bytes32" },
-        ],
-      },
-    };
+    const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
+    const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
     debug("typedMsg:", typedMsg);
     let signedMessage;
     try {
@@ -331,7 +242,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     };
     const withdrawalReqExtra: WithdrawalRequestExtra = {
       request: withdrawalReq,
-      owner_lock: ownerLock,
+      owner_lock: this.provider.getLayer1Lock(),
     };
     debug("WithdrawalRequestExtra:", withdrawalReqExtra);
 
@@ -367,6 +278,113 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }, 10000);
   }
 
+  generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {
+    const ownerLock = this.provider.getLayer1Lock();
+    const typedMsg = {
+      domain: {
+        name: "Godwoken",
+        version: "1",
+        chainId: Number(rawWithdrawalRequest.chain_id),
+      },
+      message: {
+        accountScriptHash: rawWithdrawalRequest.account_script_hash,
+        nonce: Number(rawWithdrawalRequest.nonce),
+        chainId: Number(rawWithdrawalRequest.chain_id),
+        fee: 0,
+        layer1OwnerLock: {
+          codeHash: ownerLock.code_hash,
+          hashType: ownerLock.hash_type,
+          args: ownerLock.args,
+        },
+        withdraw: {
+          ckbCapacity: BI.from(rawWithdrawalRequest.capacity).toNumber(),
+          UDTAmount: BI.from(rawWithdrawalRequest.amount).toString(),
+          UDTScriptHash: rawWithdrawalRequest.sudt_script_hash,
+        },
+      },
+      primaryType: "Withdrawal" as const,
+      types: {
+        EIP712Domain: [
+          { name: "name", type: "string" },
+          { name: "version", type: "string" },
+          { name: "chainId", type: "uint256" },
+        ],
+        Withdrawal: [
+          { name: "accountScriptHash", type: "bytes32" },
+          { name: "nonce", type: "uint256" },
+          { name: "chainId", type: "uint256" },
+          { name: "fee", type: "uint256" },
+          { name: "layer1OwnerLock", type: "Script" },
+          { name: "withdraw", type: "WithdrawalAsset" },
+        ],
+        Script: [
+          { name: "codeHash", type: "bytes32" },
+          { name: "hashType", type: "string" },
+          { name: "args", type: "bytes" },
+        ],
+        WithdrawalAsset: [
+          { name: "ckbCapacity", type: "uint256" },
+          { name: "UDTAmount", type: "uint256" },
+          { name: "UDTScriptHash", type: "bytes32" },
+        ],
+      },
+    };
+    return typedMsg;
+  }
+
+  async generateRawWithdrawalRequest(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+  ): Promise<RawWithdrawalRequestV1> {
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const chainId = await this.getChainId();
+    const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
+    const ownerLock = helpers.parseAddress(ownerCkbAddress);
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    const ethAddress = this.provider.l2Address;
+    const l2AccountScript: Script = {
+      code_hash: layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
+      hash_type: "type",
+      args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
+    };
+    const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
+
+    const address = layer2AccountScriptHash.slice(0, 42);
+    const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
+    if (BI.from(balance).lt(BI.from(payload.capacity))) {
+      eventEmitter.emit(
+        "error",
+        `Godwoken CKB balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
+          payload.capacity,
+        ).humanize()}`,
+      );
+      throw new Error(
+        `Insufficient CKB balance(${BI.from(balance).toString()}) on Godwoken, required ${BI.from(
+          payload.capacity,
+        ).toString()}`,
+      );
+    }
+
+    if (BI.from(payload.amount).gt(0)) {
+      await this.validateSUDTAmount(payload, eventEmitter);
+    }
+
+    const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
+    const nonce: number = await this.godwokenClient.getNonce(fromId!);
+
+    const rawWithdrawalRequest = {
+      chain_id: chainId,
+      nonce: BI.from(nonce).toHexString(),
+      capacity: payload.capacity,
+      amount: payload.amount,
+      sudt_script_hash: payload.sudt_script_hash,
+      account_script_hash: layer2AccountScriptHash,
+      owner_lock_hash: ownerLockHash,
+      fee: "0x0",
+    };
+    return rawWithdrawalRequest;
+  }
+
   async validateSUDTAmount(payload: WithdrawalEventEmitterPayload, eventEmitter: EventEmitter) {
     const builtinErc20List = this.getBuiltinErc20List();
     const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
@@ -377,12 +395,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
       eventEmitter.emit(
         "error",
-        `Godwoken ${erc20.symbol} balance ${Amount.from(
-          sudtBalance,
-          erc20.decimals,
-        ).humanize()} is less than ${Amount.from(payload.amount, erc20.decimals).humanize()}`,
+        `Godwoken ${erc20.symbol} balance ${BI.from(sudtBalance).toString()} is less than ${BI.from(
+          payload.amount,
+        ).toString()}`,
       );
-      throw new Error(`Insufficient ${erc20.symbol} balance(${sudtBalance}) on Godwoken`);
+      throw new Error(
+        `Insufficient ${erc20.symbol} balance(${BI.from(sudtBalance).toString()}) on Godwoken, Required: ${BI.from(
+          payload.amount,
+        ).toString()}`,
+      );
     }
   }
 }

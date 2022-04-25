@@ -227,6 +227,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return accountScriptHash;
   }
 
+  getLayer1Lock(): Script {
+    return helpers.parseAddress(this.l1Address);
+  }
+
   getLayer1LockScriptHash(): Hash {
     const ownerCKBLock = helpers.parseAddress(this.l1Address);
     const ownerLock: Script = {
