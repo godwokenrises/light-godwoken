@@ -1,1 +1,1 @@
-export { SerializeRcLockWitnessLock } from "./omni.js";
+export { SerializeRcLockWitnessLock } from "./omni";

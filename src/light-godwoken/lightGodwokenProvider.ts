@@ -52,7 +52,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       });
       this.web3 = new Web3(polyjuiceProvider);
     } else if (env === "v1") {
-      this.web3 = new Web3(window.ethereum as any);
+      this.web3 = new Web3(ethereum || (window.ethereum as any));
     } else {
       throw new Error("unsupported env");
     }

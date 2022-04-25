@@ -9,7 +9,6 @@ import { Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Link, useParams } from "react-router-dom";
-import DefaultLightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 import DefaultLightGodwokenV0 from "../../light-godwoken/LightGodwokenV0";
 const { Text } = Typography;
 const PrimaryButton = styled(Button)`
