@@ -398,7 +398,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
-    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, BI.from(1000));
+    // fee paid for this tx should cost no more than 1000 shannon
+    const maxTxFee = BI.from(1000);
+    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, maxTxFee);
     let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {

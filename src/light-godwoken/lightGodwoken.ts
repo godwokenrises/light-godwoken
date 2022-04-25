@@ -229,7 +229,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // exchange sudt if any left after deposit
       if (BI.from(sudtAmount).gt(BI.from(0))) {
-        outputCells = [exchangeCell].concat(...outputCells);
+        outputCells = [exchangeSudtCell].concat(...outputCells);
         exchangeCell.cell_output.capacity = exchangeCapacity.sub(sudtCapacity).toHexString();
       } else {
         exchangeCell.cell_output.capacity = `0x${exchangeCapacity.toString(16)}`;
