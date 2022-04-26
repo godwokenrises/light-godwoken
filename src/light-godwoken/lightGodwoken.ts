@@ -60,7 +60,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
+<<<<<<< HEAD
   async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
+=======
+  async deposit(payload: DepositPayload): Promise<string> {
+>>>>>>> develop
     let neededCapacity = BI.from(payload.capacity);
     if (!payload.depositMax) {
       // if user don't set depositMax, we will need to collect 64 more ckb for exchange
@@ -95,10 +99,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
+<<<<<<< HEAD
       throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`);
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
       throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`);
+=======
+      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity} `);
+    }
+    if (collectedSudtAmount.lt(neededSudtAmount)) {
+      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
+>>>>>>> develop
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
@@ -138,10 +149,22 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txSkeleton;
   }
 
+<<<<<<< HEAD
   async deposit(payload: DepositPayload): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1Transaction(txSkeleton);
+=======
+    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
+    const txFee = await this.calculateTxFee(signedTx);
+    txSkeleton = txSkeleton.update("outputs", (outputs) => {
+      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
+      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
+      return outputs;
+    });
+
+    signedTx = await this.provider.signL1Transaction(txSkeleton);
+>>>>>>> develop
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }
@@ -153,6 +176,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     debug(`tx size: ${size}, fee: ${fee}`);
     return fee;
   }
+<<<<<<< HEAD
+=======
 
   calculateFeeCompatible(size: number, feeRate: BI): BI {
     const ratio = BI.from(1000);
@@ -172,7 +197,38 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
+    const layer2Lock: Script = this.provider.getLayer2LockScript();
+>>>>>>> develop
+
+  calculateFeeCompatible(size: number, feeRate: BI): BI {
+    const ratio = BI.from(1000);
+    const base = BI.from(size).mul(feeRate);
+    const fee = base.div(ratio);
+    if (fee.mul(ratio).lt(base)) {
+      return fee.add(1);
+    }
+    return BI.from(fee);
+  }
+
+  getTransactionSizeByTx(tx: Transaction): number {
+    const serializedTx = core.SerializeTransaction(toolkit.normalizers.NormalizeTransaction(tx));
+    // 4 is serialized offset bytesize
+    const size = serializedTx.byteLength + 4;
+    return size;
+  }
+
+<<<<<<< HEAD
+  generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
     const depositLock = this.generateDepositLock();
+=======
+    const depositLock: Script = {
+      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    };
+>>>>>>> develop
     const sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
     const sumSudtAmount = collectedCells.reduce((acc, cell) => {
       if (cell.cell_output.type) {
@@ -223,6 +279,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       } else {
         exchangeCell.cell_output.capacity = `0x${exchangeCapacity.toString(16)}`;
       }
+<<<<<<< HEAD
 
       if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
         outputCells = outputCells.concat(exchangeCell);
@@ -259,6 +316,21 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
     return depositLock;
+=======
+
+      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+        outputCells = outputCells.concat(exchangeCell);
+      }
+
+      return outputCells;
+    } else {
+      let outputCells = [outputCell];
+      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+        outputCells = outputCells.concat(exchangeCell);
+      }
+      return outputCells;
+    }
+>>>>>>> develop
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {

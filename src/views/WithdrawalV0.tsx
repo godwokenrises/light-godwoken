@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { WithdrawalList } from "../components/Withdrawal/List";
-import RequestWithdrawalV1 from "../components/Withdrawal/RequestWithdrawalV1";
+import Unlock from "../components/Withdrawal/Unlock";
+import RequestWithdrawal from "../components/Withdrawal/RequestWithdrawalV0";
 
 const PageContent = styled.div`
   width: 436px;
@@ -34,18 +35,18 @@ const ResultList = styled.div`
   }
 `;
 
-const WithdrawalV1: React.FC = () => {
+const WithdrawalV0: React.FC = () => {
   return (
     <>
       <PageContent className="content">
         <div className="request-withdrawal">
           <div className="title">Withdrawal</div>
-          <RequestWithdrawalV1></RequestWithdrawalV1>
+          <RequestWithdrawal></RequestWithdrawal>
         </div>
         <ResultList className="withdrawal-request">
           <div className="header">Withdrawal Requests List</div>
           <div className="list">
-            <WithdrawalList></WithdrawalList>
+            <WithdrawalList unlockButton={(cell) => <Unlock cell={cell}></Unlock>}></WithdrawalList>
           </div>
         </ResultList>
       </PageContent>
@@ -53,4 +54,4 @@ const WithdrawalV1: React.FC = () => {
   );
 };
 
-export default WithdrawalV1;
+export default WithdrawalV0;
