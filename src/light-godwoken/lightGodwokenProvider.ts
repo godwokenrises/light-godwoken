@@ -15,6 +15,7 @@ import {
   HashType,
   Script,
   BI,
+  Hexadecimal,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
@@ -78,6 +79,20 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   getL1Address(): string {
     return this.l1Address;
   }
+
+  async getL1CkbBalance(): Promise<BI> {
+    const ckbCollector = this.ckbIndexer.collector({
+      lock: helpers.parseAddress(this.l1Address),
+      type: "empty",
+      outputDataLenRange: ["0x0", "0x1"],
+    });
+    let ckbBalance = BI.from(0);
+    for await (const cell of ckbCollector.collect()) {
+      ckbBalance = ckbBalance.add(cell.cell_output.capacity);
+    }
+    return ckbBalance;
+  }
+
   getLightGodwokenConfig(): LightGodwokenConfig {
     return this.lightGodwokenConfig;
   }

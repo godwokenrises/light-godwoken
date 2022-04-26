@@ -6,7 +6,7 @@ import {
   WithdrawalRequestV1,
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
-import { Amount, CkbAmount } from "@ckitjs/ckit/dist/helpers";
+import { CkbAmount } from "@ckitjs/ckit/dist/helpers";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
