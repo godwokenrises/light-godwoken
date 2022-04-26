@@ -60,7 +60,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
-  async deposit(payload: DepositPayload): Promise<string> {
+  async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
     if (!payload.depositMax) {
       // if user don't set depositMax, we will need to collect 64 more ckb for exchange
@@ -95,10 +95,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
-      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity} `);
+      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`);
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
-      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount} `);
+      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`);
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
@@ -124,7 +124,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
+    return txSkeleton;
+  }
 
+  async payTxFee(txSkeleton: helpers.TransactionSkeletonType): Promise<helpers.TransactionSkeletonType> {
     let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
@@ -132,8 +135,13 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
       return outputs;
     });
+    return txSkeleton;
+  }
 
-    signedTx = await this.provider.signL1Transaction(txSkeleton);
+  async deposit(payload: DepositPayload): Promise<string> {
+    let txSkeleton = await this.generateDepositTx(payload);
+    txSkeleton = await this.payTxFee(txSkeleton);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }
@@ -164,26 +172,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
-    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
-    const layer2Lock: Script = this.provider.getLayer2LockScript();
-
-    const depositLockArgs = {
-      owner_lock_hash: ownerLockHash,
-      layer2_lock: layer2Lock,
-      cancel_timeout: "0xc0000000000004b0",
-    };
-    const depositLockArgsHexString: HexString = new toolkit.Reader(
-      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
-    ).serializeJson();
-
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
-
-    const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
-    };
+    const depositLock = this.generateDepositLock();
     const sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
     const sumSudtAmount = collectedCells.reduce((acc, cell) => {
       if (cell.cell_output.type) {
@@ -247,6 +236,29 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
       return outputCells;
     }
+  }
+  generateDepositLock(): Script {
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
+    const layer2Lock: Script = this.provider.getLayer2LockScript();
+
+    const depositLockArgs = {
+      owner_lock_hash: ownerLockHash,
+      layer2_lock: layer2Lock,
+      cancel_timeout: "0xc0000000000004b0",
+    };
+    const depositLockArgsHexString: HexString = new toolkit.Reader(
+      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
+    ).serializeJson();
+
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+
+    const depositLock: Script = {
+      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    };
+    return depositLock;
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {

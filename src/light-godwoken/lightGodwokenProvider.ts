@@ -52,7 +52,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       });
       this.web3 = new Web3(polyjuiceProvider);
     } else if (env === "v1") {
-      this.web3 = new Web3(window.ethereum as any);
+      this.web3 = new Web3(ethereum || (window.ethereum as any));
     } else {
       throw new Error("unsupported env");
     }
@@ -225,6 +225,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const accountScriptHash = utils.computeScriptHash(this.getLayer2LockScript());
     debug("accountScriptHash", accountScriptHash);
     return accountScriptHash;
+  }
+
+  getLayer1Lock(): Script {
+    return helpers.parseAddress(this.l1Address);
   }
 
   getLayer1LockScriptHash(): Hash {
