@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import styled from "styled-components";
+import { SHOW_CLAIM_BUTTON } from "../../config";
 import { ClaimSudt } from "../ClaimSudt";
 import { ConnectButton } from "../ConnectButton";
 import { VersionSelect } from "../VersionSelect";
@@ -55,6 +56,7 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
     setActive("withdrawal");
     onViewChange && onViewChange("withdrawal");
   };
+  console.log(SHOW_CLAIM_BUTTON);
   return (
     <StyledPage>
       <div className="link">
@@ -64,10 +66,12 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
         <div onClick={changeViewToWithdrawal} className={active === "withdrawal" ? "active" : ""}>
           Withdrawal
         </div>
-        <ClaimSudt />
-        <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
-          CKB Testnet Faucet
-        </a>
+        {SHOW_CLAIM_BUTTON && <ClaimSudt />}
+        {SHOW_CLAIM_BUTTON && (
+          <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
+            CKB Testnet Faucet
+          </a>
+        )}
       </div>
       <div className="title">Light Godwoken</div>
       <div className="right-side">
