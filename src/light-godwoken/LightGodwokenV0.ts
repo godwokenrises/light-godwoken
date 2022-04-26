@@ -85,6 +85,17 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return map;
   }
 
+  getBuiltinErc20ByTypeHash(sudtTypeHash: HexString): ProxyERC20 {
+    const list = this.getBuiltinErc20List();
+    const filterd = list.filter((item) => {
+      return item.sudt_script_hash === sudtTypeHash;
+    });
+    if (filterd.length === 0) {
+      throw new Error(`Builtin erc20 not found with sudtTypeHash: ${sudtTypeHash}`);
+    }
+    return filterd[0];
+  }
+
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
     getTokenList().v0.forEach((token) => {
@@ -214,60 +225,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
-    const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
-    debug(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
-
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    const ethAddress = this.provider.l2Address;
-    const l2AccountScript: Script = {
-      code_hash: ethAccountTypeHash,
-      hash_type: "type",
-      args: rollupTypeHash + ethAddress.slice(2),
-    };
-    const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    debug("account script hash:", accountScriptHash);
-    const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
-    if (!fromId) {
-      throw new Error("account not found");
-    }
-    const isSudt = !isHexStringEqual(
-      payload.sudt_script_hash,
-      "0x0000000000000000000000000000000000000000000000000000000000000000",
-    );
-    const minCapacity = this.minimalWithdrawalCapacity(isSudt);
-    if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
-      throw new Error(
-        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
-          payload.capacity,
-        ).toString()}.`,
-      );
-    }
-    const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
-    debug("nonce:", nonce);
-    const sellCapacity: HexNumber = "0x0";
-    const sellAmount: HexNumber = "0x0";
-    const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
-    const feeSudtId: HexNumber = "0x1";
-    const feeAmount: HexNumber = "0x0";
-    const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce,
-      capacity: payload.capacity,
-      amount: payload.amount,
-      sudt_script_hash: payload.sudt_script_hash,
-      account_script_hash: accountScriptHash,
-      sell_amount: sellAmount,
-      sell_capacity: sellCapacity,
-      owner_lock_hash: ownerLockHash,
-      payment_lock_hash: paymentLockHash,
-      fee: {
-        sudt_id: feeSudtId,
-        amount: feeAmount,
-      },
-    };
+    const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
-    const message = this.generateWithdrawalMessageToSign(rawWithdrawalRequest, rollupTypeHash);
+    const message = this.generateWithdrawalMessageToSign(
+      rawWithdrawalRequest,
+      layer2Config.ROLLUP_CONFIG.rollup_type_hash,
+    );
     debug("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
     debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
@@ -305,6 +268,84 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         clearInterval(nIntervId);
       }
     }, 10000);
+  }
+
+  async generateRawWithdrawalRequest(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+  ): Promise<RawWithdrawalRequest> {
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
+    const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    const ownerLockHash = utils.computeScriptHash(ownerLock);
+    const ethAddress = this.provider.l2Address;
+    const l2AccountScript: Script = {
+      code_hash: ethAccountTypeHash,
+      hash_type: "type",
+      args: rollupTypeHash + ethAddress.slice(2),
+    };
+    const accountScriptHash = utils.computeScriptHash(l2AccountScript);
+    const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
+    if (!fromId) {
+      throw new Error("account not found");
+    }
+    const isSudt = !isHexStringEqual(
+      payload.sudt_script_hash,
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+    );
+    const minCapacity = this.minimalWithdrawalCapacity(isSudt);
+    if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
+      throw new Error(
+        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
+          payload.capacity,
+        ).toString()}.`,
+      );
+    }
+
+    const layer2CkbBalance = await this.getL2CkbBalance();
+    if (BI.from(payload.capacity).gt(BI.from(layer2CkbBalance))) {
+      const errMsg = `Godwoken CKB balance ${BI.from(layer2CkbBalance).toString()} is less than ${BI.from(
+        payload.capacity,
+      ).toString()}`;
+      eventEmitter.emit("error", errMsg);
+      throw new Error(errMsg);
+    }
+
+    if (BI.from(payload.amount).gt(BI.from(0))) {
+      const erc20 = this.getBuiltinErc20ByTypeHash(payload.sudt_script_hash);
+      const layer2Erc20Balance = (await this.getErc20Balances({ addresses: [erc20.address] })).balances[0];
+      if (BI.from(payload.amount).gt(BI.from(layer2Erc20Balance))) {
+        const errMsg = `Godwoken Erc20 balance ${BI.from(layer2Erc20Balance).toString()} is less than ${BI.from(
+          payload.amount,
+        ).toString()}`;
+        eventEmitter.emit("error", errMsg);
+        throw new Error(errMsg);
+      }
+    }
+
+    const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
+    const sellCapacity: HexNumber = "0x0";
+    const sellAmount: HexNumber = "0x0";
+    const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
+    const feeSudtId: HexNumber = "0x1";
+    const feeAmount: HexNumber = "0x0";
+    const rawWithdrawalRequest: RawWithdrawalRequest = {
+      nonce,
+      capacity: payload.capacity,
+      amount: payload.amount,
+      sudt_script_hash: payload.sudt_script_hash,
+      account_script_hash: accountScriptHash,
+      sell_amount: sellAmount,
+      sell_capacity: sellCapacity,
+      owner_lock_hash: ownerLockHash,
+      payment_lock_hash: paymentLockHash,
+      fee: {
+        sudt_id: feeSudtId,
+        amount: feeAmount,
+      },
+    };
+    return rawWithdrawalRequest;
   }
 
   async unlock(payload: UnlockPayload): Promise<Hash> {

@@ -20,6 +20,14 @@ beforeEach(() => {
 });
 
 describe("test light godwoken v1 deposit", () => {
+  it("should generateDepositLock works fine", async () => {
+    const lock = await lightGodwokenV1.generateDepositLock();
+    expect(lock).toEqual({
+      args: "0x4940246f168f4106429dc641add3381a44b5eef61e7754142f594e986671a575a10000001000000030000000990000003837aad0e28da55d366d62b7df9b1b0613c39c730c4c409b9722d4bed8cfa9266900000010000000300000003100000010571f91073fdc3cdef4ddad96b4204dd30d6355f3dda9a6d7fc0fa0326408da01340000004940246f168f4106429dc641add3381a44b5eef61e7754142f594e986671a5750c1efcca2bcb65a532274f3ef24c044ef4ab6d73b0040000000000c0",
+      code_hash: "0xcc2b4e14d7dfeb1e72f7708ac2d7f636ae222b003bac6bccfcf8f4dfebd9c714",
+      hash_type: "type",
+    });
+  });
   it("should deposit 2000 ckb ok when user balance is 2000", async () => {
     const mockCell = generateCellInput(2000);
 
