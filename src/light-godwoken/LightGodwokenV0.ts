@@ -1,4 +1,5 @@
 import {
+  BI,
   Cell,
   CellDep,
   core,
@@ -39,13 +40,18 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-
+import { debug } from "./debug";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
   }
+
+  async getChainId(): Promise<HexNumber> {
+    return await this.godwokenClient.getChainId();
+  }
+
   getVersion(): GodwokenVersion {
     return "v0";
   }
@@ -117,7 +123,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async listWithdraw(): Promise<WithdrawResult[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    console.log("searchParams is:", searchParams);
+    debug("searchParams is:", searchParams);
     const collectedCells: WithdrawResult[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
@@ -129,7 +135,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       hash_type: ownerCKBLock.hash_type as HashType,
     };
     const ownerLockHash = utils.computeScriptHash(ownerLock);
-    console.log("ownerLockHash is:", ownerLockHash);
+    debug("ownerLockHash is:", ownerLockHash);
 
     for await (const cell of collector.collect()) {
       const rawLockArgs = cell.cell_output.lock.args;
@@ -173,7 +179,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sortedWithdrawals = collectedCells.sort((a, b) => {
       return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
     });
-    console.log("found withdraw cells:", sortedWithdrawals);
+    debug("found withdraw cells:", sortedWithdrawals);
     return sortedWithdrawals;
   }
 
@@ -195,7 +201,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
+    debug("getWithdrawal result:", result);
     return result;
   }
 
@@ -210,7 +216,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
-    console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
+    debug(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
 
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
@@ -221,29 +227,34 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       args: rollupTypeHash + ethAddress.slice(2),
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    console.log("account script hash:", accountScriptHash);
+    debug("account script hash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     if (!fromId) {
       throw new Error("account not found");
     }
-    const isSudt = payload.sudt_script_hash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const isSudt = !isHexStringEqual(
+      payload.sudt_script_hash,
+      "0x0000000000000000000000000000000000000000000000000000000000000000",
+    );
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
-    if (BigInt(payload.capacity) < BigInt(minCapacity)) {
+    if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
       throw new Error(
-        `Withdrawal required ${BigInt(minCapacity)} shannons at least, provided ${BigInt(payload.capacity)}.`,
+        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
+          payload.capacity,
+        ).toString()}.`,
       );
     }
     const nonce: HexNumber = await this.godwokenClient.getNonce(fromId);
-    console.log("nonce:", nonce);
+    debug("nonce:", nonce);
     const sellCapacity: HexNumber = "0x0";
     const sellAmount: HexNumber = "0x0";
     const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
     const feeSudtId: HexNumber = "0x1";
     const feeAmount: HexNumber = "0x0";
     const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce: "0x" + BigInt(nonce).toString(16),
-      capacity: "0x" + BigInt(payload.capacity).toString(16),
-      amount: "0x" + BigInt(payload.amount).toString(16),
+      nonce,
+      capacity: payload.capacity,
+      amount: payload.amount,
       sudt_script_hash: payload.sudt_script_hash,
       account_script_hash: accountScriptHash,
       sell_amount: sellAmount,
@@ -255,16 +266,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         amount: feeAmount,
       },
     };
-    console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
+    debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(rawWithdrawalRequest, rollupTypeHash);
-    console.log("message:", message);
+    debug("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
-    console.log("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
+    debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
     const withdrawalRequest: WithdrawalRequest = {
       raw: rawWithdrawalRequest,
       signature: signatureMetamaskPersonalSign,
     };
-    console.log("withdrawalRequest:", withdrawalRequest);
+    debug("withdrawalRequest:", withdrawalRequest);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
@@ -274,18 +285,18 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       return;
     }
     eventEmitter.emit("sent", result);
-    console.log("withdrawal request result:", result);
+    debug("withdrawal request result:", result);
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
       loop++;
       const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
-        console.log("withdrawal pending:", withdrawal);
+        debug("withdrawal pending:", withdrawal);
         eventEmitter.emit("pending", result);
       }
       if (withdrawal && withdrawal.status === "committed") {
-        console.log("withdrawal committed:", withdrawal);
+        debug("withdrawal committed:", withdrawal);
         eventEmitter.emit("success", result);
         clearInterval(nIntervId);
       }
@@ -309,11 +320,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         },
         data: payload.cell.data,
       };
-      const sudtCapacity: bigint = helpers.minimalCellCapacity(dummySudtCell);
-      const capacityLeft = BigInt(payload.cell.cell_output.capacity) - sudtCapacity;
+      const sudtCapacity = helpers.minimalCellCapacity(dummySudtCell);
+      const capacityLeft = BI.from(payload.cell.cell_output.capacity).sub(sudtCapacity);
       outputCells.push({
         cell_output: {
-          capacity: `0x${capacityLeft.toString(16)}`,
+          capacity: capacityLeft.toHexString(),
           lock: l1Lock,
         },
         data: "0x",
@@ -387,8 +398,17 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
-    txSkeleton = await this.injectCapacity(txSkeleton, l1Lock, BigInt(0));
-    const signedTx = await this.provider.signL1Transaction(txSkeleton);
+    // fee paid for this tx should cost no more than 1000 shannon
+    const maxTxFee = BI.from(1000);
+    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, maxTxFee);
+    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
+    const txFee = await this.calculateTxFee(signedTx);
+    txSkeleton = txSkeleton.update("outputs", (outputs) => {
+      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
+      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
+      return outputs;
+    });
+    signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }
@@ -426,4 +446,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
     return null;
   }
+}
+function isHexStringEqual(strA: string, strB: string) {
+  return strA.toLowerCase() === strB.toLowerCase();
 }
