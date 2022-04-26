@@ -19,14 +19,18 @@ beforeEach(() => {
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
   lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0");
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
+  sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
+
+  sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
+  sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
+  sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
 });
 
 describe("test light godwoken v1 withdrawal", () => {
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and user balance is 2000", async () => {
     sinon.stub(lightGodwokenV1.godwokenClient, "getBalance").returns(Promise.resolve(BigInt(200000000000)));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV1.generateRawWithdrawalRequest(eventEmitter, {
       capacity: "0x2e90edd000",
@@ -48,9 +52,6 @@ describe("test light godwoken v1 withdrawal", () => {
 
   it("should throw error when withdraw 2000 ckb and user balance is 1999", async () => {
     sinon.stub(lightGodwokenV1.godwokenClient, "getBalance").returns(Promise.resolve(BigInt(199900000000)));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
     try {
@@ -68,9 +69,6 @@ describe("test light godwoken v1 withdrawal", () => {
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
     const erc20Address = lightGodwokenV1.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV1.godwokenClient, "getBalance").returns(Promise.resolve(BigInt(200000000000)));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
     sinon.stub(lightGodwokenV1, "getErc20Balance").returns(Promise.resolve("0x6c6b935b8bbd400000"));
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV1.generateRawWithdrawalRequest(eventEmitter, {
@@ -93,9 +91,7 @@ describe("test light godwoken v1 withdrawal", () => {
   it("should throw error when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 1999 sudt", async () => {
     const erc20Address = lightGodwokenV1.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV1.godwokenClient, "getBalance").returns(Promise.resolve(BigInt(200000000000)));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
-    sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
+
     sinon.stub(lightGodwokenV1, "getErc20Balance").returns(Promise.resolve("0x6c5db2a4d815dc0000"));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
@@ -116,9 +112,8 @@ describe("test light godwoken v1 withdrawal", () => {
 
 describe("test light godwoken v0 withdrawal", () => {
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and user balance is 2000", async () => {
-    sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
+    sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
+
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter, {
       capacity: "0x2e90edd000",
@@ -140,9 +135,6 @@ describe("test light godwoken v0 withdrawal", () => {
     });
   });
   it("should throw error when withdraw 2000 ckb and user balance is 1999", async () => {
-    sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
     sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(199900000000).toHexString()));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
@@ -160,11 +152,9 @@ describe("test light godwoken v0 withdrawal", () => {
 
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
     const erc20Address = lightGodwokenV0.getBuiltinErc20List()[0].sudt_script_hash;
-    sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
+    sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
     sinon.stub(lightGodwokenV0, "getBuiltinErc20ByTypeHash").returns({ address: "" } as any);
-    sinon.stub(lightGodwokenV0, "getErc20Balances").returns(Promise.resolve({ balances: ["0x6c6b935b8bbd400000"] }));
+    sinon.stub(lightGodwokenV0, "getErc20Balance").returns(Promise.resolve("0x6c6b935b8bbd400000"));
     const eventEmitter = { emit: jest.fn() };
     const rawWithdrawalRequest = await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter as any, {
       capacity: "0x2e90edd000",
@@ -188,11 +178,9 @@ describe("test light godwoken v0 withdrawal", () => {
 
   it("should throw error when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 1999 sudt", async () => {
     const erc20Address = lightGodwokenV0.getBuiltinErc20List()[0].sudt_script_hash;
-    sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-    sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
+    sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
     sinon.stub(lightGodwokenV0, "getBuiltinErc20ByTypeHash").returns({ address: "" } as any);
-    sinon.stub(lightGodwokenV0, "getErc20Balances").returns(Promise.resolve({ balances: ["0x6c5db2a4d815dc0000"] }));
+    sinon.stub(lightGodwokenV0, "getErc20Balance").returns(Promise.resolve("0x6c5db2a4d815dc0000"));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
     try {

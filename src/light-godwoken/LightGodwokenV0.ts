@@ -15,7 +15,7 @@ import {
   utils,
   WitnessArgs,
 } from "@ckb-lumos/lumos";
-import { TransactionWithStatus } from "@ckb-lumos/base";
+import { Hexadecimal, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
@@ -121,8 +121,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     for (let index = 0; index < payload.addresses.length; index++) {
       const address = payload.addresses[index];
       const contract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
-      const usdcBalancePromise = contract.methods.balanceOf(this.provider.l2Address).call();
-      promises.push(usdcBalancePromise);
+      const erc20BalancePromise = contract.methods.balanceOf(this.provider.l2Address).call();
+      promises.push(erc20BalancePromise);
     }
     await Promise.all(promises).then((values) => {
       values.forEach((value) => {
@@ -130,6 +130,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       });
     });
     return result;
+  }
+
+  async getErc20Balance(address: HexString): Promise<Hexadecimal> {
+    const contract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
+    return await contract.methods.balanceOf(this.provider.l2Address).call();
   }
 
   async listWithdraw(): Promise<WithdrawResult[]> {
@@ -295,7 +300,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       "0x0000000000000000000000000000000000000000000000000000000000000000",
     );
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
-    if (BI.from(payload.capacity).lt(BI.from(minCapacity))) {
+    if (BI.from(payload.capacity).lt(minCapacity)) {
       throw new Error(
         `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
           payload.capacity,
@@ -312,10 +317,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       throw new Error(errMsg);
     }
 
-    if (BI.from(payload.amount).gt(BI.from(0))) {
+    if (BI.from(payload.amount).gt(0)) {
       const erc20 = this.getBuiltinErc20ByTypeHash(payload.sudt_script_hash);
-      const layer2Erc20Balance = (await this.getErc20Balances({ addresses: [erc20.address] })).balances[0];
-      if (BI.from(payload.amount).gt(BI.from(layer2Erc20Balance))) {
+      const layer2Erc20Balance = await this.getErc20Balance(erc20.address);
+      if (BI.from(payload.amount).gt(layer2Erc20Balance)) {
         const errMsg = `Godwoken Erc20 balance ${BI.from(layer2Erc20Balance).toString()} is less than ${BI.from(
           payload.amount,
         ).toString()}`;

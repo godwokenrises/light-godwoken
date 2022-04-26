@@ -67,13 +67,30 @@ describe("test light godwoken v1 deposit", () => {
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 2000", async () => {
     const sudtType = randomScript(32);
-    const mockXCkbCell = generateCellInput(2000);
+    const mockCkbCell = generateCellInput(2000);
     const mockSudtCell = generateCellInput(144, sudtType, 2000);
 
     const mockCollector = {
-      collect: sinon.stub().onFirstCall().returns([mockXCkbCell]).onSecondCall().returns([mockSudtCell]),
+      collect: sinon.stub().returns([mockCkbCell]),
     };
-    sinon.stub(lightGodwokenProviderV1.ckbIndexer, "collector").returns(mockCollector);
+    const mockSudtCollector = {
+      collect: sinon.stub().returns([mockSudtCell]),
+    };
+
+    sinon
+      .stub(lightGodwokenProviderV1.ckbIndexer, "collector")
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      })
+      .returns(mockCollector)
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: sudtType,
+      })
+      .returns(mockSudtCollector);
+
     const tx = await lightGodwokenV1.generateDepositTx({
       capacity: "0x2e90edd000",
       depositMax: true,
@@ -87,13 +104,30 @@ describe("test light godwoken v1 deposit", () => {
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 1999", async () => {
     const sudtType = randomScript(32);
-    const mockXCkbCell = generateCellInput(2000);
+    const mockCkbCell = generateCellInput(2000);
     const mockSudtCell = generateCellInput(144, sudtType, 1999);
 
     const mockCollector = {
-      collect: sinon.stub().onFirstCall().returns([mockXCkbCell]).onSecondCall().returns([mockSudtCell]),
+      collect: sinon.stub().returns([mockCkbCell]),
     };
-    sinon.stub(lightGodwokenProviderV1.ckbIndexer, "collector").returns(mockCollector);
+    const mockSudtCollector = {
+      collect: sinon.stub().returns([mockSudtCell]),
+    };
+
+    sinon
+      .stub(lightGodwokenProviderV1.ckbIndexer, "collector")
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      })
+      .returns(mockCollector)
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: sudtType,
+      })
+      .returns(mockSudtCollector);
+
     let errMsg = "";
     try {
       await await lightGodwokenV1.generateDepositTx({
