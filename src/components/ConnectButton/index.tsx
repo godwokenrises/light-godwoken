@@ -93,7 +93,13 @@ export const ConnectButton: React.FC = () => {
 
   return (
     <StyleWrapper>
-      {lightGodwoken && <Address />}
+      {lightGodwoken ? (
+        <Address />
+      ) : (
+        <ButtonWrapper type="primary" onClick={connectWallet}>
+          connect
+        </ButtonWrapper>
+      )}
       {!lightGodwoken && (
         <ConnectModal
           title="Connect Wallet"
