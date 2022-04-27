@@ -62,8 +62,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
-    if (!payload.depositMax) {
-      // if user don't set depositMax, we will need to collect 64 more ckb for exchange
+    if (!BI.from(payload.capacity).eq(await this.provider.getL1CkbBalance())) {
+      // if user don't deposit all ckb, we will need to collect 64 more ckb for exchange
       neededCapacity = neededCapacity.add(BI.from(6400000000));
     }
     const neededSudtAmount = payload.amount ? BI.from(payload.amount) : BI.from(0);
