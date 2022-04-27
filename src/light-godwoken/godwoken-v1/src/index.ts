@@ -146,7 +146,7 @@ export class Godwoken {
     return BI.from(balance);
   }
 
-  async getBalanceById(sudt_id: Uint32, account_id: Uint32): Promise<Uint128> {
+  async getBalanceById(sudt_id: Uint32, account_id: Uint32): Promise<BI> {
     const scriptHash = await this.getScriptHash(account_id);
     const address = scriptHash.slice(0, 42);
     const balance = await this.getBalance(sudt_id, address);
