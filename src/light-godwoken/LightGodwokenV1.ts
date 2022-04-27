@@ -6,7 +6,6 @@ import {
   WithdrawalRequestV1,
 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
-import { CkbAmount } from "@ckitjs/ckit/dist/helpers";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -351,12 +350,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     const address = layer2AccountScriptHash.slice(0, 42);
     const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
-    if (BI.from(balance).lt(BI.from(payload.capacity))) {
+    if (BI.from(balance).lt(payload.capacity)) {
       eventEmitter.emit(
         "error",
-        `Godwoken CKB balance ${CkbAmount.fromShannon(balance).humanize()} is less than ${CkbAmount.fromShannon(
-          payload.capacity,
-        ).humanize()}`,
+        `Godwoken CKB balance ${balance.toString()} is less than ${BI.from(payload.capacity).toString()}`,
       );
       throw new Error(
         `Insufficient CKB balance(${BI.from(balance).toString()}) on Godwoken, required ${BI.from(
