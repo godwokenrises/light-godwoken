@@ -33,6 +33,9 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   getBlockProduceTime(): number {
     return 45 * 1000;
   }
+  getChainId(): Promise<string> {
+    return Promise.resolve("0x01");
+  }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
     return "0x2939363918936";

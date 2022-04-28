@@ -88,7 +88,7 @@ export default function CKBInputPanel({
     if (!maxAmount) {
       throw new Error("No maxAmount");
     }
-    onUserInput(getFullDisplayAmount(BigInt(maxAmount), 8, { maxDecimalPlace: 8 }));
+    onUserInput(getFullDisplayAmount(BI.from(maxAmount), 8, { maxDecimalPlace: 8 }));
     setShowMaxButton(false);
   };
   return (
@@ -97,7 +97,7 @@ export default function CKBInputPanel({
         <Typography.Text>{label}</Typography.Text>
         <Typography.Text>
           Balance:{" "}
-          {isLoading || CKBBalance === undefined ? <LoadingOutlined /> : getDisplayAmount(BigInt(CKBBalance), 8)}
+          {isLoading || CKBBalance === undefined ? <LoadingOutlined /> : getDisplayAmount(BI.from(CKBBalance), 8)}
         </Typography.Text>
       </Row>
       <Row className="input-wrapper">
