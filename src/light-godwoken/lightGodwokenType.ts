@@ -1,4 +1,4 @@
-import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script } from "@ckb-lumos/lumos";
+import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI } from "@ckb-lumos/lumos";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -107,6 +107,8 @@ export interface LightGodwokenProvider {
 
   getL1Address(): Promisable<string>;
 
+  getMinFeeRate(): Promise<BI>;
+
   signL1Transaction: (tx: helpers.TransactionSkeletonType) => Promise<Transaction>;
 
   // now only supported omni lock, the other lock type will be supported later
@@ -119,6 +121,8 @@ export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
   getVersion: () => GodwokenVersion;
+
+  getChainId: () => Promise<HexNumber> | HexNumber;
 
   /**
    * get producing 1 block time
@@ -147,6 +151,4 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   unlock: (payload: UnlockPayload) => Promise<Hash>;
 }
-export interface LightGodwokenV1 extends LightGodwokenBase {
-  getChainId: () => Promise<HexNumber>;
-}
+export interface LightGodwokenV1 extends LightGodwokenBase {}
