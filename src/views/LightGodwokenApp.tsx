@@ -1,9 +1,9 @@
 import "antd/dist/antd.css";
-import Withdrawal from "./WithdrawalV0";
+import Withdrawal from "./withdrawal/WithdrawalV0";
 import Deposit from "./Deposit";
 import { useEffect, useState } from "react";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import WithdrawalV1 from "./WithdrawalV1";
+import WithdrawalV1 from "./withdrawal/WithdrawalV1";
 import { LightGodwokenV1 } from "../light-godwoken";
 import { addNetwork } from "../utils/addNetwork";
 import { useChainId } from "../hooks/useChainId";

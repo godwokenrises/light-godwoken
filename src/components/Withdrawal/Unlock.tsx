@@ -1,15 +1,10 @@
-/* eslint-disable */
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import { DownOutlined, UpOutlined } from "@ant-design/icons";
-import { Button, Popconfirm, Typography, notification, Modal } from "antd";
-import getTimePeriods from "../../utils/getTimePeriods";
-import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenAmount";
-import { Cell, HexNumber } from "@ckb-lumos/lumos";
-import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
+import { Button, Typography, notification, Modal } from "antd";
+import { Cell } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { Link, useParams } from "react-router-dom";
-import DefaultLightGodwokenV0 from "../../light-godwoken/LightGodwokenV0";
+import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
+import { CKB_EXPLORER_URL } from "../../config";
 const { Text } = Typography;
 const PrimaryButton = styled(Button)`
   align-items: center;
@@ -132,12 +127,12 @@ const Unlock = ({ cell }: Props) => {
     return <></>;
   }
   const unlock = async () => {
-    if (lightGodwoken instanceof DefaultLightGodwokenV0) {
+    if (isInstanceOfLightGodwokenV0(lightGodwoken)) {
       setIsUnlocking(true);
-      const txHash = await lightGodwoken?.unlock({ cell });
+      const txHash = await lightGodwoken.unlock({ cell });
       setIsUnlocking(false);
       const linkToExplorer = () => {
-        window.open(`https://explorer.nervos.org/aggron/transaction/${txHash}`, "_blank");
+        window.open(`${CKB_EXPLORER_URL}/transaction/${txHash}`, "_blank");
       };
       setIsModalVisible(false);
       notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });

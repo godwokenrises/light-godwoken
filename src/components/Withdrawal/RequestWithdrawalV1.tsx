@@ -12,6 +12,8 @@ import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
+import { useL1TxHistory } from "../../hooks/useL1TxHistory";
+import { useChainId } from "../../hooks/useChainId";
 
 const RequestWithdrawalV1: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -28,6 +30,9 @@ const RequestWithdrawalV1: React.FC = () => {
   const erc20BalanceQuery = useERC20Balance();
 
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
+  const l1Address = lightGodwoken?.provider.getL1Address();
+  const { data: chainId } = useChainId();
+  const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
 
   useEffect(() => {
     if (CKBInput === "" || CKBBalance === undefined) {
@@ -83,6 +88,14 @@ const RequestWithdrawalV1: React.FC = () => {
     e.on("sent", (txHash) => {
       notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
       setLoading(false);
+      addTxToHistory({
+        type: "withdrawal",
+        txHash,
+        capacity,
+        amount,
+        symbol: selectedSudt?.symbol,
+        decimals: selectedSudt?.decimals,
+      });
     });
 
     e.on("pending", (result) => {
