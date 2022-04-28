@@ -2,16 +2,17 @@ import { WithdrawalList } from "../../components/Withdrawal/List";
 import Unlock from "../../components/Withdrawal/Unlock";
 import RequestWithdrawal from "../../components/Withdrawal/RequestWithdrawalV0";
 import { TransactionHistory } from "../../components/TransactionHistory";
-import { PageContent, ResultList } from "./WithdrawalStyle";
+import { ResultList, WithdrawalHeader } from "./WithdrawalStyle";
+import { PageContent } from "../../style/common";
 
 const WithdrawalV0: React.FC = () => {
   return (
     <>
       <PageContent className="content">
-        <div className="header">
+        <WithdrawalHeader>
           <div className="title">Withdrawal</div>
           <TransactionHistory type="withdrawal"></TransactionHistory>
-        </div>
+        </WithdrawalHeader>
         <div className="request-withdrawal">
           <RequestWithdrawal></RequestWithdrawal>
         </div>

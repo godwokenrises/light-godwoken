@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Typography, Modal, List } from "antd";
+import { Modal, List } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
@@ -7,47 +7,7 @@ import React, { useState, useEffect } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
-const { Text } = Typography;
-const StyleWrapper = styled.div`
-  border-radius: 16px;
-  background-color: rgb(60, 58, 75);
-  box-shadow: rgb(74 74 104 / 10%) 0px 2px 2px -1px;
-  .first-row {
-    margin-bottom: 3px;
-  }
-  .anticon {
-    font-size: 12px;
-  }
-  .max-button {
-    height: 32px;
-    line-height: 32px;
-    padding: 0px 16px;
-    background-color: transparent;
-    color: rgb(255, 67, 66);
-    font-weight: 600;
-  }
-  .token-list {
-    height: 390px;
-    overflow-y: auto;
-  }
-  .first-row {
-    margin-bottom: 3px;
-    padding: 0.75rem 1rem 0px;
-  }
-  .input-wrapper {
-    height: 56px;
-    padding: 0.75rem 0.5rem 0.75rem 1rem;
-    display: flex;
-    align-items: center;
-  }
-  .currency-wrapper {
-    display: flex;
-    align-items: center;
-  }
-  .anticon {
-    margin-left: 10px;
-  }
-`;
+import { InputCard, Row, Text } from "../../style/common";
 
 const TokenList = styled.div`
   height: 390px;
@@ -55,17 +15,17 @@ const TokenList = styled.div`
 `;
 
 const TokenListModal = styled(Modal)`
-  color: white;
+  color: black;
   .ant-modal-content {
     border-radius: 32px;
-    background: rgb(39, 37, 52);
+    background: white;
     box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
+    border: 1px solid white;
+    color: black;
   }
   .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
+    background: white;
+    border: 1px solid white;
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     padding: 12px 24px;
@@ -75,24 +35,24 @@ const TokenListModal = styled(Modal)`
   }
   .ant-modal-title,
   .ant-list-item {
-    color: white;
+    color: black;
   }
   .ant-modal-body {
     padding: 0px;
   }
   .ant-modal-close-x {
-    color: white;
+    color: black;
   }
   .ant-list-item {
     border-bottom: none;
     padding: 4px 20px;
     height: 56px;
     &:hover {
-      background-color: rgb(60, 58, 75);
+      background-color: white;
       cursor: pointer;
     }
     &.selected {
-      background-color: rgb(60, 58, 75);
+      background-color: white;
     }
   }
   .currency-item {
@@ -122,26 +82,11 @@ const TokenListModal = styled(Modal)`
     }
   }
 `;
-const Row = styled.div`
+const CurrencyWrapper = styled.div`
   display: flex;
-  justify-content: space-between;
-  .ant-typography {
-    color: white;
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 1.5;
-  }
-  .ckb-logo {
-    height: 24px;
-    width: 24px;
-    margin-right: 8px;
-  }
-  .max-button {
-    height: 32px;
-    padding: 0px 16px;
-    background-color: transparent;
-    color: rgb(255, 67, 66);
-    font-weight: 600;
+  align-items: center;
+  .select {
+    padding-left: 5px;
   }
 `;
 interface CurrencyInputPanelProps {
@@ -215,16 +160,17 @@ export default function CurrencyInputPanel({
     setShowMaxButton(false);
   };
   return (
-    <StyleWrapper>
+    <InputCard>
       <Row className="first-row">
-        <Typography.Text>{label}</Typography.Text>
-        <Typography.Text>
+        <Text>{label}</Text>
+        <Text className="balance" onClick={handelMaxClick}>
+          Max:{" "}
           {selectedCurrencyBalance
             ? getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals)
-            : ""}
-        </Typography.Text>
+            : "-"}
+        </Text>
       </Row>
-      <Row className="input-wrapper">
+      <Row className="second-row">
         <NumericalInput
           autoFocus={autoFocus}
           disabled={disableInput}
@@ -236,22 +182,17 @@ export default function CurrencyInputPanel({
             onUserInput(val);
           }}
         />
-        {showMaxButton && (
-          <div className="max-button" onClick={handelMaxClick}>
-            MAX
-          </div>
-        )}
-        <div className="currency-wrapper" onClick={showCurrencySelectModal}>
+        <CurrencyWrapper className="currency-wrapper" onClick={showCurrencySelectModal}>
           {selectedCurrency ? (
             <div className="currency-icon">
               <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
-              <Typography.Text>{selectedCurrency.symbol}</Typography.Text>
+              <Text>{selectedCurrency.symbol}</Text>
             </div>
           ) : (
             <Text>Select a currency </Text>
           )}
-          <DownOutlined />
-        </div>
+          <DownOutlined className="select" />
+        </CurrencyWrapper>
       </Row>
       <TokenListModal
         title="Select a Token"
@@ -289,6 +230,6 @@ export default function CurrencyInputPanel({
           ></List>
         </TokenList>
       </TokenListModal>
-    </StyleWrapper>
+    </InputCard>
   );
 }

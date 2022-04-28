@@ -26,14 +26,14 @@ const PrimaryButton = styled(Button)`
   height: 32px;
   padding: 0px 16px;
   background-color: rgb(255, 67, 66);
-  color: white;
+  color: black;
   margin-left: 4px;
   margin-top: 8px;
   &:hover,
   &:focus,
   &:active {
     background-color: rgb(255, 67, 66);
-    color: white;
+    color: black;
   }
 `;
 const PlainButton = styled.div`
@@ -55,30 +55,30 @@ const PlainButton = styled.div`
   transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
   height: 32px;
   padding: 0px 16px;
-  background-color: rgb(60, 58, 75);
-  color: white;
+  background-color: white;
+  color: black;
   margin-left: 4px;
   margin-top: 8px;
   &:hover,
   &:focus,
   &:active {
-    background-color: rgb(60, 58, 75);
-    color: white;
+    background-color: white;
+    color: black;
   }
 `;
 
 const UnlockModal = styled(Modal)`
-  color: white;
+  color: black;
   .ant-modal-content {
     border-radius: 32px;
-    background: rgb(39, 37, 52);
+    background: white;
     box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
+    border: 1px solid white;
+    color: black;
   }
   .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
+    background: white;
+    border: 1px solid white;
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     padding: 12px 24px;
@@ -87,16 +87,16 @@ const UnlockModal = styled(Modal)`
     align-items: center;
   }
   .ant-modal-title {
-    color: white;
+    color: black;
   }
   .ant-modal-body {
     padding: 20px;
   }
   .ant-modal-close-x {
-    color: white;
+    color: black;
   }
   .ant-typography {
-    color: white;
+    color: black;
     display: block;
   }
   .ant-typography.title {

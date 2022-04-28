@@ -9,7 +9,7 @@ import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 const { Text } = Typography;
 const StyleWrapper = styled.div`
-  background: rgb(39, 37, 52);
+  background: white;
   padding: 16px;
   border-radius: 12px;
   .header {
@@ -47,7 +47,7 @@ const StyleWrapper = styled.div`
     }
   }
   .ant-typography {
-    color: white;
+    color: black;
   }
   .list-detail {
     padding-top: 10px;
@@ -59,7 +59,7 @@ export const FixedHeightRow = styled.div`
   display: flex;
   justify-content: space-between;
   .ant-typography {
-    color: white;
+    color: black;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.5;

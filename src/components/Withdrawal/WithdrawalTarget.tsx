@@ -6,7 +6,7 @@ import { CKB_L1, GODWOKEN_V1 } from "./const";
 const StyleWrapper = styled.div`
   font-size: 14px;
   border-radius: 16px;
-  background-color: rgb(60, 58, 75);
+  background-color: white;
   box-shadow: rgb(74 74 104 / 10%) 0px 2px 2px -1px;
   margin-bottom: 20px;
   .anticon {
@@ -23,7 +23,7 @@ const Row = styled.div`
 
   padding: 0.75rem 1rem;
   .ant-typography {
-    color: white;
+    color: black;
     font-size: 16px;
     font-weight: 400;
     line-height: 1.5;

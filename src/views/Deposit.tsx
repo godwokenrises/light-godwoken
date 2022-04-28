@@ -15,15 +15,10 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
+import { PageContent, Text } from "../style/common";
+import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
+import { WalletInfo } from "../components/WalletInfo";
 
-const { Text } = Typography;
-
-const PageContent = styled.div`
-  width: 436px;
-  background: rgb(39, 37, 52);
-  border-radius: 24px;
-  color: white;
-`;
 const PageHeader = styled.div`
   display: flex;
   flex-direction: column;
@@ -31,20 +26,23 @@ const PageHeader = styled.div`
   padding: 24px;
   a,
   .ant-typography {
-    color: white;
+    color: black;
   }
   .title {
-    padding-bottom: 5px;
+    padding-bottom: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     > span {
       font-weight: bold;
-      font-size: 20px;
+      font-size: 18px;
+      color: #333;
     }
   }
   .description {
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
   }
 `;
 const PageMain = styled.div`
@@ -57,36 +55,6 @@ const PageMain = styled.div`
     justify-content: center;
     padding-top: 8px;
     padding-bottom: 8px;
-  }
-`;
-const L1WalletAddress = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin: 24px;
-  padding: 16px;
-  border: 1px solid rgb(60, 58, 75);
-  border-radius: 16px;
-  .ant-typography {
-    color: white;
-  }
-  .title {
-    font-size: 16px;
-    padding-bottom: 10px;
-  }
-  .address {
-    font-size: 16px;
-    padding-bottom: 10px;
-  }
-  .copy {
-    color: rgb(255, 67, 66);
-    .ant-typography {
-      font-size: 14px;
-      color: rgb(255, 67, 66);
-      padding-right: 5px;
-    }
-    &:hover {
-      cursor: pointer;
-    }
   }
 `;
 const WithdrawalButton = styled.div`
@@ -113,7 +81,7 @@ const WithdrawalButton = styled.div`
     height: 48px;
     padding: 0px 24px;
     background-color: rgb(255, 67, 66);
-    color: white;
+    color: black;
     width: 100%;
     &:disabled {
       background-color: rgb(60, 55, 66);
@@ -128,17 +96,17 @@ const WithdrawalButton = styled.div`
   }
 `;
 const ConfirmModal = styled(Modal)`
-  color: white;
+  color: black;
   .ant-modal-content {
     border-radius: 32px;
-    background: rgb(39, 37, 52);
+    background: white;
     box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
+    border: 1px solid white;
+    color: black;
   }
   .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
+    background: white;
+    border: 1px solid white;
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     padding: 12px 24px;
@@ -148,7 +116,7 @@ const ConfirmModal = styled(Modal)`
   }
   .ant-modal-title,
   .ant-list-item {
-    color: white;
+    color: black;
   }
   .ant-modal-body {
     padding: 24px;
@@ -157,10 +125,10 @@ const ConfirmModal = styled(Modal)`
     align-items: center;
   }
   .ant-modal-close-x {
-    color: white;
+    color: black;
   }
   .ant-typography {
-    color: white;
+    color: black;
     justify-content: space-between;
   }
   .tips {
@@ -175,19 +143,6 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-function L2Balance() {
-  const { data: balance } = useL2CKBBalance();
-
-  if (!balance) {
-    return (
-      <span>
-        <LoadingOutlined />
-      </span>
-    );
-  }
-  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), 8)} CKB</span>;
-}
-
 export default function Deposit() {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
@@ -200,6 +155,8 @@ export default function Deposit() {
   const sudtBalanceQUery = useSUDTBalance();
   const CKBBalanceQuery = useL1CKBBalance();
   const CKBBalance = CKBBalanceQuery.data;
+  const { data: l2CKBBalance } = useL2CKBBalance();
+
   const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
@@ -301,10 +258,6 @@ export default function Deposit() {
     setSelectedSudtBalance(balance);
   };
 
-  const copyAddress = () => {
-    navigator.clipboard.writeText(lightGodwoken?.provider.getL1Address() || "");
-    message.success("copied L1 address to clipboard");
-  };
   return (
     <>
       <PageContent>
@@ -317,14 +270,7 @@ export default function Deposit() {
             To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
           </Text>
         </PageHeader>
-        <L1WalletAddress>
-          <Text className="title">L1 Wallet Address</Text>
-          <Text className="address">{lightGodwoken?.provider.getL1Address()}</Text>
-          <div className="copy" onClick={copyAddress}>
-            <Text>Copy Address</Text>
-            <CopyOutlined />
-          </div>
-        </L1WalletAddress>
+        <WalletInfo l1Address={l1Address} l1Balance={CKBBalance} l2Balance={l2CKBBalance}></WalletInfo>
         <PageMain className="main">
           <CKBInputPanel
             value={CKBInput}
@@ -335,7 +281,7 @@ export default function Deposit() {
             maxAmount={maxAmount}
           ></CKBInputPanel>
           <div className="icon">
-            <PlusOutlined />
+            <PlusIcon />
           </div>
           <CurrencyInputPanel
             value={sudtInput}
@@ -355,9 +301,6 @@ export default function Deposit() {
               {inputError || "Deposit"}
             </Button>
           </WithdrawalButton>
-          <div>
-            <L2Balance />
-          </div>
         </PageMain>
       </PageContent>
       <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>

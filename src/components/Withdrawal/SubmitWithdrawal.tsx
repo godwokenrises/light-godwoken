@@ -3,17 +3,17 @@ import React, { useState } from "react";
 import { WithdrawalButton } from "./requestWithdrawalStyle";
 import styled from "styled-components";
 export const ConfirmModal = styled(Modal)`
-  color: white;
+  color: black;
   .ant-modal-content {
     border-radius: 32px;
-    background: rgb(39, 37, 52);
+    background: white;
     box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
+    border: 1px solid white;
+    color: black;
   }
   .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
+    background: white;
+    border: 1px solid white;
     border-top-left-radius: 32px;
     border-top-right-radius: 32px;
     padding: 12px 24px;
@@ -23,16 +23,16 @@ export const ConfirmModal = styled(Modal)`
   }
   .ant-modal-title,
   .ant-list-item {
-    color: white;
+    color: black;
   }
   .ant-modal-body {
     padding: 24px;
   }
   .ant-modal-close-x {
-    color: white;
+    color: black;
   }
   .ant-typography {
-    color: white;
+    color: black;
     justify-content: space-between;
   }
   .text-pair {

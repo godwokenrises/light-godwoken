@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { HashRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Page from "./components/Layout/Page";
+import PageFooter from "./components/Layout/PageFooter";
 import PageHeader from "./components/Layout/PageHeader";
 import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
 import LightGodwokenApp from "./views/LightGodwokenApp";
@@ -24,6 +25,7 @@ function App() {
                 <Page>
                   <PageHeader onViewChange={handleViewChange}></PageHeader>
                   <LightGodwokenApp activeView={activeView} />
+                  <PageFooter></PageFooter>
                 </Page>
               }
             ></Route>

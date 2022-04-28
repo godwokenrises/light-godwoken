@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { ReactComponent as Logo } from "../../asserts/logo.svg";
+import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
+
 import styled from "styled-components";
 import { SHOW_CLAIM_BUTTON } from "../../config";
 import { ClaimSudt } from "../ClaimSudt";
@@ -9,38 +12,49 @@ const StyledPage = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 16px;
-  background: radial-gradient(89.56% 89.56% at 50.04% 10.44%, rgb(60, 58, 75) 0%, rgb(28, 27, 37) 92.56%);
-  margin-bottom: 20px;
-  color: white;
-  .link {
+  padding: 16px 100px;
+  height: 64px;
+  margin-bottom: 24px;
+  background: white;
+  color: black;
+  .link-list {
     display: flex;
-    color: white;
-    a {
-      color: white;
-      text-decoration: none;
-      margin-right: 10px;
-    }
-    > div {
-      margin-right: 20px;
-      &:hover {
-        cursor: pointer;
-      }
-    }
-    .active {
-      color: rgb(255, 67, 66);
-    }
   }
   .right-side {
-    width: 410px;
     display: flex;
+    width: 130px;
     justify-content: end;
     > &:hover {
       cursor: pointer;
     }
   }
-  a + a {
-    padding-left: 10px;
+  @media (max-width: 600px) {
+    padding: 16px 8px;
+    .right-side {
+      display: none;
+    }
+  }
+`;
+const Link = styled.span`
+  height: 32px;
+  line-height: 32px;
+  width: 120px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  color: black;
+  border-radius: 8px;
+  @media (max-width: 600px) {
+    width: 100px;
+    .right-side {
+      display: none;
+    }
+  }
+  &.active {
+    background: #18efb1;
+  }
+  &:hover {
+    cursor: pointer;
   }
 `;
 interface Props {
@@ -59,24 +73,23 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
   console.log(SHOW_CLAIM_BUTTON);
   return (
     <StyledPage>
-      <div className="link">
-        <div onClick={changeViewToDeposit} className={active === "deposit" ? "active" : ""}>
+      <Logo height={27}></Logo>
+      <div className="link-list">
+        <Link onClick={changeViewToDeposit} className={active === "deposit" ? "active" : ""}>
           Deposit
-        </div>
-        <div onClick={changeViewToWithdrawal} className={active === "withdrawal" ? "active" : ""}>
+        </Link>
+        <Link onClick={changeViewToWithdrawal} className={active === "withdrawal" ? "active" : ""}>
           Withdrawal
-        </div>
-        {SHOW_CLAIM_BUTTON && <ClaimSudt />}
+        </Link>
+      </div>
+      <div className="right-side">
+        <Hamburger></Hamburger>
+        {/* {SHOW_CLAIM_BUTTON && <ClaimSudt />}
         {SHOW_CLAIM_BUTTON && (
           <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
             CKB Testnet Faucet
           </a>
-        )}
-      </div>
-      <div className="title">Light Godwoken</div>
-      <div className="right-side">
-        <ConnectButton />
-        <VersionSelect />
+        )} */}
       </div>
     </StyledPage>
   );
