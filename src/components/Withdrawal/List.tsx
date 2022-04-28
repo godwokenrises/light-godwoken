@@ -42,6 +42,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   }
   return (
     <WithdrawalListDiv>
+      {withdrawalList.length === 0 && "There is no withdrawal request here"}
       {withdrawalList.map((withdraw, index) => (
         <WithdrawalRequestCard now={now} {...withdraw} key={index} unlockButton={unlockButton}></WithdrawalRequestCard>
       ))}
