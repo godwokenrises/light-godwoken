@@ -1,4 +1,4 @@
-import { LightGodwokenConfig, predefined as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
+import { LightGodwokenConfig, predefined_v1_1 as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,

@@ -205,7 +205,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
     return result;
   }
 

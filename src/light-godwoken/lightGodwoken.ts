@@ -1,13 +1,7 @@
-import { Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { BI, Cell, Hash, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
-import {
-  NormalizeDepositLockArgs,
-  NormalizeRawWithdrawalRequest,
-  NormalizeWithdrawalLockArgs,
-  RawWithdrawalRequest,
-  WithdrawalLockArgs,
-} from "./godwoken/normalizer";
+import { NormalizeWithdrawalLockArgs, WithdrawalLockArgs } from "./godwoken/normalizer";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import {
   DepositPayload,
@@ -25,11 +19,8 @@ import {
   GodwokenVersion,
   LightGodwokenBase,
 } from "./lightGodwokenType";
-import {
-  SerializeDepositLockArgs,
-  SerializeRawWithdrawalRequest,
-  SerializeWithdrawalLockArgs,
-} from "./schemas/index.esm";
+import { V1DepositLockArgs } from "./schemas/codec";
+import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -118,10 +109,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
-      cancel_timeout: "0xc0000000000004b0",
+      cancel_timeout: BI.from("0xc000000000093a81"),
+      registry_id: 2,
     };
+    console.log("depositLockArgs is: ", {
+      ...depositLockArgs,
+      cancel_timeout: depositLockArgs.cancel_timeout.toHexString(),
+    });
+
     const depositLockArgsHexString: HexString = new toolkit.Reader(
-      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
+      V1DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
 
     const { SCRIPTS, ROLLUP_CONFIG } = provider.getLightGodwokenConfig().layer2Config;
@@ -131,6 +128,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       hash_type: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
+    console.log("depositLock is: ", depositLock);
+    console.log("depositLock Hash is: ", utils.computeScriptHash(depositLock));
     return depositLock;
   }
 

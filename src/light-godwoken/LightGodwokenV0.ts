@@ -136,14 +136,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     for await (const cell of collector.collect()) {
       const rawLockArgs = cell.cell_output.lock.args;
-      const lockArgs = new godwokenCore.WithdrawalLockArgs(new toolkit.Reader(`0x${rawLockArgs.slice(66)}`));
-
-      if (lockArgs == null) {
-        continue;
-      }
-
-      const withdrawBlock = Number(lockArgs.getWithdrawalBlockNumber().toLittleEndianBigUint64());
-      const containsOwnerLock = cell.cell_output.lock.args.includes(ownerLockHash.substring(2));
+      const withdrawBlockBytes = `0x${rawLockArgs.slice(194, 194 + 16)}`;
+      const withdrawBlock = utils.readBigUInt64LECompatible(withdrawBlockBytes).toNumber();
+      const containsOwnerLock = rawLockArgs.includes(ownerLockHash.substring(2));
+      console.log("withdrawBlock is:", withdrawBlock);
+      console.log("containsOwnerLock is:", containsOwnerLock);
 
       let sudtTypeHash = "0x" + "00".repeat(32);
       let erc20: ProxyERC20 | undefined = undefined;
@@ -198,7 +195,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
     return result;
   }
 
@@ -237,6 +233,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     console.log(" helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address)", payload, this.provider);
 
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    console.log("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
@@ -245,11 +242,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       args: rollupTypeHash + ethAddress.slice(2),
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    console.log("account script hash:", accountScriptHash);
+    console.log("accountScriptHash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
+    console.log("fromId:", fromId);
     if (!fromId) {
       throw new Error("account not found");
     }
+    let account_script_hash = await this.godwokenClient.getScriptHash(fromId);
+    console.log("account_script_hash:", account_script_hash);
+
     const isSudt = payload.sudt_script_hash !== "0x0000000000000000000000000000000000000000000000000000000000000000";
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
     if (BigInt(payload.capacity) < BigInt(minCapacity)) {
@@ -279,7 +280,17 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         amount: BI.from(feeAmount),
       },
     };
-    console.log("rawWithdrawalRequest:", rawWithdrawalRequest);
+    console.log("rawWithdrawalRequest:", {
+      ...rawWithdrawalRequest,
+      capacity: rawWithdrawalRequest.capacity.toString(),
+      amount: rawWithdrawalRequest.amount.toString(),
+      sell_amount: rawWithdrawalRequest.sell_amount.toString(),
+      sell_capacity: rawWithdrawalRequest.sell_capacity.toString(),
+      fee: {
+        ...rawWithdrawalRequest.fee,
+        amount: rawWithdrawalRequest.fee.amount.toString(),
+      },
+    });
     const message = this.generateWithdrawalMessageToSign(
       new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
       rollupTypeHash,
@@ -294,11 +305,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     const withdrawalRequestExtra = {
       request: withdrawalRequest,
-      owner: ownerLock,
+      owner_lock: ownerLock,
       withdraw_to_v1: withdrawToV1 ? 1 : 0,
     };
 
-    console.log("withdrawalRequest:", withdrawalRequest);
+    console.log("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
