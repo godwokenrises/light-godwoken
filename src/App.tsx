@@ -7,6 +7,7 @@ import PageFooter from "./components/Layout/PageFooter";
 import PageHeader from "./components/Layout/PageHeader";
 import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
 import LightGodwokenApp from "./views/LightGodwokenApp";
+
 function App() {
   const queryClient = new QueryClient();
   const [activeView, setActiveView] = useState<string>("deposit");

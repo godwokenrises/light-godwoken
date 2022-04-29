@@ -1,7 +1,7 @@
 import { Button, Modal, Typography } from "antd";
 import React, { useState } from "react";
-import { WithdrawalButton } from "./requestWithdrawalStyle";
 import styled from "styled-components";
+import { PrimaryButton } from "../../style/common";
 export const ConfirmModal = styled(Modal)`
   color: black;
   .ant-modal-content {
@@ -78,11 +78,9 @@ const SubmitWithdrawal: React.FC<Props> = ({
 
   return (
     <>
-      <WithdrawalButton>
-        <Button className="submit-button" disabled={disabled} onClick={showModal}>
-          {buttonText || "Request Withdrawal"}
-        </Button>
-      </WithdrawalButton>
+      <PrimaryButton className="submit-button" disabled={disabled} onClick={showModal}>
+        {buttonText || "Request Withdrawal"}
+      </PrimaryButton>
       <ConfirmModal title="Confirm Request" visible={isModalVisible || loading} onCancel={handleCancel} footer={null}>
         <div className="text-pair">
           <Text>Block wait</Text>
@@ -96,11 +94,9 @@ const SubmitWithdrawal: React.FC<Props> = ({
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
           Withdrawal
         </div>
-        <WithdrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => handleSubmit()}>
-            Request Withdrawal
-          </Button>
-        </WithdrawalButton>
+        <PrimaryButton className="submit-button" /*loading={loading}*/ onClick={() => handleSubmit()}>
+          Request Withdrawal
+        </PrimaryButton>
       </ConfirmModal>
     </>
   );

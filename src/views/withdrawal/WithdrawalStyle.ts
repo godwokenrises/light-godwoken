@@ -3,7 +3,6 @@ import styled from "styled-components";
 export const WithdrawalHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  padding: 24px;
   .title {
     font-size: 20px;
     font-weight: 600;

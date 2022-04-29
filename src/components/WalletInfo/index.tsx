@@ -9,7 +9,7 @@ import { BI } from "@ckb-lumos/lumos";
 const StyleWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  margin: 0 24px 24px 24px;
+  margin-bottom: 24px;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 16px;

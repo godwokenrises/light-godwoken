@@ -10,7 +10,6 @@ const WithdrawalListDiv = styled.div`
   max-height: calc(100vh - 400px);
   overflow-y: auto;
   background-color: rgb(16, 12, 24);
-  padding: 24px;
   border-bottom-left-radius: 24px;
   border-bottom-right-radius: 24px;
   & > div {

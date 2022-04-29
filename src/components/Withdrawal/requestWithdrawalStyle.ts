@@ -3,7 +3,6 @@ import { Modal } from "antd";
 export const PageMain = styled.div`
   grid-auto-rows: auto;
   row-gap: 8px;
-  padding: 24px;
   .icon {
     width: 100%;
     display: flex;
@@ -12,44 +11,7 @@ export const PageMain = styled.div`
     padding-bottom: 8px;
   }
 `;
-export const WithdrawalButton = styled.div`
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  .submit-button {
-    align-items: center;
-    border: 0px;
-    border-radius: 16px;
-    box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-    cursor: pointer;
-    display: inline-flex;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 600;
-    -webkit-box-pack: center;
-    justify-content: center;
-    letter-spacing: 0.03em;
-    line-height: 1;
-    opacity: 1;
-    outline: 0px;
-    transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-    height: 48px;
-    padding: 0px 24px;
-    background-color: rgb(255, 67, 66);
-    color: black;
-    width: 100%;
-    &:disabled {
-      background-color: rgb(60, 55, 66);
-      border-color: rgb(60, 55, 66);
-      box-shadow: none;
-      color: rgb(104, 102, 123);
-      cursor: not-allowed;
-    }
-  }
-  button:hover {
-    cursor: pointer;
-  }
-`;
+
 export const ConfirmModal = styled(Modal)`
   color: black;
   .ant-modal-content {
