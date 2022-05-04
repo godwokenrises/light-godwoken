@@ -17,6 +17,7 @@ import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { MockLightGodwokenV0Interface } from "../../contexts/MockLightGodwokenV0";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
+import { getInputError, isCKBInputValidate, isSudtInputValidate } from "./utils";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -37,24 +38,11 @@ const RequestWithdrawalV0: React.FC = () => {
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
   useEffect(() => {
-    if (CKBInput === "" || CKBBalance === undefined) {
-      setIsCKBValueValidate(false);
-    } else if (
-      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
-    ) {
-      setIsCKBValueValidate(true);
-    } else {
-      setIsCKBValueValidate(false);
-    }
+    setIsCKBValueValidate(isCKBInputValidate(CKBInput, CKBBalance));
   }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
-    if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
-      setIsSudtValueValidate(false);
-    } else {
-      setIsSudtValueValidate(true);
-    }
+    setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithdrawal = () => {
@@ -134,20 +122,9 @@ const RequestWithdrawalV0: React.FC = () => {
   };
 
   const inputError = useMemo(() => {
-    if (CKBInput === "") {
-      return "Enter CKB Amount";
-    }
-    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
-      return "Minimum 400 CKB";
-    }
-    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
-      return "Insufficient CKB Amount";
-    }
-    if (sudtValue && sudtBalance && Amount.from(sudtValue, selectedSudt?.decimals).gt(Amount.from(sudtBalance))) {
-      return `Insufficient ${selectedSudt?.symbol} Amount`;
-    }
-    return void 0;
+    return getInputError(CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol);
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+
   return (
     <>
       <PageMain className="main">
