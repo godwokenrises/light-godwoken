@@ -7,7 +7,6 @@ import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
-import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
@@ -15,12 +14,8 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
-import {
-  getDepositInputError,
-  getInputError,
-  isDepositCKBInputValidate,
-  isSudtInputValidate,
-} from "../utils/input-validate";
+import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
+import { parseUnit } from "../utils/numberFormat";
 
 const { Text } = Typography;
 
@@ -214,10 +209,10 @@ export default function Deposit() {
 
   const showModal = async () => {
     if (lightGodwoken) {
-      const capacity = Amount.from(CKBInput, 8).toHex();
+      const capacity = "0x" + parseUnit(CKBInput, 8).toString(16);
       let amount = "0x0";
       if (selectedSudt && sudtInput) {
-        amount = "0x" + Amount.from(sudtInput, selectedSudt.decimals).toString(16);
+        amount = "0x" + parseUnit(sudtInput, selectedSudt.decimals).toString(16);
       }
       setIsModalVisible(true);
       try {

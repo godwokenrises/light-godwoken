@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
-import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { BI } from "@ckb-lumos/lumos";
+import { parseUnit } from "../../utils/numberFormat";
 
 const StyleWrapper = styled.div`
   font-size: 14px;
@@ -76,7 +76,7 @@ export default function CKBInputPanel({
       setShowMaxButton(!!BI.from(maxAmount).gt(0));
     }
     if (value && maxAmount) {
-      if (BI.from(maxAmount).lte(0) || Amount.from(value, 8).eq(Amount.from(maxAmount))) {
+      if (BI.from(maxAmount).lte(0) || parseUnit(value, 8).eq(parseUnit(maxAmount))) {
         setShowMaxButton(false);
       } else {
         setShowMaxButton(true);

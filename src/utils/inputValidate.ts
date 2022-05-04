@@ -1,10 +1,10 @@
-import { Amount } from "@ckitjs/ckit/dist/helpers/Amount";
+import { parseUnit } from "./numberFormat";
 
 export const isSudtInputValidate = (sudtValue: string, sudtBalance?: string, decimal?: number) => {
   if (sudtValue === "0" || sudtValue === "") {
     return true;
   }
-  if (sudtValue && sudtBalance && Amount.from(sudtBalance).gte(Amount.from(sudtValue, decimal))) {
+  if (sudtValue && sudtBalance && parseUnit(sudtBalance).gte(parseUnit(sudtValue, decimal))) {
     return true;
   } else {
     return false;
@@ -14,10 +14,7 @@ export const isSudtInputValidate = (sudtValue: string, sudtBalance?: string, dec
 export const isCKBInputValidate = (CKBInput: string, CKBBalance?: string) => {
   if (CKBInput === "" || CKBBalance === undefined) {
     return false;
-  } else if (
-    Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-    Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
-  ) {
+  } else if (parseUnit(CKBInput, 8).gte(parseUnit("400", 8)) && parseUnit(CKBInput, 8).lte(parseUnit(CKBBalance))) {
     return true;
   } else {
     return false;
@@ -35,13 +32,13 @@ export const getInputError = (
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }
-  if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
+  if (parseUnit(CKBInput, 8).lt(parseUnit("400", 8))) {
     return "Minimum 400 CKB";
   }
-  if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
+  if (CKBBalance && parseUnit(CKBInput, 8).gt(parseUnit(CKBBalance))) {
     return "Insufficient CKB Amount";
   }
-  if (sudtValue && sudtBalance && Amount.from(sudtValue, sudtDecimals).gt(Amount.from(sudtBalance))) {
+  if (sudtValue && sudtBalance && parseUnit(sudtValue, sudtDecimals).gt(parseUnit(sudtBalance))) {
     return `Insufficient ${sudtSymbol} Amount`;
   }
   return undefined;
@@ -54,8 +51,8 @@ export const isDepositCKBInputValidate = (CKBInput: string, CKBBalance?: string)
   if (isCKBInputValidate(CKBInput, CKBBalance)) {
     // must deposit max or left at least 64 ckb
     if (
-      Amount.from(CKBInput, 8).eq(Amount.from(CKBBalance)) ||
-      Amount.from(CKBBalance).minus(Amount.from(CKBInput, 8)).gte(Amount.from(64, 8))
+      parseUnit(CKBInput, 8).eq(parseUnit(CKBBalance)) ||
+      parseUnit(CKBBalance).sub(parseUnit(CKBInput, 8)).gte(parseUnit("64", 8))
     ) {
       return true;
     }
@@ -73,22 +70,22 @@ export const getDepositInputError = (
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }
-  if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
+  if (parseUnit(CKBInput, 8).lt(parseUnit("400", 8))) {
     return "Minimum 400 CKB";
   }
-  if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
+  if (CKBBalance && parseUnit(CKBInput, 8).gt(parseUnit(CKBBalance))) {
     return "Insufficient CKB Amount";
   }
   // must deposit max or left at least 64 ckb
   if (
     CKBBalance &&
-    Amount.from(CKBBalance).gte(Amount.from(64, 8)) &&
-    Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance).minus(Amount.from(64, 8))) &&
-    Amount.from(CKBInput, 8).lt(Amount.from(CKBBalance))
+    parseUnit(CKBBalance).gte(parseUnit("64", 8)) &&
+    parseUnit(CKBInput, 8).gt(parseUnit(CKBBalance).sub(parseUnit("64", 8))) &&
+    parseUnit(CKBInput, 8).lt(parseUnit(CKBBalance))
   ) {
     return "Must Left 0 Or 64 More CKB";
   }
-  if (sudtValue && sudtBalance && Amount.from(sudtValue, sudtDecimals).gt(Amount.from(sudtBalance))) {
+  if (sudtValue && sudtBalance && parseUnit(sudtValue, sudtDecimals).gt(parseUnit(sudtBalance))) {
     return `Insufficient ${sudtSymbol} Amount`;
   }
   return undefined;

@@ -4,7 +4,7 @@ import {
   isCKBInputValidate,
   isDepositCKBInputValidate,
   isSudtInputValidate,
-} from "./input-validate";
+} from "./inputValidate";
 
 describe("Withdrawal/util", () => {
   describe("isSudtInputValidate", () => {
