@@ -17,7 +17,7 @@ import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { MockLightGodwokenV0Interface } from "../../contexts/MockLightGodwokenV0";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
-import { getInputError, isCKBInputValidate, isSudtInputValidate } from "./utils";
+import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/input-validate";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");

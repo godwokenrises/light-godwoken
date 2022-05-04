@@ -15,6 +15,12 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
+import {
+  getDepositInputError,
+  getInputError,
+  isDepositCKBInputValidate,
+  isSudtInputValidate,
+} from "../utils/input-validate";
 
 const { Text } = Typography;
 
@@ -248,23 +254,14 @@ export default function Deposit() {
   };
 
   const inputError = useMemo(() => {
-    if (CKBInput === "") {
-      return "Enter CKB Amount";
-    }
-    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
-      return "Minimum 400 CKB";
-    }
-    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
-      return "Insufficient CKB Amount";
-    }
-    if (
-      sudtInput &&
-      selectedSudtBalance &&
-      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
-    ) {
-      return `Insufficient ${selectedSudt?.symbol} Amount`;
-    }
-    return void 0;
+    return getDepositInputError(
+      CKBInput,
+      CKBBalance,
+      sudtInput,
+      selectedSudtBalance,
+      selectedSudt?.decimals,
+      selectedSudt?.symbol,
+    );
   }, [CKBInput, CKBBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   const handleCancel = () => {
@@ -272,28 +269,11 @@ export default function Deposit() {
   };
 
   useEffect(() => {
-    if (CKBInput === "" || CKBBalance === undefined) {
-      setIsCKBValueValidate(false);
-    } else if (
-      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
-    ) {
-      setIsCKBValueValidate(true);
-    } else {
-      setIsCKBValueValidate(false);
-    }
+    setIsCKBValueValidate(isDepositCKBInputValidate(CKBInput, CKBBalance));
   }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
-    if (
-      sudtInput &&
-      selectedSudtBalance &&
-      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
-    ) {
-      setIsSudtValueValidate(false);
-    } else {
-      setIsSudtValueValidate(true);
-    }
+    setIsSudtValueValidate(isSudtInputValidate(sudtInput, selectedSudtBalance, selectedSudt?.decimals));
   }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
   const handleSelectedChange = (value: Token, balance: string) => {

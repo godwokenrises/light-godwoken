@@ -14,7 +14,7 @@ import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useChainId } from "../../hooks/useChainId";
-import { getInputError, isCKBInputValidate, isSudtInputValidate } from "./utils";
+import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/input-validate";
 
 const RequestWithdrawalV1: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
