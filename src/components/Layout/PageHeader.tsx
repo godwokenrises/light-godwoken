@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
+import { SHOW_CLAIM_BUTTON } from "../../config";
 import { ClaimSudt } from "../ClaimSudt";
 import { ConnectButton } from "../ConnectButton";
 import { VersionSelect } from "../VersionSelect";
@@ -14,12 +15,20 @@ const StyledPage = styled.div`
   color: white;
   .link {
     display: flex;
-    color: #1890ff;
-    > div {
+    color: white;
+    a {
+      color: white;
+      text-decoration: none;
       margin-right: 10px;
+    }
+    > div {
+      margin-right: 20px;
       &:hover {
         cursor: pointer;
       }
+    }
+    .active {
+      color: rgb(255, 67, 66);
     }
   }
   .right-side {
@@ -38,21 +47,31 @@ interface Props {
   onViewChange?: (view: string) => void;
 }
 const PageHeader: React.FC<Props> = ({ onViewChange }) => {
+  const [active, setActive] = useState("deposit");
   const changeViewToDeposit = () => {
+    setActive("deposit");
     onViewChange && onViewChange("deposit");
   };
-  const changeViewToWithDrawal = () => {
+  const changeViewToWithdrawal = () => {
+    setActive("withdrawal");
     onViewChange && onViewChange("withdrawal");
   };
+  console.log(SHOW_CLAIM_BUTTON);
   return (
     <StyledPage>
       <div className="link">
-        <div onClick={changeViewToDeposit}>Deposit</div>
-        <div onClick={changeViewToWithDrawal}>Withdrawal</div>
-        <ClaimSudt />
-        <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
-          CKB Testnet Faucet
-        </a>
+        <div onClick={changeViewToDeposit} className={active === "deposit" ? "active" : ""}>
+          Deposit
+        </div>
+        <div onClick={changeViewToWithdrawal} className={active === "withdrawal" ? "active" : ""}>
+          Withdrawal
+        </div>
+        {SHOW_CLAIM_BUTTON && <ClaimSudt />}
+        {SHOW_CLAIM_BUTTON && (
+          <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
+            CKB Testnet Faucet
+          </a>
+        )}
       </div>
       <div className="title">Light Godwoken</div>
       <div className="right-side">

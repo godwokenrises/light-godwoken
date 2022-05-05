@@ -1,4 +1,5 @@
 import { molecule, number, blockchain, createFixedBytesCodec } from "@ckb-lumos/codec/";
+import { BI, HexString } from "@ckb-lumos/lumos";
 const { table, option, struct } = molecule;
 const { Bytes, Byte32 } = blockchain;
 const { Uint32, Uint128, Uint8, Uint64 } = number;
@@ -31,6 +32,22 @@ const hashTypeCodec = createFixedBytesCodec<string>({
     }
   },
 });
+
+export type RawWithdrwal = {
+  nonce: number;
+  capacity: BI;
+  amount: BI;
+  sudt_script_hash: HexString;
+  account_script_hash: HexString;
+  sell_amount: BI;
+  sell_capacity: BI;
+  owner_lock_hash: HexString;
+  payment_lock_hash: HexString;
+  fee: {
+    sudt_id: number;
+    amount: BI;
+  };
+};
 export const RawWithdrwalCodec = struct(
   {
     nonce: Uint32,

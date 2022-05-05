@@ -12,6 +12,9 @@ import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
+import { TransactionHistory } from "../components/TransactionHistory";
+import { useL1TxHistory } from "../hooks/useL1TxHistory";
+import { useChainId } from "../hooks/useChainId";
 
 const { Text } = Typography;
 
@@ -31,9 +34,14 @@ const PageHeader = styled.div`
     color: white;
   }
   .title {
-    font-weight: bold;
-    font-size: 20px;
     padding-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    > span {
+      font-weight: bold;
+      font-size: 20px;
+    }
   }
   .description {
     font-size: 14px;
@@ -177,7 +185,7 @@ function L2Balance() {
       </span>
     );
   }
-  return <span>L2 Balance: {getDisplayAmount(BigInt(balance), 8)} CKB</span>;
+  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), 8)} CKB</span>;
 }
 
 export default function Deposit() {
@@ -192,8 +200,11 @@ export default function Deposit() {
   const sudtBalanceQUery = useSUDTBalance();
   const CKBBalanceQuery = useL1CKBBalance();
   const CKBBalance = CKBBalanceQuery.data;
-  const maxAmount = CKBBalance ? BI.from(CKBBalance).add(-6400000000).toString() : undefined;
+  const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
+  const l1Address = lightGodwoken?.provider.getL1Address();
+  const { data: chainId } = useChainId();
+  const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
 
   const showModal = async () => {
     if (lightGodwoken) {
@@ -209,13 +220,21 @@ export default function Deposit() {
           amount: amount,
           sudtType: selectedSudt?.type,
         });
+
+        addTxToHistory({
+          type: "deposit",
+          txHash: hash,
+          capacity,
+          amount,
+          symbol: selectedSudt?.symbol,
+          decimals: selectedSudt?.decimals,
+        });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
-        console.error(e);
         if (e instanceof Error) {
           if (e.message.startsWith("Not enough CKB:")) {
             notification.error({
-              message: `For some reason it is needed to leave at least 64 CKBs on L1 when using this app, this issue will be optimized in the future.`,
+              message: e.message,
             });
           } else if (e.message.startsWith("Not enough SUDT:")) {
             notification.error({
@@ -257,8 +276,7 @@ export default function Deposit() {
       setIsCKBValueValidate(false);
     } else if (
       Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(CKBBalance).gte(6400000000) &&
-      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance).minus(6400000000))
+      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
     ) {
       setIsCKBValueValidate(true);
     } else {
@@ -291,7 +309,10 @@ export default function Deposit() {
     <>
       <PageContent>
         <PageHeader className="header">
-          <Text className="title">Deposit To Layer2</Text>
+          <Text className="title">
+            <span>Deposit To Layer2</span>
+            <TransactionHistory type="deposit"></TransactionHistory>
+          </Text>
           <Text className="description">
             To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
           </Text>

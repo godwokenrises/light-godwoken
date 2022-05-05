@@ -1,4 +1,6 @@
-export const getDisplayAmount = (balance: BigInt, decimals = 8) => {
+import { BI } from "@ckb-lumos/lumos";
+
+export const getDisplayAmount = (balance: BI, decimals = 8) => {
   const valueStr = balance.toString();
   if (decimals === 0) {
     return valueStr;
@@ -18,7 +20,7 @@ export const getDisplayAmount = (balance: BigInt, decimals = 8) => {
   return `${intPart}${decPart === "0" ? "" : `.${decPart}`}`;
 };
 
-export const getFullDisplayAmount = (value: BigInt, decimals = 8, options: { maxDecimalPlace?: number } = {}) => {
+export const getFullDisplayAmount = (value: BI, decimals = 8, options: { maxDecimalPlace?: number } = {}) => {
   const { maxDecimalPlace = 4 } = options;
 
   const valueStr = value.toString();

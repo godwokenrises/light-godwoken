@@ -4,7 +4,7 @@ import { DownOutlined, UpOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
-import { Cell, HexNumber } from "@ckb-lumos/lumos";
+import { BI, Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 const { Text } = Typography;
@@ -117,7 +117,7 @@ const WithdrawalRequestCard = ({
       console.error("[warn] a withdrawal request cell with zero capacity");
       return ["", ""];
     }
-    const capacityBI = BigInt(capacity);
+    const capacityBI = BI.from(capacity);
     return [`${getDisplayAmount(capacityBI, 8)} CKB`];
   }, [capacity]);
 
@@ -125,7 +125,7 @@ const WithdrawalRequestCard = ({
     if (amount === "" || !erc20) {
       return ["", ""];
     }
-    const amountBI = BigInt(amount);
+    const amountBI = BI.from(amount);
 
     return [`${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`];
   }, [amount, erc20]);

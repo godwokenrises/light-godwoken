@@ -24,6 +24,7 @@ import { SerializeRawWithdrawalRequestV1, SerializeWithdrawalRequestExtra } from
 import { RPC, Reader } from "ckb-js-toolkit";
 import { Hash, HexString, Script, utils } from "@ckb-lumos/base";
 import keccak256 from "keccak256";
+import { BI } from "@ckb-lumos/lumos";
 export * from "./types";
 
 export { core, normalizer, SerializeRawWithdrawalRequestV1 };
@@ -139,13 +140,13 @@ export class Godwoken {
   }
 
   // TODO: maybe swap params later?
-  async getBalance(sudt_id: Uint32, address: HexString): Promise<Uint128> {
+  async getBalance(sudt_id: Uint32, address: HexString): Promise<BI> {
     const sudt_id_hex = `0x${(+sudt_id).toString(16)}`;
     const balance = await this.rpcCall("get_balance", address, sudt_id_hex);
-    return BigInt(balance);
+    return BI.from(balance);
   }
 
-  async getBalanceById(sudt_id: Uint32, account_id: Uint32): Promise<Uint128> {
+  async getBalanceById(sudt_id: Uint32, account_id: Uint32): Promise<BI> {
     const scriptHash = await this.getScriptHash(account_id);
     const address = scriptHash.slice(0, 42);
     const balance = await this.getBalance(sudt_id, address);
