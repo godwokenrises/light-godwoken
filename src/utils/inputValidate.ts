@@ -21,6 +21,11 @@ export const isCKBInputValidate = (CKBInput: string, CKBBalance?: string) => {
   }
 };
 
+/**
+* check if the input is valid,
+* if it is valid, return undefined 
+* if it is invalid, return an error message
+*/
 export const getInputError = (
   CKBInput: string,
   CKBBalance: string | undefined,
@@ -28,7 +33,7 @@ export const getInputError = (
   sudtBalance: string | undefined,
   sudtDecimals: number | undefined,
   sudtSymbol: string | undefined,
-) => {
+): string | undefined => {
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }
