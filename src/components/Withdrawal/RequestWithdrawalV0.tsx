@@ -67,7 +67,7 @@ const RequestWithdrawalV0: React.FC = () => {
     if (!lightGodwoken || !isInstanceOfLightGodwokenV0(lightGodwoken)) {
       throw new Error("LightGodwoken instance error");
     }
-    const lightGodwokenInstance = lightGodwoken as MockLightGodwokenV0Interface;
+    const lightGodwokenInstance = lightGodwoken as LightGodwokenV0;
     setLoading(true);
     let e: WithdrawalEventEmitter;
     try {
