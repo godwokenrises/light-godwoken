@@ -20,20 +20,28 @@ export const isCKBInputValidate = (CKBInput: string, CKBBalance?: string) => {
     return false;
   }
 };
+type InputType = {
+  CKBInput: string;
+  CKBBalance: string | undefined;
+  sudtValue: string;
+  sudtBalance: string | undefined;
+  sudtDecimals: number | undefined;
+  sudtSymbol: string | undefined;
+};
 
 /**
  * check if the input is valid,
  * if it is valid, return undefined
  * if it is invalid, return an error message
  */
-export const getInputError = (
-  CKBInput: string,
-  CKBBalance: string | undefined,
-  sudtValue: string,
-  sudtBalance: string | undefined,
-  sudtDecimals: number | undefined,
-  sudtSymbol: string | undefined,
-): string | undefined => {
+export const getInputError = ({
+  CKBInput,
+  CKBBalance,
+  sudtValue,
+  sudtBalance,
+  sudtDecimals,
+  sudtSymbol,
+}: InputType): string | undefined => {
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }
@@ -64,14 +72,15 @@ export const isDepositCKBInputValidate = (CKBInput: string, CKBBalance?: string)
   }
   return false;
 };
-export const getDepositInputError = (
-  CKBInput: string,
-  CKBBalance: string | undefined,
-  sudtValue: string,
-  sudtBalance: string | undefined,
-  sudtDecimals: number | undefined,
-  sudtSymbol: string | undefined,
-) => {
+
+export const getDepositInputError = ({
+  CKBInput,
+  CKBBalance,
+  sudtValue,
+  sudtBalance,
+  sudtDecimals,
+  sudtSymbol,
+}: InputType): string | undefined => {
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }

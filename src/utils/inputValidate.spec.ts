@@ -53,19 +53,55 @@ describe("Withdrawal/util", () => {
 
   describe("getInputError", () => {
     it("should return 'Enter CKB Amount' if ckb value is empty string", () => {
-      expect(getInputError("", "40000000000", "", "", 0, "SUDT")).toEqual("Enter CKB Amount");
+      expect(
+        getInputError({
+          CKBInput: "",
+          CKBBalance: "40000000000",
+          sudtValue: "",
+          sudtBalance: "",
+          sudtDecimals: 0,
+          sudtSymbol: "SUDT",
+        }),
+      ).toEqual("Enter CKB Amount");
     });
 
     it("should return 'Insufficient CKB Amount' if ckb value is great than ckb balance", () => {
-      expect(getInputError("401", "40000000000", "", "", 0, "SUDT")).toEqual("Insufficient CKB Amount");
+      expect(
+        getInputError({
+          CKBInput: "401",
+          CKBBalance: "40000000000",
+          sudtValue: "",
+          sudtBalance: "",
+          sudtDecimals: 0,
+          sudtSymbol: "SUDT",
+        }),
+      ).toEqual("Insufficient CKB Amount");
     });
 
     it("should return 'Minimum 400 CKB' if ckb value is less than 400", () => {
-      expect(getInputError("399", "40000000000", "", "", 0, "SUDT")).toEqual("Minimum 400 CKB");
+      expect(
+        getInputError({
+          CKBInput: "399",
+          CKBBalance: "40000000000",
+          sudtValue: "",
+          sudtBalance: "",
+          sudtDecimals: 0,
+          sudtSymbol: "SUDT",
+        }),
+      ).toEqual("Minimum 400 CKB");
     });
 
     it("should return 'Insufficient SUDT Amount' if sudt value is great than sudt balance", () => {
-      expect(getInputError("400", "40000000000", "101", "10000", 2, "SUDT")).toEqual("Insufficient SUDT Amount");
+      expect(
+        getInputError({
+          CKBInput: "400",
+          CKBBalance: "40000000000",
+          sudtValue: "101",
+          sudtBalance: "10000",
+          sudtDecimals: 2,
+          sudtSymbol: "SUDT",
+        }),
+      ).toEqual("Insufficient SUDT Amount");
     });
   });
 });
@@ -103,24 +139,87 @@ describe("isDepositCKBInputValidate", () => {
 
 describe("getDepositInputError", () => {
   it("should return 'Enter CKB Amount' if ckb value is empty string", () => {
-    expect(getDepositInputError("", "40000000000", "", "", 0, "SUDT")).toEqual("Enter CKB Amount");
+    expect(
+      getDepositInputError({
+        CKBInput: "",
+        CKBBalance: "40000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual("Enter CKB Amount");
   });
 
   it("should return 'Insufficient CKB Amount' if ckb value is great than ckb balance", () => {
-    expect(getDepositInputError("401", "40000000000", "", "", 0, "SUDT")).toEqual("Insufficient CKB Amount");
+    expect(
+      getDepositInputError({
+        CKBInput: "",
+        CKBBalance: "40000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual("Enter CKB Amount");
   });
 
   it("should return 'Minimum 400 CKB' if ckb value is less than 400", () => {
-    expect(getDepositInputError("399", "40000000000", "", "", 0, "SUDT")).toEqual("Minimum 400 CKB");
+    expect(
+      getDepositInputError({
+        CKBInput: "399",
+        CKBBalance: "40000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual("Minimum 400 CKB");
   });
 
   it("should return 'Insufficient SUDT Amount' if sudt value is great than sudt balance", () => {
-    expect(getDepositInputError("400", "40000000000", "101", "10000", 2, "SUDT")).toEqual("Insufficient SUDT Amount");
+    expect(
+      getDepositInputError({
+        CKBInput: "400",
+        CKBBalance: "40000000000",
+        sudtValue: "101",
+        sudtBalance: "10000",
+        sudtDecimals: 2,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual("Insufficient SUDT Amount");
   });
 
   it("should return 'Must Left 0 Or 64 More CKB' if 0 < (ckb balance - ckb input) < 64", () => {
-    expect(getDepositInputError("437", "50000000000", "", "", 0, "SUDT")).toEqual("Must Left 0 Or 64 More CKB");
-    expect(getDepositInputError("500", "50000000000", "", "", 0, "SUDT")).toEqual(undefined);
-    expect(getDepositInputError("436", "50000000000", "", "", 0, "SUDT")).toEqual(undefined);
+    expect(
+      getDepositInputError({
+        CKBInput: "437",
+        CKBBalance: "50000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual("Must Left 0 Or 64 More CKB");
+    expect(
+      getDepositInputError({
+        CKBInput: "500",
+        CKBBalance: "50000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual(undefined);
+    expect(
+      getDepositInputError({
+        CKBInput: "436",
+        CKBBalance: "50000000000",
+        sudtValue: "",
+        sudtBalance: "",
+        sudtDecimals: 0,
+        sudtSymbol: "SUDT",
+      }),
+    ).toEqual(undefined);
   });
 });

@@ -109,7 +109,14 @@ const RequestWithdrawalV1: React.FC = () => {
   };
 
   const inputError = useMemo(() => {
-    return getInputError(CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol);
+    return getInputError({
+      CKBInput,
+      CKBBalance,
+      sudtValue,
+      sudtBalance,
+      sudtDecimals: selectedSudt?.decimals,
+      sudtSymbol: selectedSudt?.symbol,
+    });
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   return (

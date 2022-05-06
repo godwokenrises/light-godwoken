@@ -249,14 +249,14 @@ export default function Deposit() {
   };
 
   const inputError = useMemo(() => {
-    return getDepositInputError(
+    return getDepositInputError({
       CKBInput,
       CKBBalance,
-      sudtInput,
-      selectedSudtBalance,
-      selectedSudt?.decimals,
-      selectedSudt?.symbol,
-    );
+      sudtValue: sudtInput,
+      sudtBalance: selectedSudtBalance,
+      sudtDecimals: selectedSudt?.decimals,
+      sudtSymbol: selectedSudt?.symbol,
+    });
   }, [CKBInput, CKBBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   const handleCancel = () => {
