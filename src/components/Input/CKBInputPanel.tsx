@@ -57,6 +57,7 @@ interface CKBInputPanelProps {
   maxAmount?: string;
   CKBBalance?: string;
   isLoading?: boolean;
+  placeholder?: string;
 }
 export default function CKBInputPanel({
   value,
@@ -65,6 +66,7 @@ export default function CKBInputPanel({
   CKBBalance,
   isLoading,
   maxAmount: inputMaxAmount,
+  placeholder,
 }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
   const maxAmount = inputMaxAmount || CKBBalance;
@@ -104,7 +106,7 @@ export default function CKBInputPanel({
         <NumericalInput
           className="token-amount-input"
           value={value}
-          placeholder="Minimum 400 CKB"
+          placeholder={placeholder || "Minimum 400 CKB"}
           onUserInput={(val) => {
             onUserInput(val);
           }}

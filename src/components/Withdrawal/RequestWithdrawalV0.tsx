@@ -37,9 +37,12 @@ const RequestWithdrawalV0: React.FC = () => {
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
+
   useEffect(() => {
-    setIsCKBValueValidate(isCKBInputValidate(CKBInput, CKBBalance));
-  }, [CKBBalance, CKBInput]);
+    setIsCKBValueValidate(
+      isCKBInputValidate(CKBInput, CKBBalance, { minimumCKBAmount: targetValue === CKB_L1 ? "400" : "650" }),
+    );
+  }, [CKBBalance, CKBInput, targetValue]);
 
   useEffect(() => {
     setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
@@ -122,15 +125,18 @@ const RequestWithdrawalV0: React.FC = () => {
   };
 
   const inputError = useMemo(() => {
-    return getInputError({
-      CKBInput,
-      CKBBalance,
-      sudtValue,
-      sudtBalance,
-      sudtDecimals: selectedSudt?.decimals,
-      sudtSymbol: selectedSudt?.symbol,
-    });
-  }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
+    return getInputError(
+      {
+        CKBInput,
+        CKBBalance,
+        sudtValue,
+        sudtBalance,
+        sudtDecimals: selectedSudt?.decimals,
+        sudtSymbol: selectedSudt?.symbol,
+      },
+      { minimumCKBAmount: targetValue === CKB_L1 ? "400" : "650" },
+    );
+  }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol, targetValue]);
 
   return (
     <>
@@ -142,6 +148,7 @@ const RequestWithdrawalV0: React.FC = () => {
           label="Withdraw"
           isLoading={query.isLoading}
           CKBBalance={CKBBalance}
+          placeholder={targetValue === CKB_L1 ? "Minimum 400 CKB" : "Minimum 650 CKB"}
         ></CKBInputPanel>
         <div className="icon">
           <PlusOutlined />
