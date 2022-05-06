@@ -1,15 +1,9 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash } from "@ckb-lumos/lumos";
-import {
-  Godwoken as GodwokenV1,
-  RawWithdrawalRequestV1,
-  WithdrawalRequestExtra,
-  WithdrawalRequestV1,
-} from "./godwoken-v1/src/index";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit } from "@ckb-lumos/lumos";
+import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  CKB_SUDT_ID,
   GodwokenVersion,
   LightGodwokenV1,
   ProxyERC20,
@@ -24,6 +18,7 @@ import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { debug } from "./debug";
+import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -222,7 +217,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     eventEmitter.emit("sending");
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
-    const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
+    const typedMsg = await this.generateTypedMsg(rawWithdrawalRequest);
     debug("typedMsg:", typedMsg);
     let signedMessage;
     try {
@@ -235,18 +230,19 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
 
     // construct WithdrawalRequestExx tra
-    const withdrawalReq: WithdrawalRequestV1 = {
+    const withdrawalReq = {
       raw: rawWithdrawalRequest,
       signature: signedMessage,
     };
-    const withdrawalReqExtra: WithdrawalRequestExtra = {
+    const withdrawalReqExtra = {
       request: withdrawalReq,
       owner_lock: this.provider.getLayer1Lock(),
     };
     debug("WithdrawalRequestExtra:", withdrawalReqExtra);
 
     // submit WithdrawalRequestExtra
-    const result = await this.godwokenClient.submitWithdrawalReqV1(withdrawalReqExtra);
+    const serializedRequest = new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalReqExtra)).serializeJson();
+    const result = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
     debug("result:", result);
     if (result !== null) {
       const errorMessage = (result as any).message;
@@ -370,14 +366,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const nonce: number = await this.godwokenClient.getNonce(fromId!);
 
     const rawWithdrawalRequest = {
-      chain_id: chainId,
-      nonce: BI.from(nonce).toHexString(),
-      capacity: payload.capacity,
-      amount: payload.amount,
+      nonce,
+      chain_id: BI.from(chainId),
+      capacity: BI.from(payload.capacity),
+      amount: BI.from(payload.amount),
       sudt_script_hash: payload.sudt_script_hash,
       account_script_hash: layer2AccountScriptHash,
+      registry_id: 2,
       owner_lock_hash: ownerLockHash,
-      fee: "0x0",
+      fee: BI.from(0),
     };
     return rawWithdrawalRequest;
   }
