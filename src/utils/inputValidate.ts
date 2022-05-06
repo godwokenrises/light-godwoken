@@ -81,26 +81,24 @@ export const getDepositInputError = ({
   sudtDecimals,
   sudtSymbol,
 }: InputType): string | undefined => {
-  if (CKBInput === "") {
-    return "Enter CKB Amount";
-  }
-  if (parseUnit(CKBInput, 8).lt(parseUnit("400", 8))) {
-    return "Minimum 400 CKB";
-  }
-  if (CKBBalance && parseUnit(CKBInput, 8).gt(parseUnit(CKBBalance))) {
-    return "Insufficient CKB Amount";
-  }
-  // must deposit max or left at least 64 ckb
-  if (
+  const commonInputError = getInputError({
+    CKBInput,
+    CKBBalance,
+    sudtValue,
+    sudtBalance,
+    sudtDecimals,
+    sudtSymbol,
+  });
+  if (commonInputError !== undefined) {
+    return commonInputError;
+  } else if (
+    // must deposit max or left at least 64 ckb
     CKBBalance &&
     parseUnit(CKBBalance).gte(parseUnit("64", 8)) &&
     parseUnit(CKBInput, 8).gt(parseUnit(CKBBalance).sub(parseUnit("64", 8))) &&
     parseUnit(CKBInput, 8).lt(parseUnit(CKBBalance))
   ) {
     return "Must Left 0 Or 64 More CKB";
-  }
-  if (sudtValue && sudtBalance && parseUnit(sudtValue, sudtDecimals).gt(parseUnit(sudtBalance))) {
-    return `Insufficient ${sudtSymbol} Amount`;
   }
   return undefined;
 };
