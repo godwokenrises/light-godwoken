@@ -164,8 +164,8 @@ const RequestWithdrawalV0: React.FC = () => {
         ></CurrencyInputPanel>
         <SubmitWithdrawal
           sendWithdrawal={sendWithdrawal}
-          blockWait="1000"
-          estimatedTime="5 days"
+          blockWait={targetValue === CKB_L1 ? "1000" : "1"}
+          estimatedTime={targetValue === CKB_L1 ? "5 days" : "a few minutes"}
           loading={loading}
           buttonText={inputError}
           disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
