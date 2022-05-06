@@ -159,8 +159,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       const withdrawBlockBytes = `0x${rawLockArgs.slice(194, 194 + 16)}`;
       const withdrawBlock = utils.readBigUInt64LECompatible(withdrawBlockBytes).toNumber();
       const containsOwnerLock = rawLockArgs.includes(ownerLockHash.substring(2));
-      console.log("withdrawBlock is:", withdrawBlock);
-      console.log("containsOwnerLock is:", containsOwnerLock);
+      debug("withdrawBlock is:", withdrawBlock);
+      debug("containsOwnerLock is:", containsOwnerLock);
 
       let sudtTypeHash = "0x" + "00".repeat(32);
       let erc20: ProxyERC20 | undefined = undefined;
@@ -297,9 +297,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
       layer2Config.ROLLUP_CONFIG.rollup_type_hash,
     );
-    console.log("message:", message);
+    debug("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
-    console.log("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
+    debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
     const withdrawalRequest = {
       raw: rawWithdrawalRequest,
       signature: signatureMetamaskPersonalSign,
@@ -311,7 +311,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       withdraw_to_v1: withdrawToV1 ? 1 : 0,
     };
 
-    console.log("withdrawalRequestExtra:", withdrawalRequestExtra);
+    debug("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
@@ -323,18 +323,18 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       return;
     }
     eventEmitter.emit("sent", result);
-    console.log("withdrawal request result:", result);
+    debug("withdrawal request result:", result);
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
       loop++;
       const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
-        console.log("withdrawal pending:", withdrawal);
+        debug("withdrawal pending:", withdrawal);
         eventEmitter.emit("pending", result);
       }
       if (withdrawal && withdrawal.status === "committed") {
-        console.log("withdrawal committed:", withdrawal);
+        debug("withdrawal committed:", withdrawal);
         eventEmitter.emit("success", result);
         clearInterval(nIntervId);
       }
@@ -353,7 +353,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
-    console.log("withdraw owner lock is:", ownerLock);
+    debug("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
@@ -362,14 +362,14 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       args: rollupTypeHash + ethAddress.slice(2),
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
-    console.log("accountScriptHash:", accountScriptHash);
+    debug("accountScriptHash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
-    console.log("fromId:", fromId);
+    debug("fromId:", fromId);
     if (!fromId) {
       throw new Error("account not found");
     }
     let account_script_hash = await this.godwokenClient.getScriptHash(fromId);
-    console.log("account_script_hash:", account_script_hash);
+    debug("account_script_hash:", account_script_hash);
 
     const isSudt = !isHexStringEqual(
       payload.sudt_script_hash,
@@ -426,7 +426,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         amount: BI.from(feeAmount),
       },
     };
-    console.log("rawWithdrawalRequest:", {
+    debug("rawWithdrawalRequest:", {
       ...rawWithdrawalRequest,
       capacity: rawWithdrawalRequest.capacity.toString(),
       amount: rawWithdrawalRequest.amount.toString(),

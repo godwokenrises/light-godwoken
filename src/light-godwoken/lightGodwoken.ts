@@ -240,7 +240,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       cancel_timeout: BI.from("0xc000000000093a81"),
       registry_id: 2,
     };
-    console.log("depositLockArgs is: ", {
+    debug("depositLockArgs is: ", {
       ...depositLockArgs,
       cancel_timeout: depositLockArgs.cancel_timeout.toHexString(),
     });
@@ -256,8 +256,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       hash_type: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
-    console.log("depositLock is: ", depositLock);
-    console.log("depositLock Hash is: ", utils.computeScriptHash(depositLock));
+    debug("depositLock is: ", depositLock);
+    debug("depositLock Hash is: ", utils.computeScriptHash(depositLock));
     return depositLock;
   }
 
