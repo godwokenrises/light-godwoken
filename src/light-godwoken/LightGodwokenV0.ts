@@ -251,48 +251,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
-    // const message = this.generateWithdrawalMessageToSign(
-    //   rawWithdrawalRequest,
-    //   layer2Config.ROLLUP_CONFIG.rollup_type_hash,
-    // );
-    // debug("message:", message);
-    // const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
-    // debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
-    // const withdrawalRequest: WithdrawalRequest = {
-    //   raw: rawWithdrawalRequest,
-    //   signature: signatureMetamaskPersonalSign,
-    // };
-    // debug("withdrawalRequest:", withdrawalRequest);
-    // // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
-    // let result: unknown;
-    // try {
-    //   result = await this.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
-    // } catch (e) {
-    //   eventEmitter.emit("error", e);
-    //   return;
-    // }
-    // eventEmitter.emit("sent", result);
-    // debug("withdrawal request result:", result);
-    // const maxLoop = 100;
-    // let loop = 0;
-    // const nIntervId = setInterval(async () => {
-    //   loop++;
-    //   const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
-    //   if (withdrawal && withdrawal.status === "pending") {
-    //     debug("withdrawal pending:", withdrawal);
-    //     eventEmitter.emit("pending", result);
-    //   }
-    //   if (withdrawal && withdrawal.status === "committed") {
-    //     debug("withdrawal committed:", withdrawal);
-    //     eventEmitter.emit("success", result);
-    //     clearInterval(nIntervId);
-    //   }
-    //   if (withdrawal === null && loop > maxLoop) {
-    //     eventEmitter.emit("fail", result);
-    //     clearInterval(nIntervId);
-    //   }
-    // }, 10000);
-
     const message = this.generateWithdrawalMessageToSign(
       new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
       layer2Config.ROLLUP_CONFIG.rollup_type_hash,
