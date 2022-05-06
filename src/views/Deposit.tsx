@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
-import { Amount } from "@ckitjs/ckit/dist/helpers";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
@@ -17,6 +16,9 @@ import { useChainId } from "../hooks/useChainId";
 import { ConfirmModal, Card, PlusIconContainer, PrimaryButton, Text, CardHeader } from "../style/common";
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
+import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
+import { parseStringToBI } from "../utils/numberFormat";
+
 
 export default function Deposit() {
   const [CKBInput, setCKBInput] = useState("");
@@ -40,10 +42,10 @@ export default function Deposit() {
 
   const showModal = async () => {
     if (lightGodwoken) {
-      const capacity = Amount.from(CKBInput, 8).toHex();
+      const capacity = parseStringToBI(CKBInput, 8).toHexString();
       let amount = "0x0";
       if (selectedSudt && sudtInput) {
-        amount = "0x" + Amount.from(sudtInput, selectedSudt.decimals).toString(16);
+        amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
       }
       setIsModalVisible(true);
       try {
@@ -80,23 +82,14 @@ export default function Deposit() {
   };
 
   const inputError = useMemo(() => {
-    if (CKBInput === "") {
-      return "Enter CKB Amount";
-    }
-    if (Amount.from(CKBInput, 8).lt(Amount.from(400, 8))) {
-      return "Minimum 400 CKB";
-    }
-    if (CKBBalance && Amount.from(CKBInput, 8).gt(Amount.from(CKBBalance))) {
-      return "Insufficient CKB Amount";
-    }
-    if (
-      sudtInput &&
-      selectedSudtBalance &&
-      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
-    ) {
-      return `Insufficient ${selectedSudt?.symbol} Amount`;
-    }
-    return void 0;
+    return getDepositInputError({
+      CKBInput,
+      CKBBalance,
+      sudtValue: sudtInput,
+      sudtBalance: selectedSudtBalance,
+      sudtDecimals: selectedSudt?.decimals,
+      sudtSymbol: selectedSudt?.symbol,
+    });
   }, [CKBInput, CKBBalance, sudtInput, selectedSudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
   const handleCancel = () => {
@@ -104,28 +97,11 @@ export default function Deposit() {
   };
 
   useEffect(() => {
-    if (CKBInput === "" || CKBBalance === undefined) {
-      setIsCKBValueValidate(false);
-    } else if (
-      Amount.from(CKBInput, 8).gte(Amount.from(400, 8)) &&
-      Amount.from(CKBInput, 8).lte(Amount.from(CKBBalance))
-    ) {
-      setIsCKBValueValidate(true);
-    } else {
-      setIsCKBValueValidate(false);
-    }
+    setIsCKBValueValidate(isDepositCKBInputValidate(CKBInput, CKBBalance));
   }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
-    if (
-      sudtInput &&
-      selectedSudtBalance &&
-      Amount.from(sudtInput, selectedSudt?.decimals).gt(Amount.from(selectedSudtBalance))
-    ) {
-      setIsSudtValueValidate(false);
-    } else {
-      setIsSudtValueValidate(true);
-    }
+    setIsSudtValueValidate(isSudtInputValidate(sudtInput, selectedSudtBalance, selectedSudt?.decimals));
   }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
   const handleSelectedChange = (value: Token, balance: string) => {
