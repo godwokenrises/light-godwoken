@@ -1,23 +1,34 @@
 import { Modal } from "antd";
 import styled from "styled-components";
 
-export const PageContent = styled.div`
+export const Card = styled.div`
   width: 436px;
   background: white;
   border-radius: 24px;
   color: black;
-  height: calc(100vh - 64px - 24px);
   padding: 24px;
+  margin-bottom: 16px;
+  @media (max-width: 600px) {
+    width: calc(100% - 8px);
+    margin: 16px 4px;
+  }
+`;
+export const PageContent = styled.div`
+  width: 436px;
+  height: calc(100vh - 64px - 24px);
   @media (max-width: 600px) {
     width: calc(100% - 16px);
-    margin: 0 8px;
     height: calc(100vh - 64px - 48px - 24px - 24px);
   }
 `;
-
 export const Text = styled.span`
   font-size: 12px;
   color: #666666;
+  overflow-wrap: break-word;
+`;
+export const MainText = styled.span`
+  font-size: 14px;
+  color: #000000;
   overflow-wrap: break-word;
 `;
 
@@ -50,6 +61,7 @@ export const InputCard = styled.div`
     margin-top: 18px;
     .symbol {
       color: #000;
+      margin-left: 5px;
     }
   }
 `;
@@ -57,6 +69,7 @@ export const InputCard = styled.div`
 export const Row = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   .ckb-logo {
     height: 22px;
     width: 22px;
@@ -84,11 +97,48 @@ export const PrimaryButton = styled.button`
   border: 0px;
   border-radius: 8px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: bold;
   letter-spacing: 0.03em;
   line-height: 1;
   &:disabled {
     background-color: rgba(0, 204, 155, 0.5);
+    cursor: not-allowed;
+  }
+  &:hover {
+    cursor: pointer;
+  }
+`;
+
+export const SecondeButton = styled.button`
+  height: 32px;
+  width: 100px;
+  padding: 0px 10px;
+  background-color: #00cc9b;
+  color: white;
+  border: 0px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  &:disabled {
+    cursor: not-allowed;
+  }
+  &:hover {
+    cursor: pointer;
+  }
+`;
+export const PlainButton = styled.button`
+  height: 32px;
+  width: 100px;
+  padding: 0px 10px;
+  background-color: #999999;
+  color: white;
+  border: 0px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  &:disabled {
     cursor: not-allowed;
   }
   &:hover {
@@ -150,4 +200,27 @@ export const PlusIconContainer = styled.div`
   justify-content: center;
   padding-top: 8px;
   padding-bottom: 8px;
+`;
+
+export const CardHeader = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  .title {
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    > span {
+      font-weight: bold;
+      font-size: 18px;
+      color: #333;
+    }
+  }
+  .description {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+  }
 `;

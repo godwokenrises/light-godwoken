@@ -3,7 +3,7 @@ import { Modal, List } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
@@ -110,19 +110,10 @@ export default function CurrencyInputPanel({
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const [selectedCurrencyBalance, setCurrencyBalance] = useState<string>();
-  const [showMaxButton, setShowMaxButton] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Token>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  useEffect(() => {
-    if (selectedCurrency && (value !== selectedCurrencyBalance || value === "")) {
-      setShowMaxButton(true);
-    } else {
-      setShowMaxButton(false);
-    }
-  }, [value, selectedCurrencyBalance, selectedCurrency]);
 
   const handleOk = () => {
     setIsModalVisible(false);
@@ -139,7 +130,6 @@ export default function CurrencyInputPanel({
     setDisableInput(false);
     setSelectedCurrency(erc20);
     setIsModalVisible(false);
-    setShowMaxButton(true);
     onUserInput("");
 
     if (balancesList && balancesList.length && index !== undefined && erc20) {
@@ -157,7 +147,6 @@ export default function CurrencyInputPanel({
         maxDecimalPlace: selectedCurrency?.decimals,
       }),
     );
-    setShowMaxButton(false);
   };
   return (
     <InputCard>

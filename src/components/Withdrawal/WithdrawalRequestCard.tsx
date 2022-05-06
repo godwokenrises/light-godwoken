@@ -1,18 +1,20 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
-import { DownOutlined, UpOutlined } from "@ant-design/icons";
-import { Typography } from "antd";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI, Cell, HexNumber } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-const { Text } = Typography;
+import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
+import { ReactComponent as ArrowDownIcon } from "../../asserts/arrow-down.svg";
+import { ReactComponent as ArrowUpIcon } from "../../asserts/arrow-up.svg";
+import { MainText } from "../../style/common";
+
 const StyleWrapper = styled.div`
-  background: white;
+  background: #f3f3f3;
   padding: 16px;
   border-radius: 12px;
-  .header {
+  .main-row {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -20,37 +22,39 @@ const StyleWrapper = styled.div`
     line-height: 1.5;
     font-size: 14px;
   }
-  .icons {
+  .amount {
     display: flex;
-    img {
-      width: 20px;
-      height: 20px;
+    flex-direction: column;
+    justify-content: center;
+    img,
+    svg {
+      width: 22px;
+      height: 22px;
       margin-right: 5px;
     }
-  }
-  .ckb-icon {
-    width: 20px;
-    height: 20px;
-    background: url(./static/ckb.svg) no-repeat no-repeat;
-    background-size: contain;
-  }
-  .number {
-    margin-top: 3px;
-  }
-  .time {
-    align-self: center;
-    display: flex;
-    height: 40px;
-    align-items: center;
-    .ant-typography {
-      padding-right: 5px;
+    .ckb-amount {
+      display: flex;
+    }
+    .sudt-amount + .ckb-amount {
+      margin-top: 10px;
     }
   }
-  .ant-typography {
-    color: black;
+  .right-side {
+    height: 40px;
+    display: flex;
+    align-self: center;
+    align-items: center;
+  }
+  .time {
+    font-size: 12px;
+    color: #333333;
+    svg {
+      margin-left: 5px;
+    }
   }
   .list-detail {
     padding-top: 10px;
+    border-top: 1px dashed rgba(0, 0, 0, 0.2);
   }
 `;
 
@@ -131,52 +135,57 @@ const WithdrawalRequestCard = ({
   }, [amount, erc20]);
   return (
     <StyleWrapper onClick={isMature ? undefined : handleToggleShowMore}>
-      <div className="header">
+      <div className="main-row">
         <div className="amount">
-          <div className="icons">
-            {erc20?.tokenURI ? <img src={erc20?.tokenURI} alt="" /> : ""}
-            <div className="ckb-icon"></div>
-          </div>
-          <div className="number">
-            {sudtAmount}
-            {sudtAmount === "" ? "" : " and "}
-            {CKBAmount}
+          {sudtAmount && (
+            <div className="sudt-amount">
+              {erc20?.tokenURI ? <img src={erc20?.tokenURI} alt="" /> : ""}
+              <MainText>{sudtAmount}</MainText>
+            </div>
+          )}
+          <div className="ckb-amount">
+            <div className="ckb-icon">
+              <CKBIcon></CKBIcon>
+            </div>
+            <MainText>{CKBAmount}</MainText>
           </div>
         </div>
-        {isMature ? (
-          unlockButton && unlockButton(cell)
-        ) : shouldShowMore ? (
-          <div className="time">
-            <UpOutlined />
-          </div>
-        ) : (
-          <div className="time">
-            <Text title="Estimated time left">
-              {daysLeft > 0
-                ? `${daysLeft}${daysLeft > 1 ? " days" : " day"}`
-                : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-                    .toString()
-                    .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
-            </Text>
-            <DownOutlined />
-          </div>
-        )}
+        <div className="right-side">
+          {isMature ? (
+            unlockButton && unlockButton(cell)
+          ) : shouldShowMore ? (
+            <div className="time">
+              <ArrowUpIcon />
+            </div>
+          ) : (
+            <div className="time">
+              <MainText title="Estimated time left">
+                {daysLeft > 0
+                  ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
+                  : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
+                      .toString()
+                      .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
+              </MainText>
+              <ArrowDownIcon />
+            </div>
+          )}
+        </div>
       </div>
       {shouldShowMore && (
         <div className="list-detail">
           <FixedHeightRow>
-            <Text>Blocks remaining:</Text>
-            <Text>{remainingBlockNumber}</Text>
+            <MainText>Blocks remaining:</MainText>
+            <MainText>{remainingBlockNumber}</MainText>
           </FixedHeightRow>
           <FixedHeightRow>
-            <Text>Estimated time left:</Text>
-            <Text>
+            <MainText>Estimated time left:</MainText>
+            <MainText>
               {`${daysLeft > 0 ? `${daysLeft}${daysLeft > 1 ? " days " : " day "}` : ""}${hoursLeft
                 .toString()
                 .padStart(2, "0")}:${minutesLeft.toString().padStart(2, "0")}:${secondsLeft
                 .toString()
                 .padStart(2, "0")}`}
-            </Text>
+            </MainText>
           </FixedHeightRow>
         </div>
       )}

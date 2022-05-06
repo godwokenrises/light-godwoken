@@ -70,7 +70,6 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
     setActive("withdrawal");
     onViewChange && onViewChange("withdrawal");
   };
-  console.log(SHOW_CLAIM_BUTTON);
   return (
     <StyledPage>
       <Logo height={27}></Logo>

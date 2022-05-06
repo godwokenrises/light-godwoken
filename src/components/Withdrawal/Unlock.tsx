@@ -1,71 +1,11 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Button, Typography, notification, Modal } from "antd";
+import { notification, Modal } from "antd";
 import { Cell } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { CKB_EXPLORER_URL } from "../../config";
-const { Text } = Typography;
-const PrimaryButton = styled(Button)`
-  align-items: center;
-  border: 0px;
-  border-radius: 16px;
-  box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  -webkit-box-pack: center;
-  justify-content: center;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  opacity: 1;
-  outline: 0px;
-  transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-  height: 32px;
-  padding: 0px 16px;
-  background-color: rgb(255, 67, 66);
-  color: black;
-  margin-left: 4px;
-  margin-top: 8px;
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: rgb(255, 67, 66);
-    color: black;
-  }
-`;
-const PlainButton = styled.div`
-  align-items: center;
-  border: 0px;
-  border-radius: 16px;
-  box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  -webkit-box-pack: center;
-  justify-content: center;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  opacity: 1;
-  outline: 0px;
-  transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-  height: 32px;
-  padding: 0px 16px;
-  background-color: white;
-  color: black;
-  margin-left: 4px;
-  margin-top: 8px;
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: white;
-    color: black;
-  }
-`;
+import { PlainButton, SecondeButton, Text } from "../../style/common";
 
 const UnlockModal = styled(Modal)`
   color: black;
@@ -153,9 +93,9 @@ const Unlock = ({ cell }: Props) => {
 
   return (
     <div>
-      <PrimaryButton className="withdraw-button" onClick={showCurrencySelectModal}>
-        withdraw
-      </PrimaryButton>
+      <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
+        Withdraw
+      </SecondeButton>
       <UnlockModal
         title="Withdraw to Wallet"
         visible={isModalVisible}
@@ -169,9 +109,9 @@ const Unlock = ({ cell }: Props) => {
           <PlainButton className="cancel" onClick={handleCancel}>
             Cancel
           </PlainButton>
-          <PrimaryButton className="confirm" onClick={unlock} loading={isUnlocking}>
+          <SecondeButton className="confirm" onClick={unlock}>
             Confirm
-          </PrimaryButton>
+          </SecondeButton>
         </div>
       </UnlockModal>
     </div>

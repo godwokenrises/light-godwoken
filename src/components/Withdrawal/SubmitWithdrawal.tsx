@@ -1,7 +1,7 @@
-import { Button, Modal, Typography } from "antd";
+import { Modal } from "antd";
 import React, { useState } from "react";
 import styled from "styled-components";
-import { PrimaryButton } from "../../style/common";
+import { PrimaryButton, Text } from "../../style/common";
 export const ConfirmModal = styled(Modal)`
   color: black;
   .ant-modal-content {
@@ -45,7 +45,6 @@ export const ConfirmModal = styled(Modal)`
     margin: 24px 0;
   }
 `;
-const { Text } = Typography;
 interface Props {
   sendWithdrawal: () => void;
   loading: boolean;

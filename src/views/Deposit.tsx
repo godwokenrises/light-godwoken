@@ -14,32 +14,9 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
-import { ConfirmModal, PageContent, PlusIconContainer, PrimaryButton, Text } from "../style/common";
+import { ConfirmModal, Card, PlusIconContainer, PrimaryButton, Text, CardHeader } from "../style/common";
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
-
-const PageHeader = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-bottom: 24px;
-  .title {
-    padding-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    > span {
-      font-weight: bold;
-      font-size: 18px;
-      color: #333;
-    }
-  }
-  .description {
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
-  }
-`;
 
 export default function Deposit() {
   const [CKBInput, setCKBInput] = useState("");
@@ -158,8 +135,8 @@ export default function Deposit() {
 
   return (
     <>
-      <PageContent>
-        <PageHeader className="header">
+      <Card>
+        <CardHeader className="header">
           <Text className="title">
             <span>Deposit To Layer2</span>
             <TransactionHistory type="deposit"></TransactionHistory>
@@ -167,7 +144,7 @@ export default function Deposit() {
           <Text className="description">
             To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
           </Text>
-        </PageHeader>
+        </CardHeader>
         <WalletInfo l1Address={l1Address} l1Balance={CKBBalance} l2Balance={l2CKBBalance}></WalletInfo>
         <CKBInputPanel
           value={CKBInput}
@@ -192,7 +169,7 @@ export default function Deposit() {
         <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={showModal}>
           {inputError || "Deposit"}
         </PrimaryButton>
-      </PageContent>
+      </Card>
       <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
         <div className="icon-container">
           <LoadingOutlined />
