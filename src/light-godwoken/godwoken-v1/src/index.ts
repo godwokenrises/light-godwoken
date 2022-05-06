@@ -86,6 +86,12 @@ export class Godwoken {
     return result;
   }
 
+  async getCkbBalance(address: HexString): Promise<string> {
+    const result = await this.rpc["eth_getBalance"](address, "latest");
+    console.debug("eth_getBalance:", result);
+    return result;
+  }
+
   private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
     const name = "gw_" + method_name;
     const result = await this.rpc[name](...args);

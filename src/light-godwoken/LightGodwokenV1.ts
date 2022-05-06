@@ -38,7 +38,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
-    const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    // const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    const balance = await this.godwokenClient.getCkbBalance(payload?.l2Address || this.provider.l2Address);
     debug("get v1 l2 ckb balance", this.provider, balance);
     return "0x" + Number(balance).toString(16);
   }
@@ -347,8 +348,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     };
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
 
-    const address = layer2AccountScriptHash.slice(0, 42);
-    const balance = await this.godwokenClient.getBalance(CKB_SUDT_ID, address);
+    // const address = layer2AccountScriptHash.slice(0, 42);
+    const balance = await this.godwokenClient.getCkbBalance(this.provider.l2Address);
     if (BI.from(balance).lt(payload.capacity)) {
       eventEmitter.emit(
         "error",
