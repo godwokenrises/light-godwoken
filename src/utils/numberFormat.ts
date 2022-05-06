@@ -1,6 +1,6 @@
 import { BI } from "@ckb-lumos/lumos";
 
-export const parseUnit = (value: string, unit: number = 0): BI => {
+export const parseStringToBI = (value: string, unit: number = 0): BI => {
   const valueArray = value.split(".");
   if (valueArray.length === 2) {
     let result = BI.from(valueArray[0]).mul(BI.from(10).pow(unit));

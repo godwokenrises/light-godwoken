@@ -1,10 +1,10 @@
 import { BI } from "@ckb-lumos/lumos";
-import { parseUnit } from "./numberFormat";
+import { parseStringToBI } from "./numberFormat";
 
-describe("parseUnit", () => {
+describe("parseStringToBI", () => {
   it("parse number and float to BI", () => {
-    expect(parseUnit("10", 2).toString()).toEqual(BI.from(1000).toString());
-    expect(parseUnit("10.", 2).toString()).toEqual(BI.from(1000).toString());
-    expect(parseUnit("10.01", 2).toString()).toEqual(BI.from(1001).toString());
+    expect(parseStringToBI("10", 2).toString()).toEqual(BI.from(1000).toString());
+    expect(parseStringToBI("10.", 2).toString()).toEqual(BI.from(1000).toString());
+    expect(parseStringToBI("10.01", 2).toString()).toEqual(BI.from(1001).toString());
   });
 });

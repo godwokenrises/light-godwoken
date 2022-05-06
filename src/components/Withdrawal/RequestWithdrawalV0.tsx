@@ -17,7 +17,7 @@ import { MockLightGodwokenV0Interface } from "../../contexts/MockLightGodwokenV0
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
-import { parseUnit } from "../../utils/numberFormat";
+import { parseStringToBI } from "../../utils/numberFormat";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -46,11 +46,11 @@ const RequestWithdrawalV0: React.FC = () => {
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithdrawal = () => {
-    const capacity = "0x" + parseUnit(CKBInput, 8).toString(16);
+    const capacity = parseStringToBI(CKBInput, 8).toHexString();
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
     if (selectedSudt && sudtValue) {
-      amount = "0x" + parseUnit(sudtValue, selectedSudt.decimals).toString(16);
+      amount = parseStringToBI(sudtValue, selectedSudt.decimals).toHexString();
       sudt_script_hash = selectedSudt.sudt_script_hash;
     }
     if (!lightGodwoken || !isInstanceOfLightGodwokenV0(lightGodwoken)) {

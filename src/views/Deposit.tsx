@@ -15,7 +15,7 @@ import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
-import { parseUnit } from "../utils/numberFormat";
+import { parseStringToBI } from "../utils/numberFormat";
 
 const { Text } = Typography;
 
@@ -209,10 +209,10 @@ export default function Deposit() {
 
   const showModal = async () => {
     if (lightGodwoken) {
-      const capacity = "0x" + parseUnit(CKBInput, 8).toString(16);
+      const capacity = parseStringToBI(CKBInput, 8).toHexString();
       let amount = "0x0";
       if (selectedSudt && sudtInput) {
-        amount = "0x" + parseUnit(sudtInput, selectedSudt.decimals).toString(16);
+        amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
       }
       setIsModalVisible(true);
       try {
