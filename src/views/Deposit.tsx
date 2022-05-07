@@ -15,6 +15,8 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
+import { LightGodwoken } from "../light-godwoken";
+import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 
 const { Text } = Typography;
 
@@ -175,7 +177,7 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-function L2Balance() {
+function L2Balance({ decimals }: { decimals: number | undefined }) {
   const { data: balance } = useL2CKBBalance();
 
   if (!balance) {
@@ -185,7 +187,7 @@ function L2Balance() {
       </span>
     );
   }
-  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), 8)} CKB</span>;
+  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), decimals || 8)} CKB</span>;
 }
 
 export default function Deposit() {
@@ -356,7 +358,7 @@ export default function Deposit() {
             </Button>
           </WithdrawalButton>
           <div>
-            <L2Balance />
+            <L2Balance decimals={lightGodwoken?.getNativeAsset().decimals} />
           </div>
         </PageMain>
       </PageContent>
