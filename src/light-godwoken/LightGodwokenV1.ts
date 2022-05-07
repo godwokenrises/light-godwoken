@@ -1,4 +1,4 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import {
@@ -20,6 +20,7 @@ import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
+import { V1DepositLockArgs } from "./schemas/codec";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -416,5 +417,37 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         ).toString()}`,
       );
     }
+  }
+
+  generateDepositLock(): Script {
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
+    const layer2Lock: Script = this.provider.getLayer2LockScript();
+
+    const depositLockArgs = {
+      owner_lock_hash: ownerLockHash,
+      layer2_lock: layer2Lock,
+      cancel_timeout: BI.from("0xc000000000093a81"),
+      registry_id: 2,
+    };
+    debug("depositLockArgs is: ", {
+      ...depositLockArgs,
+      cancel_timeout: depositLockArgs.cancel_timeout.toHexString(),
+    });
+
+    const depositLockArgsHexString: HexString = new toolkit.Reader(
+      V1DepositLockArgs.pack(depositLockArgs),
+    ).serializeJson();
+
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+
+    const depositLock: Script = {
+      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    };
+    debug("depositLock is: ", depositLock);
+    debug("depositLock Hash is: ", utils.computeScriptHash(depositLock));
+    return depositLock;
   }
 }
