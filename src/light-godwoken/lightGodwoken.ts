@@ -30,6 +30,7 @@ import {
   WithdrawResult,
   GodwokenVersion,
   LightGodwokenBase,
+  Token,
 } from "./lightGodwokenType";
 import { V1DepositLockArgs } from "./schemas/codec";
 import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
@@ -41,6 +42,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     this.provider = provider;
   }
 
+  abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;

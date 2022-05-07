@@ -123,6 +123,8 @@ export interface LightGodwokenBase {
 
   getVersion: () => GodwokenVersion;
 
+  getNativeAsset: () => Token;
+
   getChainId: () => Promise<HexNumber> | HexNumber;
 
   /**

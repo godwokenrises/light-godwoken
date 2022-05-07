@@ -31,6 +31,7 @@ import {
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
   BaseWithdrawalEventEmitterPayload,
+  Token,
 } from "./lightGodwokenType";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { getTokenList } from "./constants/tokens";
@@ -56,6 +57,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getVersion(): GodwokenVersion {
     return "v0";
   }
+
+  getNativeAsset(): Token {
+    return {
+      name: 'Common Knowledge Base',
+      symbol: 'CKB',
+      decimals: 8,
+      tokenURI: '',
+    }
+  }
+
   getBlockProduceTime(): number {
     return 45 * 1000;
   }

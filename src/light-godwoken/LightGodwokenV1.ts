@@ -12,6 +12,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  Token,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
@@ -28,6 +29,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getVersion(): GodwokenVersion {
     return "v1";
   }
+  getNativeAsset(): Token {
+    return {
+      name: 'Common Knowledge Base',
+      symbol: 'CKB',
+      decimals: 18,
+      tokenURI: '',
+    }
+  }
+
   getBlockProduceTime(): number {
     return 30 * 1000;
   }
