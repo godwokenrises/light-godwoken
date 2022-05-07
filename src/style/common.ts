@@ -55,6 +55,7 @@ export const InputCard = styled.div`
       color: #00cc9b;
       text-decoration-line: underline;
       font-weight: normal;
+      cursor: pointer;
     }
   }
   .second-row {

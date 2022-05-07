@@ -148,11 +148,12 @@ export default function CurrencyInputPanel({
       }),
     );
   };
+  console.log(balancesList);
   return (
     <InputCard>
       <Row className="first-row">
         <Text>{label}</Text>
-        <Text className="balance" onClick={handelMaxClick}>
+        <Text className="balance" onClick={selectedCurrency && handelMaxClick}>
           Max:{" "}
           {selectedCurrencyBalance
             ? getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals)

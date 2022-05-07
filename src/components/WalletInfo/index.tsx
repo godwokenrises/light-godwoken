@@ -66,11 +66,11 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance })
       <PrimaryText className="address">{l1Address}</PrimaryText>
       <BalanceRow>
         <Text className="title">L1 Balance</Text>
-        <PrimaryText>{l1Balance ? getDisplayAmount(BI.from(l1Balance), 8) + "CKB" : <LoadingOutlined />}</PrimaryText>
+        <PrimaryText>{l1Balance ? getDisplayAmount(BI.from(l1Balance), 8) + " CKB" : <LoadingOutlined />}</PrimaryText>
       </BalanceRow>
       <BalanceRow>
         <Text className="title">L2 Balance</Text>
-        <PrimaryText>{l2Balance ? getDisplayAmount(BI.from(l2Balance), 8) + "CKB" : <LoadingOutlined />}</PrimaryText>
+        <PrimaryText>{l2Balance ? getDisplayAmount(BI.from(l2Balance), 8) + " CKB" : <LoadingOutlined />}</PrimaryText>
       </BalanceRow>
     </StyleWrapper>
   );
