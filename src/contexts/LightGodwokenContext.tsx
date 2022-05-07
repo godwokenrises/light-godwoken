@@ -1,9 +1,8 @@
 import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { LightGodwokenV1 } from "../light-godwoken/index";
+import { LightGodwokenV1, LightGodwoken } from "../light-godwoken/index";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
-import MockLightGodwokenV0 from "./MockLightGodwokenV0";
 import DefaultLightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 
 export const LightGodwokenContext = createContext<DefaultLightGodwoken | undefined>(undefined);
@@ -19,7 +18,7 @@ export const Provider: React.FC = (props) => {
 
         let instance: DefaultLightGodwoken;
         if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
-          instance = new MockLightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
+          instance = new LightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
           setLightGodwoken(instance);
         } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
           const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
@@ -32,7 +31,7 @@ export const Provider: React.FC = (props) => {
 
         let instance: DefaultLightGodwoken;
         if (location.pathname.startsWith("/v0")) {
-          instance = new MockLightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
+          instance = new LightGodwoken(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
         } else {
           instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
         }

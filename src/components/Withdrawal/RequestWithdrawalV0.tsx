@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import { LightGodwokenV0, Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
@@ -13,7 +13,6 @@ import { CKB_L1 } from "./const";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
-import { MockLightGodwokenV0Interface } from "../../contexts/MockLightGodwokenV0";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
@@ -56,7 +55,7 @@ const RequestWithdrawalV0: React.FC = () => {
     if (!lightGodwoken || !isInstanceOfLightGodwokenV0(lightGodwoken)) {
       throw new Error("LightGodwoken instance error");
     }
-    const lightGodwokenInstance = lightGodwoken as MockLightGodwokenV0Interface;
+    const lightGodwokenInstance = lightGodwoken as LightGodwokenV0;
     setLoading(true);
     let e: WithdrawalEventEmitter;
     try {

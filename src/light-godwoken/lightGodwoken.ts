@@ -13,13 +13,7 @@ import {
 } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
-import {
-  NormalizeDepositLockArgs,
-  NormalizeRawWithdrawalRequest,
-  NormalizeWithdrawalLockArgs,
-  RawWithdrawalRequest,
-  WithdrawalLockArgs,
-} from "./godwoken/normalizer";
+import { NormalizeWithdrawalLockArgs, WithdrawalLockArgs } from "./godwoken/normalizer";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import {
   DepositPayload,
@@ -36,12 +30,10 @@ import {
   WithdrawResult,
   GodwokenVersion,
   LightGodwokenBase,
+  Token,
 } from "./lightGodwokenType";
-import {
-  SerializeDepositLockArgs,
-  SerializeRawWithdrawalRequest,
-  SerializeWithdrawalLockArgs,
-} from "./schemas/index.esm";
+import { V1DepositLockArgs } from "./schemas/codec";
+import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
 import { debug } from "./debug";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -50,6 +42,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     this.provider = provider;
   }
 
+  abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
@@ -237,27 +230,36 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       return outputCells;
     }
   }
-  generateDepositLock(): Script {
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+
+  generateDepositLock(provider = this.provider): Script {
+    const ownerLock: Script = helpers.parseAddress(provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
-    const layer2Lock: Script = this.provider.getLayer2LockScript();
+    const layer2Lock: Script = provider.getLayer2LockScript();
 
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
-      cancel_timeout: "0xc0000000000004b0",
+      cancel_timeout: BI.from("0xc000000000093a81"),
+      registry_id: 2,
     };
+    debug("depositLockArgs is: ", {
+      ...depositLockArgs,
+      cancel_timeout: depositLockArgs.cancel_timeout.toHexString(),
+    });
+
     const depositLockArgsHexString: HexString = new toolkit.Reader(
-      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
+      V1DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
 
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+    const { SCRIPTS, ROLLUP_CONFIG } = provider.getLightGodwokenConfig().layer2Config;
 
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
+    debug("depositLock is: ", depositLock);
+    debug("depositLock Hash is: ", utils.computeScriptHash(depositLock));
     return depositLock;
   }
 
@@ -301,10 +303,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return signature;
   }
 
-  generateWithdrawalMessageToSign(rawWithdrawalRequest: RawWithdrawalRequest, rollupTypeHash: Hash): Hash {
-    const serializedRawWithdrawalRequest: HexString = new toolkit.Reader(
-      SerializeRawWithdrawalRequest(NormalizeRawWithdrawalRequest(rawWithdrawalRequest)),
-    ).serializeJson();
+  generateWithdrawalMessageToSign(serializedRawWithdrawalRequest: HexString, rollupTypeHash: Hash): Hash {
     const data = new toolkit.Reader(rollupTypeHash + serializedRawWithdrawalRequest.slice(2)).toArrayBuffer();
     const message = utils.ckbHash(data).serializeJson();
     return message;

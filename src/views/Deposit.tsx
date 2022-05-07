@@ -176,7 +176,7 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-function L2Balance() {
+function L2Balance({ decimals }: { decimals: number | undefined }) {
   const { data: balance } = useL2CKBBalance();
 
   if (!balance) {
@@ -186,7 +186,7 @@ function L2Balance() {
       </span>
     );
   }
-  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), 8)} CKB</span>;
+  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), decimals || 8)} CKB</span>;
 }
 
 export default function Deposit() {
@@ -331,7 +331,7 @@ export default function Deposit() {
             </Button>
           </WithdrawalButton>
           <div>
-            <L2Balance />
+            <L2Balance decimals={lightGodwoken?.getNativeAsset().decimals} />
           </div>
         </PageMain>
       </PageContent>

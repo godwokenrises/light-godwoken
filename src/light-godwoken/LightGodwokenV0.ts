@@ -17,8 +17,6 @@ import {
 } from "@ckb-lumos/lumos";
 import { Hexadecimal, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
-import { core as godwokenCore } from "@polyjuice-provider/godwoken";
-import { RawWithdrawalRequest, WithdrawalRequest } from "./godwoken/normalizer";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
   UnlockPayload,
@@ -32,6 +30,8 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  BaseWithdrawalEventEmitterPayload,
+  Token,
 } from "./lightGodwokenType";
 import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { getTokenList } from "./constants/tokens";
@@ -40,6 +40,8 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
+import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
+import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
 import { debug } from "./debug";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
@@ -55,6 +57,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getVersion(): GodwokenVersion {
     return "v0";
   }
+
+  getNativeAsset(): Token {
+    return {
+      name: "Common Knowledge Base",
+      symbol: "CKB",
+      decimals: 8,
+      tokenURI: "",
+    };
+  }
+
   getBlockProduceTime(): number {
     return 45 * 1000;
   }
@@ -155,14 +167,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     for await (const cell of collector.collect()) {
       const rawLockArgs = cell.cell_output.lock.args;
-      const lockArgs = new godwokenCore.WithdrawalLockArgs(new toolkit.Reader(`0x${rawLockArgs.slice(66)}`));
-
-      if (lockArgs == null) {
-        continue;
-      }
-
-      const withdrawBlock = Number(lockArgs.getWithdrawalBlockNumber().toLittleEndianBigUint64());
-      const containsOwnerLock = cell.cell_output.lock.args.includes(ownerLockHash.substring(2));
+      const withdrawBlockBytes = `0x${rawLockArgs.slice(194, 194 + 16)}`;
+      const withdrawBlock = utils.readBigUInt64LECompatible(withdrawBlockBytes).toNumber();
+      const containsOwnerLock = rawLockArgs.includes(ownerLockHash.substring(2));
+      debug("withdrawBlock is:", withdrawBlock);
+      debug("containsOwnerLock is:", containsOwnerLock);
 
       let sudtTypeHash = "0x" + "00".repeat(32);
       let erc20: ProxyERC20 | undefined = undefined;
@@ -217,7 +226,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    debug("getWithdrawal result:", result);
     return result;
   }
 
@@ -227,27 +235,58 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+  withdrawToV1WithEvent(payload: BaseWithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.withdraw(
+      eventEmitter,
+      { ...payload, withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock()) },
+      true,
+    );
+    return eventEmitter;
+  }
+
+  getV1DepositLock(): Script {
+    const v1DepositLock = this.generateDepositLock(
+      new DefaultLightGodwokenProvider(this.provider.l2Address, this.provider.ethereum, "v1"),
+    );
+    return v1DepositLock;
+  }
+
+  async withdraw(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+    withdrawToV1 = false,
+  ): Promise<void> {
     eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(
-      rawWithdrawalRequest,
+      new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
       layer2Config.ROLLUP_CONFIG.rollup_type_hash,
     );
     debug("message:", message);
     const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
     debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
-    const withdrawalRequest: WithdrawalRequest = {
+    const withdrawalRequest = {
       raw: rawWithdrawalRequest,
       signature: signatureMetamaskPersonalSign,
     };
-    debug("withdrawalRequest:", withdrawalRequest);
+
+    const withdrawalRequestExtra = {
+      request: withdrawalRequest,
+      owner_lock: ownerLock,
+      withdraw_to_v1: withdrawToV1 ? 1 : 0,
+    };
+
+    debug("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
     let result: unknown;
     try {
-      result = await this.godwokenClient.submitWithdrawalRequest(withdrawalRequest);
+      result = await this.godwokenClient.submitWithdrawalRequest(
+        new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
+      );
     } catch (e) {
       eventEmitter.emit("error", e);
       return;
@@ -278,11 +317,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async generateRawWithdrawalRequest(
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
-  ): Promise<RawWithdrawalRequest> {
+  ): Promise<RawWithdrwal> {
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
     const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    debug("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
@@ -291,10 +331,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       args: rollupTypeHash + ethAddress.slice(2),
     };
     const accountScriptHash = utils.computeScriptHash(l2AccountScript);
+    debug("accountScriptHash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
+    debug("fromId:", fromId);
     if (!fromId) {
       throw new Error("account not found");
     }
+    let account_script_hash = await this.godwokenClient.getScriptHash(fromId);
+    debug("account_script_hash:", account_script_hash);
+
     const isSudt = !isHexStringEqual(
       payload.sudt_script_hash,
       "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -335,21 +380,33 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const paymentLockHash: HexNumber = "0x" + "00".repeat(32);
     const feeSudtId: HexNumber = "0x1";
     const feeAmount: HexNumber = "0x0";
-    const rawWithdrawalRequest: RawWithdrawalRequest = {
-      nonce,
-      capacity: payload.capacity,
-      amount: payload.amount,
+    const rawWithdrawalRequest = {
+      nonce: BI.from(nonce).toNumber(),
+      capacity: BI.from(payload.capacity),
+      amount: BI.from(payload.amount),
       sudt_script_hash: payload.sudt_script_hash,
       account_script_hash: accountScriptHash,
-      sell_amount: sellAmount,
-      sell_capacity: sellCapacity,
+      sell_amount: BI.from(sellAmount),
+      sell_capacity: BI.from(sellCapacity),
       owner_lock_hash: ownerLockHash,
       payment_lock_hash: paymentLockHash,
       fee: {
-        sudt_id: feeSudtId,
-        amount: feeAmount,
+        sudt_id: BI.from(feeSudtId).toNumber(),
+        amount: BI.from(feeAmount),
       },
     };
+    debug("rawWithdrawalRequest:", {
+      ...rawWithdrawalRequest,
+      capacity: rawWithdrawalRequest.capacity.toString(),
+      amount: rawWithdrawalRequest.amount.toString(),
+      sell_amount: rawWithdrawalRequest.sell_amount.toString(),
+      sell_capacity: rawWithdrawalRequest.sell_capacity.toString(),
+      fee: {
+        ...rawWithdrawalRequest.fee,
+        amount: rawWithdrawalRequest.fee.amount.toString(),
+      },
+    });
+
     return rawWithdrawalRequest;
   }
 

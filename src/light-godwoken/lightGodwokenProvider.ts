@@ -1,4 +1,4 @@
-import { LightGodwokenConfig, predefined as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
+import { LightGodwokenConfig, predefined_v1_1 as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,
@@ -15,7 +15,6 @@ import {
   HashType,
   Script,
   BI,
-  Hexadecimal,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";

@@ -4,14 +4,12 @@ import {
   NormalizeL2Transaction,
   NormalizeRawL2Transaction,
   NormalizeCreateAccount,
-  NormalizeWithdrawalRequest,
   NormalizeRawWithdrawalRequest,
 } from "./normalizer";
 import {
   L2Transaction,
   RawL2Transaction,
   RawWithdrawalRequest,
-  WithdrawalRequest,
   WithdrawalRequestExtra,
   RunResult,
   Uint128,
@@ -20,7 +18,7 @@ import {
   Fee,
   LastL2BlockCommittedInfo,
 } from "./types";
-import { SerializeRawWithdrawalRequestV1, SerializeWithdrawalRequestExtra } from "./schema_v1";
+import { SerializeRawWithdrawalRequestV1 } from "./schema_v1";
 import { RPC, Reader } from "ckb-js-toolkit";
 import { Hash, HexString, Script, utils } from "@ckb-lumos/base";
 import keccak256 from "keccak256";
@@ -86,6 +84,12 @@ export class Godwoken {
     return result;
   }
 
+  async getCkbBalance(address: HexString): Promise<string> {
+    const result = await this.rpc["eth_getBalance"](address, "latest");
+    console.debug("eth_getBalance:", result);
+    return result;
+  }
+
   private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
     const name = "gw_" + method_name;
     const result = await this.rpc[name](...args);
@@ -110,15 +114,7 @@ export class Godwoken {
     return await this.rpcCall("execute_raw_l2transaction", hex);
   }
 
-  async submitWithdrawalRequest(request: WithdrawalRequest): Promise<void> {
-    const data = new Reader(core.SerializeWithdrawalRequest(NormalizeWithdrawalRequest(request))).serializeJson();
-    return await this.rpcCall("submit_withdrawal_request", data);
-  }
-
-  async submitWithdrawalReqV1(reqExtra: WithdrawalRequestExtra): Promise<Hash> {
-    const data = new Reader(
-      SerializeWithdrawalRequestExtra(normalizer.NormalizeWithdrawalReqExtra(reqExtra)),
-    ).serializeJson();
+  async submitWithdrawalRequest(data: HexString): Promise<Hash> {
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 

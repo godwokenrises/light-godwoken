@@ -1,7 +1,6 @@
-import { MockLightGodwokenV0Interface } from "../contexts/MockLightGodwokenV0";
-import { LightGodwokenV1 } from "../light-godwoken/lightGodwokenType";
+import { LightGodwokenV0, LightGodwokenV1 } from "../light-godwoken/lightGodwokenType";
 
-export const isInstanceOfLightGodwokenV0 = (instance: unknown): instance is MockLightGodwokenV0Interface => {
+export const isInstanceOfLightGodwokenV0 = (instance: unknown): instance is LightGodwokenV0 => {
   return typeof instance === "object" && instance !== null && "withdrawToV1WithEvent" in instance;
 };
 
