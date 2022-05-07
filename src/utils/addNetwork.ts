@@ -4,10 +4,9 @@ import {
   GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
   GODWOKEN_V1_NATIVE_CURRENCY_NAME,
   GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
-  GODWOKEN_V1_RPC_URL,
 } from "../config";
 
-export const addNetwork = (ethereum: any, chainId: string) => {
+export const addNetwork = (ethereum: any, chainId: string, rpcUrl: string) => {
   const params = [
     {
       chainId: chainId,
@@ -17,7 +16,7 @@ export const addNetwork = (ethereum: any, chainId: string) => {
         symbol: GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
         decimals: Number(GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS),
       },
-      rpcUrls: [GODWOKEN_V1_RPC_URL],
+      rpcUrls: [rpcUrl],
       blockExplorerUrls: [GODWOKEN_V1_BLOCK_EXPLORER_URL],
     },
   ];
