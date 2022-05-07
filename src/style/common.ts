@@ -10,15 +10,13 @@ export const Card = styled.div`
   margin-bottom: 16px;
   @media (max-width: 600px) {
     width: calc(100% - 8px);
-    margin: 16px 4px;
+    margin: 16px 4px 64px;
   }
 `;
 export const PageContent = styled.div`
   width: 436px;
-  height: calc(100vh - 64px - 24px);
   @media (max-width: 600px) {
     width: calc(100% - 16px);
-    height: calc(100vh - 64px - 48px - 24px - 24px);
   }
 `;
 export const Text = styled.span`
