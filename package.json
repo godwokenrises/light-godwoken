@@ -44,6 +44,7 @@
     "start": "react-scripts start",
     "build": "craco --max_old_space_size=4096 build",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
     "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
     "eject": "react-scripts eject",

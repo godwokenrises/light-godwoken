@@ -24,4 +24,9 @@ jobs:
       - name: Install project dependencies and run test
         run: |
           yarn --ignore-engines --frozen-lockfile
-          yarn test
+          yarn test:coverage
+
+      - uses: codecov/codecov-action@v2
+        with:
+            files: ./coverage/clover.xml
+            verbose: true # optional (default = false)
