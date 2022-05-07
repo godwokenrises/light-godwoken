@@ -1,6 +1,6 @@
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit } from "@ckb-lumos/lumos";
-import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import EventEmitter from "events";
+import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -18,8 +18,8 @@ import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import { debug } from "./debug";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
+import { debug } from "./debug";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -31,11 +31,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
   getNativeAsset(): Token {
     return {
-      name: 'Common Knowledge Base',
-      symbol: 'CKB',
+      name: "Common Knowledge Base",
+      symbol: "CKB",
       decimals: 18,
-      tokenURI: '',
-    }
+      tokenURI: "",
+    };
   }
 
   getBlockProduceTime(): number {
@@ -292,7 +292,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         chainId: Number(rawWithdrawalRequest.chain_id),
       },
       message: {
-        accountScriptHash: rawWithdrawalRequest.account_script_hash,
+        address: {
+          registry: "ETH",
+          address: this.provider.getL2Address(),
+        },
         nonce: Number(rawWithdrawalRequest.nonce),
         chainId: Number(rawWithdrawalRequest.chain_id),
         fee: 0,
@@ -315,7 +318,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
           { name: "chainId", type: "uint256" },
         ],
         Withdrawal: [
-          { name: "accountScriptHash", type: "bytes32" },
+          { name: "address", type: "RegistryAddress" },
           { name: "nonce", type: "uint256" },
           { name: "chainId", type: "uint256" },
           { name: "fee", type: "uint256" },
@@ -331,6 +334,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
           { name: "ckbCapacity", type: "uint256" },
           { name: "UDTAmount", type: "uint256" },
           { name: "UDTScriptHash", type: "bytes32" },
+        ],
+        RegistryAddress: [
+          { name: "registry", type: "string" },
+          { name: "address", type: "address" },
         ],
       },
     };

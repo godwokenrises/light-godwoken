@@ -33,11 +33,11 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   }
   getNativeAsset(): Token {
     return {
-      name: 'Common Knowledge Base',
-      symbol: 'CKB',
+      name: "Common Knowledge Base",
+      symbol: "CKB",
       decimals: 8,
-      tokenURI: '',
-    }
+      tokenURI: "",
+    };
   }
   getBlockProduceTime(): number {
     return 45 * 1000;

@@ -60,11 +60,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getNativeAsset(): Token {
     return {
-      name: 'Common Knowledge Base',
-      symbol: 'CKB',
+      name: "Common Knowledge Base",
+      symbol: "CKB",
       decimals: 8,
-      tokenURI: '',
-    }
+      tokenURI: "",
+    };
   }
 
   getBlockProduceTime(): number {
