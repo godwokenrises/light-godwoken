@@ -1,10 +1,9 @@
-name: run test
+name: run unit test
 
 on:
   push:
     branches:
-      - develop
-      - fix-test
+      - '**' 
 
 jobs:
   test-unit:
