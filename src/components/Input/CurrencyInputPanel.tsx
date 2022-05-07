@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Modal, List } from "antd";
+import { List } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalRequestCard";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
@@ -7,54 +7,12 @@ import React, { useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
-import { InputCard, Row, Text } from "../../style/common";
+import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
 
 const TokenList = styled.div`
   height: 390px;
   overflow-y: auto;
-`;
-
-const TokenListModal = styled(Modal)`
-  color: black;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: white;
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid white;
-    color: black;
-  }
-  .ant-modal-header {
-    background: white;
-    border: 1px solid white;
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title,
-  .ant-list-item {
-    color: black;
-  }
-  .ant-modal-body {
-    padding: 0px;
-  }
-  .ant-modal-close-x {
-    color: black;
-  }
-  .ant-list-item {
-    border-bottom: none;
-    padding: 4px 20px;
-    height: 56px;
-    &:hover {
-      background-color: white;
-      cursor: pointer;
-    }
-    &.selected {
-      background-color: white;
-    }
-  }
+  width: 100%;
   .currency-item {
     width: 100%;
     .info {
@@ -79,6 +37,19 @@ const TokenListModal = styled(Modal)`
         font-size: 14px;
         line-height: 1.5;
       }
+    }
+  }
+  .ant-list-item {
+    border-bottom: none;
+    height: 56px;
+    padding: 12px;
+    border-radius: 10px;
+    &:hover {
+      background-color: #f3f3f3;
+      cursor: pointer;
+    }
+    &.selected {
+      background-color: #f3f3f3;
     }
   }
 `;
@@ -184,7 +155,7 @@ export default function CurrencyInputPanel({
           <DownOutlined className="select" />
         </CurrencyWrapper>
       </Row>
-      <TokenListModal
+      <ConfirmModal
         title="Select a Token"
         visible={isModalVisible}
         onOk={handleOk}
@@ -219,7 +190,7 @@ export default function CurrencyInputPanel({
             )}
           ></List>
         </TokenList>
-      </TokenListModal>
+      </ConfirmModal>
     </InputCard>
   );
 }

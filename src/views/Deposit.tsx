@@ -13,13 +13,40 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
-import { ConfirmModal, Card, PlusIconContainer, PrimaryButton, Text, CardHeader } from "../style/common";
+import { ConfirmModal, Card, PlusIconContainer, PrimaryButton, Text, CardHeader, MainText } from "../style/common";
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
 import { parseStringToBI } from "../utils/numberFormat";
-
-
+import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
+const ConfirmInfo = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  .title {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+  }
+  .amount {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: end;
+    img,
+    svg {
+      width: 22px;
+      height: 22px;
+      margin: 0 10px 0 16px;
+    }
+    .ckb-amount {
+      display: flex;
+    }
+    .ckb-amount + .sudt-amount {
+      margin-top: 10px;
+    }
+  }
+`;
 export default function Deposit() {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
@@ -146,15 +173,38 @@ export default function Deposit() {
           {inputError || "Deposit"}
         </PrimaryButton>
       </Card>
-      <ConfirmModal title="Confirm Transaction" visible={isModalVisible} onCancel={handleCancel} footer={null}>
+      <ConfirmModal
+        title="Confirm Transaction"
+        visible={isModalVisible}
+        onCancel={handleCancel}
+        footer={null}
+        width={400}
+      >
+        <ConfirmInfo>
+          <span className="title">Depositing</span>
+          <div className="amount">
+            <div className="ckb-amount">
+              <MainText>{CKBInput}</MainText>
+              <div className="ckb-icon">
+                <CKBIcon></CKBIcon>
+              </div>
+              <MainText>CKB</MainText>
+            </div>
+            {sudtInput && (
+              <div className="sudt-amount">
+                <MainText>{sudtInput}</MainText>
+                {selectedSudt?.tokenURI ? <img src={selectedSudt?.tokenURI} alt="" /> : ""}
+                <MainText>{selectedSudt?.symbol}</MainText>
+              </div>
+            )}
+          </div>
+        </ConfirmInfo>
+
         <div className="icon-container">
           <LoadingOutlined />
         </div>
-        <Text>Waiting For Confirmation</Text>
-        <Text>
-          Depositing {sudtInput} {selectedSudt?.symbol} and {CKBInput} CKB
-        </Text>
-        <div className="tips">Confirm this transaction in your wallet</div>
+
+        <div className="tips">Waiting for User Confirmation</div>
       </ConfirmModal>
     </>
   );
