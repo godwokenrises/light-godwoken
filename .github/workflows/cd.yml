@@ -1,22 +1,28 @@
-name: deploy to github pages
+name: run test
 
 on:
   push:
     branches:
       - develop
+      - fix-test
 
 jobs:
-  gh-pages:
+  test-unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: build
+      - uses: actions/checkout@v2
+      - name: Get yarn cache directory path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v1
+        id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - name: Install project dependencies and run test
         run: |
-          yarn install --frozen-lockfile --force
-          yarn build
-      - name: deploy
-        run: |
-          git remote set-url origin https://git:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          yarn deploy -- -u "github-actions-bot <support+actions@github.com>"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          yarn --ignore-engines --frozen-lockfile
+          yarn test
