@@ -33,7 +33,7 @@ import {
   BaseWithdrawalEventEmitterPayload,
   Token,
 } from "./lightGodwokenType";
-import { SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
+import { SerializeDepositLockArgs, SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
 import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
@@ -43,6 +43,8 @@ import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
 import { debug } from "./debug";
+import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
+import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -246,9 +248,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   getV1DepositLock(): Script {
-    const v1DepositLock = this.generateDepositLock(
+    const lightGodwokenV1 = new DefaultLightGodwokenV1(
       new DefaultLightGodwokenProvider(this.provider.l2Address, this.provider.ethereum, "v1"),
     );
+    const v1DepositLock = lightGodwokenV1.generateDepositLock();
     return v1DepositLock;
   }
 
@@ -514,6 +517,30 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
+  }
+
+  generateDepositLock(): Script {
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
+    const layer2Lock: Script = this.provider.getLayer2LockScript();
+
+    const depositLockArgs = {
+      owner_lock_hash: ownerLockHash,
+      layer2_lock: layer2Lock,
+      cancel_timeout: "0xc0000000000004b0",
+    };
+    const depositLockArgsHexString: HexString = new toolkit.Reader(
+      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
+    ).serializeJson();
+
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+
+    const depositLock: Script = {
+      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+      hash_type: "type",
+      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    };
+    return depositLock;
   }
 
   async getRollupCellDep(): Promise<CellDep> {

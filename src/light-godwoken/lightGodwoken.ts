@@ -32,7 +32,6 @@ import {
   LightGodwokenBase,
   Token,
 } from "./lightGodwokenType";
-import { V1DepositLockArgs } from "./schemas/codec";
 import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
 import { debug } from "./debug";
 
@@ -42,6 +41,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     this.provider = provider;
   }
 
+  abstract generateDepositLock(): Script;
   abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
@@ -229,38 +229,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
       return outputCells;
     }
-  }
-
-  generateDepositLock(provider = this.provider): Script {
-    const ownerLock: Script = helpers.parseAddress(provider.l1Address);
-    const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
-    const layer2Lock: Script = provider.getLayer2LockScript();
-
-    const depositLockArgs = {
-      owner_lock_hash: ownerLockHash,
-      layer2_lock: layer2Lock,
-      cancel_timeout: BI.from("0xc000000000093a81"),
-      registry_id: 2,
-    };
-    debug("depositLockArgs is: ", {
-      ...depositLockArgs,
-      cancel_timeout: depositLockArgs.cancel_timeout.toHexString(),
-    });
-
-    const depositLockArgsHexString: HexString = new toolkit.Reader(
-      V1DepositLockArgs.pack(depositLockArgs),
-    ).serializeJson();
-
-    const { SCRIPTS, ROLLUP_CONFIG } = provider.getLightGodwokenConfig().layer2Config;
-
-    const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
-    };
-    debug("depositLock is: ", depositLock);
-    debug("depositLock Hash is: ", utils.computeScriptHash(depositLock));
-    return depositLock;
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {

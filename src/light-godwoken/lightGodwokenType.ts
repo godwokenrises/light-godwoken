@@ -134,6 +134,8 @@ export interface LightGodwokenBase {
 
   listWithdraw: () => Promise<WithdrawResult[]>;
 
+  generateDepositLock: () => Script;
+
   deposit: (payload: DepositPayload) => Promise<Hash>;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
