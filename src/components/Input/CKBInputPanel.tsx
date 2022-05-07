@@ -57,6 +57,7 @@ interface CKBInputPanelProps {
   maxAmount?: string;
   CKBBalance?: string;
   isLoading?: boolean;
+  decimals?: number;
 }
 export default function CKBInputPanel({
   value,
@@ -65,6 +66,7 @@ export default function CKBInputPanel({
   CKBBalance,
   isLoading,
   maxAmount: inputMaxAmount,
+  decimals = 8,
 }: CKBInputPanelProps) {
   const [showMaxButton, setShowMaxButton] = useState(true);
   const maxAmount = inputMaxAmount || CKBBalance;
@@ -88,7 +90,7 @@ export default function CKBInputPanel({
     if (!maxAmount) {
       throw new Error("No maxAmount");
     }
-    onUserInput(getFullDisplayAmount(BI.from(maxAmount), 18, { maxDecimalPlace: 18 }));
+    onUserInput(getFullDisplayAmount(BI.from(maxAmount), decimals, { maxDecimalPlace: 8 }));
     setShowMaxButton(false);
   };
   return (
@@ -97,7 +99,11 @@ export default function CKBInputPanel({
         <Typography.Text>{label}</Typography.Text>
         <Typography.Text>
           Balance:{" "}
-          {isLoading || CKBBalance === undefined ? <LoadingOutlined /> : getDisplayAmount(BI.from(CKBBalance), 18)}
+          {isLoading || CKBBalance === undefined ? (
+            <LoadingOutlined />
+          ) : (
+            getDisplayAmount(BI.from(CKBBalance), decimals)
+          )}
         </Typography.Text>
       </Row>
       <Row className="input-wrapper">

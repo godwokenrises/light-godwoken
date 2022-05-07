@@ -128,6 +128,7 @@ const RequestWithdrawalV1: React.FC = () => {
           label="Withdraw"
           isLoading={query.isLoading}
           CKBBalance={CKBBalance}
+          decimals={lightGodwoken?.getNativeAsset().decimals || 18}
         ></CKBInputPanel>
         <div className="icon">
           <PlusOutlined />
