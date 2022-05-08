@@ -107,54 +107,32 @@ export const predefined_v1_1: Record<GodwokenVersion, LightGodwokenConfig> = {
     layer1Config: layer1ConfigAggron,
     layer2Config: {
       SCRIPTS: {
-        // deposit_lock: {
-        //   script_type_hash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
-        // },
-        // withdrawal_lock: {
-        //   script_type_hash: "0x06ae0706bb2d7997d66224741d3ec7c173dbb2854a6d2cf97088796b677269c6",
-        //   cell_dep: {
-        //     out_point: {
-        //       tx_hash: "0xb4b07dcd1571ac18683b515ada40e13b99bd0622197b6817047adc9f407f4828",
-        //       index: "0x0",
-        //     },
-        //     dep_type: "code",
-        //   },
-        // },
-        // eth_account_lock: {
-        //   script_type_hash: "0x07521d0aa8e66ef441ebc31204d86bb23fc83e9edc58c19dbb1b0ebe64336ec0",
-        // },
         deposit_lock: {
-          script_type_hash: "0xa37d1189629007c3c08242c4a87b563fe50652add0f3ba4e5059a1737d20d6e4",
+          script_type_hash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
         },
         withdrawal_lock: {
-          script_type_hash: "0xb2c4cc6ee345632610e4e36872b15a291aaad63baf8e73ede3984e32d643bfe8",
+          script_type_hash: "0x06ae0706bb2d7997d66224741d3ec7c173dbb2854a6d2cf97088796b677269c6",
           cell_dep: {
             out_point: {
-              tx_hash: "0x309322839bd989c2f97f385dac774471c09643fe4f37ba9613e8dcc2e05bc539",
+              tx_hash: "0x9c607a9a75ea4699dd01b1c2a478002343998cac8346d2aa582f35b532bd2b93",
               index: "0x0",
             },
             dep_type: "code",
           },
         },
         eth_account_lock: {
-          script_type_hash: "0x85e7c1efa93e8ca23ce91404654b31c008a6766637a4a5a08c44598d80746f35",
+          script_type_hash: "0x07521d0aa8e66ef441ebc31204d86bb23fc83e9edc58c19dbb1b0ebe64336ec0",
         },
       },
       ROLLUP_CONFIG: {
-        // rollup_type_hash: "0x7b1a2b341e0c339263b2774d6ab228e223871322021f768815e6519550f99441",
-        // rollup_type_script: {
-        //   code_hash: "0x1e44736436b406f8e48a30dfbddcf044feb0c9eebfe63b0f81cb5bb727d84854",
-        //   hash_type: "type",
-        //   args: "0x7b98056f6b3191304d08d33b60ace0a788fb6d31160be5f13418cdce08b558fc",
-        // },
-        rollup_type_hash: "0x9ffbacfebfd9627e6f8f28004e32ec95ca857d72b3d1f6ef05f0c10c222399d7",
+        rollup_type_hash: "0x702359ea7f073558921eb50d8c1c77e92f760c8f8656bde4995f26b8963e2dd8",
         rollup_type_script: {
-          code_hash: "0x3bda219a967978d2db0316e36f6d39aaa713e1740752283cf184c4c195eeb48a",
+          code_hash: "0x1e44736436b406f8e48a30dfbddcf044feb0c9eebfe63b0f81cb5bb727d84854",
           hash_type: "type",
-          args: "0x375e628d7780e7f00bee16a63bc583b5ceb1ed779a4b2b4ab3f64381376e83ce",
+          args: "0x86c7429247beba7ddd6e4361bcdfc0510b0b644131e2afb7e486375249a01802",
         },
       },
-      GW_POLYJUICE_RPC_URL: "https://godwoken-betanet-v1.ckbapp.dev",
+      GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
     },
   },
 };
