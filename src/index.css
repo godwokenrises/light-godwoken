@@ -30,3 +30,6 @@ code {
 ::-ms-input-placeholder { /* Microsoft Edge */
   color: #b3b3b3;
 }
+.ant-popover.popover-menu {
+  padding-top: 30px;
+}

@@ -3,10 +3,8 @@ import { ReactComponent as Logo } from "../../asserts/logo.svg";
 import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 
 import styled from "styled-components";
-import { SHOW_CLAIM_BUTTON } from "../../config";
-import { ClaimSudt } from "../ClaimSudt";
-import { ConnectButton } from "../ConnectButton";
-import { VersionSelect } from "../VersionSelect";
+import { Popover } from "antd";
+import { PopoverMenu } from "../PopoverMenu";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;
@@ -57,11 +55,13 @@ const Link = styled.span`
     cursor: pointer;
   }
 `;
+
 interface Props {
   onViewChange?: (view: string) => void;
 }
 const PageHeader: React.FC<Props> = ({ onViewChange }) => {
   const [active, setActive] = useState("deposit");
+  const [popoverVisible, setPopoverVisible] = useState(false);
   const changeViewToDeposit = () => {
     setActive("deposit");
     onViewChange && onViewChange("deposit");
@@ -70,6 +70,14 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
     setActive("withdrawal");
     onViewChange && onViewChange("withdrawal");
   };
+  const openPopoverMenu = () => {
+    setPopoverVisible(true);
+  };
+
+  const closePopoverMenu = () => {
+    setPopoverVisible(false);
+  };
+
   return (
     <StyledPage>
       <Logo height={27}></Logo>
@@ -82,13 +90,14 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
         </Link>
       </div>
       <div className="right-side">
-        <Hamburger></Hamburger>
-        {/* {SHOW_CLAIM_BUTTON && <ClaimSudt />}
-        {SHOW_CLAIM_BUTTON && (
-          <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
-            CKB Testnet Faucet
-          </a>
-        )} */}
+        <Popover
+          content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
+          trigger="click"
+          overlayClassName="popover-menu"
+          visible={popoverVisible}
+        >
+          <Hamburger onClick={openPopoverMenu}></Hamburger>
+        </Popover>
       </div>
     </StyledPage>
   );

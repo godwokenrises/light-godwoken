@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 
 import styled from "styled-components";
+import { Popover } from "antd";
+import { PopoverMenu } from "../PopoverMenu";
 const StyledPage = styled.div`
   position: fixed;
   bottom: 0;
@@ -19,9 +21,25 @@ const StyledPage = styled.div`
 `;
 
 const PageFooter: React.FC = () => {
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const openPopoverMenu = () => {
+    setPopoverVisible(true);
+  };
+
+  const closePopoverMenu = () => {
+    setPopoverVisible(false);
+  };
   return (
     <StyledPage>
-      <Hamburger></Hamburger>
+      <Popover
+        content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
+        trigger="click"
+        placement="top"
+        overlayClassName="popover-menu"
+        visible={popoverVisible}
+      >
+        <Hamburger onClick={openPopoverMenu}></Hamburger>
+      </Popover>
     </StyledPage>
   );
 };

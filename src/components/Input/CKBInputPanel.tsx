@@ -7,7 +7,6 @@ import { InputCard, Text, Row } from "../../style/common";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { parseStringToBI } from "../../utils/numberFormat";
 
-
 interface CKBInputPanelProps {
   value: string;
   onUserInput: (value: string) => void;
@@ -25,7 +24,6 @@ export default function CKBInputPanel({
   maxAmount: inputMaxAmount,
 }: CKBInputPanelProps) {
   const maxAmount = inputMaxAmount || CKBBalance;
-
 
   const handelMaxClick = () => {
     if (!maxAmount) {
