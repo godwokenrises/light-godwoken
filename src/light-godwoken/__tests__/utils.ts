@@ -1,4 +1,6 @@
 import { Cell, HexString, Script, HashType, BI, helpers, utils } from "@ckb-lumos/lumos";
+import { RawWithdrwal } from "../schemas/codec";
+import { RawWithdrawalRequestV1 } from "../schemas/codecV1";
 
 export const randomHexString = (byteLength: number) => {
   let randomString = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
@@ -57,4 +59,28 @@ export const outputSudtAmountOf = (tx: helpers.TransactionSkeletonType): BI => {
       }
     }, BI.from(0))
     .div(1000000000000000000);
+};
+
+export const deBifyRawWithdrawalRequestV0 = (rawWithdrwal: RawWithdrwal) => {
+  return {
+    ...rawWithdrwal,
+    capacity: rawWithdrwal.capacity.toHexString(),
+    amount: rawWithdrwal.amount.toHexString(),
+    sell_amount: rawWithdrwal.sell_amount.toHexString(),
+    sell_capacity: rawWithdrwal.sell_capacity.toHexString(),
+    fee: {
+      amount: rawWithdrwal.fee.amount.toHexString(),
+      sudt_id: rawWithdrwal.fee.sudt_id,
+    },
+  };
+};
+
+export const deBifyRawWithdrawalRequestV1 = (rawWithdrwal: RawWithdrawalRequestV1) => {
+  return {
+    ...rawWithdrwal,
+    chain_id: rawWithdrwal.chain_id.toHexString(),
+    capacity: rawWithdrwal.capacity.toHexString(),
+    amount: rawWithdrwal.amount.toHexString(),
+    fee: rawWithdrwal.fee.toHexString(),
+  };
 };
