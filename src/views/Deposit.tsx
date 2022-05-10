@@ -3,7 +3,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { Button, message, Modal, notification, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
+import { useLightGodwoken, useLightGodwokenVersion } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { getDisplayAmount } from "../utils/formatTokenAmount";
@@ -16,6 +16,8 @@ import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
 import { parseStringToBI } from "../utils/numberFormat";
+import { ClaimSudt } from "../components/ClaimSudt";
+import { UseQueryResult } from "react-query/types/react";
 
 const { Text } = Typography;
 
@@ -58,6 +60,12 @@ const PageMain = styled.div`
     justify-content: center;
     padding-top: 8px;
     padding-bottom: 8px;
+  }
+  .claim {
+    a {
+      color: rgb(255, 67, 66);
+      text-decoration: none;
+    }
   }
 `;
 const L1WalletAddress = styled.div`
@@ -176,17 +184,13 @@ const ConfirmModal = styled(Modal)`
   }
 `;
 
-function L2Balance({ decimals }: { decimals: number | undefined }) {
-  const { data: balance } = useL2CKBBalance();
+function L2Balance({ decimals, query }: { decimals: number | undefined; query: UseQueryResult<string, unknown> }) {
+  const loading = !query.data || query.isLoading;
+  console.log("L2Balance", query);
 
-  if (!balance) {
-    return (
-      <span>
-        <LoadingOutlined />
-      </span>
-    );
-  }
-  return <span>L2 Balance: {getDisplayAmount(BI.from(balance), decimals || 8)} CKB</span>;
+  return (
+    <span>L2 Balance: {loading ? <LoadingOutlined /> : getDisplayAmount(BI.from(query.data), decimals || 8)} CKB</span>
+  );
 }
 
 export default function Deposit() {
@@ -198,14 +202,25 @@ export default function Deposit() {
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
+  const lightGodwokenVersion = useLightGodwokenVersion();
   const sudtBalanceQUery = useSUDTBalance();
   const CKBBalanceQuery = useL1CKBBalance();
+  const l2CKBBalanceQuery = useL2CKBBalance();
   const CKBBalance = CKBBalanceQuery.data;
   const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
+
+  useEffect(() => {
+    CKBBalanceQuery.remove();
+    CKBBalanceQuery.refetch();
+    l2CKBBalanceQuery.remove();
+    l2CKBBalanceQuery.refetch();
+    sudtBalanceQUery.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, lightGodwokenVersion]);
 
   const showModal = async () => {
     if (lightGodwoken) {
@@ -286,7 +301,7 @@ export default function Deposit() {
         <PageHeader className="header">
           <Text className="title">
             <span>Deposit To Layer2</span>
-            <TransactionHistory type="deposit"></TransactionHistory>
+            {/* <TransactionHistory type="deposit"></TransactionHistory> */}
           </Text>
           <Text className="description">
             To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
@@ -331,7 +346,17 @@ export default function Deposit() {
             </Button>
           </WithdrawalButton>
           <div>
-            <L2Balance decimals={lightGodwoken?.getNativeAsset().decimals} />
+            <L2Balance query={l2CKBBalanceQuery} decimals={lightGodwoken?.getNativeAsset().decimals} />
+          </div>
+          <div className="claim">
+            <div>
+              <ClaimSudt />
+            </div>
+            <div>
+              <a href="https://faucet.nervos.org/" target="_blank" rel="noreferrer">
+                CKB Testnet Faucet
+              </a>
+            </div>
           </div>
         </PageMain>
       </PageContent>
