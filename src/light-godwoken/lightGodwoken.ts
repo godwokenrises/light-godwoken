@@ -33,7 +33,7 @@ import {
   Token,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
-import { debug } from "./debug";
+import { debug, debugWithSentry } from "./debug";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -136,6 +136,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1Transaction(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
+    debugWithSentry(`Deposit ${txHash}`);
     return txHash;
   }
 

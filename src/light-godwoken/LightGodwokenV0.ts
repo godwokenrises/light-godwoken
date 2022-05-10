@@ -42,7 +42,7 @@ import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
-import { debug } from "./debug";
+import { debug, debugWithSentry } from "./debug";
 import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
@@ -285,33 +285,36 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     debug("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
-    let result: unknown;
+    let txHash: unknown;
     try {
-      result = await this.godwokenClient.submitWithdrawalRequest(
+      txHash = await this.godwokenClient.submitWithdrawalRequest(
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
       );
     } catch (e) {
       eventEmitter.emit("error", e);
       return;
     }
-    eventEmitter.emit("sent", result);
-    debug("withdrawal request result:", result);
+    eventEmitter.emit("sent", txHash);
+    debug("withdrawal request result:", txHash);
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
       loop++;
-      const withdrawal: any = await this.getWithdrawal(result as unknown as Hash);
+      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
         debug("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", result);
+        debugWithSentry("withdrawal pending:", txHash);
+        eventEmitter.emit("pending", txHash);
       }
       if (withdrawal && withdrawal.status === "committed") {
         debug("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", result);
+        debugWithSentry("withdrawal committed:", txHash);
+        eventEmitter.emit("success", txHash);
         clearInterval(nIntervId);
       }
       if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", result);
+        eventEmitter.emit("fail", txHash);
+        debugWithSentry("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
     }, 10000);
