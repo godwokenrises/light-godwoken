@@ -186,8 +186,6 @@ const ConfirmModal = styled(Modal)`
 
 function L2Balance({ decimals, query }: { decimals: number | undefined; query: UseQueryResult<string, unknown> }) {
   const loading = !query.data || query.isLoading;
-  console.log("L2Balance", query);
-
   return (
     <span>L2 Balance: {loading ? <LoadingOutlined /> : getDisplayAmount(BI.from(query.data), decimals || 8)} CKB</span>
   );
