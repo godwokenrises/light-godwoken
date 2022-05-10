@@ -9,7 +9,7 @@ const WithdrawalV1: React.FC = () => {
       <PageContent className="content">
         <div className="header">
           <div className="title">Withdrawal</div>
-          <TransactionHistory type="withdrawal"></TransactionHistory>
+          {/* <TransactionHistory type="withdrawal"></TransactionHistory> */}
         </div>
         <div className="request-withdrawal">
           <RequestWithdrawalV1></RequestWithdrawalV1>

@@ -3,7 +3,7 @@ import { notification } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
-import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { useLightGodwoken, useLightGodwokenVersion } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
@@ -26,8 +26,9 @@ const RequestWithdrawalV1: React.FC = () => {
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
-  const query = useL2CKBBalance();
-  const CKBBalance = query.data;
+  const lightGodwokenVersion = useLightGodwokenVersion();
+  const l2CKBBalanceQuery = useL2CKBBalance();
+  const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
 
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
@@ -35,12 +36,23 @@ const RequestWithdrawalV1: React.FC = () => {
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
   useEffect(() => {
-    setIsCKBValueValidate(isCKBInputValidate(CKBInput, CKBBalance));
+    if (!CKBBalance) {
+      setIsCKBValueValidate(false);
+    } else {
+      setIsCKBValueValidate(isCKBInputValidate(CKBInput, CKBBalance, { decimals: 18, minimumCKBAmount: 400 }));
+    }
   }, [CKBBalance, CKBInput]);
 
   useEffect(() => {
     setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
+
+  useEffect(() => {
+    l2CKBBalanceQuery.remove();
+    l2CKBBalanceQuery.refetch();
+    erc20BalanceQuery.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, lightGodwokenVersion]);
 
   const sendWithdrawal = () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();
@@ -126,7 +138,7 @@ const RequestWithdrawalV1: React.FC = () => {
           value={CKBInput}
           onUserInput={setCKBInput}
           label="Withdraw"
-          isLoading={query.isLoading}
+          isLoading={l2CKBBalanceQuery.isLoading}
           CKBBalance={CKBBalance}
           decimals={lightGodwoken?.getNativeAsset().decimals || 18}
         ></CKBInputPanel>
@@ -144,8 +156,8 @@ const RequestWithdrawalV1: React.FC = () => {
         ></CurrencyInputPanel>
         <SubmitWithdrawal
           sendWithdrawal={sendWithdrawal}
-          blockWait="50"
-          estimatedTime="30 mins"
+          blockWait="100"
+          estimatedTime="50 mins"
           loading={loading}
           buttonText={inputError}
           disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}

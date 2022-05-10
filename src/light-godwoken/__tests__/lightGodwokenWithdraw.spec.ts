@@ -39,7 +39,7 @@ describe("test light godwoken v1 withdrawal", () => {
     });
 
     expect(deBifyRawWithdrawalRequestV1(rawWithdrawalRequest)).toEqual({
-      account_script_hash: "0x602428d11cc17a88fb139cdf66de368c21c0dadbec508ab38fa6a331c2b65c36",
+      account_script_hash: "0x7ad59fa0e426c5e5b0bc13f25bcae43263ab3be70fcb2d36bdb6df2119e7bea5",
       amount: "0x0",
       capacity: "0x2e90edd000",
       chain_id: "0x11",
@@ -79,7 +79,7 @@ describe("test light godwoken v1 withdrawal", () => {
     });
 
     expect(deBifyRawWithdrawalRequestV1(rawWithdrawalRequest)).toEqual({
-      account_script_hash: "0x602428d11cc17a88fb139cdf66de368c21c0dadbec508ab38fa6a331c2b65c36",
+      account_script_hash: "0x7ad59fa0e426c5e5b0bc13f25bcae43263ab3be70fcb2d36bdb6df2119e7bea5",
       amount: "0x6c6b935b8bbd400000",
       capacity: "0x2e90edd000",
       chain_id: "0x11",

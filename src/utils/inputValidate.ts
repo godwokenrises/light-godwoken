@@ -1,3 +1,4 @@
+import { BI } from "@ckb-lumos/lumos";
 import { parseStringToBI } from "./numberFormat";
 
 export const isSudtInputValidate = (sudtValue: string, sudtBalance?: string, decimal?: number) => {
@@ -13,14 +14,14 @@ export const isSudtInputValidate = (sudtValue: string, sudtBalance?: string, dec
 
 export const isCKBInputValidate = (
   CKBInput: string,
-  CKBBalance?: string,
-  limit: inputLimitType = { minimumCKBAmount: "400" },
+  CKBBalance: string,
+  limit: InputOptionType = { minimumCKBAmount: 400 },
 ) => {
-  if (CKBInput === "" || CKBBalance === undefined) {
+  if (!CKBInput || !CKBBalance) {
     return false;
   } else if (
-    parseStringToBI(CKBInput, 8).gte(parseStringToBI(limit.minimumCKBAmount, 8)) &&
-    parseStringToBI(CKBInput, 8).lte(parseStringToBI(CKBBalance))
+    parseStringToBI(CKBInput, 8).gte(BI.from(limit.minimumCKBAmount).mul(BI.from(10).pow(8))) &&
+    parseStringToBI(CKBInput, limit.decimals || 8).lte(parseStringToBI(CKBBalance))
   ) {
     return true;
   } else {
@@ -35,8 +36,9 @@ type InputType = {
   sudtDecimals: number | undefined;
   sudtSymbol: string | undefined;
 };
-type inputLimitType = {
-  minimumCKBAmount: string;
+type InputOptionType = {
+  minimumCKBAmount: number;
+  decimals?: number;
 };
 
 /**
@@ -46,12 +48,12 @@ type inputLimitType = {
  */
 export const getInputError = (
   { CKBInput, CKBBalance, sudtValue, sudtBalance, sudtDecimals, sudtSymbol }: InputType,
-  limit: inputLimitType = { minimumCKBAmount: "400" },
+  limit: InputOptionType = { minimumCKBAmount: 400 },
 ): string | undefined => {
   if (CKBInput === "") {
     return "Enter CKB Amount";
   }
-  if (parseStringToBI(CKBInput, 8).lt(parseStringToBI(limit.minimumCKBAmount, 8))) {
+  if (parseStringToBI(CKBInput, 8).lt(BI.from(limit.minimumCKBAmount).mul(BI.from(10).pow(8)))) {
     return `Minimum ${limit.minimumCKBAmount} CKB`;
   }
   if (CKBBalance && parseStringToBI(CKBInput, 8).gt(parseStringToBI(CKBBalance))) {

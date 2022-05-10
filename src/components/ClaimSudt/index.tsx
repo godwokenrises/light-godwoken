@@ -56,5 +56,5 @@ export const ClaimSudt: React.FC = () => {
     });
     notification.success({ message: `deposit Tx(${txHash}) is successful` });
   };
-  return <Link onClick={claimSudt}>Claim SUDT</Link>;
+  return <Link onClick={claimSudt}>Get 1,000 USDC</Link>;
 };

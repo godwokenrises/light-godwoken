@@ -3,7 +3,7 @@ import { notification } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
-import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { useLightGodwoken, useLightGodwokenVersion } from "../../hooks/useLightGodwoken";
 import { LightGodwokenV0, Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
@@ -29,8 +29,9 @@ const RequestWithdrawalV0: React.FC = () => {
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
-  const query = useL2CKBBalance();
-  const CKBBalance = query.data;
+  const lightGodwokenVersion = useLightGodwokenVersion();
+  const l2CKBBalanceQuery = useL2CKBBalance();
+  const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   const l1Address = lightGodwoken?.provider.getL1Address();
@@ -38,14 +39,25 @@ const RequestWithdrawalV0: React.FC = () => {
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
 
   useEffect(() => {
-    setIsCKBValueValidate(
-      isCKBInputValidate(CKBInput, CKBBalance, { minimumCKBAmount: targetValue === CKB_L1 ? "400" : "650" }),
-    );
+    if (!CKBBalance) {
+      setIsCKBValueValidate(false);
+    } else {
+      setIsCKBValueValidate(
+        isCKBInputValidate(CKBInput, CKBBalance, { minimumCKBAmount: targetValue === CKB_L1 ? 400 : 650 }),
+      );
+    }
   }, [CKBBalance, CKBInput, targetValue]);
 
   useEffect(() => {
     setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
+
+  useEffect(() => {
+    l2CKBBalanceQuery.remove();
+    l2CKBBalanceQuery.refetch();
+    erc20BalanceQuery.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, lightGodwokenVersion]);
 
   const sendWithdrawal = () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();
@@ -133,7 +145,7 @@ const RequestWithdrawalV0: React.FC = () => {
         sudtDecimals: selectedSudt?.decimals,
         sudtSymbol: selectedSudt?.symbol,
       },
-      { minimumCKBAmount: targetValue === CKB_L1 ? "400" : "650" },
+      { minimumCKBAmount: targetValue === CKB_L1 ? 400 : 650 },
     );
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol, targetValue]);
 
@@ -145,7 +157,7 @@ const RequestWithdrawalV0: React.FC = () => {
           value={CKBInput}
           onUserInput={setCKBInput}
           label="Withdraw"
-          isLoading={query.isLoading}
+          isLoading={l2CKBBalanceQuery.isLoading}
           CKBBalance={CKBBalance}
           placeholder={targetValue === CKB_L1 ? "Minimum 400 CKB" : "Minimum 650 CKB"}
         ></CKBInputPanel>
