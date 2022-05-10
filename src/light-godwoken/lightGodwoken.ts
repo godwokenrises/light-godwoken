@@ -34,6 +34,7 @@ import {
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
 import { debug } from "./debug";
+import { createErrorString, ErrorCode } from "./constants/errorCode";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -88,10 +89,20 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
-      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`);
+      throw new Error(
+        createErrorString(ErrorCode.LAYER_1_CKB_NOT_ENOUGH, {
+          actual: collectedCapatity.toString(),
+          expected: neededCapacity.toString(),
+        }),
+      );
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
-      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`);
+      throw new Error(
+        createErrorString(ErrorCode.LAYER_1_SUDT_NOT_ENOUGH, {
+          actual: collectedSudtAmount.toString(),
+          expected: neededSudtAmount.toString(),
+        }),
+      );
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
@@ -378,7 +389,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       if (collectedSum.gte(neededCapacity)) break;
     }
     if (collectedSum.lt(neededCapacity)) {
-      throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `);
+      throw new Error(
+        createErrorString(ErrorCode.LAYER_1_CKB_NOT_ENOUGH, {
+          actual: collectedSum.toString(),
+          expected: neededCapacity.toString(),
+        }),
+      );
     }
     const changeOutput: Cell = {
       cell_output: {

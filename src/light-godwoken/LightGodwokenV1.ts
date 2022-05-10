@@ -21,6 +21,7 @@ import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codec";
+import { createErrorString, createErrorObject, ErrorCode } from "./constants/errorCode";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -47,7 +48,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
     // const balance = await this.godwokenClient.getCkbBalance(payload?.l2Address || this.provider.l2Address);
     debug("get v1 l2 ckb balance", this.provider, balance);
-    return "0x" + Number(balance).toString(16);
+    return BI.from(balance).toHexString();
   }
 
   getBuiltinSUDTList(): SUDT[] {
@@ -197,7 +198,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalCellSearchParams(ethAddress: string) {
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
-      throw new Error("eth address format error!");
+      throw new Error(createErrorString(ErrorCode.ETH_ADDRESS_FORMAT_ERROR));
     }
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
@@ -237,7 +238,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         params: [this.provider.l2Address, JSON.stringify(typedMsg)],
       });
     } catch (e) {
-      eventEmitter.emit("error", "transaction need to be sign first");
+      eventEmitter.emit("error", createErrorObject(ErrorCode.TX_SIGN_ERROR));
     }
 
     // construct WithdrawalRequestExx tra
@@ -258,7 +259,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (result !== null) {
       const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", errorMessage);
+        const error = createErrorObject(ErrorCode.LAYER_2_RPC_ERROR, {
+          expected: "",
+          actual: "",
+          message: errorMessage,
+        });
+        eventEmitter.emit("error", error);
       }
     }
     eventEmitter.emit("sent", result);
@@ -365,15 +371,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     // const address = layer2AccountScriptHash.slice(0, 42);
     const balance = await this.getL2CkbBalance();
     if (BI.from(balance).lt(payload.capacity)) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken CKB balance ${balance.toString()} is less than ${BI.from(payload.capacity).toString()}`,
-      );
-      throw new Error(
-        `Insufficient CKB balance(${BI.from(balance).toString()}) on Godwoken, required ${BI.from(
-          payload.capacity,
-        ).toString()}`,
-      );
+      const error = createErrorObject(ErrorCode.LAYER_2_CKB_NOT_ENOUGH, {
+        expected: BI.from(payload.capacity).toString(),
+        actual: BI.from(balance).toString(),
+      });
+      eventEmitter.emit("error", error);
+      throw new Error(JSON.stringify(error));
     }
 
     if (BI.from(payload.amount).gt(0)) {
@@ -401,21 +404,16 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const builtinErc20List = this.getBuiltinErc20List();
     const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
     if (!erc20) {
-      throw new Error("SUDT not exit");
+      throw new Error(createErrorString(ErrorCode.ERC20_TOKEN_NOT_FOUND));
     }
     const sudtBalance = await this.getErc20Balance(erc20.address);
     if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken ${erc20.symbol} balance ${BI.from(sudtBalance).toString()} is less than ${BI.from(
-          payload.amount,
-        ).toString()}`,
-      );
-      throw new Error(
-        `Insufficient ${erc20.symbol} balance(${BI.from(sudtBalance).toString()}) on Godwoken, Required: ${BI.from(
-          payload.amount,
-        ).toString()}`,
-      );
+      const error = createErrorObject(ErrorCode.LAYER_2_ERC20_NOT_ENOUGH, {
+        expected: BI.from(payload.amount).toString(),
+        actual: BI.from(sudtBalance).toString(),
+      });
+      eventEmitter.emit("error", error);
+      throw new Error(JSON.stringify(error));
     }
   }
 

@@ -64,7 +64,14 @@ describe("test light godwoken v1 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Insufficient CKB balance(199900000000) on Godwoken, required 200000000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 202,
+      errorMessage: "Layer 2 CKB not enough",
+      metadata: {
+        expected: "200000000000",
+        actual: "199900000000",
+      },
+    });
   });
 
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
@@ -105,9 +112,14 @@ describe("test light godwoken v1 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual(
-      "Insufficient USDC balance(1999000000000000000000) on Godwoken, Required: 2000000000000000000000",
-    );
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 203,
+      errorMessage: "Layer 2 ERC20 not enough",
+      metadata: {
+        expected: "2000000000000000000000",
+        actual: "1999000000000000000000",
+      },
+    });
   });
 });
 
@@ -148,7 +160,14 @@ describe("test light godwoken v0 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Godwoken CKB balance 199900000000 is less than 200000000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 202,
+      errorMessage: "Layer 2 CKB not enough",
+      metadata: {
+        expected: "200000000000",
+        actual: "199900000000",
+      },
+    });
   });
 
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
@@ -193,6 +212,13 @@ describe("test light godwoken v0 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Godwoken Erc20 balance 1999000000000000000000 is less than 2000000000000000000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 203,
+      errorMessage: "Layer 2 ERC20 not enough",
+      metadata: {
+        expected: "2000000000000000000000",
+        actual: "1999000000000000000000",
+      },
+    });
   });
 });

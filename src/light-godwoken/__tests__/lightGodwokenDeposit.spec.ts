@@ -49,7 +49,14 @@ describe("test light godwoken v1 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 199900000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 102,
+      errorMessage: "Layer 1 CKB not enough",
+      metadata: {
+        actual: "199900000000",
+        expected: "206400000000",
+      },
+    });
   });
   it("should deposit 2000 ckb fail when user balance is 2001", async () => {
     const mockCell = generateCellInput(2001);
@@ -62,7 +69,14 @@ describe("test light godwoken v1 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 200100000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 102,
+      errorMessage: "Layer 1 CKB not enough",
+      metadata: {
+        actual: "200100000000",
+        expected: "206400000000",
+      },
+    });
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 2000", async () => {
@@ -138,7 +152,14 @@ describe("test light godwoken v1 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough SUDT:expected: 2000000000000000000000, actual: 1999000000000000000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 103,
+      errorMessage: "Layer 1 SUDT not enough",
+      metadata: {
+        actual: "1999000000000000000000",
+        expected: "2000000000000000000000",
+      },
+    });
   });
 });
 
@@ -164,7 +185,14 @@ describe("test light godwoken v0 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 199900000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 102,
+      errorMessage: "Layer 1 CKB not enough",
+      metadata: {
+        expected: "206400000000",
+        actual: "199900000000",
+      },
+    });
   });
   it("should deposit 2000 ckb fail when user balance is 2001", async () => {
     const mockCell = generateCellInput(2001);
@@ -177,7 +205,14 @@ describe("test light godwoken v0 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 200100000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 102,
+      errorMessage: "Layer 1 CKB not enough",
+      metadata: {
+        actual: "200100000000",
+        expected: "206400000000",
+      },
+    });
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 2000", async () => {
@@ -252,6 +287,10 @@ describe("test light godwoken v0 deposit", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Not enough SUDT:expected: 2000000000000000000000, actual: 1999000000000000000000");
+    expect(JSON.parse(errMsg)).toEqual({
+      errorCode: 103,
+      errorMessage: "Layer 1 SUDT not enough",
+      metadata: { actual: "1999000000000000000000", expected: "2000000000000000000000" },
+    });
   });
 });

@@ -45,6 +45,8 @@ import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./
 import { debug } from "./debug";
 import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
+import { createErrorObject, createErrorString, ErrorCode } from "./constants/errorCode";
+
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -212,7 +214,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getWithdrawalCellSearchParams(ethAddress: string) {
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
-      throw new Error("eth address format error!");
+      throw new Error(createErrorString(ErrorCode.ETH_ADDRESS_FORMAT_ERROR));
     }
     const accountScriptHash = this.provider.getLayer2LockScriptHash();
     const { layer2Config } = this.provider.getLightGodwokenConfig();
@@ -291,7 +293,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
       );
     } catch (e) {
-      eventEmitter.emit("error", e);
+      eventEmitter.emit("error", createErrorObject(ErrorCode.LAYER_2_RPC_ERROR));
       return;
     }
     eventEmitter.emit("sent", result);
@@ -338,7 +340,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     debug("fromId:", fromId);
     if (!fromId) {
-      throw new Error("account not found");
+      throw new Error(createErrorString(ErrorCode.LAYER_2_ACCOUNT_ID_NOT_FOUND));
     }
     let account_script_hash = await this.godwokenClient.getScriptHash(fromId);
     debug("account_script_hash:", account_script_hash);
@@ -349,31 +351,34 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     );
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
     if (BI.from(payload.capacity).lt(minCapacity)) {
-      throw new Error(
-        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
-          payload.capacity,
-        ).toString()}.`,
-      );
+      const error = createErrorObject(ErrorCode.WITHDRAWAL_CKB_LESS_THAN_LIMIT, {
+        expected: BI.from(minCapacity).toString(),
+        actual: BI.from(payload.capacity).toString(),
+      });
+      eventEmitter.emit("error", error);
+      throw new Error(JSON.stringify(error));
     }
 
     const layer2CkbBalance = await this.getL2CkbBalance();
     if (BI.from(payload.capacity).gt(BI.from(layer2CkbBalance))) {
-      const errMsg = `Godwoken CKB balance ${BI.from(layer2CkbBalance).toString()} is less than ${BI.from(
-        payload.capacity,
-      ).toString()}`;
-      eventEmitter.emit("error", errMsg);
-      throw new Error(errMsg);
+      const error = createErrorObject(ErrorCode.LAYER_2_CKB_NOT_ENOUGH, {
+        expected: BI.from(payload.capacity).toString(),
+        actual: BI.from(layer2CkbBalance).toString(),
+      });
+      eventEmitter.emit("error", error);
+      throw new Error(JSON.stringify(error));
     }
 
     if (BI.from(payload.amount).gt(0)) {
       const erc20 = this.getBuiltinErc20ByTypeHash(payload.sudt_script_hash);
       const layer2Erc20Balance = await this.getErc20Balance(erc20.address);
       if (BI.from(payload.amount).gt(layer2Erc20Balance)) {
-        const errMsg = `Godwoken Erc20 balance ${BI.from(layer2Erc20Balance).toString()} is less than ${BI.from(
-          payload.amount,
-        ).toString()}`;
-        eventEmitter.emit("error", errMsg);
-        throw new Error(errMsg);
+        const error = createErrorObject(ErrorCode.LAYER_2_ERC20_NOT_ENOUGH, {
+          expected: BI.from(payload.amount).toString(),
+          actual: BI.from(layer2Erc20Balance).toString(),
+        });
+        eventEmitter.emit("error", error);
+        throw new Error(JSON.stringify(error));
       }
     }
 

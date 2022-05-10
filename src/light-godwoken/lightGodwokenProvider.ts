@@ -24,6 +24,7 @@ import Web3 from "web3";
 import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { debug } from "./debug";
+import { createErrorString, ErrorCode } from "./constants/errorCode";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -98,7 +99,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   static async CreateProvider(ethereum: any, version: GodwokenVersion): Promise<LightGodwokenProvider> {
     if (!ethereum || !ethereum.isMetaMask) {
-      throw new Error("please provide metamask ethereum object");
+      throw new Error(createErrorString(ErrorCode.ETHEREUM_NOT_FOUND));
     }
     return ethereum
       .request({ method: "eth_requestAccounts" })
@@ -286,6 +287,6 @@ function validateLightGodwokenConfig(
     !lightGodwokenConfig.layer1Config.CKB_INDEXER_URL ||
     !lightGodwokenConfig.layer1Config.CKB_RPC_URL
   ) {
-    throw new Error("lightGodwokenConfig not valid.");
+    throw new Error(createErrorString(ErrorCode.LIGHT_GODWOKEN_INVALID));
   }
 }
