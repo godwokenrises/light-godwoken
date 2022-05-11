@@ -74,16 +74,6 @@ export const Row = styled.div`
     width: 22px;
     margin-right: 8px;
   }
-  .max-button {
-    height: 32px;
-    padding: 0px 16px;
-    background-color: transparent;
-    color: rgb(255, 67, 66);
-    font-weight: 600;
-    &:hover {
-      cursor: pointer;
-    }
-  }
 `;
 
 export const PrimaryButton = styled.button`
