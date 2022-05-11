@@ -94,7 +94,7 @@ const Unlock = ({ cell }: Props) => {
   return (
     <div>
       <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
-        Withdraw
+        unlock
       </SecondeButton>
       <UnlockModal
         title="Withdraw to Wallet"

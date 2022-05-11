@@ -4,12 +4,11 @@ import { ClaimSudt } from "../ClaimSudt";
 const StyleWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  a {
-    color: #000;
-    text-decoration: none;
-  }
   > a,
   > div {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
     height: 33px;
     padding: 0 10px;
     border-radius: 8px;

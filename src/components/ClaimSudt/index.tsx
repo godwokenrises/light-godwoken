@@ -2,7 +2,6 @@ import { CkitProvider, MintOptions, MintSudtBuilder, predefined } from "@ckitjs/
 import { Secp256k1Signer } from "@ckitjs/ckit/dist/wallets/Secp256k1Wallet";
 import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import Link from "antd/lib/typography/Link";
 import { BI } from "@ckb-lumos/lumos";
 import { CKB_USDC_ISSUER_PRIVATE_KEY } from "../../config";
 
@@ -44,7 +43,8 @@ export const ClaimSudt: React.FC = () => {
 
   const claimSudt = async () => {
     if (!lightGodwoken) {
-      throw new Error("LightGodwoken Not Found!");
+      notification.error({ message: "Please connect wallet first" });
+      return;
     }
     if (!config) {
       throw new Error("can not find light godwoken config");
@@ -56,9 +56,5 @@ export const ClaimSudt: React.FC = () => {
     });
     notification.success({ message: `deposit Tx(${txHash}) is successful` });
   };
-  return (
-    <a href="null" onClick={claimSudt}>
-      Get 1,000 USDC
-    </a>
-  );
+  return <div onClick={claimSudt}>Get 1,000 USDC</div>;
 };
