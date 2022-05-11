@@ -1,6 +1,10 @@
-import { message, Select } from "antd";
+import { Select } from "antd";
 import styled from "styled-components";
-import { PrimaryText, SecondeButton, Text } from "../../style/common";
+import { SecondeButton } from "../../style/common";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { useEffect, useState } from "react";
+import detectEthereumProvider from "@metamask/detect-provider";
+import { useNavigate, useParams } from "react-router-dom";
 const { Option } = Select;
 const StyleWrapper = styled.div`
   display: flex;
@@ -33,14 +37,38 @@ const StyleWrapper = styled.div`
 `;
 
 export const WalletConnect: React.FC = () => {
-  const handleChange = () => {};
+  const params = useParams();
+  const navigate = useNavigate();
+
+  const [version, setVersion] = useState("v0");
+  const lightGodwoken = useLightGodwoken();
+
+  useEffect(() => {
+    if (params.version) {
+      setVersion(params.version.toString());
+    }
+  }, [params.version]);
+
+  const handleChange = (value: string) => {
+    setVersion(value);
+    navigate(`/${value}`);
+  };
+
+  const connect = () => {
+    if (lightGodwoken) return;
+
+    detectEthereumProvider().then((ethereum: any) => {
+      return ethereum.request({ method: "eth_requestAccounts" });
+    });
+  };
+  if (lightGodwoken) return null;
   return (
     <StyleWrapper>
-      <Select className="network-select" defaultValue="lucy" onChange={handleChange}>
-        <Option value="jack">Jack</Option>
-        <Option value="Yiminghe">yiminghe</Option>
+      <Select className="network-select" defaultValue={version} onChange={handleChange}>
+        <Option value="v0">Godwoken V0</Option>
+        <Option value="v1">Godwoken V1</Option>
       </Select>
-      <SecondeButton>Connect</SecondeButton>
+      <SecondeButton onClick={connect}>Connect</SecondeButton>
     </StyleWrapper>
   );
 };

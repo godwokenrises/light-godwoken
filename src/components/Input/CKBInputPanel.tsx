@@ -1,10 +1,10 @@
-import { LoadingOutlined } from "@ant-design/icons";
 import React from "react";
 import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import NumericalInput from "./NumericalInput";
 import { BI } from "@ckb-lumos/lumos";
 import { InputCard, Text, Row } from "../../style/common";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
+import { PlaceHolder } from "../PlaceHolder";
 
 interface CKBInputPanelProps {
   value: string;
@@ -39,12 +39,7 @@ export default function CKBInputPanel({
       <Row className="first-row">
         <Text>{label}</Text>
         <Text className="balance" onClick={handelMaxClick}>
-          Max:{" "}
-          {isLoading || CKBBalance === undefined ? (
-            <LoadingOutlined />
-          ) : (
-            getDisplayAmount(BI.from(CKBBalance), decimals)
-          )}
+          Max: {CKBBalance ? getDisplayAmount(BI.from(CKBBalance), decimals) : <PlaceHolder />}
         </Text>
       </Row>
       <Row className="second-row">

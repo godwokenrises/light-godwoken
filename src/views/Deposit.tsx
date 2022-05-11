@@ -152,39 +152,41 @@ export default function Deposit() {
     <>
       <Card>
         <WalletConnect></WalletConnect>
-        <CardHeader className="header">
-          <Text className="title">
-            <span>Deposit To Layer2</span>
-            <TransactionHistory type="deposit"></TransactionHistory>
-          </Text>
-          <Text className="description">
-            To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
-          </Text>
-        </CardHeader>
-        <WalletInfo l1Address={l1Address} l1Balance={CKBBalance} l2Balance={l2CKBBalance}></WalletInfo>
-        <CKBInputPanel
-          value={CKBInput}
-          onUserInput={setCKBInput}
-          label="Deposit"
-          isLoading={CKBBalanceQuery.isLoading}
-          CKBBalance={CKBBalance}
-          maxAmount={maxAmount}
-        ></CKBInputPanel>
-        <PlusIconContainer>
-          <PlusIcon />
-        </PlusIconContainer>
-        <CurrencyInputPanel
-          value={sudtInput}
-          onUserInput={setSudtInputValue}
-          label="sUDT(optional)"
-          onSelectedChange={handleSelectedChange}
-          balancesList={sudtBalanceQUery.data?.balances}
-          tokenList={tokenList}
-          dataLoading={sudtBalanceQUery.isLoading}
-        ></CurrencyInputPanel>
-        <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={showModal}>
-          {inputError || "Deposit"}
-        </PrimaryButton>
+        <div style={{ opacity: lightGodwoken ? "1" : "0.5" }}>
+          <CardHeader className="header">
+            <Text className="title">
+              <span>Deposit To Layer2</span>
+              <TransactionHistory type="deposit"></TransactionHistory>
+            </Text>
+            <Text className="description">
+              To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
+            </Text>
+          </CardHeader>
+          <WalletInfo l1Address={l1Address} l1Balance={CKBBalance} l2Balance={l2CKBBalance}></WalletInfo>
+          <CKBInputPanel
+            value={CKBInput}
+            onUserInput={setCKBInput}
+            label="Deposit"
+            isLoading={CKBBalanceQuery.isLoading}
+            CKBBalance={CKBBalance}
+            maxAmount={maxAmount}
+          ></CKBInputPanel>
+          <PlusIconContainer>
+            <PlusIcon />
+          </PlusIconContainer>
+          <CurrencyInputPanel
+            value={sudtInput}
+            onUserInput={setSudtInputValue}
+            label="sUDT(optional)"
+            onSelectedChange={handleSelectedChange}
+            balancesList={sudtBalanceQUery.data?.balances}
+            tokenList={tokenList}
+            dataLoading={sudtBalanceQUery.isLoading}
+          ></CurrencyInputPanel>
+          <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={showModal}>
+            {inputError || "Deposit"}
+          </PrimaryButton>
+        </div>
       </Card>
       <ConfirmModal
         title="Confirm Transaction"
