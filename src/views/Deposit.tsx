@@ -19,6 +19,7 @@ import { WalletInfo } from "../components/WalletInfo";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
 import { parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
+import { WalletConnect } from "../components/WalletConnect";
 const ConfirmInfo = styled.div`
   display: flex;
   width: 100%;
@@ -139,6 +140,7 @@ export default function Deposit() {
   return (
     <>
       <Card>
+        <WalletConnect></WalletConnect>
         <CardHeader className="header">
           <Text className="title">
             <span>Deposit To Layer2</span>
