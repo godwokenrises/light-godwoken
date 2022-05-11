@@ -40,7 +40,7 @@ export const WalletConnect: React.FC = () => {
   const params = useParams();
   const navigate = useNavigate();
 
-  const [version, setVersion] = useState("v0");
+  const [version, setVersion] = useState<string>();
   const lightGodwoken = useLightGodwoken();
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export const WalletConnect: React.FC = () => {
   if (lightGodwoken) return null;
   return (
     <StyleWrapper>
-      <Select className="network-select" defaultValue={version} onChange={handleChange}>
+      <Select className="network-select" value={version} onChange={handleChange}>
         <Option value="v0">Godwoken V0</Option>
         <Option value="v1">Godwoken V1</Option>
       </Select>

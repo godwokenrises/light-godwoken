@@ -119,7 +119,6 @@ export default function CurrencyInputPanel({
       }),
     );
   };
-  console.log(balancesList);
   return (
     <InputCard>
       <Row className="first-row">
@@ -150,7 +149,7 @@ export default function CurrencyInputPanel({
               <Text>{selectedCurrency.symbol}</Text>
             </div>
           ) : (
-            <Text>Select a currency </Text>
+            <Text>Select Token </Text>
           )}
           <DownOutlined className="select" />
         </CurrencyWrapper>
