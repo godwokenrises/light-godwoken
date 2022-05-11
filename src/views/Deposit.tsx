@@ -18,6 +18,7 @@ import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } 
 import { parseStringToBI } from "../utils/numberFormat";
 import { ClaimSudt } from "../components/ClaimSudt";
 import { UseQueryResult } from "react-query/types/react";
+import { claimUSDC } from "../light-godwoken/sudtFaucet";
 
 const { Text } = Typography;
 
@@ -186,8 +187,6 @@ const ConfirmModal = styled(Modal)`
 
 function L2Balance({ decimals, query }: { decimals: number | undefined; query: UseQueryResult<string, unknown> }) {
   const loading = !query.data || query.isLoading;
-  console.log("L2Balance", query);
-
   return (
     <span>L2 Balance: {loading ? <LoadingOutlined /> : getDisplayAmount(BI.from(query.data), decimals || 8)} CKB</span>
   );

@@ -24,6 +24,7 @@ import Web3 from "web3";
 import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { debug } from "./debug";
+import { claimUSDC } from "./sudtFaucet";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -65,6 +66,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.l2Address = accounts[0];
       this.l1Address = this.generateL1Address(this.l2Address);
     });
+  }
+
+  async claimUSDC(): Promise<HexString> {
+    return claimUSDC(this.ethereum, this.getLightGodwokenConfig(), this.getL2Address(), this.ckbRpc, this.ckbIndexer);
   }
 
   async getMinFeeRate(): Promise<BI> {

@@ -53,6 +53,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
+  async claimUSDC(): Promise<HexString> {
+    return this.provider.claimUSDC();
+  }
+
   async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
     if (!BI.from(payload.capacity).eq(await this.provider.getL1CkbBalance())) {

@@ -56,5 +56,12 @@ export const ClaimSudt: React.FC = () => {
     });
     notification.success({ message: `deposit Tx(${txHash}) is successful` });
   };
-  return <Link onClick={claimSudt}>Get 1,000 USDC</Link>;
+  const claimSudtNew = async () => {
+    if (!lightGodwoken) {
+      throw new Error("LightGodwoken Not Found!");
+    }
+    const txHash = await lightGodwoken.claimUSDC();
+    notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
+  };
+  return <Link onClick={claimSudtNew}>Get 1,000 USDC</Link>;
 };
