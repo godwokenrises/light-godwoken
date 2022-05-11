@@ -20,7 +20,8 @@ export default function LightGodwokenApp(props: Props) {
   const lightGodwoken = useLightGodwoken();
   const { data: chainId } = useChainId();
   if (lightGodwoken instanceof LightGodwokenV1 && chainId) {
-    addNetwork(lightGodwoken.provider.ethereum, chainId);
+    const layer2Config = lightGodwoken.provider.lightGodwokenConfig.layer2Config;
+    addNetwork(lightGodwoken.provider.ethereum, chainId, layer2Config.GW_POLYJUICE_RPC_URL);
   }
 
   const WithdrawalComp = lightGodwoken?.getVersion().toString() === "v0" ? Withdrawal : WithdrawalV1;

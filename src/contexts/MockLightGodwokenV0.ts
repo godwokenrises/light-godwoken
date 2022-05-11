@@ -1,4 +1,4 @@
-import { Hash, HashType, HexNumber } from "@ckb-lumos/lumos";
+import { Hash, HashType, HexNumber, Script } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import {
@@ -13,6 +13,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  Token,
 } from "../light-godwoken/lightGodwokenType";
 import { GodwokenClient } from "../light-godwoken/godwoken/godwoken";
 import LightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
@@ -21,6 +22,9 @@ export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements MockLightGodwokenV0Interface {
+  generateDepositLock(): Script {
+    throw new Error("Method not implemented.");
+  }
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
@@ -29,6 +33,14 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
 
   getVersion(): GodwokenVersion {
     return "v0";
+  }
+  getNativeAsset(): Token {
+    return {
+      name: "Common Knowledge Base",
+      symbol: "CKB",
+      decimals: 8,
+      tokenURI: "",
+    };
   }
   getBlockProduceTime(): number {
     return 45 * 1000;

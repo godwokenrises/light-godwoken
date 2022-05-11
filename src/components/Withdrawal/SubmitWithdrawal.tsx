@@ -90,8 +90,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
           <Text>{estimatedTime}</Text>
         </div>
         <div className="tips">
-          Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity. Request
-          Withdrawal
+          Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity.
         </div>
         <PrimaryButton className="submit-button" /*loading={loading}*/ onClick={() => handleSubmit()}>
           Request Withdrawal

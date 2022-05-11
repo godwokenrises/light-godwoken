@@ -31,8 +31,8 @@ describe("Withdrawal/util", () => {
       expect(isCKBInputValidate("", "400")).toEqual(false);
     });
 
-    it("ckb balance can not be undefined", () => {
-      expect(isCKBInputValidate("400", undefined)).toEqual(false);
+    it("ckb balance can not be blank", () => {
+      expect(isCKBInputValidate("400", "")).toEqual(false);
     });
     it("ckb input must equal or great than 400", () => {
       expect(isCKBInputValidate("400", "50000000000")).toEqual(true);

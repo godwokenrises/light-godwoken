@@ -58,7 +58,7 @@ export const ClaimSudt: React.FC = () => {
   };
   return (
     <a href="null" onClick={claimSudt}>
-      Claim SUDT
+      Get 1,000 USDC
     </a>
   );
 };

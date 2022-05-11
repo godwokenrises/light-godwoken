@@ -51,7 +51,7 @@ export const TOKEN_LIST_V1 = [
     decimals: 18,
     tokenURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=002",
     sudt_script_hash: "",
-    address: "0xCa703686AACd882144377B3e32F175D305cFAc53",
+    address: "0x088338e5Df007e2d7B38fd6A1eBc1EB766c6E360",
     issuerLockHash: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
     l1Lock: {
       code_hash: "0xc5e5dcf215925f7ef4dfaf5f4b4f105bc321c02776d6e7d52a1db3fcd9d011a4",

@@ -13,6 +13,8 @@ interface CKBInputPanelProps {
   maxAmount?: string;
   CKBBalance?: string;
   isLoading?: boolean;
+  decimals?: number;
+  placeholder?: string;
 }
 export default function CKBInputPanel({
   value,
@@ -21,6 +23,8 @@ export default function CKBInputPanel({
   CKBBalance,
   isLoading,
   maxAmount: inputMaxAmount,
+  decimals = 8,
+  placeholder,
 }: CKBInputPanelProps) {
   const maxAmount = inputMaxAmount || CKBBalance;
 
@@ -28,21 +32,26 @@ export default function CKBInputPanel({
     if (!maxAmount) {
       throw new Error("No maxAmount");
     }
-    onUserInput(getFullDisplayAmount(BI.from(maxAmount), 8, { maxDecimalPlace: 8 }));
+    onUserInput(getFullDisplayAmount(BI.from(maxAmount), decimals, { maxDecimalPlace: 8 }));
   };
   return (
     <InputCard>
       <Row className="first-row">
         <Text>{label}</Text>
         <Text className="balance" onClick={handelMaxClick}>
-          Max: {isLoading || CKBBalance === undefined ? <LoadingOutlined /> : getDisplayAmount(BI.from(CKBBalance), 8)}
+          Max:{" "}
+          {isLoading || CKBBalance === undefined ? (
+            <LoadingOutlined />
+          ) : (
+            getDisplayAmount(BI.from(CKBBalance), decimals)
+          )}
         </Text>
       </Row>
       <Row className="second-row">
         <NumericalInput
           className="token-amount-input"
           value={value}
-          placeholder="Minimum 400 CKB"
+          placeholder={placeholder || "Minimum 400 CKB"}
           onUserInput={(val) => {
             onUserInput(val);
           }}

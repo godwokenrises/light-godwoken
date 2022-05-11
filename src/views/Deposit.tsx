@@ -3,7 +3,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { notification } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
+import { useLightGodwoken, useLightGodwokenVersion } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";
 import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
@@ -57,8 +57,10 @@ export default function Deposit() {
   const [selectedSudt, setSelectedSudt] = useState<SUDT>();
   const [selectedSudtBalance, setSelectedSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
+  const lightGodwokenVersion = useLightGodwokenVersion();
   const sudtBalanceQUery = useSUDTBalance();
   const CKBBalanceQuery = useL1CKBBalance();
+  const l2CKBBalanceQuery = useL2CKBBalance();
   const CKBBalance = CKBBalanceQuery.data;
   const { data: l2CKBBalance } = useL2CKBBalance();
 
@@ -67,6 +69,15 @@ export default function Deposit() {
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
+
+  useEffect(() => {
+    CKBBalanceQuery.remove();
+    CKBBalanceQuery.refetch();
+    l2CKBBalanceQuery.remove();
+    l2CKBBalanceQuery.refetch();
+    sudtBalanceQUery.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, lightGodwokenVersion]);
 
   const showModal = async () => {
     if (lightGodwoken) {
