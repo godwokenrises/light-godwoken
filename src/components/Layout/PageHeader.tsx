@@ -26,6 +26,9 @@ const StyledPage = styled.div`
       cursor: pointer;
     }
   }
+  .hamburger-menu {
+    cursor: pointer;
+  }
   @media (max-width: 600px) {
     padding: 16px 8px;
     .right-side {
@@ -95,8 +98,9 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
           trigger="click"
           overlayClassName="popover-menu"
           visible={popoverVisible}
+          placement="bottomLeft"
         >
-          <Hamburger onClick={openPopoverMenu}></Hamburger>
+          <Hamburger className="hamburger-menu" onClick={openPopoverMenu}></Hamburger>
         </Popover>
       </div>
     </StyledPage>

@@ -1,4 +1,3 @@
-import "antd/dist/antd.css";
 import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { HashRouter as Router, Route, Routes, Navigate } from "react-router-dom";

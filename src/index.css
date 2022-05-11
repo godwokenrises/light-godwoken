@@ -30,6 +30,19 @@ code {
 ::-ms-input-placeholder { /* Microsoft Edge */
   color: #b3b3b3;
 }
+
+/* ant-popover-reset */
 .ant-popover.popover-menu {
   padding-top: 30px;
+}
+.ant-popover.popover-menu .ant-popover-inner-content {
+  padding: 8px;
+}
+.ant-popover-arrow {
+  display: none;
+}
+@media (max-width: 600px) {
+  .ant-popover.popover-menu {
+    padding-bottom: 13px;
+  }
 }

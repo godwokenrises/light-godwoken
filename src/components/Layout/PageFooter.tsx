@@ -34,7 +34,7 @@ const PageFooter: React.FC = () => {
       <Popover
         content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
         trigger="click"
-        placement="top"
+        placement="topLeft"
         overlayClassName="popover-menu"
         visible={popoverVisible}
       >

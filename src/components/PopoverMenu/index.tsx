@@ -6,18 +6,18 @@ const StyleWrapper = styled.div`
   flex-direction: column;
   a {
     color: #000;
+    text-decoration: none;
   }
   > a,
   > div {
     height: 33px;
     padding: 0 10px;
     border-radius: 8px;
-    margin: 8px 0px;
+    margin: 4px 0px;
     text-align: center;
     line-height: 33px;
     font-size: 14px;
     font-weight: bold;
-    text-decoration: none;
     &:hover {
       background: rgba(0, 0, 0, 0.1);
       color: #000;
