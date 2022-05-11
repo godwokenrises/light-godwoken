@@ -1,59 +1,20 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { notification, Modal } from "antd";
+import { notification } from "antd";
 import { Cell } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { CKB_EXPLORER_URL } from "../../config";
-import { PlainButton, SecondeButton, Text } from "../../style/common";
+import { Actions, ConfirmModal, PlainButton, SecondeButton, Text } from "../../style/common";
 
-const UnlockModal = styled(Modal)`
-  color: black;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: white;
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid white;
-    color: black;
-  }
-  .ant-modal-header {
-    background: white;
-    border: 1px solid white;
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title {
-    color: black;
-  }
-  .ant-modal-body {
-    padding: 20px;
-  }
-  .ant-modal-close-x {
-    color: black;
-  }
-  .ant-typography {
-    color: black;
-    display: block;
-  }
-  .ant-typography.title {
-    font-size: 20px;
-    padding-bottom: 10px;
-  }
-  .actions {
-    padding-top: 20px;
-    display: flex;
-    justify-content: center;
-  }
-  .confirm {
-    margin-left: 30px;
-  }
-  .confirm,
-  .cancel {
-    border-radius: 6px;
+const ModalContent = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  .title {
+    font-size: 14px;
+    padding-bottom: 16px;
+    font-weight: bold;
   }
 `;
 export interface Props {
@@ -96,24 +57,27 @@ const Unlock = ({ cell }: Props) => {
       <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
         unlock
       </SecondeButton>
-      <UnlockModal
-        title="Withdraw to Wallet"
+      <ConfirmModal
+        title="Unlock Withdrawal"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={null}
+        width={400}
       >
-        <Text className="title">Confirm Unlock Withdrawal to below address</Text>
-        <Text>{lightGodwoken?.provider.getL1Address()}</Text>
-        <div className="actions">
-          <PlainButton className="cancel" onClick={handleCancel}>
-            Cancel
-          </PlainButton>
-          <SecondeButton className="confirm" onClick={unlock}>
-            Confirm
-          </SecondeButton>
-        </div>
-      </UnlockModal>
+        <ModalContent>
+          <Text className="title">Unlock withdraw to below address</Text>
+          <Text>{lightGodwoken?.provider.getL1Address()}</Text>
+          <Actions>
+            <PlainButton className="cancel" onClick={handleCancel}>
+              Cancel
+            </PlainButton>
+            <SecondeButton className="confirm" onClick={unlock}>
+              Confirm
+            </SecondeButton>
+          </Actions>
+        </ModalContent>
+      </ConfirmModal>
     </div>
   );
 };

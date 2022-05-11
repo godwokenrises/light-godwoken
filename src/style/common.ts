@@ -172,19 +172,6 @@ export const ConfirmModal = styled(Modal)`
     color: black;
     justify-content: space-between;
   }
-  .tips {
-    margin: 12px 0;
-    font-size: 12px;
-    color: #333;
-    font-weight: bold;
-  }
-  .anticon-loading {
-    font-size: 70px;
-    color: #00cc9b;
-  }
-  .icon-container {
-    padding: 70px 0 20px 0;
-  }
 `;
 
 export const PlusIconContainer = styled.div`
@@ -215,5 +202,44 @@ export const CardHeader = styled.div`
     font-size: 12px;
     font-weight: bold;
     color: #333;
+  }
+`;
+
+export const InputInfo = styled.div`
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  .title {
+    font-size: 14px;
+    color: #333;
+    font-weight: bold;
+  }
+  .amount {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: end;
+    img,
+    svg {
+      width: 22px;
+      height: 22px;
+      margin: 0 10px 0 16px;
+    }
+    .ckb-amount {
+      display: flex;
+    }
+    .ckb-amount + .sudt-amount {
+      margin-top: 10px;
+    }
+  }
+`;
+export const Actions = styled.div`
+  margin-top: 64px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  button + button {
+    margin-left: 16px;
   }
 `;

@@ -13,41 +13,43 @@ import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
-import { ConfirmModal, Card, PlusIconContainer, PrimaryButton, Text, CardHeader, MainText } from "../style/common";
+import {
+  ConfirmModal,
+  Card,
+  PlusIconContainer,
+  PrimaryButton,
+  Text,
+  CardHeader,
+  MainText,
+  InputInfo,
+} from "../style/common";
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
 import { parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
-const ConfirmInfo = styled.div`
-  display: flex;
+
+const ModalContent = styled.div`
   width: 100%;
-  justify-content: space-between;
-  .title {
-    font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .tips {
+    margin: 12px 0;
+    font-size: 12px;
     color: #333;
     font-weight: bold;
   }
-  .amount {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: end;
-    img,
-    svg {
-      width: 22px;
-      height: 22px;
-      margin: 0 10px 0 16px;
-    }
-    .ckb-amount {
-      display: flex;
-    }
-    .ckb-amount + .sudt-amount {
-      margin-top: 10px;
-    }
+  .anticon-loading {
+    font-size: 70px;
+    color: #00cc9b;
+  }
+  .icon-container {
+    padding: 60px 0 20px 0;
   }
 `;
+
 export default function Deposit() {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtInput, setSudtInputValue] = useState("");
@@ -195,31 +197,33 @@ export default function Deposit() {
         footer={null}
         width={400}
       >
-        <ConfirmInfo>
-          <span className="title">Depositing</span>
-          <div className="amount">
-            <div className="ckb-amount">
-              <MainText>{CKBInput}</MainText>
-              <div className="ckb-icon">
-                <CKBIcon></CKBIcon>
+        <ModalContent>
+          <InputInfo>
+            <span className="title">Depositing</span>
+            <div className="amount">
+              <div className="ckb-amount">
+                <MainText>{CKBInput}</MainText>
+                <div className="ckb-icon">
+                  <CKBIcon></CKBIcon>
+                </div>
+                <MainText>CKB</MainText>
               </div>
-              <MainText>CKB</MainText>
+              {sudtInput && (
+                <div className="sudt-amount">
+                  <MainText>{sudtInput}</MainText>
+                  {selectedSudt?.tokenURI ? <img src={selectedSudt?.tokenURI} alt="" /> : ""}
+                  <MainText>{selectedSudt?.symbol}</MainText>
+                </div>
+              )}
             </div>
-            {sudtInput && (
-              <div className="sudt-amount">
-                <MainText>{sudtInput}</MainText>
-                {selectedSudt?.tokenURI ? <img src={selectedSudt?.tokenURI} alt="" /> : ""}
-                <MainText>{selectedSudt?.symbol}</MainText>
-              </div>
-            )}
+          </InputInfo>
+
+          <div className="icon-container">
+            <LoadingOutlined />
           </div>
-        </ConfirmInfo>
 
-        <div className="icon-container">
-          <LoadingOutlined />
-        </div>
-
-        <div className="tips">Waiting for User Confirmation</div>
+          <div className="tips">Waiting for User Confirmation</div>
+        </ModalContent>
       </ConfirmModal>
     </>
   );
