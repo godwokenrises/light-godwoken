@@ -89,18 +89,18 @@ export const PrimaryButton = styled.button`
   font-weight: bold;
   letter-spacing: 0.03em;
   line-height: 1;
+  &:hover {
+    cursor: pointer;
+  }
   &:disabled {
     background-color: rgba(0, 204, 155, 0.5);
     cursor: not-allowed;
   }
-  &:hover {
-    cursor: pointer;
-  }
 `;
 
 export const SecondeButton = styled.button`
+  width: 100%;
   height: 32px;
-  width: 100px;
   padding: 0px 10px;
   background-color: #00cc9b;
   color: white;
@@ -109,16 +109,16 @@ export const SecondeButton = styled.button`
   font-size: 14px;
   font-weight: bold;
   line-height: 1;
-  &:disabled {
-    cursor: not-allowed;
-  }
   &:hover {
     cursor: pointer;
   }
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
 export const PlainButton = styled.button`
+  width: 100%;
   height: 32px;
-  width: 100px;
   padding: 0px 10px;
   background-color: #999999;
   color: white;
@@ -127,11 +127,11 @@ export const PlainButton = styled.button`
   font-size: 14px;
   font-weight: bold;
   line-height: 1;
-  &:disabled {
-    cursor: not-allowed;
-  }
   &:hover {
     cursor: pointer;
+  }
+  &:disabled {
+    cursor: not-allowed;
   }
 `;
 
@@ -160,7 +160,7 @@ export const ConfirmModal = styled(Modal)`
     font-weight: bold;
   }
   .ant-modal-body {
-    padding: 0 24px 12px 24px;
+    padding: 0 24px 24px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -242,4 +242,24 @@ export const Actions = styled.div`
   button + button {
     margin-left: 16px;
   }
+`;
+export const LoadingWrapper = styled.div`
+  width: 100%;
+  padding: 60px 0 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .anticon-loading {
+    font-size: 70px;
+    color: #00cc9b;
+  }
+`;
+
+export const Tips = styled.div`
+  width: 100%;
+  margin: 12px 0;
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+  text-align: center;
 `;

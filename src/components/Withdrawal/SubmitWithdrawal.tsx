@@ -8,6 +8,7 @@ import {
   PrimaryButton,
   SecondeButton,
   Text,
+  Tips,
 } from "../../style/common";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import styled from "styled-components";
@@ -21,12 +22,6 @@ const TimeInfo = styled.div`
   .title {
     font-weight: bold;
   }
-`;
-const Tips = styled.div`
-  font-size: 12px;
-  font-weight: bold;
-  line-height: 14px;
-  padding: 12px 0;
 `;
 
 interface Props {

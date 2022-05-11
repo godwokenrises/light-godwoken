@@ -4,7 +4,7 @@ import { PrimaryText, Text } from "../../style/common";
 import { ReactComponent as CopyIcon } from "../../asserts/copy.svg";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI } from "@ckb-lumos/lumos";
-import { PlaceHolder } from "../PlaceHolder";
+import { Placeholder } from "../Placeholder";
 
 const StyleWrapper = styled.div`
   display: flex;
@@ -64,14 +64,14 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance })
         </div>
       </div>
 
-      <PrimaryText className="address">{l1Address || <PlaceHolder />}</PrimaryText>
+      <PrimaryText className="address">{l1Address || <Placeholder />}</PrimaryText>
       <BalanceRow>
         <Text className="title">L1 Balance</Text>
-        <PrimaryText>{l1Balance ? getDisplayAmount(BI.from(l1Balance), 8) + " CKB" : <PlaceHolder />}</PrimaryText>
+        <PrimaryText>{l1Balance ? getDisplayAmount(BI.from(l1Balance), 8) + " CKB" : <Placeholder />}</PrimaryText>
       </BalanceRow>
       <BalanceRow>
         <Text className="title">L2 Balance</Text>
-        <PrimaryText>{l2Balance ? getDisplayAmount(BI.from(l2Balance), 8) + " CKB" : <PlaceHolder />}</PrimaryText>
+        <PrimaryText>{l2Balance ? getDisplayAmount(BI.from(l2Balance), 8) + " CKB" : <Placeholder />}</PrimaryText>
       </BalanceRow>
     </StyleWrapper>
   );

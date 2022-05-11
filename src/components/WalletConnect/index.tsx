@@ -15,24 +15,8 @@ const StyleWrapper = styled.div`
     flex: 1;
     margin-right: 16px;
   }
-  .first-row {
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .address {
-    margin-top: 10px;
-  }
-  .copy {
-    svg {
-      margin-right: 4px;
-    }
-    .copy-text {
-      color: #00cc98;
-    }
-    &:hover {
-      cursor: pointer;
-    }
+  button {
+    width: 100px;
   }
 `;
 

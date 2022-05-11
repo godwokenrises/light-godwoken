@@ -22,6 +22,8 @@ import {
   CardHeader,
   MainText,
   InputInfo,
+  LoadingWrapper,
+  Tips,
 } from "../style/common";
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
@@ -35,19 +37,6 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  .tips {
-    margin: 12px 0;
-    font-size: 12px;
-    color: #333;
-    font-weight: bold;
-  }
-  .anticon-loading {
-    font-size: 70px;
-    color: #00cc9b;
-  }
-  .icon-container {
-    padding: 60px 0 20px 0;
-  }
 `;
 
 export default function Deposit() {
@@ -218,11 +207,10 @@ export default function Deposit() {
             </div>
           </InputInfo>
 
-          <div className="icon-container">
+          <LoadingWrapper>
             <LoadingOutlined />
-          </div>
-
-          <div className="tips">Waiting for User Confirmation</div>
+          </LoadingWrapper>
+          <Tips>Waiting for User Confirmation</Tips>
         </ModalContent>
       </ConfirmModal>
     </>
