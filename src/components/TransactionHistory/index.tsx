@@ -23,16 +23,17 @@ export const HistoryList = styled.div`
   }
 `;
 
-type Props = {
+type TransactionHistoryProps = {
   type: "withdrawal" | "deposit";
 };
 
-export const TransactionHistory: React.FC<Props> = (prop) => {
+export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const lightGodwoken = useLightGodwoken();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
-  const { txHistory } = useL1TxHistory(`${chainId}/${l1Address}/${prop.type}`);
+  const historyKey = `${chainId}/${l1Address}/${prop.type}`;
+  const { txHistory } = useL1TxHistory(historyKey);
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -58,13 +59,18 @@ export const TransactionHistory: React.FC<Props> = (prop) => {
         <HistoryList>
           {txHistory.length === 0 && "there is no transaction history"}
           {txHistory.map((history) => {
-            return (
+            const historyCKBDescription = `${history.type} ${getDisplayAmount(BI.from(history.capacity))} CKB  `;
+            const historySUDTDescription =
+              history.amount && history.amount !== "0x0"
+                ? `and ${getDisplayAmount(BI.from(history.amount), history.decimals)} ${history.symbol}`
+                : "";
+            const historyDescription = historyCKBDescription + historySUDTDescription;
+            return prop.type === "deposit" ? (
               <a target="_blank" href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`} rel="noreferrer">
-                {`${history.type} ${getDisplayAmount(BI.from(history.capacity))} CKB`}{" "}
-                {history.amount && history.amount !== "0x0"
-                  ? `and ${getDisplayAmount(BI.from(history.amount), history.decimals)} ${history.symbol}`
-                  : ""}
+                {historyDescription}
               </a>
+            ) : (
+              <span>{historyDescription}</span>
             );
           })}
         </HistoryList>
