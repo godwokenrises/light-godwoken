@@ -303,12 +303,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
         debug("withdrawal pending:", withdrawal);
-        debugWithSentry("withdrawal pending:", txHash);
         eventEmitter.emit("pending", txHash);
       }
       if (withdrawal && withdrawal.status === "committed") {
         debug("withdrawal committed:", withdrawal);
-        debugWithSentry("withdrawal committed:", txHash);
         eventEmitter.emit("success", txHash);
         clearInterval(nIntervId);
       }
