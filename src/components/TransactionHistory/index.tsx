@@ -1,12 +1,12 @@
 import { HistoryOutlined } from "@ant-design/icons";
 import { BI } from "@ckb-lumos/lumos";
-import { Modal } from "antd";
 import React, { useState } from "react";
 import styled from "styled-components";
 import { CKB_EXPLORER_URL } from "../../config";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { ConfirmModal } from "../../style/common";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 
 export const StyleWrapper = styled.div`
@@ -23,48 +23,6 @@ export const HistoryList = styled.div`
   }
 `;
 
-const CKBModal = styled(Modal)`
-  color: white;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: rgb(39, 37, 52);
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
-  }
-  .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title,
-  .ant-list-item {
-    color: white;
-  }
-  .ant-modal-body {
-    padding: 0px;
-  }
-  .ant-modal-close-x {
-    color: white;
-  }
-  .ant-list-item {
-    border-bottom: none;
-    padding: 4px 20px;
-    height: 56px;
-    &:hover {
-      background-color: rgb(60, 58, 75);
-      cursor: pointer;
-    }
-    &.selected {
-      background-color: rgb(60, 58, 75);
-    }
-  }
-`;
 type TransactionHistoryProps = {
   type: "withdrawal" | "deposit";
 };
@@ -90,12 +48,13 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
   return (
     <StyleWrapper>
       <HistoryOutlined onClick={showModal} />
-      <CKBModal
+      <ConfirmModal
         title="Recent Transactions"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={null}
+        width={400}
       >
         <HistoryList>
           {txHistory.length === 0 && "there is no transaction history"}
@@ -115,7 +74,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
             );
           })}
         </HistoryList>
-      </CKBModal>
+      </ConfirmModal>
     </StyleWrapper>
   );
 };

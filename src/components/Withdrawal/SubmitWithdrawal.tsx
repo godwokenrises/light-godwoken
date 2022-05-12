@@ -1,56 +1,38 @@
-import { Button, Modal, Typography } from "antd";
 import React, { useState } from "react";
-import { WithdrawalButton } from "./requestWithdrawalStyle";
+import {
+  Actions,
+  ConfirmModal,
+  InputInfo,
+  MainText,
+  PlainButton,
+  PrimaryButton,
+  SecondeButton,
+  Text,
+  Tips,
+} from "../../style/common";
+import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import styled from "styled-components";
-export const ConfirmModal = styled(Modal)`
-  color: white;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: rgb(39, 37, 52);
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
-  }
-  .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title,
-  .ant-list-item {
-    color: white;
-  }
-  .ant-modal-body {
-    padding: 24px;
-  }
-  .ant-modal-close-x {
-    color: white;
-  }
-  .ant-typography {
-    color: white;
-    justify-content: space-between;
-  }
-  .text-pair {
-    padding-top: 5px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 24px;
-  }
-  .tips {
-    margin: 24px 0;
+
+const TimeInfo = styled.div`
+  width: 100%;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  .title {
+    font-weight: bold;
   }
 `;
-const { Text } = Typography;
+
 interface Props {
   sendWithdrawal: () => void;
   loading: boolean;
   blockWait: string;
   estimatedTime: string;
+  CKBInput: string;
+  sudtInput: string;
+  tokenURI?: string;
+  sudtSymbol?: string;
   disabled?: boolean;
   buttonText?: string;
 }
@@ -61,6 +43,10 @@ const SubmitWithdrawal: React.FC<Props> = ({
   loading,
   blockWait,
   estimatedTime,
+  CKBInput,
+  sudtInput,
+  tokenURI,
+  sudtSymbol,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -78,28 +64,50 @@ const SubmitWithdrawal: React.FC<Props> = ({
 
   return (
     <>
-      <WithdrawalButton>
-        <Button className="submit-button" disabled={disabled} onClick={showModal}>
-          {buttonText || "Request Withdrawal"}
-        </Button>
-      </WithdrawalButton>
-      <ConfirmModal title="Confirm Request" visible={isModalVisible || loading} onCancel={handleCancel} footer={null}>
-        <div className="text-pair">
-          <Text>Block wait</Text>
+      <PrimaryButton className="submit-button" disabled={disabled} onClick={showModal}>
+        {buttonText || "Request Withdrawal Request"}
+      </PrimaryButton>
+      <ConfirmModal
+        title="Confirm Request"
+        visible={isModalVisible || loading}
+        onCancel={handleCancel}
+        footer={null}
+        width={400}
+      >
+        <InputInfo>
+          <span className="title">Withdrawing</span>
+          <div className="amount">
+            <div className="ckb-amount">
+              <MainText>{CKBInput}</MainText>
+              <div className="ckb-icon">
+                <CKBIcon></CKBIcon>
+              </div>
+              <MainText>CKB</MainText>
+            </div>
+            {sudtInput && (
+              <div className="sudt-amount">
+                <MainText>{sudtInput}</MainText>
+                {tokenURI ? <img src={tokenURI} alt="" /> : ""}
+                <MainText>{sudtSymbol}</MainText>
+              </div>
+            )}
+          </div>
+        </InputInfo>
+        <TimeInfo>
+          <MainText className="title">Block wait</MainText>
           <Text>{blockWait}</Text>
-        </div>
-        <div className="text-pair">
-          <Text>Estimated time</Text>
+        </TimeInfo>
+        <TimeInfo>
+          <MainText className="title">Estimated time</MainText>
           <Text>{estimatedTime}</Text>
-        </div>
-        <div className="tips">
+        </TimeInfo>
+        <Tips>
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity.
-        </div>
-        <WithdrawalButton>
-          <Button className="submit-button" loading={loading} onClick={() => handleSubmit()}>
-            Request Withdrawal
-          </Button>
-        </WithdrawalButton>
+        </Tips>
+        <Actions>
+          <PlainButton onClick={handleCancel}>Cancel</PlainButton>
+          <SecondeButton /*loading={loading}*/ onClick={() => handleSubmit()}>Confirm</SecondeButton>
+        </Actions>
       </ConfirmModal>
     </>
   );
