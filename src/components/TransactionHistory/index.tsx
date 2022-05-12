@@ -18,6 +18,7 @@ export const HistoryList = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
+  color: ${COLOR.brand};
   a {
     text-decoration: none;
     color: ${COLOR.brand};
@@ -67,11 +68,16 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
                 : "";
             const historyDescription = historyCKBDescription + historySUDTDescription;
             return prop.type === "deposit" ? (
-              <a target="_blank" href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`} rel="noreferrer">
+              <a
+                key={history.txHash}
+                target="_blank"
+                href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`}
+                rel="noreferrer"
+              >
                 {historyDescription}
               </a>
             ) : (
-              <span>{historyDescription}</span>
+              <span key={history.txHash}>{historyDescription}</span>
             );
           })}
         </HistoryList>
