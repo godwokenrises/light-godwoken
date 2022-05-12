@@ -1,119 +1,21 @@
 import React, { useState } from "react";
 import styled from "styled-components";
-import { Button, Typography, notification, Modal } from "antd";
+import { notification } from "antd";
 import { Cell } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { CKB_EXPLORER_URL } from "../../config";
-const { Text } = Typography;
-const PrimaryButton = styled(Button)`
-  align-items: center;
-  border: 0px;
-  border-radius: 16px;
-  box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  -webkit-box-pack: center;
-  justify-content: center;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  opacity: 1;
-  outline: 0px;
-  transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-  height: 32px;
-  padding: 0px 16px;
-  background-color: rgb(255, 67, 66);
-  color: white;
-  margin-left: 4px;
-  margin-top: 8px;
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: rgb(255, 67, 66);
-    color: white;
-  }
-`;
-const PlainButton = styled.div`
-  align-items: center;
-  border: 0px;
-  border-radius: 16px;
-  box-shadow: rgb(14 14 44 / 40%) 0px -1px 0px 0px inset;
-  cursor: pointer;
-  display: inline-flex;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  -webkit-box-pack: center;
-  justify-content: center;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  opacity: 1;
-  outline: 0px;
-  transition: background-color 0.2s ease 0s, opacity 0.2s ease 0s;
-  height: 32px;
-  padding: 0px 16px;
-  background-color: rgb(60, 58, 75);
-  color: white;
-  margin-left: 4px;
-  margin-top: 8px;
-  &:hover,
-  &:focus,
-  &:active {
-    background-color: rgb(60, 58, 75);
-    color: white;
-  }
-`;
+import { Actions, ConfirmModal, LoadingWrapper, PlainButton, SecondeButton, Text, Tips } from "../../style/common";
+import { LoadingOutlined } from "@ant-design/icons";
 
-const UnlockModal = styled(Modal)`
-  color: white;
-  .ant-modal-content {
-    border-radius: 32px;
-    background: rgb(39, 37, 52);
-    box-shadow: rgb(14 14 44 / 10%) 0px 20px 36px -8px, rgb(0 0 0 / 5%) 0px 1px 1px;
-    border: 1px solid rgb(60, 58, 75);
-    color: white;
-  }
-  .ant-modal-header {
-    background: rgb(39, 37, 52);
-    border: 1px solid rgb(60, 58, 75);
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    padding: 12px 24px;
-    height: 73px;
-    display: flex;
-    align-items: center;
-  }
-  .ant-modal-title {
-    color: white;
-  }
-  .ant-modal-body {
-    padding: 20px;
-  }
-  .ant-modal-close-x {
-    color: white;
-  }
-  .ant-typography {
-    color: white;
-    display: block;
-  }
-  .ant-typography.title {
-    font-size: 20px;
-    padding-bottom: 10px;
-  }
-  .actions {
-    padding-top: 20px;
-    display: flex;
-    justify-content: center;
-  }
-  .confirm {
-    margin-left: 30px;
-  }
-  .confirm,
-  .cancel {
-    border-radius: 6px;
+const ModalContent = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  .title {
+    font-size: 14px;
+    padding-bottom: 16px;
+    font-weight: bold;
   }
 `;
 export interface Props {
@@ -153,27 +55,37 @@ const Unlock = ({ cell }: Props) => {
 
   return (
     <div>
-      <PrimaryButton className="withdraw-button" onClick={showCurrencySelectModal}>
-        withdraw
-      </PrimaryButton>
-      <UnlockModal
-        title="Withdraw to Wallet"
+      <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
+        unlock
+      </SecondeButton>
+      <ConfirmModal
+        title="Unlock Withdrawal"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={null}
+        width={400}
       >
-        <Text className="title">Confirm Unlock Withdrawal to below address</Text>
-        <Text>{lightGodwoken?.provider.getL1Address()}</Text>
-        <div className="actions">
-          <PlainButton className="cancel" onClick={handleCancel}>
-            Cancel
-          </PlainButton>
-          <PrimaryButton className="confirm" onClick={unlock} loading={isUnlocking}>
-            Confirm
-          </PrimaryButton>
-        </div>
-      </UnlockModal>
+        <ModalContent>
+          <Text className="title">Unlock withdraw to below address</Text>
+          <Text>{lightGodwoken?.provider.getL1Address()}</Text>
+          {isUnlocking && (
+            <LoadingWrapper>
+              <LoadingOutlined />
+            </LoadingWrapper>
+          )}
+          {isUnlocking && <Tips>Waiting for User Confirmation</Tips>}
+
+          <Actions>
+            <PlainButton className="cancel" onClick={handleCancel}>
+              Cancel
+            </PlainButton>
+            <SecondeButton className="confirm" onClick={unlock} disabled={isUnlocking}>
+              Confirm
+            </SecondeButton>
+          </Actions>
+        </ModalContent>
+      </ConfirmModal>
     </div>
   );
 };
