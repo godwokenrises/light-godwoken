@@ -6,10 +6,11 @@ export function useClock(): number {
   useEffect(() => {
     const loop = () => {
       setTime(Date.now());
-      setTimeout(loop, 1000);
     };
-
-    setTimeout(loop, 1000);
+    let timeId = setInterval(loop, 1000);
+    return () => {
+      clearInterval(timeId);
+    };
   }, []);
 
   return now;
