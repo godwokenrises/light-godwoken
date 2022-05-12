@@ -25,7 +25,6 @@ function App() {
                 <Page>
                   <PageHeader onViewChange={handleViewChange}></PageHeader>
                   <LightGodwokenApp activeView={activeView} />
-                  <PageFooter></PageFooter>
                 </Page>
               }
             ></Route>

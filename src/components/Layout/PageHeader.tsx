@@ -92,17 +92,7 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
           Withdrawal
         </Link>
       </div>
-      <div className="right-side">
-        <Popover
-          content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
-          trigger="click"
-          overlayClassName="popover-menu"
-          visible={popoverVisible}
-          placement="bottomLeft"
-        >
-          <Hamburger className="hamburger-menu" onClick={openPopoverMenu}></Hamburger>
-        </Popover>
-      </div>
+      <div className="right-side"></div>
     </StyledPage>
   );
 };
