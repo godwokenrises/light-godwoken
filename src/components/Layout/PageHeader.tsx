@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ReactComponent as Logo } from "../../asserts/logo.svg";
 import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 
@@ -80,6 +80,15 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
   const closePopoverMenu = () => {
     setPopoverVisible(false);
   };
+
+  useEffect(() => {
+    document.addEventListener("click", (e) => {
+      const target = document.querySelector(".hamburger-menu");
+      if (!(e.target && e.target instanceof Element && (e.target === target || target?.contains(e.target)))) {
+        closePopoverMenu();
+      }
+    });
+  });
 
   return (
     <StyledPage>
