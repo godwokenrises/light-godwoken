@@ -51,7 +51,7 @@ export default function WithdrawalTarget({ value, onSelectedChange }: Withdrawal
       <Row>
         <Radio.Group onChange={onChange} value={value}>
           <Radio value={CKB_L1}>CKB L1</Radio>
-          {/* <Radio value={GODWOKEN_V1}>GodWoken V1</Radio> */}
+          <Radio value={GODWOKEN_V1}>GodWoken V1</Radio>
         </Radio.Group>
       </Row>
     </StyleWrapper>
