@@ -66,7 +66,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
   return (
     <>
       <PrimaryButton className="submit-button" disabled={disabled} onClick={showModal}>
-        {buttonText || "Request Withdrawal Request"}
+        {buttonText || "Request Withdrawal"}
       </PrimaryButton>
       <ConfirmModal
         title="Confirm Request"

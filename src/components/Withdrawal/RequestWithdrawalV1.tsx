@@ -3,7 +3,7 @@ import { notification } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
-import { useLightGodwoken, useLightGodwokenVersion } from "../../hooks/useLightGodwoken";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
@@ -26,7 +26,6 @@ const RequestWithdrawalV1: React.FC = () => {
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
-  const lightGodwokenVersion = useLightGodwokenVersion();
   const l2CKBBalanceQuery = useL2CKBBalance();
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
@@ -46,13 +45,6 @@ const RequestWithdrawalV1: React.FC = () => {
   useEffect(() => {
     setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
-
-  useEffect(() => {
-    l2CKBBalanceQuery.remove();
-    l2CKBBalanceQuery.refetch();
-    erc20BalanceQuery.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken, lightGodwokenVersion]);
 
   const sendWithdrawal = () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();

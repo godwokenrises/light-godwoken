@@ -7,7 +7,7 @@ export const useSUDTBalance = (): UseQueryResult<GetSudtBalancesResult> => {
   const lightGodwoken = useLightGodwoken();
 
   return useQuery(
-    ["queryBalance"],
+    ["queryBalance", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
       if (!lightGodwoken) {
         throw new Error("LightGodwoken not found");
