@@ -179,6 +179,10 @@ const RequestWithdrawalV0: React.FC = () => {
           estimatedTime={targetValue === CKB_L1 ? "5 days" : "a few minutes"}
           loading={loading}
           buttonText={inputError}
+          CKBInput={CKBInput}
+          sudtInput={sudtValue}
+          tokenURI={selectedSudt?.tokenURI}
+          sudtSymbol={selectedSudt?.symbol}
           disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
         ></SubmitWithdrawal>
       </PageMain>

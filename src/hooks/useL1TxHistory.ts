@@ -16,19 +16,19 @@ export interface L1TxHistoryInterface {
 
 export function useL1TxHistory(storageKey: string) {
   const [txHistory, setTxHistory] = useState<L1TxHistoryInterface[]>(() => []);
-  const [counterValue] = useLocalStorage(storageKey);
+  const storageValue = localStorage.getItem(storageKey);
   useLayoutEffect(() => {
-    if (counterValue == null) {
+    if (storageValue == null) {
       setTxHistory([]);
       return;
     }
 
     try {
-      setTxHistory(JSON.parse(counterValue));
+      setTxHistory(JSON.parse(storageValue));
     } catch (err) {
       console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
     }
-  }, [counterValue, storageKey]);
+  }, [storageValue, storageKey]);
 
   const addTxToHistory = useCallback(
     (newTxHistory: L1TxHistoryInterface) => {
@@ -36,7 +36,7 @@ export function useL1TxHistory(storageKey: string) {
         return;
       }
 
-      const latestTxHistoryRaw = counterValue || "[]";
+      const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
         writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
@@ -44,7 +44,7 @@ export function useL1TxHistory(storageKey: string) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }
     },
-    [counterValue, storageKey],
+    [storageValue, storageKey],
   );
 
   return useMemo(
