@@ -1,5 +1,6 @@
 import { Modal } from "antd";
 import styled from "styled-components";
+import { COLOR } from "./variables";
 
 export const Card = styled.div`
   width: 400px;
@@ -21,18 +22,18 @@ export const PageContent = styled.div`
 `;
 export const Text = styled.span`
   font-size: 12px;
-  color: #666666;
+  color: ${COLOR.label};
   overflow-wrap: break-word;
 `;
 export const MainText = styled.span`
   font-size: 14px;
-  color: #000000;
+  color: ${COLOR.primary};
   overflow-wrap: break-word;
 `;
 
 export const PrimaryText = styled.span`
   font-size: 12px;
-  color: #000000;
+  color: ${COLOR.primary};
   overflow-wrap: break-word;
 `;
 
@@ -47,10 +48,10 @@ export const InputCard = styled.div`
   }
   .first-row {
     font-size: 12px;
-    color: #666;
+    color: ${COLOR.label};
     font-weight: bold;
     .balance {
-      color: #00cc9b;
+      color: ${COLOR.brand};
       text-decoration-line: underline;
       font-weight: normal;
       cursor: pointer;
@@ -59,7 +60,7 @@ export const InputCard = styled.div`
   .second-row {
     margin-top: 18px;
     .symbol {
-      color: #000;
+      color: ${COLOR.primary};
       margin-left: 5px;
     }
   }
@@ -81,7 +82,7 @@ export const PrimaryButton = styled.button`
   width: 100%;
   padding: 0px 24px;
   margin-top: 24px;
-  background-color: #00cc9b;
+  background-color: ${COLOR.brand};
   color: white;
   border: 0px;
   border-radius: 8px;
@@ -102,7 +103,7 @@ export const SecondeButton = styled.button`
   width: 100%;
   height: 32px;
   padding: 0px 10px;
-  background-color: #00cc9b;
+  background-color: ${COLOR.brand};
   color: white;
   border: 0px;
   border-radius: 8px;
@@ -156,7 +157,7 @@ export const ConfirmModal = styled(Modal)`
   }
   .ant-modal-title {
     font-size: 12px;
-    color: #666;
+    color: ${COLOR.label};
     font-weight: bold;
   }
   .ant-modal-body {
@@ -195,13 +196,13 @@ export const CardHeader = styled.div`
     > span {
       font-weight: bold;
       font-size: 18px;
-      color: #333;
+      color: ${COLOR.secondary};
     }
   }
   .description {
     font-size: 12px;
     font-weight: bold;
-    color: #333;
+    color: ${COLOR.secondary};
   }
 `;
 
@@ -212,7 +213,7 @@ export const InputInfo = styled.div`
   margin-bottom: 12px;
   .title {
     font-size: 14px;
-    color: #333;
+    color: ${COLOR.secondary};
     font-weight: bold;
   }
   .amount {
@@ -251,7 +252,7 @@ export const LoadingWrapper = styled.div`
   justify-content: center;
   .anticon-loading {
     font-size: 70px;
-    color: #00cc9b;
+    color: ${COLOR.brand};
   }
 `;
 
@@ -259,7 +260,7 @@ export const Tips = styled.div`
   width: 100%;
   margin: 12px 0;
   font-size: 12px;
-  color: #333;
+  color: ${COLOR.secondary};
   font-weight: bold;
   text-align: center;
 `;
