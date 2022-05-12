@@ -182,7 +182,8 @@ export default function CurrencyInputPanel({
                     {dataLoading ? (
                       <LoadingOutlined />
                     ) : (
-                      balancesList && getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals)
+                      balancesList &&
+                      formatToThousands(getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals))
                     )}
                   </div>
                 </FixedHeightRow>

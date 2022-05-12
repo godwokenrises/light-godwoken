@@ -7,6 +7,7 @@ import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ConfirmModal } from "../../style/common";
+import { COLOR } from "../../style/variables";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 
 export const StyleWrapper = styled.div`
@@ -19,7 +20,7 @@ export const HistoryList = styled.div`
   flex-direction: column;
   a {
     text-decoration: none;
-    color: rgb(255, 67, 66);
+    color: ${COLOR.brand};
   }
 `;
 
