@@ -8,6 +8,7 @@ import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
 import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
+import { formatToThousands } from "../../utils/numberFormat";
 
 const TokenList = styled.div`
   height: 390px;
@@ -126,7 +127,7 @@ export default function CurrencyInputPanel({
         <Text className="balance" onClick={selectedCurrency && handelMaxClick}>
           Max:{" "}
           {selectedCurrencyBalance
-            ? getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals)
+            ? formatToThousands(getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals))
             : "-"}
         </Text>
       </Row>
