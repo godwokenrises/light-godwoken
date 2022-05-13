@@ -5,7 +5,7 @@ import { SerializeRcLockWitnessLock } from "./omni-lock";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/lightGodwokenConfig";
 
-const issuerPrivateKey = "0xb60bf0787fa97c52bb62d41131757954d5bda2f2054fb0c5efa172fa6b945296";
+const issuerPrivateKey = process.env.REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY!;
 
 export async function claimUSDC(
   ethereum: any,
