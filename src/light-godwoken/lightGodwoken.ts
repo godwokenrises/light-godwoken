@@ -32,7 +32,7 @@ import {
   LightGodwokenBase,
   Token,
 } from "./lightGodwokenType";
-import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
+import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugWithSentry } from "./debug";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
