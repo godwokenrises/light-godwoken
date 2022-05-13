@@ -1,7 +1,7 @@
+import React, { useEffect, useMemo, useState } from "react";
 import { LoadingOutlined } from "@ant-design/icons";
 import { BI } from "@ckb-lumos/lumos";
 import { notification } from "antd";
-import React, { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLightGodwoken, useLightGodwokenVersion } from "../hooks/useLightGodwoken";
 import CKBInputPanel from "../components/Input/CKBInputPanel";

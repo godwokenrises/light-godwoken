@@ -32,7 +32,7 @@ import {
   LightGodwokenBase,
   Token,
 } from "./lightGodwokenType";
-import { SerializeWithdrawalLockArgs } from "./schemas/index.esm";
+import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugWithSentry } from "./debug";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -52,6 +52,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract listWithdraw(): Promise<WithdrawResult[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  async claimUSDC(): Promise<HexString> {
+    return this.provider.claimUSDC();
+  }
 
   async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);

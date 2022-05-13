@@ -3,6 +3,7 @@ import LightGodwokenV1 from "../LightGodwokenV1";
 import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { generateCellInput, outputCapacityOf, randomScript, outputSudtAmountOf } from "./utils";
+import { testConfig } from "./lightGodwokenConfig";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -13,9 +14,9 @@ beforeEach(() => {
   const dummyEthereum = {
     on: () => {},
   };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1");
+  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig.v1);
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0");
+  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
 });
 

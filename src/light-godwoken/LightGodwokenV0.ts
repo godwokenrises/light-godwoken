@@ -33,7 +33,7 @@ import {
   BaseWithdrawalEventEmitterPayload,
   Token,
 } from "./lightGodwokenType";
-import { SerializeDepositLockArgs, SerializeUnlockWithdrawalViaFinalize } from "./schemas/index.esm";
+import { SerializeDepositLockArgs, SerializeUnlockWithdrawalViaFinalize } from "./schemas/generated/index.esm";
 import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
