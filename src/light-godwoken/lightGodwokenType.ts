@@ -1,4 +1,4 @@
-import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI } from "@ckb-lumos/lumos";
+import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -104,6 +104,8 @@ type Promisable<T> = Promise<T> | T;
 export const CKB_SUDT_ID = 1;
 
 export interface LightGodwokenProvider {
+  claimUSDC(): Promise<HexString>;
+
   getL2Address(): Promisable<string>;
 
   getL1Address(): Promisable<string>;
@@ -120,6 +122,8 @@ export type GodwokenVersion = "v0" | "v1";
 
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
+
+  claimUSDC(): Promise<HexString>;
 
   getVersion: () => GodwokenVersion;
 
