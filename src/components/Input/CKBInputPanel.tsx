@@ -5,6 +5,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { InputCard, Text, Row } from "../../style/common";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Placeholder } from "../Placeholder";
+import { formatToThousands } from "../../utils/numberFormat";
 
 interface CKBInputPanelProps {
   value: string;
@@ -39,7 +40,7 @@ export default function CKBInputPanel({
       <Row className="first-row">
         <Text>{label}</Text>
         <Text className="balance" onClick={handelMaxClick}>
-          Max: {CKBBalance ? getDisplayAmount(BI.from(CKBBalance), decimals) : <Placeholder />}
+          Max: {CKBBalance ? formatToThousands(getDisplayAmount(BI.from(CKBBalance), decimals)) : <Placeholder />}
         </Text>
       </Row>
       <Row className="second-row">
