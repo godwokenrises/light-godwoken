@@ -9,6 +9,7 @@ import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { ReactComponent as ArrowDownIcon } from "../../asserts/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../asserts/arrow-up.svg";
 import { MainText } from "../../style/common";
+import { COLOR } from "../../style/variables";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -47,7 +48,7 @@ const StyleWrapper = styled.div`
   }
   .time {
     font-size: 12px;
-    color: #333333;
+    color: ${COLOR.secondary};
     svg {
       margin-left: 5px;
     }

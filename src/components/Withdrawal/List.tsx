@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useClock } from "../../hooks/useClock";
-import { useLightGodwoken, useLightGodwokenVersion } from "../../hooks/useLightGodwoken";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import { LoadingOutlined } from "@ant-design/icons";
@@ -22,10 +22,9 @@ interface Props {
 }
 export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const lightGodwoken = useLightGodwoken();
-  const lightGodwokenVersion = useLightGodwokenVersion();
   const now = useClock();
   const withdrawalListQuery = useQuery(
-    ["queryWithdrawList", { version: lightGodwoken?.getVersion() }],
+    ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
       return lightGodwoken?.listWithdraw();
     },
@@ -35,12 +34,6 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   );
 
   const { data: withdrawalList } = withdrawalListQuery;
-
-  useEffect(() => {
-    withdrawalListQuery.remove();
-    withdrawalListQuery.refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken, lightGodwokenVersion]);
 
   if (!withdrawalList) {
     return (

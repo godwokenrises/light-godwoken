@@ -12,6 +12,7 @@ import {
 } from "../../style/common";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import styled from "styled-components";
+import { formatToThousands } from "../../utils/numberFormat";
 
 const TimeInfo = styled.div`
   width: 100%;
@@ -65,7 +66,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
   return (
     <>
       <PrimaryButton className="submit-button" disabled={disabled} onClick={showModal}>
-        {buttonText || "Request Withdrawal Request"}
+        {buttonText || "Request Withdrawal"}
       </PrimaryButton>
       <ConfirmModal
         title="Confirm Request"
@@ -78,7 +79,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
           <span className="title">Withdrawing</span>
           <div className="amount">
             <div className="ckb-amount">
-              <MainText>{CKBInput}</MainText>
+              <MainText>{formatToThousands(CKBInput)}</MainText>
               <div className="ckb-icon">
                 <CKBIcon></CKBIcon>
               </div>
@@ -86,7 +87,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
             </div>
             {sudtInput && (
               <div className="sudt-amount">
-                <MainText>{sudtInput}</MainText>
+                <MainText>{formatToThousands(sudtInput)}</MainText>
                 {tokenURI ? <img src={tokenURI} alt="" /> : ""}
                 <MainText>{sudtSymbol}</MainText>
               </div>

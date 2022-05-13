@@ -542,18 +542,15 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
-    console.log("getWithdrawal result:", result);
     return result;
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
-    console.log("v0 - v0");
     const eventEmitter = new EventEmitter();
     this.withdraw(eventEmitter, payload);
     return eventEmitter;
   }
   withdrawToV1WithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
-    console.log("v0 - v1");
     const eventEmitter = new EventEmitter();
     this.withdraw(eventEmitter, payload);
     return eventEmitter;

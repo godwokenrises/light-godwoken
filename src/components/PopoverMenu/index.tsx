@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { COLOR } from "../../style/variables";
 import { ClaimSudt } from "../ClaimSudt";
 
 const StyleWrapper = styled.div`
@@ -6,7 +7,7 @@ const StyleWrapper = styled.div`
   flex-direction: column;
   > a,
   > div {
-    color: #000;
+    color: ${COLOR.primary};
     text-decoration: none;
     cursor: pointer;
     height: 33px;
@@ -19,7 +20,7 @@ const StyleWrapper = styled.div`
     font-weight: bold;
     &:hover {
       background: rgba(0, 0, 0, 0.1);
-      color: #000;
+      color: ${COLOR.primary};
     }
   }
 `;

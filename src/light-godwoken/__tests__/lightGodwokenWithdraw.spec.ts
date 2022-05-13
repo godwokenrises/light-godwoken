@@ -5,6 +5,7 @@ import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { deBifyRawWithdrawalRequestV0, deBifyRawWithdrawalRequestV1, dummyScriptHash } from "./utils";
 import { BI } from "@ckb-lumos/lumos";
+import { testConfig } from "./lightGodwokenConfig";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -15,9 +16,9 @@ beforeEach(() => {
   const dummyEthereum = {
     on: () => {},
   };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1");
+  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig.v1);
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0");
+  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
   sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
   sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));

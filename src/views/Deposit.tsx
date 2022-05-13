@@ -28,7 +28,7 @@ import {
 import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
-import { parseStringToBI } from "../utils/numberFormat";
+import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
 
@@ -191,7 +191,7 @@ export default function Deposit() {
             <span className="title">Depositing</span>
             <div className="amount">
               <div className="ckb-amount">
-                <MainText>{CKBInput}</MainText>
+                <MainText>{formatToThousands(CKBInput)}</MainText>
                 <div className="ckb-icon">
                   <CKBIcon></CKBIcon>
                 </div>
@@ -199,7 +199,7 @@ export default function Deposit() {
               </div>
               {sudtInput && (
                 <div className="sudt-amount">
-                  <MainText>{sudtInput}</MainText>
+                  <MainText>{formatToThousands(sudtInput)}</MainText>
                   {selectedSudt?.tokenURI ? <img src={selectedSudt?.tokenURI} alt="" /> : ""}
                   <MainText>{selectedSudt?.symbol}</MainText>
                 </div>
