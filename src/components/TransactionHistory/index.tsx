@@ -2,7 +2,6 @@ import { HistoryOutlined } from "@ant-design/icons";
 import { BI } from "@ckb-lumos/lumos";
 import React, { useState } from "react";
 import styled from "styled-components";
-import { CKB_EXPLORER_URL } from "../../config";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
@@ -31,6 +30,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const lightGodwoken = useLightGodwoken();
   const l1Address = lightGodwoken?.provider.getL1Address();
+  const scannerUrl = lightGodwoken!.getConfig().layer1Config.SCANNER_URL;
   const { data: chainId } = useChainId();
   const historyKey = `${chainId}/${l1Address}/${prop.type}`;
   const { txHistory } = useL1TxHistory(historyKey);
@@ -66,7 +66,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
                 : "";
             const historyDescription = historyCKBDescription + historySUDTDescription;
             return prop.type === "deposit" ? (
-              <a target="_blank" href={`${CKB_EXPLORER_URL}/transaction/${history.txHash}`} rel="noreferrer">
+              <a target="_blank" href={`${scannerUrl}/transaction/${history.txHash}`} rel="noreferrer">
                 {historyDescription}
               </a>
             ) : (

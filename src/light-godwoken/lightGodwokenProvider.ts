@@ -1,4 +1,4 @@
-import { LightGodwokenConfig, predefined_v1_1 as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
+import { predefined_v1_1 as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,
@@ -25,6 +25,7 @@ import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
 import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
+import { LightGodwokenConfig } from "./constants/configTypes";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -66,6 +67,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.l2Address = accounts[0];
       this.l1Address = this.generateL1Address(this.l2Address);
     });
+  }
+
+  getConfig(): LightGodwokenConfig {
+    return this.lightGodwokenConfig;
   }
 
   async claimUSDC(): Promise<HexString> {
