@@ -12,6 +12,7 @@ export interface L1TxHistoryInterface {
   decimals?: number;
   outPoint?: string;
   recipient?: string;
+  date?: string;
 }
 
 export function useL1TxHistory(storageKey: string) {
@@ -35,7 +36,7 @@ export function useL1TxHistory(storageKey: string) {
       if (storageKey == null) {
         return;
       }
-
+      newTxHistory.date = new Date().toLocaleString();
       const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
