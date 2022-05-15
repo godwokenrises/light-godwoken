@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 const { Option } = Select;
-
 export const VersionSelect: React.FC = () => {
   const [version, setVersion] = useState<string>();
   const params = useParams();
@@ -19,7 +18,7 @@ export const VersionSelect: React.FC = () => {
     navigate(`/${value}`);
   };
   return (
-    <Select style={{ width: 150, marginLeft: "10px" }} value={version} onChange={handleChange}>
+    <Select style={{ width: 130, marginLeft: "10px", marginRight: "10px" }} value={version} onChange={handleChange}>
       <Option value="v0">Godwoken V0</Option>
       <Option value="v1">Godwoken V1</Option>
     </Select>

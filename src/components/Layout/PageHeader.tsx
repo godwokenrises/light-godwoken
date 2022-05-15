@@ -5,6 +5,7 @@ import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
+import { VersionSelect } from "../VersionSelect";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;
@@ -102,6 +103,7 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
         </Link>
       </div>
       <div className="right-side">
+        <VersionSelect></VersionSelect>
         <Popover
           content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
           trigger="click"
