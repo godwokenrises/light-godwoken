@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 
 import styled from "styled-components";
@@ -22,6 +22,19 @@ const StyledPage = styled.div`
 
 const PageFooter: React.FC = () => {
   const [popoverVisible, setPopoverVisible] = useState(false);
+
+  useEffect(() => {
+    document.addEventListener("click", (e) => {
+      const target = document.querySelector(".hamburger-menu-bottom");
+      console.log(target);
+      console.log(e.target);
+      e.target instanceof Element && console.log(target?.contains(e.target));
+      if (!(e.target && e.target instanceof Element && (e.target === target || target?.contains(e.target)))) {
+        closePopoverMenu();
+      }
+    });
+  });
+
   const openPopoverMenu = () => {
     setPopoverVisible(true);
   };
@@ -34,11 +47,11 @@ const PageFooter: React.FC = () => {
       <Popover
         content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
         trigger="click"
-        placement="topLeft"
         overlayClassName="popover-menu"
         visible={popoverVisible}
+        placement="bottomLeft"
       >
-        <Hamburger onClick={openPopoverMenu}></Hamburger>
+        <Hamburger className="hamburger-menu-bottom" onClick={openPopoverMenu}></Hamburger>
       </Popover>
     </StyledPage>
   );
