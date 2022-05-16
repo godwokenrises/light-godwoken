@@ -21,6 +21,7 @@ import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codec";
+import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -369,15 +370,15 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     // const address = layer2AccountScriptHash.slice(0, 42);
     const balance = await this.getL2CkbBalance();
     if (BI.from(balance).lt(payload.capacity)) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken CKB balance ${balance.toString()} is less than ${BI.from(payload.capacity).toString()}`,
+      const errMsg = `Godwoken CKB balance ${BI.from(balance).toString()} is less than ${BI.from(
+        payload.capacity,
+      ).toString()}`;
+      const error = new NotEnoughCapacityError(
+        { expected: BI.from(payload.capacity), actual: BI.from(balance) },
+        errMsg,
       );
-      throw new Error(
-        `Insufficient CKB balance(${BI.from(balance).toString()}) on Godwoken, required ${BI.from(
-          payload.capacity,
-        ).toString()}`,
-      );
+      eventEmitter.emit("error", error);
+      throw error;
     }
 
     if (BI.from(payload.amount).gt(0)) {
@@ -409,17 +410,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
     const sudtBalance = await this.getErc20Balance(erc20.address);
     if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {
-      eventEmitter.emit(
-        "error",
-        `Godwoken ${erc20.symbol} balance ${BI.from(sudtBalance).toString()} is less than ${BI.from(
-          payload.amount,
-        ).toString()}`,
-      );
-      throw new Error(
-        `Insufficient ${erc20.symbol} balance(${BI.from(sudtBalance).toString()}) on Godwoken, Required: ${BI.from(
-          payload.amount,
-        ).toString()}`,
-      );
+      const errMsg = `Godwoken ${erc20.symbol} balance ${BI.from(sudtBalance).toString()} is less than ${BI.from(
+        payload.amount,
+      ).toString()}`;
+      const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
+      eventEmitter.emit("error", error);
+      throw error;
     }
   }
 

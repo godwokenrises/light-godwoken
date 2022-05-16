@@ -45,6 +45,7 @@ import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./
 import { debug, debugProductionEnv } from "./debug";
 import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
+import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -366,8 +367,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       const errMsg = `Godwoken CKB balance ${BI.from(layer2CkbBalance).toString()} is less than ${BI.from(
         payload.capacity,
       ).toString()}`;
-      eventEmitter.emit("error", errMsg);
-      throw new Error(errMsg);
+      const error = new NotEnoughCapacityError(
+        { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
+        errMsg,
+      );
+      eventEmitter.emit("error", error);
+      throw error;
     }
 
     if (BI.from(payload.amount).gt(0)) {
@@ -377,8 +382,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         const errMsg = `Godwoken Erc20 balance ${BI.from(layer2Erc20Balance).toString()} is less than ${BI.from(
           payload.amount,
         ).toString()}`;
-        eventEmitter.emit("error", errMsg);
-        throw new Error(errMsg);
+        const error = new NotEnoughSudtError(
+          { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
+          errMsg,
+        );
+        eventEmitter.emit("error", error);
+        throw error;
       }
     }
 
