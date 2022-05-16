@@ -12,14 +12,15 @@ const StyleWrapper = styled.div`
   cursor: pointer;
   width: 100%;
   display: flex;
-  padding-bottom: 16px;
+  padding: 10px;
   justify-content: space-between;
+  border-radius: 8px;
   & + & {
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
     padding-top: 16px;
   }
   &:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.05);
   }
   .title {
     padding: 6px 8px;
