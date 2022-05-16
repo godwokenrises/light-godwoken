@@ -63,7 +63,7 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance, e
 
   const copyEthAddress = () => {
     // navigator.clipboard.writeText(ethAddress || "");
-    copy(l1Address || "");
+    copy(ethAddress || "");
     message.success("copied ethereum address to clipboard");
   };
   const lightGodwoken = useLightGodwoken();
