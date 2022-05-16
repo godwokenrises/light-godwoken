@@ -1,8 +1,8 @@
 import { BI } from "@ckb-lumos/lumos";
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
-import { CKB_EXPLORER_URL } from "../../config";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
+import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { MainText, PrimaryText } from "../../style/common";
 import { COLOR } from "../../style/variables";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
@@ -54,9 +54,16 @@ const StyleWrapper = styled.div`
 `;
 
 export const Item: React.FC<L1TxHistoryInterface> = (prop) => {
+  const lightGodwoken = useLightGodwoken();
+  const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
+  const l2ScannerUrl = lightGodwoken?.getConfig().layer2Config.SCANNER_URL;
   const openTransaction = () => {
-    // TODO  change withdrawal to use layer2Config.SCANNER_URL
-    window.open(`${CKB_EXPLORER_URL}/transaction/${prop.txHash}`, "_blank");
+    if (prop.type === "deposit") {
+      window.open(`${l1ScannerUrl}/transaction/${prop.txHash}`, "_blank");
+    }
+    if (prop.type === "withdrawal") {
+      window.open(`${l2ScannerUrl}/transaction/${prop.txHash}`, "_blank");
+    }
   };
   return (
     <StyleWrapper onClick={openTransaction}>
