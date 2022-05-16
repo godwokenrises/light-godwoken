@@ -58,6 +58,7 @@ export default function Deposit() {
   const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
+  const ethAddress = lightGodwoken?.provider.getL2Address();
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
 
@@ -153,7 +154,12 @@ export default function Deposit() {
               To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
             </Text>
           </CardHeader>
-          <WalletInfo l1Address={l1Address} l1Balance={CKBBalance} l2Balance={l2CKBBalance}></WalletInfo>
+          <WalletInfo
+            l1Address={l1Address}
+            l1Balance={CKBBalance}
+            l2Balance={l2CKBBalance}
+            ethAddress={ethAddress}
+          ></WalletInfo>
           <CKBInputPanel
             value={CKBInput}
             onUserInput={setCKBInput}
