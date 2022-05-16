@@ -1,45 +1,6 @@
-import { CellDep, DepType, Hash, HashType, Hexadecimal, Script } from "@ckb-lumos/lumos";
 import { GodwokenVersion } from "../lightGodwokenType";
+import { Layer1Config, LightGodwokenConfig } from "./configTypes";
 
-export type Layer2Config = {
-  SCRIPTS: {
-    deposit_lock: {
-      script_type_hash: Hash;
-    };
-    withdrawal_lock: {
-      script_type_hash: Hash;
-      cell_dep: CellDep;
-    };
-    eth_account_lock: {
-      script_type_hash: Hash;
-    };
-  };
-  ROLLUP_CONFIG: {
-    rollup_type_hash: Hash;
-    rollup_type_script: Script;
-  };
-  GW_POLYJUICE_RPC_URL: string;
-};
-export type ScriptType = {
-  code_hash: Hash;
-  hash_type: HashType;
-  tx_hash: Hash;
-  index: Hexadecimal;
-  dep_type: DepType;
-};
-export type Layer1Config = {
-  SCRIPTS: {
-    omni_lock: ScriptType;
-    secp256k1_blake160: ScriptType;
-    sudt: ScriptType;
-  };
-  CKB_INDEXER_URL: string;
-  CKB_RPC_URL: string;
-};
-export type LightGodwokenConfig = {
-  layer1Config: Layer1Config;
-  layer2Config: Layer2Config;
-};
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {
     omni_lock: {
@@ -66,6 +27,7 @@ const layer1ConfigAggron: Layer1Config = {
   },
   CKB_INDEXER_URL: "https://testnet.ckb.dev/indexer",
   CKB_RPC_URL: "https://testnet.ckb.dev",
+  SCANNER_URL: "https://pudge.explorer.nervos.org/",
 };
 
 const v0Config: LightGodwokenConfig = {
@@ -98,6 +60,8 @@ const v0Config: LightGodwokenConfig = {
       },
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
+    SCANNER_URL: "https://aggron.layerview.io/zh-CN",
+    CHAIN_NAME: "Godwoken Testnet v0",
   },
 };
 
@@ -133,42 +97,8 @@ export const predefined_v1_1: Record<GodwokenVersion, LightGodwokenConfig> = {
         },
       },
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
-    },
-  },
-};
-
-export const predefined_v1: Record<GodwokenVersion, LightGodwokenConfig> = {
-  v0: v0Config,
-  v1: {
-    layer1Config: layer1ConfigAggron,
-    layer2Config: {
-      SCRIPTS: {
-        deposit_lock: {
-          script_type_hash: "0xcc2b4e14d7dfeb1e72f7708ac2d7f636ae222b003bac6bccfcf8f4dfebd9c714",
-        },
-        withdrawal_lock: {
-          script_type_hash: "0x318e8882bec0339fa20584f4791152e71d5b71c5dbd8bf988fd511373e142222",
-          cell_dep: {
-            out_point: {
-              tx_hash: "0xb4b07dcd1571ac18683b515ada40e13b99bd0622197b6817047adc9f407f4828",
-              index: "0x0",
-            },
-            dep_type: "code",
-          },
-        },
-        eth_account_lock: {
-          script_type_hash: "0x10571f91073fdc3cdef4ddad96b4204dd30d6355f3dda9a6d7fc0fa0326408da",
-        },
-      },
-      ROLLUP_CONFIG: {
-        rollup_type_hash: "0x4940246f168f4106429dc641add3381a44b5eef61e7754142f594e986671a575",
-        rollup_type_script: {
-          code_hash: "0x0d3bfeaa292a59fcb58ed026e8f14e2167bd27f1765aa4b2af7d842b6123c6a9",
-          hash_type: "type",
-          args: "0x8137c84a9089f92fee684ac840532ee1133b012a9d42b6b76b74fbdde6999230",
-        },
-      },
-      GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev",
+      SCANNER_URL: "https://v1.aggron.gwscan.com/zh-CN",
+      CHAIN_NAME: "Godwoken Testnet v1.1",
     },
   },
 };

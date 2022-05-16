@@ -1,4 +1,4 @@
-import { Layer1Config, LightGodwokenConfig } from "../constants/lightGodwokenConfig";
+import { Layer1Config, LightGodwokenConfig } from "../constants/configTypes";
 import { GodwokenVersion } from "../lightGodwokenType";
 
 const layer1ConfigAggron: Layer1Config = {
@@ -27,6 +27,7 @@ const layer1ConfigAggron: Layer1Config = {
   },
   CKB_INDEXER_URL: "https://testnet.ckb.dev/indexer",
   CKB_RPC_URL: "https://testnet.ckb.dev",
+  SCANNER_URL: "",
 };
 
 export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
@@ -60,6 +61,8 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
         },
       },
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
+      SCANNER_URL: "",
+      CHAIN_NAME: "",
     },
   },
   v1: {
@@ -92,6 +95,8 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
         },
       },
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
+      CHAIN_NAME: "https://testnet.ckb.dev",
+      SCANNER_URL: "",
     },
   },
 };

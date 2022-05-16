@@ -43,6 +43,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return 30 * 1000;
   }
 
+  getWithdrawalWaitBlock(): number {
+    return 100;
+  }
+
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
     const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
     // const balance = await this.godwokenClient.getCkbBalance(payload?.l2Address || this.provider.l2Address);

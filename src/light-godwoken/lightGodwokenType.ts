@@ -1,4 +1,5 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
+import { LightGodwokenConfig } from "./constants/configTypes";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -108,6 +109,8 @@ export interface LightGodwokenProvider {
 
   getL2Address(): Promisable<string>;
 
+  getConfig(): LightGodwokenConfig;
+
   getL1Address(): Promisable<string>;
 
   getMinFeeRate(): Promise<BI>;
@@ -123,6 +126,8 @@ export type GodwokenVersion = "v0" | "v1";
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
+  getConfig(): LightGodwokenConfig;
+
   claimUSDC(): Promise<HexString>;
 
   getVersion: () => GodwokenVersion;
@@ -135,6 +140,8 @@ export interface LightGodwokenBase {
    * get producing 1 block time
    */
   getBlockProduceTime: () => Promise<number> | number;
+
+  getWithdrawalWaitBlock: () => Promise<number> | number;
 
   listWithdraw: () => Promise<WithdrawResult[]>;
 

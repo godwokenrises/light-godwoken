@@ -1,23 +1,21 @@
-import {
-  GODWOKEN_V1_BLOCK_EXPLORER_URL,
-  GODWOKEN_V1_CHAIN_NAME,
-  GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS,
-  GODWOKEN_V1_NATIVE_CURRENCY_NAME,
-  GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
-} from "../config";
+import { LightGodwokenV1 } from "../light-godwoken";
 
-export const addNetwork = (ethereum: any, chainId: string, rpcUrl: string) => {
+export const addNetwork = async (ethereum: any, lightGodwokenV1: LightGodwokenV1) => {
+  const chainId = await lightGodwokenV1.getChainId();
+  const layer2Config = lightGodwokenV1.getConfig().layer2Config;
+  const nativeToken = lightGodwokenV1.getNativeAsset();
+
   const params = [
     {
       chainId: chainId,
-      chainName: GODWOKEN_V1_CHAIN_NAME,
+      chainName: layer2Config.CHAIN_NAME,
       nativeCurrency: {
-        name: GODWOKEN_V1_NATIVE_CURRENCY_NAME,
-        symbol: GODWOKEN_V1_NATIVE_CURRENCY_SYMBOL,
-        decimals: Number(GODWOKEN_V1_NATIVE_CURRENCY_DECIMALS),
+        name: nativeToken.name,
+        symbol: nativeToken.symbol,
+        decimals: nativeToken.decimals,
       },
-      rpcUrls: [rpcUrl],
-      blockExplorerUrls: [GODWOKEN_V1_BLOCK_EXPLORER_URL],
+      rpcUrls: [layer2Config.GW_POLYJUICE_RPC_URL],
+      blockExplorerUrls: [layer2Config.SCANNER_URL],
     },
   ];
   ethereum
