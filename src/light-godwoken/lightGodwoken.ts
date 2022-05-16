@@ -34,6 +34,7 @@ import {
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugWithSentry } from "./debug";
+import { LightGodwokenConfig } from "./constants/configTypes";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -47,11 +48,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
+  abstract getWithdrawalWaitBlock(): number | Promise<number>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
   abstract listWithdraw(): Promise<WithdrawResult[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  getConfig(): LightGodwokenConfig {
+    return this.provider.getConfig();
+  }
 
   async claimUSDC(): Promise<HexString> {
     return this.provider.claimUSDC();

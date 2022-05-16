@@ -3,7 +3,7 @@ import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
 import { SerializeRcLockWitnessLock } from "./omni-lock";
 import { debug } from "./debug";
-import { LightGodwokenConfig } from "./constants/lightGodwokenConfig";
+import { LightGodwokenConfig } from "./constants/configTypes";
 
 const issuerPrivateKey = process.env.REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY!;
 

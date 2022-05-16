@@ -22,6 +22,9 @@ export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements MockLightGodwokenV0Interface {
+  getWithdrawalWaitBlock(): number | Promise<number> {
+    throw new Error("Method not implemented.");
+  }
   generateDepositLock(): Script {
     throw new Error("Method not implemented.");
   }

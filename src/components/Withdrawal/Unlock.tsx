@@ -4,7 +4,6 @@ import { notification } from "antd";
 import { Cell } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
-import { CKB_EXPLORER_URL } from "../../config";
 import { Actions, ConfirmModal, LoadingWrapper, PlainButton, SecondeButton, Text, Tips } from "../../style/common";
 import { LoadingOutlined } from "@ant-design/icons";
 
@@ -34,7 +33,7 @@ const Unlock = ({ cell }: Props) => {
       const txHash = await lightGodwoken.unlock({ cell });
       setIsUnlocking(false);
       const linkToExplorer = () => {
-        window.open(`${CKB_EXPLORER_URL}/transaction/${txHash}`, "_blank");
+        window.open(`${lightGodwoken.getConfig().layer1Config.SCANNER_URL}/transaction/${txHash}`, "_blank");
       };
       setIsModalVisible(false);
       notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
