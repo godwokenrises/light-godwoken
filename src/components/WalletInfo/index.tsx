@@ -7,7 +7,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { Placeholder } from "../Placeholder";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-
+import copy from "copy-to-clipboard";
 const StyleWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -56,12 +56,14 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance, e
     return str.substring(0, first) + "..." + str.substring(str.length - last);
   };
   const copyAddress = () => {
-    navigator.clipboard.writeText(l1Address || "");
+    // navigator.clipboard.writeText(l1Address || "");
+    copy(l1Address || "");
     message.success("copied L1 address to clipboard");
   };
 
   const copyEthAddress = () => {
-    navigator.clipboard.writeText(ethAddress || "");
+    // navigator.clipboard.writeText(ethAddress || "");
+    copy(l1Address || "");
     message.success("copied ethereum address to clipboard");
   };
   const lightGodwoken = useLightGodwoken();
