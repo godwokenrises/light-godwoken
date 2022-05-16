@@ -42,7 +42,7 @@ import { GodwokenClient } from "./godwoken/godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
-import { debug, debugWithSentry } from "./debug";
+import { debug, debugProductionEnv } from "./debug";
 import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
@@ -316,7 +316,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       }
       if (withdrawal === null && loop > maxLoop) {
         eventEmitter.emit("fail", txHash);
-        debugWithSentry("withdrawal fail:", txHash);
+        debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
     }, 10000);
