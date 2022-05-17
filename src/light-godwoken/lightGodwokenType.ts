@@ -123,8 +123,22 @@ export interface LightGodwokenProvider {
 
 export type GodwokenVersion = "v0" | "v1";
 
+export type DepositRequest = {
+  blockNumber: BI;
+  capacity: BI;
+  amount: BI;
+  sudtTypeHash: HexString;
+  cancelTime: BI;
+};
+
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
+
+  getCkbBlockProduceTime(): Promisable<number>;
+
+  getDepositList(): Promise<DepositRequest[]>;
+
+  getCkbCurrentBlockNumber(): Promise<BI>;
 
   getConfig(): LightGodwokenConfig;
 

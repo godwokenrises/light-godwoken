@@ -31,6 +31,7 @@ import {
   GodwokenVersion,
   LightGodwokenBase,
   Token,
+  DepositRequest,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
@@ -56,6 +57,47 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
+  getCkbBlockProduceTime(): number {
+    return 7460;
+  }
+
+  async getCkbCurrentBlockNumber(): Promise<BI> {
+    return BI.from((await this.provider.ckbIndexer.tip()).block_number);
+  }
+
+  async getDepositList(): Promise<DepositRequest[]> {
+    const depositLock = this.generateDepositLock();
+    const ckbCollector = this.provider.ckbIndexer.collector({
+      lock: depositLock,
+    });
+    const currentCkbBlockNumber = await this.getCkbCurrentBlockNumber();
+    const depositList: DepositRequest[] = [];
+    for await (const cell of ckbCollector.collect()) {
+      const amount = cell.data && cell.data !== "0x" ? utils.readBigUInt128LECompatible(cell.data) : BI.from(0);
+      depositList.push({
+        blockNumber: BI.from(cell.block_number),
+        capacity: BI.from(cell.cell_output.capacity),
+        cancelTime: BI.from(7 * 24)
+          .mul(3600)
+          .mul(1000)
+          .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.block_number)).mul(this.getCkbBlockProduceTime())),
+        amount,
+        sudtTypeHash: cell.cell_output.type ? utils.computeScriptHash(cell.cell_output.type) : `0x${"00".repeat(32)}`,
+      });
+    }
+    debug(
+      "Deposit list: ",
+      depositList.map((d) => ({
+        blockNumber: d.blockNumber.toNumber(),
+        capacity: d.capacity.toNumber(),
+        cancelTime: d.cancelTime.toNumber(),
+        amount: d.amount.toNumber(),
+        sudtTypeHash: d.sudtTypeHash,
+      })),
+    );
+    return depositList;
+  }
+
   getConfig(): LightGodwokenConfig {
     return this.provider.getConfig();
   }
@@ -80,7 +122,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of ckbCollector.collect()) {
-      debug(cell);
       collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
       collectedCells.push(cell);
       if (collectedCapatity.gte(neededCapacity)) break;
@@ -91,7 +132,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         type: payload.sudtType,
       });
       for await (const cell of sudtCollector.collect()) {
-        debug(cell);
         collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
         collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
         collectedCells.push(cell);
