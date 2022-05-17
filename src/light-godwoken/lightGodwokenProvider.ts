@@ -1,4 +1,4 @@
-import { predefined_v1_1 as predefinedLightGodwokenConfig } from "./constants/lightGodwokenConfig";
+import { predefined_testnet, predefined_mainnet } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,
@@ -26,6 +26,7 @@ import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { LightGodwokenConfig } from "./constants/configTypes";
+import { isMainet } from "./env";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -36,6 +37,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   web3;
   lightGodwokenConfig;
   constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfig) {
+    const predefinedLightGodwokenConfig = isMainet ? predefined_mainnet : predefined_testnet;
     if (lightGodwokenConfig) {
       validateLightGodwokenConfig(lightGodwokenConfig);
     }
