@@ -30,13 +30,18 @@ const Unlock = ({ cell }: Props) => {
   const unlock = async () => {
     if (isInstanceOfLightGodwokenV0(lightGodwoken)) {
       setIsUnlocking(true);
-      const txHash = await lightGodwoken.unlock({ cell });
-      setIsUnlocking(false);
-      const linkToExplorer = () => {
-        window.open(`${lightGodwoken.getConfig().layer1Config.SCANNER_URL}/transaction/${txHash}`, "_blank");
-      };
-      setIsModalVisible(false);
-      notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
+      try {
+        const txHash = await lightGodwoken.unlock({ cell });
+        setIsUnlocking(false);
+        const linkToExplorer = () => {
+          window.open(`${lightGodwoken.getConfig().layer1Config.SCANNER_URL}/transaction/${txHash}`, "_blank");
+        };
+        setIsModalVisible(false);
+        notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
+      } catch {
+        setIsUnlocking(false);
+        setIsModalVisible(false);
+      }
     }
   };
 
