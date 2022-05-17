@@ -56,13 +56,11 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance, e
     return str.substring(0, first) + "..." + str.substring(str.length - last);
   };
   const copyAddress = () => {
-    // navigator.clipboard.writeText(l1Address || "");
     copy(l1Address || "");
     message.success("copied L1 address to clipboard");
   };
 
   const copyEthAddress = () => {
-    // navigator.clipboard.writeText(ethAddress || "");
     copy(ethAddress || "");
     message.success("copied ethereum address to clipboard");
   };
@@ -80,7 +78,7 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance, e
       </div>
 
       <PrimaryText className="address" title={l1Address}>
-        {l1Address ? truncateMiddle(l1Address) : <Placeholder />}
+        {l1Address ? truncateMiddle(l1Address, 11, 11) : <Placeholder />}
       </PrimaryText>
       <div className="address-row eth">
         <Text className="title">Ethereum Address</Text>
@@ -91,7 +89,7 @@ export const WalletInfo: React.FC<Props> = ({ l1Address, l1Balance, l2Balance, e
       </div>
 
       <PrimaryText className="address" title={ethAddress}>
-        {ethAddress ? truncateMiddle(ethAddress) : <Placeholder />}
+        {ethAddress ? truncateMiddle(ethAddress, 5, 4) : <Placeholder />}
       </PrimaryText>
       <BalanceRow>
         <Text className="title">L1 Balance</Text>
