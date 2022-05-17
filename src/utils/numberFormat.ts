@@ -19,8 +19,7 @@ export const parseStringToBI = (value: string, decimals: number = 0): BI => {
 export const formatToThousands = (value: string) => {
   let format = "0,0";
   if (value.split(".").length === 2) {
-    const decimalLength = value.split(".")[1].length;
-    format += "." + Array(decimalLength).fill("0").join("");
+    return numeral(value.split(".")[0]).format(format) + "." + value.split(".")[1];
   }
   return numeral(value).format(format);
 };

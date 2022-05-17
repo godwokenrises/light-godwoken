@@ -14,5 +14,8 @@ describe("formatToThousands", () => {
     expect(formatToThousands("10")).toEqual("10");
     expect(formatToThousands("1000")).toEqual("1,000");
     expect(formatToThousands("1000.3323")).toEqual("1,000.3323");
+    expect(formatToThousands("0.00001")).toEqual("0.00001");
+    expect(formatToThousands("10000.000000000000000001")).toEqual("10,000.000000000000000001");
+    expect(formatToThousands("0.99999999999999999")).toEqual("0.99999999999999999");
   });
 });
