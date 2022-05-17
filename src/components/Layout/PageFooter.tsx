@@ -26,9 +26,6 @@ const PageFooter: React.FC = () => {
   useEffect(() => {
     document.addEventListener("click", (e) => {
       const target = document.querySelector(".hamburger-menu-bottom");
-      console.log(target);
-      console.log(e.target);
-      e.target instanceof Element && console.log(target?.contains(e.target));
       if (!(e.target && e.target instanceof Element && (e.target === target || target?.contains(e.target)))) {
         closePopoverMenu();
       }
