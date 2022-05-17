@@ -63,7 +63,7 @@ export const Item: React.FC<L1TxHistoryInterface> = (prop) => {
       window.open(`${l1ScannerUrl}/transaction/${prop.txHash}`, "_blank");
     }
     if (prop.type === "withdrawal") {
-      window.open(`${l2ScannerUrl}/transaction/${prop.txHash}`, "_blank");
+      window.open(`${l2ScannerUrl}/tx/${prop.txHash}`, "_blank");
     }
   };
   return (

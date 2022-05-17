@@ -60,7 +60,7 @@ const v0Config: LightGodwokenConfig = {
       },
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
-    SCANNER_URL: "https://aggron.gwscan.com/zh-CN",
+    SCANNER_URL: "https://aggron.gwscan.com",
     CHAIN_NAME: "Godwoken Testnet v0",
   },
 };
