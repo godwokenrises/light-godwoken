@@ -35,6 +35,7 @@ import {
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
+import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -98,10 +99,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
-      throw new Error(`Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`);
+      const errorMsg = `Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`;
+      throw new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
-      throw new Error(`Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`);
+      const errorMsg = `Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`;
+      throw new NotEnoughSudtError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);

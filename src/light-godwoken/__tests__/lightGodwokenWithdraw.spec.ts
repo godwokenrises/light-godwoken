@@ -65,7 +65,7 @@ describe("test light godwoken v1 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Insufficient CKB balance(199900000000) on Godwoken, required 200000000000");
+    expect(errMsg).toEqual("Godwoken CKB balance 199900000000 is less than 200000000000");
   });
 
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
@@ -106,9 +106,7 @@ describe("test light godwoken v1 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual(
-      "Insufficient USDC balance(1999000000000000000000) on Godwoken, Required: 2000000000000000000000",
-    );
+    expect(errMsg).toEqual("Godwoken USDC balance 1999000000000000000000 is less than 2000000000000000000000");
   });
 });
 
