@@ -128,6 +128,7 @@ export default function CurrencyInputPanel({
       }),
     );
   };
+  console.log(balancesList);
   return (
     <InputCard>
       <Row className="first-row">
@@ -189,9 +190,10 @@ export default function CurrencyInputPanel({
                   <div>
                     {dataLoading ? (
                       <LoadingOutlined />
-                    ) : (
-                      balancesList &&
+                    ) : balancesList && balancesList[index] && balancesList[index] !== "0x0" ? (
                       formatToThousands(getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals))
+                    ) : (
+                      "-"
                     )}
                   </div>
                 </FixedHeightRow>
