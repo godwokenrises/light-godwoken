@@ -27,7 +27,7 @@ const layer1ConfigAggron: Layer1Config = {
   },
   CKB_INDEXER_URL: "https://testnet.ckb.dev/indexer",
   CKB_RPC_URL: "https://testnet.ckb.dev",
-  SCANNER_URL: "https://pudge.explorer.nervos.org/",
+  SCANNER_URL: "https://pudge.explorer.nervos.org",
 };
 
 const v0Config: LightGodwokenConfig = {
