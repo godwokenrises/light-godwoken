@@ -9,7 +9,6 @@ import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
 
 const StyleWrapper = styled.div`
-  cursor: pointer;
   width: 100%;
   display: flex;
   padding: 10px;
@@ -21,6 +20,9 @@ const StyleWrapper = styled.div`
   }
   &:hover {
     background: rgba(0, 0, 0, 0.05);
+  }
+  &.click-able {
+    cursor: pointer;
   }
   .title {
     padding: 6px 8px;
@@ -57,17 +59,13 @@ const StyleWrapper = styled.div`
 export const Item: React.FC<L1TxHistoryInterface> = (prop) => {
   const lightGodwoken = useLightGodwoken();
   const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
-  const l2ScannerUrl = lightGodwoken?.getConfig().layer2Config.SCANNER_URL;
   const openTransaction = () => {
     if (prop.type === "deposit") {
       window.open(`${l1ScannerUrl}/transaction/${prop.txHash}`, "_blank");
     }
-    if (prop.type === "withdrawal") {
-      window.open(`${l2ScannerUrl}/tx/${prop.txHash}`, "_blank");
-    }
   };
   return (
-    <StyleWrapper onClick={openTransaction}>
+    <StyleWrapper className={prop.type === "deposit" ? "click-able" : ""} onClick={openTransaction}>
       <div className="left">
         <div className={"title " + prop.type}>{prop.type}</div>
         {prop.date && <PrimaryText>{prop.date}</PrimaryText>}
