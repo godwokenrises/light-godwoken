@@ -9,13 +9,12 @@ import {
   helpers,
   HexNumber,
   HexString,
-  Output,
   Script,
   toolkit,
   utils,
   WitnessArgs,
 } from "@ckb-lumos/lumos";
-import { Hexadecimal, TransactionWithStatus } from "@ckb-lumos/base";
+import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {

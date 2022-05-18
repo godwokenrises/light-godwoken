@@ -1,16 +1,4 @@
-import {
-  helpers,
-  Script,
-  utils,
-  BI,
-  HashType,
-  HexNumber,
-  Hash,
-  toolkit,
-  HexString,
-  CellDep,
-  Output,
-} from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import {
@@ -67,15 +55,24 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return "0x" + Number(balance).toString(16);
   }
 
+  getBuiltinSUDTMapByTypeHash(): Record<HexString, SUDT> {
+    const map: Record<HexString, SUDT> = {};
+    this.getBuiltinSUDTList().forEach((sudt) => {
+      const typeHash: HexString = utils.computeScriptHash(sudt.type);
+      map[typeHash] = sudt;
+    });
+    return map;
+  }
+
   getBuiltinSUDTList(): SUDT[] {
-    const map: SUDT[] = [];
+    const sudtList: SUDT[] = [];
     getTokenList().v1.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: token.l1Lock.code_hash,
         args: token.l1Lock.args,
         hash_type: token.l1Lock.hash_type as HashType,
       };
-      map.push({
+      sudtList.push({
         type: tokenL1Script,
         name: token.name,
         symbol: token.symbol,
@@ -83,7 +80,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         tokenURI: token.tokenURI,
       });
     });
-    return map;
+    return sudtList;
   }
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];

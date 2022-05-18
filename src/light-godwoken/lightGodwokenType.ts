@@ -129,7 +129,7 @@ export type DepositRequest = {
   blockNumber: BI;
   capacity: BI;
   amount: BI;
-  sudtTypeHash: HexString;
+  sudt?: SUDT;
   cancelTime: BI;
   rawCell: Cell;
 };

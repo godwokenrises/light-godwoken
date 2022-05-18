@@ -64,6 +64,15 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return 7460;
   }
 
+  getBuiltinSUDTMapByTypeHash(): Record<HexString, SUDT> {
+    const map: Record<HexString, SUDT> = {};
+    this.getBuiltinSUDTList().forEach((sudt) => {
+      const typeHash: HexString = utils.computeScriptHash(sudt.type);
+      map[typeHash] = sudt;
+    });
+    return map;
+  }
+
   async getCkbCurrentBlockNumber(): Promise<BI> {
     return BI.from((await this.provider.ckbIndexer.tip()).block_number);
   }
@@ -86,7 +95,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           .mul(1000) // milliseconds per second
           .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.block_number)).mul(this.getCkbBlockProduceTime())),
         amount,
-        sudtTypeHash: cell.cell_output.type ? utils.computeScriptHash(cell.cell_output.type) : `0x${"00".repeat(32)}`,
+        sudt: cell.cell_output.type
+          ? this.getBuiltinSUDTMapByTypeHash()[utils.computeScriptHash(cell.cell_output.type)]
+          : undefined,
       });
     }
     debug(
@@ -96,7 +107,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         capacity: d.capacity.toNumber(),
         cancelTime: d.cancelTime.toNumber(),
         amount: d.amount.toNumber(),
-        sudtTypeHash: d.sudtTypeHash,
+        sudt: d.sudt,
       })),
     );
     return depositList;
