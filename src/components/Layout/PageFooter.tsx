@@ -4,6 +4,7 @@ import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
 import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
+import { VersionSelect } from "../VersionSelect";
 const StyledPage = styled.div`
   position: fixed;
   bottom: 0;
@@ -31,6 +32,7 @@ const PageFooter: React.FC = () => {
   };
   return (
     <StyledPage>
+      <VersionSelect></VersionSelect>
       <Popover
         content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
         trigger="click"
