@@ -521,14 +521,14 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     // fee paid for this tx should cost no more than 1000 shannon
     const maxTxFee = BI.from(1000);
     txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, maxTxFee);
-    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
+    let signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
       const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
       exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
       return outputs;
     });
-    signedTx = await this.provider.signL1Transaction(txSkeleton);
+    signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     return txHash;
   }
@@ -537,18 +537,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
-
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
       cancel_timeout: "0xc0000000000004b0",
+      // cancel_timeout: "0xc000000000000001", // min time to test cancel deposit
     };
     const depositLockArgsHexString: HexString = new toolkit.Reader(
       SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
     ).serializeJson();
-
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
-
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
@@ -556,41 +554,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     };
     return depositLock;
   }
-
-  async getRollupCellDep(): Promise<CellDep> {
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const godwokenClient = new GodwokenClient(layer2Config.GW_POLYJUICE_RPC_URL);
-    const result = await godwokenClient.getLastSubmittedInfo();
-    const txHash = result.transaction_hash;
-    const tx = await this.getPendingTransaction(txHash);
-    if (tx == null) {
-      throw new Error("Last submitted tx not found!");
-    }
-    let rollupIndex = tx.transaction.outputs.findIndex((output: Output) => {
-      return output.type && utils.computeScriptHash(output.type) === layer2Config.ROLLUP_CONFIG.rollup_type_hash;
-    });
-    return {
-      out_point: {
-        tx_hash: txHash,
-        index: `0x${rollupIndex.toString(16)}`,
-      },
-      dep_type: "code",
-    };
-  }
-
-  async getPendingTransaction(txHash: Hash): Promise<TransactionWithStatus | null> {
-    let tx: TransactionWithStatus | null = null;
-    // retry 10 times, and sleep 1s
-    for (let i = 0; i < 10; i++) {
-      tx = await this.provider.ckbRpc.get_transaction(txHash);
-      if (tx != null) {
-        return tx;
-      }
-      await this.provider.asyncSleep(1000);
-    }
-    return null;
-  }
 }
+
 function isHexStringEqual(strA: string, strB: string) {
   return strA.toLowerCase() === strB.toLowerCase();
 }

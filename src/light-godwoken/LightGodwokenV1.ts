@@ -1,4 +1,16 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import {
+  helpers,
+  Script,
+  utils,
+  BI,
+  HashType,
+  HexNumber,
+  Hash,
+  toolkit,
+  HexString,
+  CellDep,
+  Output,
+} from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
 import {
@@ -214,7 +226,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       script_type: "lock",
     };
   }
-
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
     return result;

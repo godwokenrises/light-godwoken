@@ -115,7 +115,9 @@ export interface LightGodwokenProvider {
 
   getMinFeeRate(): Promise<BI>;
 
-  signL1Transaction: (tx: helpers.TransactionSkeletonType) => Promise<Transaction>;
+  signL1TxSkeleton: (tx: helpers.TransactionSkeletonType) => Promise<Transaction>;
+
+  signL1Tx: (tx: Transaction) => Promise<Transaction>;
 
   // now only supported omni lock, the other lock type will be supported later
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
@@ -129,10 +131,13 @@ export type DepositRequest = {
   amount: BI;
   sudtTypeHash: HexString;
   cancelTime: BI;
+  rawCell: Cell;
 };
 
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
+
+  cancelDeposit(cell: Cell): Promise<HexString>;
 
   getCkbBlockProduceTime(): Promisable<number>;
 
