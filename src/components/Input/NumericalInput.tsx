@@ -54,7 +54,7 @@ export const Input = React.memo(function InnerInput({
   align?: "right" | "left";
 } & Omit<React.HTMLProps<HTMLInputElement>, "ref" | "onChange" | "as">) {
   const targetDecimal = decimal || DEFAULT_DECIMAL;
-  const inputRegex = RegExp(`^\\d*(?:\\\\[.])?\\d{0,${targetDecimal}}$`); // match escaped "." characters via in a non-capturing group
+  const inputRegex = RegExp(`^\\d+(?:\\\\[.])?\\d{0,${targetDecimal}}$`); // match escaped "." characters via in a non-capturing group
 
   const enforcer = (nextUserInput: string) => {
     if (nextUserInput === "" || inputRegex.test(escapeRegExp(nextUserInput))) {
