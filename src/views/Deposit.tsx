@@ -62,6 +62,36 @@ export default function Deposit() {
   const { data: chainId } = useChainId();
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
 
+  const handleError = (e: unknown, selectedSudt?: SUDT) => {
+    if (e instanceof NotEnoughCapacityError) {
+      const expect = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.expected), 8, { maxDecimalPlace: 8 }));
+      const actual = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.actual), 8, { maxDecimalPlace: 8 }));
+      notification.error({
+        message: `You need to get more ckb for deposit, cause there is ${expect} CKB expected but only got ${actual} CKB`,
+      });
+      return;
+    }
+    if (e instanceof NotEnoughSudtError) {
+      const expect = formatToThousands(
+        getFullDisplayAmount(BI.from(e.metadata.expected), selectedSudt?.decimals, {
+          maxDecimalPlace: selectedSudt?.decimals,
+        }),
+      );
+      const actual = formatToThousands(
+        getFullDisplayAmount(BI.from(e.metadata.actual), selectedSudt?.decimals, {
+          maxDecimalPlace: selectedSudt?.decimals,
+        }),
+      );
+      notification.error({
+        message: `You need to get more ${selectedSudt?.symbol} for deposit, cause there is ${expect} ${selectedSudt?.symbol} expected but only got ${actual} ${selectedSudt?.symbol}`,
+      });
+      return;
+    }
+    console.error(e);
+    notification.error({
+      message: `Server Error, Please try again later`,
+    });
+  };
   const showModal = async () => {
     if (lightGodwoken) {
       const capacity = parseStringToBI(CKBInput, 8).toHexString();
@@ -87,35 +117,8 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
-        if (e instanceof NotEnoughCapacityError) {
-          const expect = formatToThousands(
-            getFullDisplayAmount(BI.from(e.metadata.expected), 8, { maxDecimalPlace: 8 }),
-          );
-          const actual = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.actual), 8, { maxDecimalPlace: 8 }));
-          notification.error({
-            message: `You need to get more ckb for deposit, cause there is ${expect} CKB expected but only got ${actual} CKB`,
-          });
-          return;
-        }
-        if (e instanceof NotEnoughSudtError) {
-          const expect = formatToThousands(
-            getFullDisplayAmount(BI.from(e.metadata.expected), selectedSudt?.decimals, {
-              maxDecimalPlace: selectedSudt?.decimals,
-            }),
-          );
-          const actual = formatToThousands(
-            getFullDisplayAmount(BI.from(e.metadata.actual), selectedSudt?.decimals, {
-              maxDecimalPlace: selectedSudt?.decimals,
-            }),
-          );
-          notification.error({
-            message: `You need to get more ${selectedSudt?.symbol} for deposit, cause there is ${expect} CKB expected but only got ${actual} CKB`,
-          });
-          return;
-        }
-        notification.error({
-          message: `Server Error, Please try again later`,
-        });
+        handleError(e, selectedSudt);
+        setIsModalVisible(false);
       }
       setIsModalVisible(false);
     }

@@ -26,10 +26,11 @@ export const handleError = (e: unknown, selectedSudt?: L1MappedErc20) => {
       }),
     );
     notification.error({
-      message: `You need to get more ${selectedSudt?.symbol} for withdraw, cause there is ${expect} CKB expected but only got ${actual} CKB`,
+      message: `You need to get more ${selectedSudt?.symbol} for withdraw, cause there is ${expect} ${selectedSudt?.symbol} expected but only got ${actual} ${selectedSudt?.symbol}`,
     });
     return;
   }
+  console.error(e);
   notification.error({
     message: `Server Error, Please try again later`,
   });

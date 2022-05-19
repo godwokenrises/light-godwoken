@@ -104,7 +104,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
       const errorMsg = `Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`;
-      throw new NotEnoughSudtError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
+      throw new NotEnoughSudtError({ expected: neededSudtAmount, actual: collectedSudtAmount }, errorMsg);
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);

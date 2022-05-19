@@ -383,7 +383,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           payload.amount,
         ).toString()}`;
         const error = new NotEnoughSudtError(
-          { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
+          { expected: BI.from(payload.amount), actual: BI.from(layer2Erc20Balance) },
           errMsg,
         );
         eventEmitter.emit("error", error);
