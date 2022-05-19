@@ -31,6 +31,8 @@ import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } 
 import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
+import { NotEnoughCapacityError, NotEnoughSudtError } from "../light-godwoken/constants/error";
+import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -85,17 +87,35 @@ export default function Deposit() {
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
-        if (e instanceof Error) {
-          if (e.message.startsWith("Not enough CKB:")) {
-            notification.error({
-              message: e.message,
-            });
-          } else if (e.message.startsWith("Not enough SUDT:")) {
-            notification.error({
-              message: e.message,
-            });
-          }
+        if (e instanceof NotEnoughCapacityError) {
+          const expect = formatToThousands(
+            getFullDisplayAmount(BI.from(e.metadata.expected), 8, { maxDecimalPlace: 8 }),
+          );
+          const actual = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.actual), 8, { maxDecimalPlace: 8 }));
+          notification.error({
+            message: `You need to get more ckb for deposit, cause there is ${expect} CKB expected but only got ${actual} CKB`,
+          });
+          return;
         }
+        if (e instanceof NotEnoughSudtError) {
+          const expect = formatToThousands(
+            getFullDisplayAmount(BI.from(e.metadata.expected), selectedSudt?.decimals, {
+              maxDecimalPlace: selectedSudt?.decimals,
+            }),
+          );
+          const actual = formatToThousands(
+            getFullDisplayAmount(BI.from(e.metadata.actual), selectedSudt?.decimals, {
+              maxDecimalPlace: selectedSudt?.decimals,
+            }),
+          );
+          notification.error({
+            message: `You need to get more ${selectedSudt?.symbol} for deposit, cause there is ${expect} CKB expected but only got ${actual} CKB`,
+          });
+          return;
+        }
+        notification.error({
+          message: `Server Error, Please try again later`,
+        });
       }
       setIsModalVisible(false);
     }
