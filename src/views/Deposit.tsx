@@ -31,6 +31,7 @@ import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } 
 import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
+import { DepositList } from "../components/Deposit/List";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -173,6 +174,9 @@ export default function Deposit() {
             {inputError || "Deposit"}
           </PrimaryButton>
         </div>
+      </Card>
+      <Card>
+        <DepositList></DepositList>
       </Card>
       <ConfirmModal
         title="Confirm Transaction"
