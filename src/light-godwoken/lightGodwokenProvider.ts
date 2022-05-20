@@ -147,8 +147,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return await this.ckbRpc.send_transaction(tx, "passthrough");
   }
 
-  async signL1Transaction(txSkeleton: helpers.TransactionSkeletonType, dummySign = false): Promise<Transaction> {
-    const message = this.generateMessage(txSkeleton);
+  async signMessage(message: string, dummySign = false): Promise<string> {
     debug("message before sign", message);
     let signedMessage = `0x${"00".repeat(65)}`;
 
@@ -169,28 +168,33 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
         }),
       }),
     ).serializeJson();
-    txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(`${signedWitness}`));
+    return signedWitness;
+  }
+
+  async signL1Tx(tx: Transaction, dummySign = false): Promise<Transaction> {
+    const message = this.generateMessageByTransaction(tx);
+    const signedWitness = await this.signMessage(message, dummySign);
+    tx.witnesses.push(signedWitness);
+    return tx;
+  }
+
+  async signL1TxSkeleton(txSkeleton: helpers.TransactionSkeletonType, dummySign = false): Promise<Transaction> {
+    const message = this.generateMessageByTxSkeleton(txSkeleton);
+    const signedWitness = await this.signMessage(message, dummySign);
+    txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(signedWitness));
     const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
-    let inputCapacity = txSkeleton.inputs.reduce(
-      (acc, input) => acc.add(BI.from(input.cell_output.capacity)),
-      BI.from(0),
-    );
-    let outputCapacity = txSkeleton.outputs.reduce(
-      (acc, input) => acc.add(BI.from(input.cell_output.capacity)),
-      BI.from(0),
-    );
-    debug("inputCapacity", inputCapacity.toString());
-    debug("outputCapacity", outputCapacity.toString());
-    debug("payed fee", outputCapacity.sub(inputCapacity).toString());
     return signedTx;
   }
 
-  generateMessage(tx: helpers.TransactionSkeletonType): HexString {
+  generateMessageByTxSkeleton(tx: helpers.TransactionSkeletonType): HexString {
+    const transaction = helpers.createTransactionFromSkeleton(tx);
+    return this.generateMessageByTransaction(transaction);
+  }
+
+  generateMessageByTransaction(transaction: Transaction): HexString {
     const hasher = new utils.CKBHasher();
     const rawTxHash = utils.ckbHash(
-      core.SerializeRawTransaction(
-        toolkit.normalizers.NormalizeRawTransaction(helpers.createTransactionFromSkeleton(tx)),
-      ),
+      core.SerializeRawTransaction(toolkit.normalizers.NormalizeRawTransaction(transaction)),
     );
     const serializedWitness = core.SerializeWitnessArgs({
       lock: new toolkit.Reader(

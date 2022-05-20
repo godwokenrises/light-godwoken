@@ -4,6 +4,7 @@ export type Layer2Config = {
   SCRIPTS: {
     deposit_lock: {
       script_type_hash: Hash;
+      cell_dep: CellDep;
     };
     withdrawal_lock: {
       script_type_hash: Hash;
