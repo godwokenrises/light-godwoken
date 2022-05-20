@@ -37,6 +37,13 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       SCRIPTS: {
         deposit_lock: {
           script_type_hash: "0x5a2506bb68d81a11dcadad4cb7eae62a17c43c619fe47ac8037bc8ce2dd90360",
+          cell_dep: {
+            out_point: {
+              tx_hash: "0x9caeec735f3cd2a60b9d12be59bb161f7c61ddab1ac22c4383a94c33ba6404a2",
+              index: "0x0",
+            },
+            dep_type: "code",
+          },
         },
         withdrawal_lock: {
           script_type_hash: "0x170ef156e9f6132dbca6069dfd3e436f7d91c29d3ac7332c4b33e633b6a299b5",
@@ -71,6 +78,13 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       SCRIPTS: {
         deposit_lock: {
           script_type_hash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
+          cell_dep: {
+            out_point: {
+              tx_hash: "0x9caeec735f3cd2a60b9d12be59bb161f7c61ddab1ac22c4383a94c33ba6404a2",
+              index: "0x0",
+            },
+            dep_type: "code",
+          },
         },
         withdrawal_lock: {
           script_type_hash: "0x06ae0706bb2d7997d66224741d3ec7c173dbb2854a6d2cf97088796b677269c6",

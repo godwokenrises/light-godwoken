@@ -31,18 +31,22 @@ import {
   GodwokenVersion,
   LightGodwokenBase,
   Token,
+  DepositRequest,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
+import { CellDep, DepType, Output, TransactionWithStatus } from "@ckb-lumos/base";
 
+const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
 
+  abstract godwokenClient: any;
   abstract generateDepositLock(): Script;
   abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
@@ -55,6 +59,186 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract listWithdraw(): Promise<WithdrawResult[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  getCkbBlockProduceTime(): number {
+    return 7460;
+  }
+
+  getBuiltinSUDTMapByTypeHash(): Record<HexString, SUDT> {
+    const map: Record<HexString, SUDT> = {};
+    this.getBuiltinSUDTList().forEach((sudt) => {
+      const typeHash: HexString = utils.computeScriptHash(sudt.type);
+      map[typeHash] = sudt;
+    });
+    return map;
+  }
+
+  async getCkbCurrentBlockNumber(): Promise<BI> {
+    return BI.from((await this.provider.ckbIndexer.tip()).block_number);
+  }
+
+  async getDepositList(): Promise<DepositRequest[]> {
+    const depositLock = this.generateDepositLock();
+    const ckbCollector = this.provider.ckbIndexer.collector({
+      lock: depositLock,
+    });
+    const currentCkbBlockNumber = await this.getCkbCurrentBlockNumber();
+    const depositList: DepositRequest[] = [];
+    for await (const cell of ckbCollector.collect()) {
+      const amount = cell.data && cell.data !== "0x" ? utils.readBigUInt128LECompatible(cell.data) : BI.from(0);
+      depositList.push({
+        rawCell: cell,
+        blockNumber: BI.from(cell.block_number),
+        capacity: BI.from(cell.cell_output.capacity),
+        cancelTime: BI.from(7 * 24) // hours per week
+          .mul(3600) // seconds  per hour
+          .mul(1000) // milliseconds per second
+          .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.block_number)).mul(this.getCkbBlockProduceTime())),
+        amount,
+        sudt: cell.cell_output.type
+          ? this.getBuiltinSUDTMapByTypeHash()[utils.computeScriptHash(cell.cell_output.type)]
+          : undefined,
+      });
+    }
+    debug(
+      "Deposit list: ",
+      depositList.map((d) => ({
+        blockNumber: d.blockNumber.toNumber(),
+        capacity: d.capacity.toNumber(),
+        cancelTime: d.cancelTime.toNumber(),
+        amount: d.amount.toNumber(),
+        sudt: d.sudt,
+      })),
+    );
+    return depositList;
+  }
+
+  async cancelDeposit(cell: Cell): Promise<HexString> {
+    let txSkeleton = await this.createCancelDepositTx(cell);
+    txSkeleton = await this.payTxFee(txSkeleton);
+    const transaction = helpers.createTransactionFromSkeleton(txSkeleton);
+    transaction.inputs[1].since = MIN_RELATIVE_TIME;
+    let signedTx = await this.provider.signL1Tx(transaction);
+    const txHash = await this.provider.sendL1Transaction(signedTx);
+    debugProductionEnv(`Cancel deposit: ${txHash}`);
+    return txHash;
+  }
+
+  async createCancelDepositTx(cell: Cell): Promise<helpers.TransactionSkeletonType> {
+    let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
+    const outputCells: Cell[] = [];
+    const inputCells: Cell[] = [cell];
+    const inputCapacity = BI.from(cell.cell_output.capacity);
+    const ownerLock = this.provider.getLayer1Lock();
+
+    // collect one owner cell
+    const ownerCellCollector = this.provider.ckbIndexer.collector({
+      lock: ownerLock,
+      type: "empty",
+      outputDataLenRange: ["0x0", "0x1"],
+    });
+    let ownerCellCapacity = BI.from(0);
+    for await (const cell of ownerCellCollector.collect()) {
+      ownerCellCapacity = ownerCellCapacity.add(cell.cell_output.capacity);
+      inputCells.unshift(cell);
+      break;
+    }
+
+    if (!!cell.cell_output.type) {
+      outputCells.push({
+        cell_output: {
+          capacity: BI.from(14400000000).toHexString(),
+          lock: ownerLock,
+          type: cell.cell_output.type,
+        },
+        data: cell.data,
+      });
+      outputCells.push({
+        cell_output: {
+          capacity: inputCapacity.sub(14400000000).add(ownerCellCapacity).toHexString(),
+          lock: ownerLock,
+        },
+        data: "0x",
+      });
+    } else {
+      outputCells.push({
+        cell_output: {
+          capacity: inputCapacity.add(ownerCellCapacity).toHexString(),
+          lock: ownerLock,
+        },
+        data: "0x",
+      });
+    }
+    const { layer2Config, layer1Config } = this.provider.getLightGodwokenConfig();
+    const depositLockDep: CellDep = {
+      out_point: {
+        tx_hash: layer2Config.SCRIPTS.deposit_lock.cell_dep.out_point.tx_hash,
+        index: layer2Config.SCRIPTS.deposit_lock.cell_dep.out_point.index,
+      },
+      dep_type: layer2Config.SCRIPTS.deposit_lock.cell_dep.dep_type as DepType,
+    };
+    const rollupCellDep: CellDep = await this.getRollupCellDep();
+
+    txSkeleton = txSkeleton
+      .update("inputs", (inputs) => {
+        return inputs.push(...inputCells);
+      })
+      .update("outputs", (outputs) => {
+        return outputs.push(...outputCells);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.omni_lock));
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(depositLockDep);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(rollupCellDep);
+      })
+      .update("cellDeps", (cell_deps) => {
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
+      });
+
+    if (!!cell.cell_output.type) {
+      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
+        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
+      });
+    }
+    return txSkeleton;
+  }
+
+  async getRollupCellDep(): Promise<CellDep> {
+    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const result = await this.godwokenClient.getLastSubmittedInfo();
+    const txHash = result.transaction_hash;
+    const tx = await this.getPendingTransaction(txHash);
+    if (tx == null) {
+      throw new Error("Last submitted tx not found!");
+    }
+    let rollupIndex = tx.transaction.outputs.findIndex((output: Output) => {
+      return output.type && utils.computeScriptHash(output.type) === layer2Config.ROLLUP_CONFIG.rollup_type_hash;
+    });
+    return {
+      out_point: {
+        tx_hash: txHash,
+        index: `0x${rollupIndex.toString(16)}`,
+      },
+      dep_type: "code",
+    };
+  }
+
+  async getPendingTransaction(txHash: Hash): Promise<TransactionWithStatus | null> {
+    let tx: TransactionWithStatus | null = null;
+    // retry 10 times, and sleep 1s
+    for (let i = 0; i < 10; i++) {
+      tx = await this.provider.ckbRpc.get_transaction(txHash);
+      if (tx != null) {
+        return tx;
+      }
+      await this.provider.asyncSleep(1000);
+    }
+    return null;
+  }
 
   getConfig(): LightGodwokenConfig {
     return this.provider.getConfig();
@@ -80,7 +264,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of ckbCollector.collect()) {
-      debug(cell);
       collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
       collectedCells.push(cell);
       if (collectedCapatity.gte(neededCapacity)) break;
@@ -91,7 +274,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         type: payload.sudtType,
       });
       for await (const cell of sudtCollector.collect()) {
-        debug(cell);
         collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
         collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
         collectedCells.push(cell);
@@ -134,7 +316,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async payTxFee(txSkeleton: helpers.TransactionSkeletonType): Promise<helpers.TransactionSkeletonType> {
-    let signedTx = await this.provider.signL1Transaction(txSkeleton, true);
+    let signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
       const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
@@ -147,7 +329,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   async deposit(payload: DepositPayload): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload);
     txSkeleton = await this.payTxFee(txSkeleton);
-    let signedTx = await this.provider.signL1Transaction(txSkeleton);
+    let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
     return txHash;
