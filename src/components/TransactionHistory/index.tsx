@@ -1,5 +1,6 @@
 import { HistoryOutlined } from "@ant-design/icons";
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
@@ -34,6 +35,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
   const { data: chainId } = useChainId();
   const historyKey = `${chainId}/${l1Address}/${prop.type}`;
   const { txHistory } = useL1TxHistory(historyKey);
+  const [searchParams] = useSearchParams();
+  const isShowTxHistory = !!searchParams.get("debug");
   const showModal = () => {
     setIsModalVisible(true);
   };
@@ -45,6 +48,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = (prop) => {
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+  if (!isShowTxHistory) {
+    return null;
+  }
   return (
     <StyleWrapper>
       <HistoryOutlined onClick={showModal} />
