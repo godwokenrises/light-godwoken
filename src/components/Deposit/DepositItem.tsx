@@ -20,6 +20,7 @@ import { COLOR } from "../../style/variables";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { useClock } from "../../hooks/useClock";
 import { LoadingOutlined } from "@ant-design/icons";
+import { message } from "antd";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -85,10 +86,28 @@ const ModalContent = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   .title {
     font-size: 14px;
     padding-bottom: 16px;
     font-weight: bold;
+  }
+  .amount {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    img,
+    svg {
+      width: 22px;
+      height: 22px;
+      margin-right: 5px;
+    }
+    .ckb-amount {
+      display: flex;
+    }
+    .sudt-amount + .ckb-amount {
+      margin-top: 10px;
+    }
   }
 `;
 
@@ -133,9 +152,17 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
 
   const cancelDeposit = async () => {
     setIsCancel(true);
-    await lightGodwoken?.cancelDeposit(rawCell);
-    setIsCancel(false);
-    handleCancel();
+    try {
+      await lightGodwoken?.cancelDeposit(rawCell);
+      message.success("cancel deposit request success");
+    } catch (error) {
+      if (error instanceof Error) {
+        message.error(error.message);
+      }
+    } finally {
+      setIsCancel(false);
+      handleCancel();
+    }
   };
 
   const showModal = () => {
@@ -180,7 +207,7 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
         </div>
       </div>
       <ConfirmModal
-        title="Unlock Withdrawal"
+        title="Confirm cancel padding deposit ?"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -188,8 +215,20 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
         width={400}
       >
         <ModalContent>
-          <Text className="title">Unlock withdraw to below address</Text>
-          <Text>{lightGodwoken?.provider.getL1Address()}</Text>
+          <div className="amount">
+            {sudtAmount && (
+              <div className="sudt-amount">
+                {sudt?.tokenURI ? <img src={sudt?.tokenURI} alt="" /> : ""}
+                <MainText>{sudtAmount}</MainText>
+              </div>
+            )}
+            <div className="ckb-amount">
+              <div className="ckb-icon">
+                <CKBIcon></CKBIcon>
+              </div>
+              <MainText>{CKBAmount}</MainText>
+            </div>
+          </div>
           {isCancel && (
             <LoadingWrapper>
               <LoadingOutlined />

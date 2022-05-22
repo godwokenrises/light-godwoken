@@ -128,7 +128,6 @@ export default function CurrencyInputPanel({
       }),
     );
   };
-  console.log(balancesList);
   return (
     <InputCard>
       <Row className="first-row">

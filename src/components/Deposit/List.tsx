@@ -2,8 +2,8 @@ import React from "react";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
-import { LoadingOutlined } from "@ant-design/icons";
 import DepositItem from "./DepositItem";
+import { Placeholder } from "../Placeholder";
 
 const DepositListDiv = styled.div`
   max-height: 500px;
@@ -28,17 +28,16 @@ export const DepositList: React.FC = () => {
   );
 
   const { data: depositList } = depositListQuery;
-
   if (!depositList) {
     return (
       <DepositListDiv>
-        <LoadingOutlined />
+        <Placeholder />
       </DepositListDiv>
     );
   }
   return (
     <DepositListDiv>
-      {depositList.length === 0 && "There is no withdrawal request here"}
+      {depositList.length === 0 && "There is no padding deposit request here"}
       {depositList.map((deposit, index) => (
         <DepositItem {...deposit} key={index}></DepositItem>
       ))}
