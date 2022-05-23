@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
+import { isMainnet } from "../../light-godwoken/env";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;
@@ -108,15 +109,17 @@ const PageHeader: React.FC<Props> = ({ onViewChange }) => {
       </div>
       <div className="right-side">
         <VersionSelect></VersionSelect>
-        <Popover
-          content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
-          trigger="click"
-          overlayClassName="popover-menu"
-          visible={popoverVisible}
-          placement="bottomLeft"
-        >
-          <Hamburger className="hamburger-menu" onClick={openPopoverMenu}></Hamburger>
-        </Popover>
+        {!isMainnet && (
+          <Popover
+            content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
+            trigger="click"
+            overlayClassName="popover-menu"
+            visible={popoverVisible}
+            placement="bottomLeft"
+          >
+            <Hamburger className="hamburger-menu" onClick={openPopoverMenu}></Hamburger>
+          </Popover>
+        )}
       </div>
     </StyledPage>
   );
