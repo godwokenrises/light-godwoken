@@ -37,7 +37,7 @@ export const DepositList: React.FC = () => {
   }
   return (
     <DepositListDiv>
-      {depositList.length === 0 && "There is no padding deposit request here"}
+      {depositList.length === 0 && "There is no pending deposit request here"}
       {depositList.map((deposit, index) => (
         <DepositItem {...deposit} key={index}></DepositItem>
       ))}
