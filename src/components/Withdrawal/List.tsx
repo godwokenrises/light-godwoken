@@ -3,9 +3,9 @@ import { useClock } from "../../hooks/useClock";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
-import { LoadingOutlined } from "@ant-design/icons";
 import WithdrawalRequestCard from "./WithdrawalRequestCard";
 import { Cell } from "@ckb-lumos/base";
+import { Placeholder } from "../Placeholder";
 
 const WithdrawalListDiv = styled.div`
   max-height: 500px;
@@ -38,7 +38,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   if (!withdrawalList) {
     return (
       <WithdrawalListDiv>
-        <LoadingOutlined />
+        <Placeholder />
       </WithdrawalListDiv>
     );
   }
