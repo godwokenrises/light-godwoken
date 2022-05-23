@@ -17,6 +17,7 @@ import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
+import { handleError } from "./service";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -80,11 +81,7 @@ const RequestWithdrawalV0: React.FC = () => {
         });
       }
     } catch (e) {
-      if (e instanceof Error) {
-        notification.error({
-          message: e.message,
-        });
-      }
+      handleError(e, selectedSudt);
       setLoading(false);
       return;
     }
@@ -112,14 +109,12 @@ const RequestWithdrawalV0: React.FC = () => {
 
     e.on("error", (result: unknown) => {
       setLoading(false);
-      console.error(result);
-      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+      handleError(result, selectedSudt);
     });
 
     e.on("fail", (result: unknown) => {
       setLoading(false);
-      console.error(result);
-      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+      handleError(result, selectedSudt);
     });
   };
   const handleSelectedChange = (value: Token, balance: string) => {
