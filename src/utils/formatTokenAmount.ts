@@ -33,7 +33,7 @@ export const getFullDisplayAmount = (value: BI, decimals = 8, options: { maxDeci
     .slice(-decimals)
     .padStart(decimals, "0")
     .replace(/(\d)0+$/, "$1")
-    .slice(0, maxDecimalPlace);
-
+    .slice(0, maxDecimalPlace)
+    .replace(/(\d)0+$/, "$1");
   return `${intPart}${decPart === "0" ? "" : `.${decPart}`}`;
 };
