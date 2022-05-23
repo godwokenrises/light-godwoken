@@ -38,7 +38,11 @@ const Unlock = ({ cell }: Props) => {
         };
         setIsModalVisible(false);
         notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
-      } catch {
+      } catch (e) {
+        console.error(e);
+        if (e instanceof Error) {
+          notification.error({ message: e.message });
+        }
         setIsUnlocking(false);
         setIsModalVisible(false);
       }
