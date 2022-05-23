@@ -14,7 +14,11 @@ import SubmitWithdrawal from "./SubmitWithdrawal";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useChainId } from "../../hooks/useChainId";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
-import { parseStringToBI } from "../../utils/numberFormat";
+import { formatToThousands, parseStringToBI } from "../../utils/numberFormat";
+import { NotEnoughCapacityError, NotEnoughSudtError } from "../../light-godwoken/constants/error";
+import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
+import { BI } from "@ckb-lumos/bi";
+import { handleError } from "./service";
 
 const RequestWithdrawalV1: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -67,11 +71,7 @@ const RequestWithdrawalV1: React.FC = () => {
         sudt_script_hash: sudt_script_hash,
       });
     } catch (e) {
-      if (e instanceof Error) {
-        notification.error({
-          message: e.message,
-        });
-      }
+      handleError(e, selectedSudt);
       setLoading(false);
       return;
     }
@@ -99,12 +99,12 @@ const RequestWithdrawalV1: React.FC = () => {
 
     e.on("error", (result: unknown) => {
       setLoading(false);
-      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+      handleError(result, selectedSudt);
     });
 
     e.on("fail", (result: unknown) => {
       setLoading(false);
-      notification.error({ message: result instanceof Error ? result.message : JSON.stringify(result) });
+      handleError(result, selectedSudt);
     });
   };
   const handleSelectedChange = (value: Token, balance: string) => {
