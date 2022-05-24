@@ -33,6 +33,7 @@ import {
   Token,
   DepositRequest,
   DepositEventEmitter,
+  PendingDepositTransaction,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
@@ -56,6 +57,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
   abstract getWithdrawalWaitBlock(): number | Promise<number>;
+  abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
   abstract listWithdraw(): Promise<WithdrawResult[]>;
@@ -334,6 +336,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
+    this.waitForDepositToComplete(txHash, payload, eventEmitter);
     eventEmitter.emit("pending", txHash);
     return txHash;
   }
@@ -371,6 +374,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           const output = txOutputs[index];
           const isCapacitySame = BI.from(payload.capacity).eq(output.capacity);
           const isTypeSame =
+            (!payload.sudtType && !output.type) ||
             JSON.stringify(payload.sudtType).toLowerCase() === JSON.stringify(output.type).toLowerCase();
           let isDataSame = false;
           if (!payload.amount) {
@@ -394,6 +398,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         depositCell = await this.provider.ckbRpc.get_live_cell(depositCellOutPoint, false);
       }
 
+      // TODO 4. extract unlocker cell ????
+
       if (
         depositTx &&
         depositTx.tx_status.status === "committed" &&
@@ -406,6 +412,49 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         clearInterval(nIntervId);
       }
     }, 10000);
+  }
+
+  subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let index = 0; index < payload.length; index++) {
+      const element = payload[index];
+      this.waitForDepositToComplete(element.tx_hash, element, eventEmitter);
+    }
+    return eventEmitter;
+  }
+
+  waitForWithdrawalToComplete(txHash: HexString, eventEmitter: EventEmitter) {
+    const maxLoop = 30;
+    let loop = 0;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      if (loop > maxLoop) {
+        eventEmitter.emit("fail", txHash);
+        debugProductionEnv("withdrawal fail:", txHash);
+        clearInterval(nIntervId);
+      }
+
+      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
+      if (withdrawal && withdrawal.status === "pending") {
+        loop = 0;
+        debug("withdrawal pending:", withdrawal);
+        eventEmitter.emit("pending", txHash);
+      }
+      if (withdrawal && withdrawal.status === "committed") {
+        debug("withdrawal committed:", withdrawal);
+        eventEmitter.emit("success", txHash);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
+  }
+
+  subscribPendingWithdrawalTransactions(txHashList: Hash[]): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let index = 0; index < txHashList.length; index++) {
+      const txHash = txHashList[index];
+      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    }
+    return eventEmitter;
   }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {

@@ -111,6 +111,10 @@ export interface DepositPayload {
   sudtType?: Script;
 }
 
+export interface PendingDepositTransaction extends DepositPayload {
+  tx_hash: Hash;
+}
+
 type Promisable<T> = Promise<T> | T;
 
 export const CKB_SUDT_ID = 1;
@@ -180,6 +184,8 @@ export interface LightGodwokenBase {
   deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
 
   depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;
+
+  subscribPendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
