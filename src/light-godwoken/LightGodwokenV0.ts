@@ -44,7 +44,15 @@ import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./
 import { debug, debugProductionEnv } from "./debug";
 import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
+import {
+  Erc20NotFoundError,
+  EthAddressFormatError,
+  Layer2AccountIdNotFoundError,
+  Layer2RpcError,
+  NotEnoughCapacityError,
+  NotEnoughSudtError,
+  TransactionSignError,
+} from "./constants/error";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -109,7 +117,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       return item.sudt_script_hash === sudtTypeHash;
     });
     if (filterd.length === 0) {
-      throw new Error(`Builtin erc20 not found with sudtTypeHash: ${sudtTypeHash}`);
+      throw new Erc20NotFoundError(sudtTypeHash, `Builtin erc20 not found with sudtTypeHash: ${sudtTypeHash}`);
     }
     return filterd[0];
   }
@@ -216,7 +224,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getWithdrawalCellSearchParams(ethAddress: string) {
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
-      throw new Error("eth address format error!");
+      throw new EthAddressFormatError({ address: ethAddress }, "eth address format error!");
     }
     const accountScriptHash = this.provider.getLayer2LockScriptHash();
     const { layer2Config } = this.provider.getLightGodwokenConfig();
@@ -274,7 +282,14 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       layer2Config.ROLLUP_CONFIG.rollup_type_hash,
     );
     debug("message:", message);
-    const signatureMetamaskPersonalSign: HexString = await this.signMessageMetamaskPersonalSign(message);
+    let signatureMetamaskPersonalSign: HexString = "";
+    try {
+      signatureMetamaskPersonalSign = await this.signMessageMetamaskPersonalSign(message);
+    } catch (e) {
+      const error = new TransactionSignError(message, (e as Error).message);
+      eventEmitter.emit("error", error);
+      throw error;
+    }
     debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
     const withdrawalRequest = {
       raw: rawWithdrawalRequest,
@@ -289,13 +304,13 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     debug("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
-    let txHash: unknown;
+    let txHash: HexString = "";
     try {
-      txHash = await this.godwokenClient.submitWithdrawalRequest(
+      txHash = (await this.godwokenClient.submitWithdrawalRequest(
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
-      );
-    } catch (e) {
-      eventEmitter.emit("error", e);
+      )) as unknown as HexString;
+    } catch (e: any) {
+      eventEmitter.emit("error", new Layer2RpcError(txHash, e.message));
       return;
     }
     eventEmitter.emit("sent", txHash);
@@ -343,7 +358,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     debug("fromId:", fromId);
     if (!fromId) {
-      throw new Error("account not found");
+      throw new Layer2AccountIdNotFoundError(accountScriptHash, "account not found");
     }
     let account_script_hash = await this.godwokenClient.getScriptHash(fromId);
     debug("account_script_hash:", account_script_hash);
@@ -354,11 +369,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     );
     const minCapacity = this.minimalWithdrawalCapacity(isSudt);
     if (BI.from(payload.capacity).lt(minCapacity)) {
-      throw new Error(
-        `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
-          payload.capacity,
-        ).toString()}.`,
+      const message = `Withdrawal required ${BI.from(minCapacity).toString()} shannons at least, provided ${BI.from(
+        payload.capacity,
+      ).toString()}.`;
+      const error = new NotEnoughCapacityError(
+        { expected: BI.from(minCapacity), actual: BI.from(payload.capacity) },
+        message,
       );
+      eventEmitter.emit("error", error);
+      throw error;
     }
 
     const layer2CkbBalance = await this.getL2CkbBalance();

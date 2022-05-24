@@ -27,6 +27,7 @@ import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { isMainnet } from "./env";
+import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -58,7 +59,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     } else if (env === "v1") {
       this.web3 = new Web3(ethereum || (window.ethereum as any));
     } else {
-      throw new Error("unsupported env");
+      throw new EnvNotFoundError(env, "unsupported env");
     }
 
     this.ethereum = ethereum;
@@ -110,7 +111,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   static async CreateProvider(ethereum: any, version: GodwokenVersion): Promise<LightGodwokenProvider> {
     if (!ethereum || !ethereum.isMetaMask) {
-      throw new Error("please provide metamask ethereum object");
+      throw new EthereumNotFoundError(ethereum, "please provide metamask ethereum object");
     }
     return ethereum
       .request({ method: "eth_requestAccounts" })
@@ -302,6 +303,6 @@ function validateLightGodwokenConfig(
     !lightGodwokenConfig.layer1Config.CKB_INDEXER_URL ||
     !lightGodwokenConfig.layer1Config.CKB_RPC_URL
   ) {
-    throw new Error("lightGodwokenConfig not valid.");
+    throw new LightGodwokenConfigNotValidError(JSON.stringify(lightGodwokenConfig), "lightGodwokenConfig not valid.");
   }
 }

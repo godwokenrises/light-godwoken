@@ -8,6 +8,8 @@ export class LightGodwokenError<T> extends Error {
   }
 }
 
+export class EthereumNotFoundError extends LightGodwokenError<string> {}
+export class LightGodwokenConfigNotValidError extends LightGodwokenError<string> {}
 export class LightGodwokenNotFoundError extends LightGodwokenError<string> {}
 export class NotEnoughCapacityError extends LightGodwokenError<{ expected: BI; actual: BI }> {}
 export class NotEnoughSudtError extends LightGodwokenError<{ expected: BI; actual: BI }> {}
@@ -19,3 +21,6 @@ export class EthAddressFormatError extends LightGodwokenError<{ address: string 
 export class Layer2AccountIdNotFoundError extends LightGodwokenError<string> {}
 export class ERC20TokenNotFoundError extends LightGodwokenError<{ sudtScriptHash: HexString }> {}
 export class TransactionSignError extends LightGodwokenError<string> {}
+export class EnvNotFoundError extends LightGodwokenError<string> {}
+export class SudtNotFoundError extends LightGodwokenError<string> {}
+export class Erc20NotFoundError extends LightGodwokenError<string> {}
