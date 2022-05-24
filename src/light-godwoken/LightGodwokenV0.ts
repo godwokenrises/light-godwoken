@@ -285,8 +285,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     let signatureMetamaskPersonalSign: HexString = "";
     try {
       signatureMetamaskPersonalSign = await this.signMessageMetamaskPersonalSign(message);
-    } catch (e: any) {
-      const error = new TransactionSignError(message, e.message);
+    } catch (e) {
+      const error = new TransactionSignError(message, (e as Error).message);
       eventEmitter.emit("error", error);
       throw error;
     }
@@ -304,11 +304,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     debug("withdrawalRequestExtra:", withdrawalRequestExtra);
     // using RPC `submitWithdrawalRequest` to submit withdrawal request to godwoken
-    let txHash: any;
+    let txHash: HexString = "";
     try {
-      txHash = await this.godwokenClient.submitWithdrawalRequest(
+      txHash = (await this.godwokenClient.submitWithdrawalRequest(
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
-      );
+      )) as unknown as HexString;
     } catch (e: any) {
       eventEmitter.emit("error", new Layer2RpcError(txHash, e.message));
       return;
