@@ -9,7 +9,7 @@ import {
 describe("Withdrawal/util", () => {
   describe("isSudtInputValidate", () => {
     it("sudt value can be empty string", () => {
-      expect(isSudtInputValidate("", "400", 8)).toEqual(true);
+      expect(isSudtInputValidate("", "40000000000", 8)).toEqual(true);
     });
 
     it("sudt balance should not be undefined", () => {
@@ -154,14 +154,14 @@ describe("getDepositInputError", () => {
   it("should return 'Insufficient CKB Amount' if ckb value is great than ckb balance", () => {
     expect(
       getDepositInputError({
-        CKBInput: "",
+        CKBInput: "500",
         CKBBalance: "40000000000",
         sudtValue: "",
         sudtBalance: "",
         sudtDecimals: 0,
         sudtSymbol: "SUDT",
       }),
-    ).toEqual("Enter CKB Amount");
+    ).toEqual("Insufficient CKB Amount");
   });
 
   it("should return 'Minimum 400 CKB' if ckb value is less than 400", () => {
