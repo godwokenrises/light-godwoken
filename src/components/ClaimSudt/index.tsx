@@ -7,7 +7,7 @@ export const ClaimSudt: React.FC = () => {
 
   const claimSudt = async () => {
     if (!lightGodwoken) {
-      const message = "Light Godwoken is not found";
+      const message = "Please connect wallet first";
       notification.error({ message });
       throw new LightGodwokenNotFoundError("LightGodwoken Not Found!", message);
     }
