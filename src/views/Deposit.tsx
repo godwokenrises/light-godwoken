@@ -32,7 +32,7 @@ import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
 import { DepositList } from "../components/Deposit/List";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "../light-godwoken/constants/error";
+import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../light-godwoken/constants/error";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 
 const ModalContent = styled.div`
@@ -64,6 +64,7 @@ export default function Deposit() {
   const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
 
   const handleError = (e: unknown, selectedSudt?: SUDT) => {
+    console.error(e);
     if (e instanceof NotEnoughCapacityError) {
       const expect = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.expected), 8, { maxDecimalPlace: 8 }));
       const actual = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.actual), 8, { maxDecimalPlace: 8 }));
@@ -88,7 +89,12 @@ export default function Deposit() {
       });
       return;
     }
-    console.error(e);
+    if (e instanceof TransactionSignError) {
+      notification.error({
+        message: `Sign Transaction Error, please try and confirm sign again`,
+      });
+      return;
+    }
     notification.error({
       message: `Server Error, Please try again later`,
     });
