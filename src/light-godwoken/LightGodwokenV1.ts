@@ -28,9 +28,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
   }
+
   getVersion(): GodwokenVersion {
     return "v1";
   }
+
   getNativeAsset(): Token {
     return {
       name: "Common Knowledge Base",
@@ -46,6 +48,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalWaitBlock(): number {
     return 100;
+  }
+
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
