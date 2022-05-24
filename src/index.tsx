@@ -10,6 +10,7 @@ import { config } from "@ckb-lumos/lumos";
 
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
+import { LightGodwokenError } from "./light-godwoken/constants/error";
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
     environment: process.env.NODE_ENV,
@@ -22,6 +23,18 @@ if (process.env.NODE_ENV === "production") {
     // of transactions for performance monitoring.
     // We recommend adjusting this value in production
     tracesSampleRate: 1.0,
+    allowUrls: [
+      /https?:\/\/testnet\.bridge\.godwoken\.io/,
+      /https?:\/\/light-godwoken\.vercel\.app/,
+      /https?:\/\/light-godwoken-mainnet\.vercel\.app/,
+    ],
+    beforeSend: function (event, hint) {
+      const exception = hint?.originalException;
+      if (exception instanceof LightGodwokenError) {
+        event.fingerprint = ["light-godwoken-error"];
+      }
+      return event;
+    },
   });
 }
 

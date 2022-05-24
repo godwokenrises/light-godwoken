@@ -389,6 +389,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
         errMsg,
       );
+      debugProductionEnv(error);
       eventEmitter.emit("error", error);
       throw error;
     }
@@ -404,6 +405,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           { expected: BI.from(payload.amount), actual: BI.from(layer2Erc20Balance) },
           errMsg,
         );
+        debugProductionEnv(error);
         eventEmitter.emit("error", error);
         throw error;
       }
