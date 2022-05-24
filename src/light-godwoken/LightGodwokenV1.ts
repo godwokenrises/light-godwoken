@@ -19,7 +19,7 @@ import { getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
-import { debug } from "./debug";
+import { debug, debugProductionEnv } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codec";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
@@ -385,6 +385,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(balance) },
         errMsg,
       );
+      debugProductionEnv(error);
       eventEmitter.emit("error", error);
       throw error;
     }
@@ -422,6 +423,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         payload.amount,
       ).toString()}`;
       const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
+      debugProductionEnv(error);
       eventEmitter.emit("error", error);
       throw error;
     }
