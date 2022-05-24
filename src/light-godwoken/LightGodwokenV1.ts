@@ -21,7 +21,14 @@ import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codec";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
+import {
+  EthAddressFormatError,
+  Layer2RpcError,
+  NotEnoughCapacityError,
+  NotEnoughSudtError,
+  SudtNotFoundError,
+  TransactionSignError,
+} from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -211,7 +218,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalCellSearchParams(ethAddress: string) {
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
-      throw new Error("eth address format error!");
+      throw new EthAddressFormatError({ address: ethAddress }, "eth address format error!");
     }
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
@@ -249,8 +256,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         method: "eth_signTypedData_v4",
         params: [this.provider.l2Address, JSON.stringify(typedMsg)],
       });
-    } catch (e) {
-      eventEmitter.emit("error", "transaction need to be sign first");
+    } catch (e: any) {
+      eventEmitter.emit("error", new TransactionSignError(JSON.stringify(typedMsg), e.message));
     }
 
     // construct WithdrawalRequestExx tra
@@ -271,7 +278,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (result !== null) {
       const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", errorMessage);
+        eventEmitter.emit("error", new Layer2RpcError(result, errorMessage));
       }
     }
     eventEmitter.emit("sent", result);
@@ -414,7 +421,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const builtinErc20List = this.getBuiltinErc20List();
     const erc20 = builtinErc20List.find((e) => e.sudt_script_hash === payload.sudt_script_hash);
     if (!erc20) {
-      throw new Error("SUDT not exit");
+      throw new SudtNotFoundError(payload.sudt_script_hash, "SUDT not exit");
     }
     const sudtBalance = await this.getErc20Balance(erc20.address);
     if (BI.from(sudtBalance).lt(BI.from(payload.amount))) {

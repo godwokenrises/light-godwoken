@@ -574,7 +574,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       if (collectedSum.gte(neededCapacity)) break;
     }
     if (collectedSum.lt(neededCapacity)) {
-      throw new Error(`Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `);
+      const message = `Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `;
+      const error = new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedSum }, message);
+      throw error;
     }
     const changeOutput: Cell = {
       cell_output: {

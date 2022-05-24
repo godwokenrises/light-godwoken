@@ -1,13 +1,15 @@
 import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { LightGodwokenNotFoundError } from "../../light-godwoken/constants/error";
 
 export const ClaimSudt: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
 
   const claimSudt = async () => {
     if (!lightGodwoken) {
-      notification.error({ message: "Please connect wallet first" });
-      throw new Error("LightGodwoken Not Found!");
+      const message = "Please connect wallet first";
+      notification.error({ message });
+      throw new LightGodwokenNotFoundError("LightGodwoken Not Found!", message);
     }
     const txHash = await lightGodwoken.claimUSDC();
     notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
