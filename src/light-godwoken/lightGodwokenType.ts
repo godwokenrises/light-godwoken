@@ -1,4 +1,5 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
+import EventEmitter from "events";
 import { LightGodwokenConfig } from "./constants/configTypes";
 
 export interface GetL2CkbBalancePayload {
@@ -54,8 +55,18 @@ interface WithdrawListener {
   (event: "fail", listener: (e: Error) => void): void;
 }
 
+interface DepositListener {
+  (event: "pending", listener: (txHash: Hash) => void): void;
+  (event: "success", listener: (txHash: Hash) => void): void;
+  (event: "fail", listener: (e: Error) => void): void;
+}
+
 export interface WithdrawalEventEmitter {
   on: WithdrawListener;
+}
+
+export interface DepositEventEmitter {
+  on: DepositListener;
 }
 
 export interface BaseWithdrawalEventEmitterPayload {
@@ -166,7 +177,9 @@ export interface LightGodwokenBase {
 
   generateDepositLock: () => Script;
 
-  deposit: (payload: DepositPayload) => Promise<Hash>;
+  deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
+
+  depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 

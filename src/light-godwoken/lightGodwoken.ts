@@ -32,12 +32,14 @@ import {
   LightGodwokenBase,
   Token,
   DepositRequest,
+  DepositEventEmitter,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
-import { CellDep, DepType, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import EventEmitter from "events";
 
 const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -326,13 +328,84 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txSkeleton;
   }
 
-  async deposit(payload: DepositPayload): Promise<string> {
+  async deposit(payload: DepositPayload, eventEmitter: EventEmitter): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
+    eventEmitter.emit("pending", txHash);
     return txHash;
+  }
+
+  depositWithEvent(payload: DepositPayload): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.deposit(payload, eventEmitter);
+    return eventEmitter;
+  }
+
+  waitForDepositToComplete(txHash: HexString, payload: DepositPayload, eventEmitter: EventEmitter) {
+    const maxLoop = 30;
+    let loop = 0;
+    let depositTx: TransactionWithStatus | null;
+    let depositCellOutPoint: OutPoint | null;
+    let depositCell: CellWithStatus | null;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      if (loop > maxLoop) {
+        eventEmitter.emit("fail", txHash);
+        debugProductionEnv("deposit fail:", txHash);
+        clearInterval(nIntervId);
+      }
+
+      // 1. wait for deposit tx to be commited
+      if (!depositTx) {
+        depositTx = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        loop = 0;
+      }
+
+      // 2. extract deposit cell outpoint
+      if (!!depositTx) {
+        const txOutputs = depositTx.transaction.outputs;
+        for (let index = 0; index < txOutputs.length; index++) {
+          const output = txOutputs[index];
+          const isCapacitySame = BI.from(payload.capacity).eq(output.capacity);
+          const isTypeSame =
+            JSON.stringify(payload.sudtType).toLowerCase() === JSON.stringify(output.type).toLowerCase();
+          let isDataSame = false;
+          if (!payload.amount) {
+            isDataSame = depositTx.transaction.outputs_data[index] === "0x";
+          } else {
+            isDataSame = utils.readBigUInt128LECompatible(depositTx.transaction.outputs_data[index]).eq(payload.amount);
+          }
+          if (isCapacitySame && isTypeSame && isDataSame) {
+            depositCellOutPoint = {
+              tx_hash: txHash,
+              index: String(index),
+            };
+            loop = 0;
+            break;
+          }
+        }
+      }
+
+      // 3. wait for deposit cell to be consumed
+      if (depositCellOutPoint !== null) {
+        depositCell = await this.provider.ckbRpc.get_live_cell(depositCellOutPoint, false);
+      }
+
+      if (
+        depositTx &&
+        depositTx.tx_status.status === "committed" &&
+        depositCellOutPoint &&
+        depositCell &&
+        depositCell.status !== "live"
+      ) {
+        debug("deposit committed:", depositTx);
+        eventEmitter.emit("success", txHash);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
   }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {
