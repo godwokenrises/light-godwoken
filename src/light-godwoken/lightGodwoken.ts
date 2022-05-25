@@ -330,14 +330,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txSkeleton;
   }
 
-  async deposit(payload: DepositPayload, eventEmitter: EventEmitter): Promise<string> {
+  async deposit(payload: DepositPayload, eventEmitter?: EventEmitter): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
-    this.waitForDepositToComplete(txHash, payload, eventEmitter);
-    eventEmitter.emit("pending", txHash);
+    if (eventEmitter) {
+      eventEmitter.emit("pending", txHash);
+      this.waitForDepositToComplete(txHash, payload, eventEmitter);
+    }
     return txHash;
   }
 
@@ -348,16 +350,23 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   waitForDepositToComplete(txHash: HexString, payload: DepositPayload, eventEmitter: EventEmitter) {
-    const maxLoop = 30;
+    debug("Waiting for deposit to complete...", txHash, payload);
+    const maxLoop = 20;
     let loop = 0;
     let depositTx: TransactionWithStatus | null;
     let depositCellOutPoint: OutPoint | null;
     let depositCell: CellWithStatus | null;
+    let depositUnlockedByRollup = false;
+    let depositUnlockedByUser = false;
     const nIntervId = setInterval(async () => {
       loop++;
       if (loop > maxLoop) {
-        eventEmitter.emit("fail", txHash);
-        debugProductionEnv("deposit fail:", txHash);
+        if (depositCell && depositCell.status !== "live" && !depositUnlockedByUser) {
+          eventEmitter.emit("success", txHash);
+        } else {
+          eventEmitter.emit("fail", txHash);
+        }
+        debugProductionEnv("wait for deposit to complete max loop exceeded:", txHash);
         clearInterval(nIntervId);
       }
 
@@ -365,10 +374,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       if (!depositTx) {
         depositTx = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
         loop = 0;
+        debug("depositTx", depositTx);
       }
 
       // 2. extract deposit cell outpoint
-      if (!!depositTx) {
+      if (!!depositTx && !depositCellOutPoint) {
         const txOutputs = depositTx.transaction.outputs;
         for (let index = 0; index < txOutputs.length; index++) {
           const output = txOutputs[index];
@@ -377,7 +387,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
             (!payload.sudtType && !output.type) ||
             JSON.stringify(payload.sudtType).toLowerCase() === JSON.stringify(output.type).toLowerCase();
           let isDataSame = false;
-          if (!payload.amount) {
+          if (!payload.amount || payload.amount === "0x0" || payload.amount === "0x") {
             isDataSame = depositTx.transaction.outputs_data[index] === "0x";
           } else {
             isDataSame = utils.readBigUInt128LECompatible(depositTx.transaction.outputs_data[index]).eq(payload.amount);
@@ -385,33 +395,42 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           if (isCapacitySame && isTypeSame && isDataSame) {
             depositCellOutPoint = {
               tx_hash: txHash,
-              index: String(index),
+              index: BI.from(index).toHexString(),
             };
             loop = 0;
+            debug("depositCellOutPoint", depositCellOutPoint);
             break;
           }
         }
       }
 
       // 3. wait for deposit cell to be consumed
-      if (depositCellOutPoint !== null) {
+      if (depositCellOutPoint) {
         depositCell = await this.provider.ckbRpc.get_live_cell(depositCellOutPoint, false);
+        debug("depositCell", depositCell);
       }
 
-      // TODO 4. extract unlocker cell ????
-
-      if (
-        depositTx &&
-        depositTx.tx_status.status === "committed" &&
-        depositCellOutPoint &&
-        depositCell &&
-        depositCell.status !== "live"
-      ) {
-        debug("deposit committed:", depositTx);
-        eventEmitter.emit("success", txHash);
-        clearInterval(nIntervId);
+      // TODO 4. extract unlocker cell，if unlocker is rollup, emit success
+      if (depositCell && depositCell.status !== "live") {
+        const depositLock = await this.generateDepositLock();
+        depositUnlockedByRollup = await this.provider.isCellConsumedByLock(depositCellOutPoint!, depositLock);
+        if (depositUnlockedByRollup) {
+          debug("deposit committed:", depositTx);
+          eventEmitter.emit("success", txHash);
+          clearInterval(nIntervId);
+        } else {
+          depositUnlockedByUser = await this.provider.isCellConsumedByLock(
+            depositCellOutPoint!,
+            this.provider.getLayer1Lock(),
+          );
+          if (depositUnlockedByUser) {
+            debug("deposit canceled:", depositTx);
+            eventEmitter.emit("fail", txHash);
+            clearInterval(nIntervId);
+          }
+        }
       }
-    }, 10000);
+    }, 30000);
   }
 
   subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
