@@ -1,9 +1,6 @@
 name: run unit test
 
-on:
-  push:
-    branches:
-      - '**' 
+on: [push, pull_request]
 
 jobs:
   test-unit:
@@ -28,6 +25,6 @@ jobs:
 
       - uses: codecov/codecov-action@v2
         with:
-            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-            files: ./coverage/clover.xml
-            verbose: true # optional (default = false)
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: ./coverage/clover.xml
+          verbose: true # optional (default = false)
