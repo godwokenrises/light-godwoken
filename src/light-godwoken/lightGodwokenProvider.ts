@@ -275,32 +275,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return ownerLockHash;
   }
 
-  // only check latest 10 tx
-  async isCellConsumedByLock(outpoint: OutPoint, lockScript: Script): Promise<boolean> {
-    const transactions = await this.ckbIndexer.getTransactions({ script: lockScript, script_type: "lock" });
-    const txHashList = transactions.objects
-      .map((object) => object.tx_hash)
-      .slice(-10)
-      .reverse();
-    debug("txHashList", txHashList);
-    const promises = txHashList.map(async (txHash) => {
-      return this.ckbRpc.get_transaction(txHash as unknown as Hash);
-    });
-    const txList = await Promise.all(promises);
-    const allConsumedOutpoints = txList.reduce((acc: OutPoint[], tx) => {
-      if (tx) {
-        const txInputs = tx.transaction.inputs.map((input) => input.previous_output);
-        acc.push(...txInputs);
-      }
-      return acc;
-    }, []);
-    const isConsumed = allConsumedOutpoints.some((consumedOutpoint) => {
-      return consumedOutpoint.tx_hash === outpoint.tx_hash && consumedOutpoint.index === outpoint.index;
-    });
-    debug("outpoint isConsumed by lockScript:", outpoint, isConsumed, lockScript);
-    return isConsumed;
-  }
-
   async getLastFinalizedBlockNumber(): Promise<number> {
     const rollupCell = await this.getRollupCell();
     if (!rollupCell === undefined) {

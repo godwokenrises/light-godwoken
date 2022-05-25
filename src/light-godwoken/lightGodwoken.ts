@@ -356,12 +356,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let depositTx: TransactionWithStatus | null;
     let depositCellOutPoint: OutPoint | null;
     let depositCell: CellWithStatus | null;
-    let depositUnlockedByRollup = false;
-    let depositUnlockedByUser = false;
     const nIntervId = setInterval(async () => {
       loop++;
       if (loop > maxLoop) {
-        if (depositCell && depositCell.status !== "live" && !depositUnlockedByUser) {
+        // only when we find the deposit cell, and the deposit cell is not unlocked by user
+        if (depositCell && depositCell.status !== "live") {
           eventEmitter.emit("success", txHash);
         } else {
           eventEmitter.emit("fail", txHash);
@@ -382,17 +381,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         const txOutputs = depositTx.transaction.outputs;
         for (let index = 0; index < txOutputs.length; index++) {
           const output = txOutputs[index];
-          const isCapacitySame = BI.from(payload.capacity).eq(output.capacity);
-          const isTypeSame =
-            (!payload.sudtType && !output.type) ||
-            JSON.stringify(payload.sudtType).toLowerCase() === JSON.stringify(output.type).toLowerCase();
-          let isDataSame = false;
-          if (!payload.amount || payload.amount === "0x0" || payload.amount === "0x") {
-            isDataSame = depositTx.transaction.outputs_data[index] === "0x";
-          } else {
-            isDataSame = utils.readBigUInt128LECompatible(depositTx.transaction.outputs_data[index]).eq(payload.amount);
-          }
-          if (isCapacitySame && isTypeSame && isDataSame) {
+          const depositLock = this.generateDepositLock();
+          if (
+            depositLock.code_hash === output.lock.code_hash &&
+            depositLock.hash_type === output.lock.hash_type &&
+            depositLock.args === output.lock.args
+          ) {
             depositCellOutPoint = {
               tx_hash: txHash,
               index: BI.from(index).toHexString(),
@@ -410,23 +404,52 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         debug("depositCell", depositCell);
       }
 
-      // TODO 4. extract unlocker cell，if unlocker is rollup, emit success
+      // 4. extract unlocker cell，if output does not contain owner cell, emit success
       if (depositCell && depositCell.status !== "live") {
         const depositLock = await this.generateDepositLock();
-        depositUnlockedByRollup = await this.provider.isCellConsumedByLock(depositCellOutPoint!, depositLock);
-        if (depositUnlockedByRollup) {
-          debug("deposit committed:", depositTx);
-          eventEmitter.emit("success", txHash);
-          clearInterval(nIntervId);
-        } else {
-          depositUnlockedByUser = await this.provider.isCellConsumedByLock(
-            depositCellOutPoint!,
-            this.provider.getLayer1Lock(),
-          );
-          if (depositUnlockedByUser) {
-            debug("deposit canceled:", depositTx);
-            eventEmitter.emit("fail", txHash);
-            clearInterval(nIntervId);
+        const ownerLock = this.provider.getLayer1Lock();
+        const transactions = await this.provider.ckbIndexer.getTransactions({
+          script: depositLock,
+          script_type: "lock",
+        });
+        const txHashList = transactions.objects
+          .map((object) => object.tx_hash)
+          .slice(-10)
+          .reverse();
+        debug("txHashList", txHashList);
+        const promises = txHashList.map(async (txHash) => {
+          return this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        });
+        const txList = await Promise.all(promises);
+        for (let index = 0; index < txList.length; index++) {
+          const tx = txList[index];
+          // eslint-disable-next-line no-loop-func
+          const txConsumedDepositCell = tx?.transaction.inputs.some((input) => {
+            return (
+              input.previous_output.tx_hash === depositCellOutPoint!.tx_hash &&
+              input.previous_output.index === depositCellOutPoint!.index
+            );
+          });
+          if (txConsumedDepositCell) {
+            // eslint-disable-next-line no-loop-func
+            const outputContainsOwnerLock = tx?.transaction.outputs.some((output) => {
+              return (
+                output.lock.code_hash === ownerLock.code_hash &&
+                output.lock.hash_type === ownerLock.hash_type &&
+                output.lock.args === ownerLock.args
+              );
+            });
+
+            if (!outputContainsOwnerLock) {
+              debug("deposit committed:", depositTx);
+              eventEmitter.emit("success", txHash);
+              clearInterval(nIntervId);
+            } else {
+              debug("deposit canceled:", depositTx);
+              eventEmitter.emit("fail", txHash);
+              clearInterval(nIntervId);
+            }
+            break;
           }
         }
       }
