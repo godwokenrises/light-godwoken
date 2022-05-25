@@ -77,14 +77,7 @@ export const WithdrawalRequestExtraCodec = table(
   ["request", "owner_lock", "withdraw_to_v1"],
 );
 
-// table V1DepositLockArgs {
-//   owner_lock_hash: Byte32,
-//   layer2_lock: Script,
-//   cancel_timeout: Uint64,
-//   registry_id: Uint32,
-// }
-
-export const V1DepositLockArgs = table(
+export const V0DepositLockArgs = table(
   {
     owner_lock_hash: Byte32,
     layer2_lock: table(
@@ -96,7 +89,8 @@ export const V1DepositLockArgs = table(
       ["code_hash", "hash_type", "args"],
     ),
     cancel_timeout: Uint64,
-    registry_id: Uint32,
   },
-  ["owner_lock_hash", "layer2_lock", "cancel_timeout", "registry_id"],
+  ["owner_lock_hash", "layer2_lock", "cancel_timeout"],
 );
+
+

@@ -22,12 +22,12 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
 import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
-import { SerializeRcLockWitnessLock } from "./omni-lock/index";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { isMainnet } from "./env";
 import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -164,11 +164,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     debug("message after sign", signedMessage);
     const signedWitness = new toolkit.Reader(
       core.SerializeWitnessArgs({
-        lock: SerializeRcLockWitnessLock({
-          signature: new toolkit.Reader(signedMessage),
-        }),
+        lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
       }),
     ).serializeJson();
+    debug("signedWitness", signedWitness);
     return signedWitness;
   }
 
@@ -198,14 +197,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       core.SerializeRawTransaction(toolkit.normalizers.NormalizeRawTransaction(transaction)),
     );
     const serializedWitness = core.SerializeWitnessArgs({
-      lock: new toolkit.Reader(
-        "0x" +
-          "00".repeat(
-            SerializeRcLockWitnessLock({
-              signature: new toolkit.Reader("0x" + "00".repeat(65)),
-            }).byteLength,
-          ),
-      ),
+      lock: new toolkit.Reader("0x" + "00".repeat(85)),
     });
     hasher.update(rawTxHash);
     this.hashWitness(hasher, serializedWitness);
