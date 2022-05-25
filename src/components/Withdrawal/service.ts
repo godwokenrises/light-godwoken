@@ -1,4 +1,5 @@
 import { BI } from "@ckb-lumos/bi";
+import { captureException } from "@sentry/react";
 import { notification } from "antd";
 import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../../light-godwoken/constants/error";
 import { L1MappedErc20 } from "../../types/type";
@@ -37,7 +38,9 @@ export const handleError = (e: unknown, selectedSudt?: L1MappedErc20) => {
     });
     return;
   }
+  captureException(e);
+
   notification.error({
-    message: `Server Error, Please try again later`,
+    message: `Unknown Error, Please try again later`,
   });
 };

@@ -34,6 +34,7 @@ import { WalletConnect } from "../components/WalletConnect";
 import { DepositList } from "../components/Deposit/List";
 import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../light-godwoken/constants/error";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
+import { captureException } from "@sentry/react";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -95,8 +96,9 @@ export default function Deposit() {
       });
       return;
     }
+    captureException(e);
     notification.error({
-      message: `Server Error, Please try again later`,
+      message: `Unknown Error, Please try again later`,
     });
   };
   const showModal = async () => {
