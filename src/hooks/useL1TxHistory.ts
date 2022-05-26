@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
-import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
+import { Token } from "../light-godwoken/lightGodwokenType";
 
 type L1TxType = "deposit" | "withdrawal";
 

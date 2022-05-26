@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI, Cell } from "@ckb-lumos/lumos";
-import { SUDT, Token } from "../../light-godwoken/lightGodwokenType";
+import { Token } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";

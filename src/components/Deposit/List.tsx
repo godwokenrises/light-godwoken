@@ -7,7 +7,6 @@ import { Placeholder } from "../Placeholder";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { BI } from "@ckb-lumos/bi";
-import EventEmitter from "events";
 import { LinkList, Tab } from "../../style/common";
 
 const DepositListDiv = styled.div`
