@@ -10,6 +10,7 @@ import { ReactComponent as ArrowDownIcon } from "../../asserts/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../asserts/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -48,6 +49,10 @@ const StyleWrapper = styled.div`
     display: flex;
     align-self: center;
     align-items: center;
+    justify-content: center;
+    span + span {
+      padding-left: 10px;
+    }
   }
   .time {
     font-size: 12px;
@@ -78,6 +83,7 @@ export interface IWithdrawalRequestCardProps {
   remainingBlockNumber?: number;
   capacity: HexNumber;
   amount: HexNumber;
+  status: string;
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
@@ -87,6 +93,7 @@ const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
   capacity,
   amount,
+  status,
   erc20,
   now = 0,
   cell,
@@ -155,23 +162,31 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {isMature ? (
-            unlockButton && cell && unlockButton(cell)
-          ) : shouldShowMore ? (
-            <div className="time">
-              <ArrowUpIcon />
-            </div>
-          ) : (
-            <div className="time">
-              <MainText title="Estimated time left">
-                {daysLeft > 0
-                  ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
-                  : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-                      .toString()
-                      .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
-              </MainText>
-              <ArrowDownIcon />
-            </div>
+          {status === "pending" &&
+            (isMature ? (
+              unlockButton && cell && unlockButton(cell)
+            ) : shouldShowMore ? (
+              <div className="time">
+                <ArrowUpIcon />
+              </div>
+            ) : (
+              <div className="time">
+                <MainText title="Estimated time left">
+                  {daysLeft > 0
+                    ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
+                    : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
+                        .toString()
+                        .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
+                </MainText>
+                <ArrowDownIcon />
+              </div>
+            ))}
+          {status !== "pending" && <span>{status + " "}</span>}
+          {status === "success" && (
+            <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+          )}
+          {status === "fail" && (
+            <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
           )}
         </div>
       </div>

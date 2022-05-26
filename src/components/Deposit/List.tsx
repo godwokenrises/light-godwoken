@@ -42,9 +42,10 @@ export const DepositList: React.FC = () => {
   );
 
   const { data: depositList, isLoading } = depositListQuery;
+  console.log(depositList);
 
   depositList?.forEach((deposit) => {
-    if (!formattedTxHistory.find((txHistory) => deposit.rawCell.out_point?.tx_hash === txHistory.txHash)) {
+    if (!txHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
       addTxToHistory({
         type: "deposit",
         capacity: deposit.capacity.toHexString(),
@@ -86,13 +87,15 @@ export const DepositList: React.FC = () => {
   eventEmit?.on("success", (txHash) => {
     updateTxStatus(txHash, "success");
   });
-  eventEmit?.on("error", (txHash) => {
-    updateTxStatus(txHash, "error");
+  eventEmit?.on("fail", (txHash) => {
+    updateTxStatus(txHash, "fail");
   });
   eventEmit?.on("pending", (txHash) => {
     updateTxStatus(txHash, "pending");
   });
 
+  eventEmit?.emit("fail", "0xd9a1e68e2b50e5cb1e9e7ef1b19e343ba5730e57d7b64405fe3921f179f902d6");
+  eventEmit?.emit("success", "0xa4ab3d737131eb4e743e42374a096c399a8bd5d27bc66bc0cd5c4dbebba85b11");
   return (
     <DepositListDiv>
       <LinkList>

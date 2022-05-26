@@ -10,7 +10,7 @@ import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeBu
 import { COLOR } from "../../style/variables";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { useClock } from "../../hooks/useClock";
-import { LoadingOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { message } from "antd";
 
 const StyleWrapper = styled.div`
@@ -50,6 +50,10 @@ const StyleWrapper = styled.div`
     display: flex;
     align-self: center;
     align-items: center;
+    justify-content: center;
+    span + span {
+      padding-left: 10px;
+    }
   }
   .time {
     font-size: 12px;
@@ -207,9 +211,14 @@ const DepositItem = ({
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending ${timeLeft} left`)}
-          {status === "success" && "success"}
-          {status === "error" && "error"}
+            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending ${timeLeft}`)}
+          {status !== "pending" && <span>{status + " "}</span>}
+          {status === "success" && (
+            <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+          )}
+          {status === "fail" && (
+            <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
+          )}
         </div>
       </div>
       <ConfirmModal

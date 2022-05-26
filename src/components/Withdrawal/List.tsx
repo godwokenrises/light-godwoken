@@ -63,27 +63,18 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
     if (targetWithdraw) {
       return {
         ...history,
+        status: history.status || "pending",
         cell: targetWithdraw.cell,
         remainingBlockNumber: targetWithdraw.remainingBlockNumber,
       };
     }
-    return history;
+    return { ...history, status: history.status || "pending" };
   });
   const pendingList = formattedHistoryList.filter((history) => history.status === "pending");
   const completedList = formattedHistoryList.filter((history) => history.status !== "pending");
 
   const subscribePayload = pendingList.map((history) => history.txHash);
   const eventEmit = lightGodwoken?.subscribPendingWithdrawalTransactions(subscribePayload);
-
-  eventEmit?.on("success", (txHash) => {
-    updateTxStatus(txHash, "success");
-  });
-  eventEmit?.on("error", (txHash) => {
-    updateTxStatus(txHash, "error");
-  });
-  eventEmit?.on("pending", (txHash) => {
-    updateTxStatus(txHash, "pending");
-  });
   const updateTxStatus = (txHash: string, status: string) => {
     const result = txHistory.find((tx) => {
       return tx.txHash === txHash;
@@ -93,6 +84,17 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
       updateTxHistory(result);
     }
   };
+  eventEmit?.on("success", (txHash) => {
+    updateTxStatus(txHash, "success");
+  });
+  eventEmit?.on("fail", (txHash) => {
+    updateTxStatus(txHash, "fail");
+  });
+  eventEmit?.on("pending", (txHash) => {
+    updateTxStatus(txHash, "pending");
+  });
+  eventEmit?.emit("success", "0xe6d465455f8dba0ec6ca437d53962043b9e9a12366dceaab1f9c373896567829");
+  eventEmit?.emit("fail", "0xe94e5a6a0b81f90ce00b0a39fbb819189752ba4cd8487755cf930ed4fb44253b");
 
   return (
     <WithdrawalListDiv>
