@@ -42,7 +42,6 @@ export const DepositList: React.FC = () => {
   );
 
   const { data: depositList, isLoading } = depositListQuery;
-  console.log(depositList);
 
   depositList?.forEach((deposit) => {
     if (!txHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
