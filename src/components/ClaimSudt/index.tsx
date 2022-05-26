@@ -14,5 +14,5 @@ export const ClaimSudt: React.FC = () => {
     const txHash = await lightGodwoken.claimUSDC();
     notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
   };
-  return <div onClick={claimSudt}>Get 1,000 USDC</div>;
+  return <div onClick={claimSudt}>Get 1,000 USDC on L1</div>;
 };

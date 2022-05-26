@@ -14,10 +14,7 @@ import SubmitWithdrawal from "./SubmitWithdrawal";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useChainId } from "../../hooks/useChainId";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
-import { formatToThousands, parseStringToBI } from "../../utils/numberFormat";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "../../light-godwoken/constants/error";
-import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
-import { BI } from "@ckb-lumos/bi";
+import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
 
 const RequestWithdrawalV1: React.FC = () => {

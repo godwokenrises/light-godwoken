@@ -5,16 +5,7 @@ import { BI, Cell } from "@ckb-lumos/lumos";
 import { SUDT } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
-import {
-  Actions,
-  ConfirmModal,
-  LoadingWrapper,
-  MainText,
-  PlainButton,
-  SecondeButton,
-  Text,
-  Tips,
-} from "../../style/common";
+import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
 
 import { COLOR } from "../../style/variables";
 import getTimePeriods from "../../utils/getTimePeriods";

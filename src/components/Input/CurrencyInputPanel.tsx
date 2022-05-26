@@ -61,6 +61,9 @@ const CurrencyWrapper = styled.div`
   .select {
     padding-left: 5px;
   }
+  &:hover {
+    cursor: pointer;
+  }
 `;
 interface CurrencyInputPanelProps {
   value: string;
