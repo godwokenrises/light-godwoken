@@ -338,7 +338,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
       eventEmitter.emit("pending", txHash);
-      this.waitForDepositToComplete(txHash, payload, eventEmitter);
+      this.waitForDepositToComplete(txHash, eventEmitter);
     }
     return txHash;
   }
@@ -349,8 +349,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return eventEmitter;
   }
 
-  waitForDepositToComplete(txHash: HexString, payload: DepositPayload, eventEmitter: EventEmitter) {
-    debug("Waiting for deposit to complete...", txHash, payload);
+  waitForDepositToComplete(txHash: HexString, eventEmitter: EventEmitter) {
+    debug("Waiting for deposit to complete...", txHash);
     const maxLoop = 20;
     let loop = 0;
     let depositTx: TransactionWithStatus | null;
@@ -460,7 +460,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const eventEmitter = new EventEmitter();
     for (let index = 0; index < payload.length; index++) {
       const element = payload[index];
-      this.waitForDepositToComplete(element.tx_hash, element, eventEmitter);
+      this.waitForDepositToComplete(element.tx_hash, eventEmitter);
     }
     return eventEmitter;
   }

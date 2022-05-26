@@ -111,7 +111,7 @@ export interface DepositPayload {
   sudtType?: Script;
 }
 
-export interface PendingDepositTransaction extends DepositPayload {
+export interface PendingDepositTransaction {
   tx_hash: Hash;
 }
 
