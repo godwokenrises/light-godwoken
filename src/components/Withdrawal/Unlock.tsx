@@ -6,6 +6,8 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { Actions, ConfirmModal, LoadingWrapper, PlainButton, SecondeButton, Text, Tips } from "../../style/common";
 import { LoadingOutlined } from "@ant-design/icons";
+import { NotEnoughCapacityError } from "../../light-godwoken/constants/error";
+import { captureException } from "@sentry/react";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -32,13 +34,21 @@ const Unlock = ({ cell }: Props) => {
       setIsUnlocking(true);
       try {
         const txHash = await lightGodwoken.unlock({ cell });
-        setIsUnlocking(false);
         const linkToExplorer = () => {
           window.open(`${lightGodwoken.getConfig().layer1Config.SCANNER_URL}/transaction/${txHash}`, "_blank");
         };
-        setIsModalVisible(false);
         notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
-      } catch {
+      } catch (e) {
+        console.error(e);
+        if (e instanceof NotEnoughCapacityError) {
+          notification.error({ message: `Unlock Transaction fail, you need to get some ckb on L1 first` });
+          return;
+        }
+        if (e instanceof Error) {
+          notification.error({ message: `Unknown error, please try again later` });
+        }
+        captureException(e);
+      } finally {
         setIsUnlocking(false);
         setIsModalVisible(false);
       }
