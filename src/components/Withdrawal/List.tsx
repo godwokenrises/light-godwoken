@@ -72,7 +72,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const pendingList = formattedHistoryList.filter((history) => history.status === "pending");
   const completedList = formattedHistoryList.filter((history) => history.status !== "pending");
 
-  const subscribePayload = txHistory.map((history) => history.txHash);
+  const subscribePayload = pendingList.map((history) => history.txHash);
   const eventEmit = lightGodwoken?.subscribPendingWithdrawalTransactions(subscribePayload);
 
   eventEmit?.on("success", (txHash) => {
