@@ -24,7 +24,7 @@ export const DepositList: React.FC = () => {
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { data: chainId } = useChainId();
   const historyKey = `${chainId}/${l1Address}/deposit`;
-  const { txHistory, updateTxHistory } = useL1TxHistory(historyKey);
+  const { txHistory, updateTxHistory, addTxToHistory } = useL1TxHistory(historyKey);
   const [active, setActive] = useState("pending");
   const changeViewToPending = () => {
     setActive("pending");
@@ -42,7 +42,21 @@ export const DepositList: React.FC = () => {
     },
   );
 
-  const { data: depositList } = depositListQuery;
+  const { data: depositList, isLoading } = depositListQuery;
+
+  depositList?.forEach((deposit) => {
+    if (!formattedTxHistory.find((txHistory) => deposit.rawCell.out_point?.tx_hash === txHistory.txHash)) {
+      addTxToHistory({
+        type: "deposit",
+        capacity: deposit.capacity.toHexString(),
+        amount: deposit.amount.toHexString(),
+        token: deposit.sudt,
+        txHash: deposit.rawCell.out_point?.tx_hash || "",
+        status: "pending",
+      });
+    }
+  });
+
   const formattedTxHistory = txHistory.map((history) => {
     const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
     return {
@@ -55,19 +69,10 @@ export const DepositList: React.FC = () => {
       cancelTime: targetDeposit?.cancelTime,
     };
   });
-  depositList?.forEach((deposit) => {
-    if (!formattedTxHistory.find((txHistory) => deposit.rawCell.out_point?.tx_hash === txHistory.txHash)) {
-      formattedTxHistory.push({
-        capacity: deposit.capacity,
-        amount: deposit.amount,
-        token: deposit.sudt,
-        txHash: deposit.rawCell.out_point?.tx_hash || "",
-        rawCell: deposit.rawCell,
-        cancelTime: deposit.cancelTime,
-        status: "pending",
-      });
-    }
-  });
+
+  const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
+  const completedList = formattedTxHistory.filter((history) => history.status !== "pending");
+
   const updateTxStatus = (txHash: string, status: string) => {
     const result = txHistory.find((tx) => {
       return tx.txHash === txHash;
@@ -77,8 +82,8 @@ export const DepositList: React.FC = () => {
       updateTxHistory(result);
     }
   };
-  const subscribPayload = formattedTxHistory.map(({ txHash }) => txHash);
-  const eventEmit = lightGodwoken?.subscribPendingDepositTransactions(subscribPayload);
+  const subscribePayload = txHistory.map(({ txHash }) => txHash);
+  const eventEmit = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
   eventEmit?.on("success", (txHash) => {
     updateTxStatus(txHash, "success");
   });
@@ -89,13 +94,6 @@ export const DepositList: React.FC = () => {
     updateTxStatus(txHash, "pending");
   });
 
-  if (!depositList) {
-    return (
-      <DepositListDiv>
-        <Placeholder />
-      </DepositListDiv>
-    );
-  }
   return (
     <DepositListDiv>
       <LinkList>
@@ -106,24 +104,23 @@ export const DepositList: React.FC = () => {
           Completed
         </Tab>
       </LinkList>
-      {active === "padding" && (
-        <div className="list padding-list">
-          {formattedTxHistory.length === 0 && "There is no pending deposit request here"}
-          {formattedTxHistory.map((deposit, index) => {
-            if (deposit.status !== "pending") return null;
-            return <DepositItem {...deposit} key={index}></DepositItem>;
-          })}
+      {active === "pending" && (
+        <div className="list pending-list">
+          {pendingList.length === 0 && "There is no pending deposit request here"}
+          {pendingList.map((deposit, index) => (
+            <DepositItem {...deposit} key={index}></DepositItem>
+          ))}
         </div>
       )}
       {active === "completed" && (
         <div className="list completed-list">
-          {formattedTxHistory.length === 0 && "There is no completed deposit request here"}
-          {formattedTxHistory.map((deposit, index) => {
-            if (deposit.status === "pending") return null;
-            return <DepositItem {...deposit} key={index}></DepositItem>;
-          })}
+          {completedList.length === 0 && "There is no completed deposit request here"}
+          {completedList.map((deposit, index) => (
+            <DepositItem {...deposit} key={index}></DepositItem>
+          ))}
         </div>
       )}
+      {isLoading && <Placeholder />}
     </DepositListDiv>
   );
 };

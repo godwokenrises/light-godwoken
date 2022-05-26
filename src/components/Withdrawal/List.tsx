@@ -69,7 +69,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
     }
     return history;
   });
-  const paddingList = formattedHistoryList.filter((history) => history.status === "pending");
+  const pendingList = formattedHistoryList.filter((history) => history.status === "pending");
   const completedList = formattedHistoryList.filter((history) => history.status !== "pending");
 
   const subscribePayload = txHistory.map((history) => history.txHash);
@@ -105,9 +105,9 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
         </Tab>
       </LinkList>
       {active === "pending" && (
-        <div className="list padding-list">
-          {paddingList.length === 0 && "There is no pending withdrawal request here"}
-          {paddingList.map((withdraw, index) => (
+        <div className="list pending-list">
+          {pendingList.length === 0 && "There is no pending withdrawal request here"}
+          {pendingList.map((withdraw, index) => (
             <WithdrawalRequestCard
               now={now}
               {...withdraw}
@@ -118,7 +118,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
         </div>
       )}
       {active !== "pending" && (
-        <div className="list padding-list">
+        <div className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw, index) => (
             <WithdrawalRequestCard
