@@ -5,16 +5,7 @@ import { BI, Cell } from "@ckb-lumos/lumos";
 import { SUDT } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
-import {
-  Actions,
-  ConfirmModal,
-  LoadingWrapper,
-  MainText,
-  PlainButton,
-  SecondeButton,
-  Text,
-  Tips,
-} from "../../style/common";
+import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
 
 import { COLOR } from "../../style/variables";
 import getTimePeriods from "../../utils/getTimePeriods";
@@ -26,6 +17,9 @@ const StyleWrapper = styled.div`
   background: #f3f3f3;
   padding: 16px;
   border-radius: 12px;
+  & + & {
+    margin-top: 16px;
+  }
   .main-row {
     display: flex;
     flex-direction: row;
@@ -115,10 +109,21 @@ export interface Props {
   capacity: BI;
   amount: BI;
   sudt?: SUDT;
-  rawCell: Cell;
-  cancelTime: BI;
+  rawCell?: Cell;
+  cancelTime?: BI;
+  status: string;
 }
-const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => {
+
+const DepositItem = ({
+  capacity,
+  amount,
+  sudt,
+  rawCell,
+  status,
+  cancelTime = BI.from(7 * 24)
+    .mul(3600)
+    .mul(1000),
+}: Props) => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -149,9 +154,17 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
     minutes: minutesLeft,
     seconds: secondsLeft,
   } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
-
+  const timeLeft =
+    daysLeft > 0
+      ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
+      : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
+          .toString()
+          .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`;
   const cancelDeposit = async () => {
     setIsCancel(true);
+    if (!rawCell) {
+      throw new Error("no raw found");
+    }
     try {
       await lightGodwoken?.cancelDeposit(rawCell);
       message.success("cancel deposit request success");
@@ -193,17 +206,10 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
           </div>
         </div>
         <div className="right-side">
-          {cancelAble ? (
-            <SecondeButton onClick={showModal}>cancel</SecondeButton>
-          ) : (
-            <MainText title="Estimated time left">
-              {daysLeft > 0
-                ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
-                : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-                    .toString()
-                    .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
-            </MainText>
-          )}
+          {status === "pending" &&
+            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending ${timeLeft} left`)}
+          {status === "success" && "success"}
+          {status === "error" && "error"}
         </div>
       </div>
       <ConfirmModal

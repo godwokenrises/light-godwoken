@@ -93,7 +93,7 @@ export default function Deposit() {
       message: `Server Error, Please try again later`,
     });
   };
-  const showModal = async () => {
+  const deposit = async () => {
     if (lightGodwoken) {
       const capacity = parseStringToBI(CKBInput, 8).toHexString();
       let amount = "0x0";
@@ -113,8 +113,8 @@ export default function Deposit() {
           txHash: hash,
           capacity,
           amount,
-          symbol: selectedSudt?.symbol,
-          decimals: selectedSudt?.decimals,
+          sudt: selectedSudt,
+          status: "pending",
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
       } catch (e) {
@@ -193,7 +193,7 @@ export default function Deposit() {
             tokenList={tokenList}
             dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
-          <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={showModal}>
+          <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={deposit}>
             {inputError || "Deposit"}
           </PrimaryButton>
         </div>
