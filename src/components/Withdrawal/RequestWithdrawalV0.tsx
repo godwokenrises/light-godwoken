@@ -93,8 +93,8 @@ const RequestWithdrawalV0: React.FC = () => {
         txHash,
         capacity,
         amount,
-        symbol: selectedSudt?.symbol,
-        decimals: selectedSudt?.decimals,
+        token: selectedSudt,
+        status: "pending",
       });
       setLoading(false);
     });

@@ -84,13 +84,13 @@ const RequestWithdrawalV1: React.FC = () => {
         txHash,
         capacity,
         amount,
-        symbol: selectedSudt?.symbol,
-        decimals: selectedSudt?.decimals,
+        token: selectedSudt,
+        status: "pending",
       });
     });
 
     e.on("pending", (result) => {
-      console.log("pending triggerd", result);
+      console.log("pending triggered", result);
     });
 
     e.on("success", (txHash) => {

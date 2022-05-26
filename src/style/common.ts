@@ -264,3 +264,31 @@ export const Tips = styled.div`
   font-weight: bold;
   text-align: center;
 `;
+
+export const LinkList = styled.div`
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+`;
+export const Tab = styled.span`
+  height: 32px;
+  line-height: 32px;
+  width: 120px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  color: black;
+  border-radius: 8px;
+  @media (max-width: 600px) {
+    width: 100px;
+    .right-side {
+      display: none;
+    }
+  }
+  &.active {
+    background: #18efb1;
+  }
+  &:hover {
+    cursor: pointer;
+  }
+`;

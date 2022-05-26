@@ -15,6 +15,9 @@ const StyleWrapper = styled.div`
   background: #f3f3f3;
   padding: 16px;
   border-radius: 12px;
+  & + & {
+    margin-top: 16px;
+  }
   .main-row {
     display: flex;
     flex-direction: row;
@@ -72,16 +75,16 @@ export const FixedHeightRow = styled.div`
 `;
 
 export interface IWithdrawalRequestCardProps {
-  remainingBlockNumber: number;
+  remainingBlockNumber?: number;
   capacity: HexNumber;
   amount: HexNumber;
-  cell: Cell;
+  cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
   unlockButton?: (cell: Cell) => JSX.Element;
 }
 const WithdrawalRequestCard = ({
-  remainingBlockNumber,
+  remainingBlockNumber = 0,
   capacity,
   amount,
   erc20,
@@ -153,7 +156,7 @@ const WithdrawalRequestCard = ({
         </div>
         <div className="right-side">
           {isMature ? (
-            unlockButton && unlockButton(cell)
+            unlockButton && cell && unlockButton(cell)
           ) : shouldShowMore ? (
             <div className="time">
               <ArrowUpIcon />

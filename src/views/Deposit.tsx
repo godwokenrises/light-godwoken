@@ -113,7 +113,7 @@ export default function Deposit() {
           txHash: hash,
           capacity,
           amount,
-          sudt: selectedSudt,
+          token: selectedSudt,
           status: "pending",
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });

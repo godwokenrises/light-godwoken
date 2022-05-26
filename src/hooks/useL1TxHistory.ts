@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
-import { SUDT } from "../light-godwoken/lightGodwokenType";
+import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
 
 type L1TxType = "deposit" | "withdrawal";
 
@@ -9,7 +9,7 @@ export interface L1TxHistoryInterface {
   txHash: string;
   capacity: string;
   amount: string;
-  sudt?: SUDT;
+  token?: Token;
   status?: string;
   symbol?: string;
   decimals?: number;

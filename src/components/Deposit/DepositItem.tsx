@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI, Cell } from "@ckb-lumos/lumos";
-import { SUDT } from "../../light-godwoken/lightGodwokenType";
+import { SUDT, Token } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
@@ -108,7 +108,7 @@ const ModalContent = styled.div`
 export interface Props {
   capacity: BI;
   amount: BI;
-  sudt?: SUDT;
+  token?: Token;
   rawCell?: Cell;
   cancelTime?: BI;
   status: string;
@@ -117,7 +117,7 @@ export interface Props {
 const DepositItem = ({
   capacity,
   amount,
-  sudt,
+  token,
   rawCell,
   status,
   cancelTime = BI.from(7 * 24)
@@ -138,11 +138,11 @@ const DepositItem = ({
   }, [capacity]);
 
   const [sudtAmount] = useMemo(() => {
-    if (amount.eq(0) || !sudt) {
+    if (amount.eq(0) || !token) {
       return ["", ""];
     }
-    return [`${getDisplayAmount(amount, sudt.decimals)} ${sudt.symbol}`];
-  }, [amount, sudt]);
+    return [`${getDisplayAmount(amount, token.decimals)} ${token.symbol}`];
+  }, [amount, token]);
 
   const estimatedArrivalDate = useMemo(() => Date.now() + cancelTime.toNumber(), [cancelTime]);
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
@@ -194,7 +194,7 @@ const DepositItem = ({
         <div className="amount">
           {sudtAmount && (
             <div className="sudt-amount">
-              {sudt?.tokenURI ? <img src={sudt?.tokenURI} alt="" /> : ""}
+              {token?.tokenURI ? <img src={token?.tokenURI} alt="" /> : ""}
               <MainText>{sudtAmount}</MainText>
             </div>
           )}
@@ -224,7 +224,7 @@ const DepositItem = ({
           <div className="amount">
             {sudtAmount && (
               <div className="sudt-amount">
-                {sudt?.tokenURI ? <img src={sudt?.tokenURI} alt="" /> : ""}
+                {token?.tokenURI ? <img src={token?.tokenURI} alt="" /> : ""}
                 <MainText>{sudtAmount}</MainText>
               </div>
             )}
