@@ -1,4 +1,4 @@
-import { OmniLockWitnessLockCodec } from './schemas/codecLayer1';
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
@@ -163,7 +163,7 @@ async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, 
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: OmniLockWitnessLockCodec.pack({signature: signedMessage}),
+      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }),
     }),
   ).serializeJson();
   return signedWitness;

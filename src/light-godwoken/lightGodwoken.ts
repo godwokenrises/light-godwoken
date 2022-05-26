@@ -491,7 +491,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     // ).serializeJson();
     const dummyWithdrawalLockArgsByteLength = 192;
     // debug("serialized", serialized, serialized.length);
-    const args = dummyRollupTypeHash + '00'.repeat(dummyWithdrawalLockArgsByteLength);
+    const args = dummyRollupTypeHash + "00".repeat(dummyWithdrawalLockArgsByteLength);
     const lock: Script = {
       code_hash: dummyHash,
       hash_type: "data",

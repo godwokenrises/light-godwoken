@@ -486,7 +486,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       });
     }
     const newWitnessArgs: WitnessArgs = {
-      lock: '0x0000000004000000',
+      lock: "0x0000000004000000",
     };
     const withdrawalWitness = new toolkit.Reader(
       core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
@@ -556,7 +556,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       cancel_timeout: BI.from("0xc0000000000004b0"),
       // cancel_timeout: "0xc000000000000001", // min time to test cancel deposit
     };
-    const depositLockArgsHexString: HexString = new toolkit.Reader(V0DepositLockArgs.pack(depositLockArgs)).serializeJson();
+    const depositLockArgsHexString: HexString = new toolkit.Reader(
+      V0DepositLockArgs.pack(depositLockArgs),
+    ).serializeJson();
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,

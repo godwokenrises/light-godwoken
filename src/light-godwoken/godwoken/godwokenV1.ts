@@ -90,12 +90,9 @@ export class Godwoken {
     return await this.rpcCall("get_script_hash_by_short_address", address);
   }
 
-
   async getScript(script_hash: Hash): Promise<Script> {
     return await this.rpcCall("get_script", script_hash);
   }
-
-
 
   async getData(data_hash: Hash): Promise<HexString> {
     return await this.rpcCall("get_data", data_hash);
@@ -113,7 +110,7 @@ export class Godwoken {
     const id = await this.rpcCall("get_account_id_by_script_hash", scriptHash);
     return id;
   }
-  
+
   async getNonce(accountId: HexNumber): Promise<HexNumber> {
     const nonce = await this.rpcCall("get_nonce", accountId);
     return nonce;

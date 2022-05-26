@@ -92,5 +92,3 @@ export const V0DepositLockArgs = table(
   },
   ["owner_lock_hash", "layer2_lock", "cancel_timeout"],
 );
-
-
