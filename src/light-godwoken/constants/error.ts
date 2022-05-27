@@ -24,3 +24,7 @@ export class TransactionSignError extends LightGodwokenError<string> {}
 export class EnvNotFoundError extends LightGodwokenError<string> {}
 export class SudtNotFoundError extends LightGodwokenError<string> {}
 export class Erc20NotFoundError extends LightGodwokenError<string> {}
+
+export class DepositTimeoutError extends LightGodwokenError<string> {}
+export class DepositCanceledError extends LightGodwokenError<string> {}
+export class WithdrawalTimeoutError extends LightGodwokenError<string> {}
