@@ -273,35 +273,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     // submit WithdrawalRequestExtra
     const serializedRequest = new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalReqExtra)).serializeJson();
-    const result = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
-    debug("result:", result);
-    if (result !== null) {
-      const errorMessage = (result as any).message;
+    const txHash = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
+    debug("result:", txHash);
+    if (txHash !== null) {
+      const errorMessage = (txHash as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", new Layer2RpcError(result, errorMessage));
+        eventEmitter.emit("error", new Layer2RpcError(txHash, errorMessage));
       }
     }
-    eventEmitter.emit("sent", result);
-    debug("withdrawal request result:", result);
-    const maxLoop = 100;
-    let loop = 0;
-    const nIntervId = setInterval(async () => {
-      loop++;
-      const withdrawal: any = await this.getWithdrawal(result as Hash);
-      if (withdrawal && withdrawal.status === "pending") {
-        debug("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", result);
-      }
-      if (withdrawal && withdrawal.status === "committed") {
-        debug("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", result);
-        clearInterval(nIntervId);
-      }
-      if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", result);
-        clearInterval(nIntervId);
-      }
-    }, 10000);
+    eventEmitter.emit("sent", txHash);
+    debug("withdrawal request result:", txHash);
+    this.waitForWithdrawalToComplete(txHash, eventEmitter);
   }
 
   generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {

@@ -15,6 +15,7 @@ import {
   HashType,
   Script,
   BI,
+  OutPoint,
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
