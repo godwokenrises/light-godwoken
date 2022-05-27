@@ -246,7 +246,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     const typedMsg = await this.generateTypedMsg(rawWithdrawalRequest);
     debug("typedMsg:", typedMsg);
@@ -257,7 +256,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         params: [this.provider.l2Address, JSON.stringify(typedMsg)],
       });
     } catch (e: any) {
-      eventEmitter.emit("error", new TransactionSignError(JSON.stringify(typedMsg), e.message));
+      eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
     }
 
     // construct WithdrawalRequestExx tra
@@ -278,7 +277,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (txHash !== null) {
       const errorMessage = (txHash as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", new Layer2RpcError(txHash, errorMessage));
+        eventEmitter.emit("fail", new Layer2RpcError(txHash, errorMessage));
       }
     }
     eventEmitter.emit("sent", txHash);
@@ -375,7 +374,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         errMsg,
       );
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -413,7 +412,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       ).toString()}`;
       const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
   }

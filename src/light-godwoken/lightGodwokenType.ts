@@ -47,15 +47,14 @@ export interface GodwokenNetworkConfig {
 }
 
 interface WithdrawListener {
-  (event: "sending", listener: () => void): void;
   (event: "sent", listener: (txHash: Hash) => void): void;
   (event: "pending", listener: (txHash: Hash) => void): void;
   (event: "success", listener: (txHash: Hash) => void): void;
-  (event: "error", listener: (e: Error) => void): void;
   (event: "fail", listener: (e: Error) => void): void;
 }
 
 interface DepositListener {
+  (event: "sent", listener: (txHash: Hash) => void): void;
   (event: "pending", listener: (txHash: Hash) => void): void;
   (event: "success", listener: (txHash: Hash) => void): void;
   (event: "fail", listener: (e: Error) => void): void;

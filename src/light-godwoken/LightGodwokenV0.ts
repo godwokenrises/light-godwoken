@@ -272,7 +272,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     payload: WithdrawalEventEmitterPayload,
     withdrawToV1 = false,
   ): Promise<void> {
-    eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
@@ -287,7 +286,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       signatureMetamaskPersonalSign = await this.signMessageMetamaskPersonalSign(message);
     } catch (e) {
       const error = new TransactionSignError(message, (e as Error).message);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
     debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
@@ -310,7 +309,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
       )) as unknown as HexString;
     } catch (e: any) {
-      eventEmitter.emit("error", new Layer2RpcError(txHash, e.message));
+      eventEmitter.emit("fail", new Layer2RpcError(txHash, e.message));
       return;
     }
     eventEmitter.emit("sent", txHash);
@@ -357,7 +356,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         { expected: BI.from(minCapacity), actual: BI.from(payload.capacity) },
         message,
       );
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -371,7 +370,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         errMsg,
       );
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -387,7 +386,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           errMsg,
         );
         debugProductionEnv(error);
-        eventEmitter.emit("error", error);
+        eventEmitter.emit("fail", error);
         throw error;
       }
     }

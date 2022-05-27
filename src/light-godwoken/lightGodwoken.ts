@@ -43,6 +43,7 @@ import {
   DepositTimeoutError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
+  TransactionSignError,
   WithdrawalTimeoutError,
 } from "./constants/error";
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
@@ -350,11 +351,20 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   async deposit(payload: DepositPayload, eventEmitter?: EventEmitter): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload, eventEmitter);
     txSkeleton = await this.payTxFee(txSkeleton);
-    let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
+    let signedTx: Transaction;
+    try {
+      signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
+    } catch (e) {
+      const error = new TransactionSignError("", "Failed to sign transaction");
+      if (eventEmitter) {
+        eventEmitter.emit("fail", error);
+      }
+      throw error;
+    }
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
-      eventEmitter.emit("pending", txHash);
+      eventEmitter.emit("sent", txHash);
       this.waitForDepositToComplete(txHash, eventEmitter);
     }
     return txHash;
@@ -388,9 +398,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // 1. wait for deposit tx to be commited
       if (!depositTx) {
-        depositTx = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
-        loop = 0;
-        debug("depositTx", depositTx);
+        const txOnChain = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        if (txOnChain && txOnChain.tx_status.status === "committed") {
+          depositTx = txOnChain;
+          loop = 0;
+          debug("depositTx", depositTx);
+        }
       }
 
       // 2. extract deposit cell outpoint
