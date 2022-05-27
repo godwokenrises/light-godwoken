@@ -38,7 +38,13 @@ import {
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
+import {
+  DepositCanceledError,
+  DepositTimeoutError,
+  NotEnoughCapacityError,
+  NotEnoughSudtError,
+  WithdrawalTimeoutError,
+} from "./constants/error";
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 
@@ -363,7 +369,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         if (depositCell && depositCell.status !== "live") {
           eventEmitter.emit("success", txHash);
         } else {
-          eventEmitter.emit("fail", txHash);
+          eventEmitter.emit("fail", new DepositTimeoutError(txHash, "Deposit timeout"));
         }
         debugProductionEnv("wait for deposit to complete max loop exceeded:", txHash);
         clearInterval(nIntervId);
@@ -446,7 +452,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
               clearInterval(nIntervId);
             } else {
               debug("deposit canceled:", depositTx);
-              eventEmitter.emit("fail", txHash);
+              eventEmitter.emit("fail", new DepositCanceledError(txHash, "Deposit canceled"));
               clearInterval(nIntervId);
             }
             break;
@@ -471,7 +477,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const nIntervId = setInterval(async () => {
       loop++;
       if (loop > maxLoop) {
-        eventEmitter.emit("fail", txHash);
+        eventEmitter.emit("fail", new WithdrawalTimeoutError(txHash, "Withdrawal timeout"));
         debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
