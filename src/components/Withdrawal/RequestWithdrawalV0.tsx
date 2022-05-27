@@ -107,11 +107,6 @@ const RequestWithdrawalV0: React.FC = () => {
       notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
     });
 
-    e.on("error", (result: unknown) => {
-      setLoading(false);
-      handleError(result, selectedSudt);
-    });
-
     e.on("fail", (result: unknown) => {
       setLoading(false);
       handleError(result, selectedSudt);

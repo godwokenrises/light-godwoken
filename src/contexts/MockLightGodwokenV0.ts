@@ -557,9 +557,8 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   }
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
     const txHash = await Promise.resolve("0xb352e1c8dbe5178cc6c40ef7a341d7b15209eb80bb97a0cb5e4fa1f846e8c4a9");
-    eventEmitter.emit("sent", txHash);
+    eventEmitter.emit("pending", txHash);
   }
 
   async unlock(payload: UnlockPayload): Promise<Hash> {
