@@ -81,7 +81,7 @@ export const DepositList: React.FC = () => {
       updateTxHistory(result);
     }
   };
-  const subscribePayload = pendingList.map(({ txHash }) => txHash);
+  const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
   const eventEmit = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
   eventEmit?.on("success", (txHash) => {
     updateTxStatus(txHash, "success");
