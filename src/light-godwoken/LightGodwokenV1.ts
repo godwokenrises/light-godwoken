@@ -1,3 +1,4 @@
+import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
@@ -31,9 +32,11 @@ import {
 } from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
+  godwokenScannerClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
   }
   getVersion(): GodwokenVersion {
     return "v1";
@@ -99,6 +102,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
+        id: token.id,
         name: token.name,
         symbol: token.symbol,
         decimals: token.decimals,
@@ -214,6 +218,33 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     debug("found withdraw cells:", sortedWithdrawals);
     return sortedWithdrawals;
+  }
+
+  async listWithdrawWithScannerApi(): Promise<WithdrawResult[]> {
+    const ownerLockHash = await this.provider.getLayer1LockScriptHash();
+    const searchParams = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
+    debug("searchParams is:", searchParams);
+    const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
+    const collectedWithdrawals: WithdrawResult[] = searchParams.map((item) => {
+      let amount = "0x0";
+      let erc20 = undefined;
+      if (item.udt_id !== 1) {
+        amount = BI.from(item.amount).toHexString();
+        erc20 = this.getBuiltinErc20List().find(
+          (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
+        );
+      }
+      return {
+        withdrawalBlockNumber: item.block_number,
+        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        capacity: BI.from(item.capacity).toHexString(),
+        amount,
+        sudt_script_hash: item.udt_script_hash,
+        erc20,
+        status: item.state,
+      };
+    });
+    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {

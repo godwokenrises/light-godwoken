@@ -35,7 +35,7 @@ const WithdrawalV0: React.FC = () => {
               </Text>
             </CardHeader>
             <div className="list">
-              <WithdrawalList unlockButton={(cell) => <Unlock cell={cell}></Unlock>}></WithdrawalList>
+              <WithdrawalList unlockButton={(cell) => <Unlock cell={cell!}></Unlock>}></WithdrawalList>
             </div>
           </ResultList>
         </Card>
