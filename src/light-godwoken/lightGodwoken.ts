@@ -258,7 +258,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return this.provider.claimUSDC();
   }
 
-  async generateDepositTx(payload: DepositPayload): Promise<helpers.TransactionSkeletonType> {
+  async generateDepositTx(
+    payload: DepositPayload,
+    eventEmiter?: EventEmitter,
+  ): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
     if (!BI.from(payload.capacity).eq(await this.provider.getL1CkbBalance())) {
       // if user don't deposit all ckb, we will need to collect 64 more ckb for exchange
@@ -292,11 +295,19 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     if (collectedCapatity.lt(neededCapacity)) {
       const errorMsg = `Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`;
-      throw new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
+      const error = new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
+      if (eventEmiter) {
+        eventEmiter.emit("fail", error);
+      }
+      throw error;
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
       const errorMsg = `Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`;
-      throw new NotEnoughSudtError({ expected: neededSudtAmount, actual: collectedSudtAmount }, errorMsg);
+      const error = new NotEnoughSudtError({ expected: neededSudtAmount, actual: collectedSudtAmount }, errorMsg);
+      if (eventEmiter) {
+        eventEmiter.emit("fail", error);
+      }
+      throw error;
     }
 
     const outputCell = this.generateDepositOutputCell(collectedCells, payload);
@@ -337,7 +348,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async deposit(payload: DepositPayload, eventEmitter?: EventEmitter): Promise<string> {
-    let txSkeleton = await this.generateDepositTx(payload);
+    let txSkeleton = await this.generateDepositTx(payload, eventEmitter);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
