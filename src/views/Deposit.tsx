@@ -9,7 +9,7 @@ import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
-import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
+import { DepositEventEmitter, SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
@@ -94,35 +94,49 @@ export default function Deposit() {
     });
   };
   const deposit = async () => {
-    if (lightGodwoken) {
-      const capacity = parseStringToBI(CKBInput, 8).toHexString();
-      let amount = "0x0";
-      if (selectedSudt && sudtInput) {
-        amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
-      }
-      setIsModalVisible(true);
-      try {
-        const hash = await lightGodwoken.deposit({
-          capacity: capacity,
-          amount: amount,
-          sudtType: selectedSudt?.type,
-        });
-
-        addTxToHistory({
-          type: "deposit",
-          txHash: hash,
-          capacity,
-          amount,
-          token: selectedSudt,
-          status: "pending",
-        });
-        notification.success({ message: `deposit Tx(${hash}) is successful` });
-      } catch (e) {
-        handleError(e, selectedSudt);
-        setIsModalVisible(false);
-      }
-      setIsModalVisible(false);
+    if (!lightGodwoken) {
+      throw new Error("LightGodwoken not found");
     }
+    const capacity = parseStringToBI(CKBInput, 8).toHexString();
+    let amount = "0x0";
+    if (selectedSudt && sudtInput) {
+      amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
+    }
+    setIsModalVisible(true);
+    let e: DepositEventEmitter;
+    try {
+      e = lightGodwoken.depositWithEvent({
+        capacity: capacity,
+        amount: amount,
+        sudtType: selectedSudt?.type,
+      });
+    } catch (e) {
+      handleError(e, selectedSudt);
+      setIsModalVisible(false);
+      return;
+    }
+    e.on("pending", (txHash) => {
+      notification.success({ message: `deposit Tx(${txHash}) is successful` });
+      setIsModalVisible(false);
+      addTxToHistory({
+        type: "deposit",
+        txHash: txHash,
+        capacity,
+        amount,
+        token: selectedSudt,
+        status: "pending",
+      });
+    });
+
+    e.on("success", (txHash) => {
+      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
+    });
+
+    e.on("fail", (result: unknown) => {
+      setIsModalVisible(false);
+
+      handleError(result, selectedSudt);
+    });
   };
 
   const inputError = useMemo(() => {
