@@ -92,9 +92,6 @@ export const DepositList: React.FC = () => {
   eventEmit?.on("pending", (txHash) => {
     updateTxStatus(txHash, "pending");
   });
-
-  eventEmit?.emit("fail", "0xd9a1e68e2b50e5cb1e9e7ef1b19e343ba5730e57d7b64405fe3921f179f902d6");
-  eventEmit?.emit("success", "0xa4ab3d737131eb4e743e42374a096c399a8bd5d27bc66bc0cd5c4dbebba85b11");
   return (
     <DepositListDiv>
       <LinkList>
