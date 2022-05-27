@@ -115,7 +115,7 @@ export default function Deposit() {
       setIsModalVisible(false);
       return;
     }
-    e.on("pending", (txHash) => {
+    e.on("sent", (txHash) => {
       notification.success({ message: `deposit Tx(${txHash}) is successful` });
       setIsModalVisible(false);
       addTxToHistory({
