@@ -41,6 +41,7 @@ import { LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
   DepositTimeoutError,
+  Layer1RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
   TransactionSignError,
@@ -353,7 +354,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx: Transaction;
     try {
-      signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
+      signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     } catch (e) {
       const error = new TransactionSignError("", "Failed to sign transaction");
       if (eventEmitter) {
@@ -361,7 +362,18 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
       throw error;
     }
-    const txHash = await this.provider.sendL1Transaction(signedTx);
+
+    let txHash: Hash;
+    try {
+      txHash = await this.provider.sendL1Transaction(signedTx);
+    } catch (e) {
+      const error = new Layer1RpcError("", "Failed to send transaction");
+      if (eventEmitter) {
+        eventEmitter.emit("fail", error);
+      }
+      throw error;
+    }
+
     debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
       eventEmitter.emit("sent", txHash);
