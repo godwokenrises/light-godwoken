@@ -398,9 +398,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // 1. wait for deposit tx to be commited
       if (!depositTx) {
-        depositTx = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
-        loop = 0;
-        debug("depositTx", depositTx);
+        const txOnChain = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        if (txOnChain && txOnChain.tx_status.status === "committed") {
+          depositTx = txOnChain;
+          loop = 0;
+          debug("depositTx", depositTx);
+        }
       }
 
       // 2. extract deposit cell outpoint
