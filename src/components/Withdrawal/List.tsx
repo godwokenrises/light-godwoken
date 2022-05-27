@@ -9,6 +9,7 @@ import { Placeholder } from "../Placeholder";
 import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { LinkList, Tab } from "../../style/common";
+import { LightGodwokenError } from "../../light-godwoken/constants/error";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -87,14 +88,14 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   eventEmit?.on("success", (txHash) => {
     updateTxStatus(txHash, "success");
   });
-  eventEmit?.on("fail", (txHash) => {
-    updateTxStatus(txHash, "fail");
+  eventEmit?.on("fail", (e) => {
+    if (e instanceof LightGodwokenError) {
+      updateTxStatus(e.metadata, "fail");
+    }
   });
   eventEmit?.on("pending", (txHash) => {
     updateTxStatus(txHash, "pending");
   });
-  // eventEmit?.emit("success", "0x33a287e21ecd0c8d7295f75c50cefd083b77e1d008186d6bf3c4633d9bc270a0");
-  // eventEmit?.emit("fail", "0xe94e5a6a0b81f90ce00b0a39fbb819189752ba4cd8487755cf930ed4fb44253b");
 
   return (
     <WithdrawalListDiv>
