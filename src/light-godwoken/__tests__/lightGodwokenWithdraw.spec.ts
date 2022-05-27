@@ -20,8 +20,8 @@ beforeEach(() => {
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
   lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
-  sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-  sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x9"));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve("0x1"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
 
   sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));

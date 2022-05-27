@@ -15,7 +15,7 @@ import {
   GetL2CkbBalancePayload,
   Token,
 } from "../light-godwoken/lightGodwokenType";
-import { GodwokenClient } from "../light-godwoken/godwoken/godwoken";
+import { GodwokenClient } from "../light-godwoken/godwoken/godwokenV0";
 import LightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
   unlock: (payload: UnlockPayload) => Promise<Hash>;

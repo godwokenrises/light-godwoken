@@ -32,17 +32,15 @@ import {
   BaseWithdrawalEventEmitterPayload,
   Token,
 } from "./lightGodwokenType";
-import { SerializeDepositLockArgs, SerializeUnlockWithdrawalViaFinalize } from "./schemas/generated/index.esm";
 import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { getCellDep } from "./constants/configUtils";
-import { GodwokenClient } from "./godwoken/godwoken";
+import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec } from "./schemas/codec";
+import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec, V0DepositLockArgs } from "./schemas/codecV0";
 import { debug, debugProductionEnv } from "./debug";
-import { NormalizeDepositLockArgs } from "./godwoken/normalizer";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 import {
   Erc20NotFoundError,
@@ -487,13 +485,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         data: payload.cell.data,
       });
     }
-    const data =
-      "0x00000000" +
-      new toolkit.Reader(SerializeUnlockWithdrawalViaFinalize(toolkit.normalizers.NormalizeWitnessArgs({})))
-        .serializeJson()
-        .slice(2);
     const newWitnessArgs: WitnessArgs = {
-      lock: data,
+      lock: "0x0000000004000000",
     };
     const withdrawalWitness = new toolkit.Reader(
       core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
@@ -560,11 +553,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
-      cancel_timeout: "0xc0000000000004b0",
+      cancel_timeout: BI.from("0xc0000000000004b0"),
       // cancel_timeout: "0xc000000000000001", // min time to test cancel deposit
     };
     const depositLockArgsHexString: HexString = new toolkit.Reader(
-      SerializeDepositLockArgs(NormalizeDepositLockArgs(depositLockArgs)),
+      V0DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
     const depositLock: Script = {

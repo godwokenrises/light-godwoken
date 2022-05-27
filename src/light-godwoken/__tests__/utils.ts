@@ -1,5 +1,5 @@
 import { Cell, HexString, Script, HashType, BI, helpers, utils } from "@ckb-lumos/lumos";
-import { RawWithdrwal } from "../schemas/codec";
+import { RawWithdrwal } from "../schemas/codecV0";
 import { RawWithdrawalRequestV1 } from "../schemas/codecV1";
 
 export const randomHexString = (byteLength: number) => {

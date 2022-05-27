@@ -1,1 +1,0 @@
-export { SerializeRcLockWitnessLock } from "./omni";

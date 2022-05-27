@@ -1,6 +1,6 @@
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
+import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -20,7 +20,7 @@ import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug, debugProductionEnv } from "./debug";
-import { V1DepositLockArgs } from "./schemas/codec";
+import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
   Layer2RpcError,
@@ -402,10 +402,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
 
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await this.godwokenClient.getNonce(fromId!);
+    const nonce = await this.godwokenClient.getNonce(fromId!);
 
     const rawWithdrawalRequest = {
-      nonce,
+      nonce: BI.from(nonce).toNumber(),
       chain_id: BI.from(chainId),
       capacity: BI.from(payload.capacity),
       amount: BI.from(payload.amount),

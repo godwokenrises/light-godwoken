@@ -13,7 +13,6 @@ import {
 } from "@ckb-lumos/lumos";
 import * as secp256k1 from "secp256k1";
 import { getCellDep } from "./constants/configUtils";
-import { NormalizeWithdrawalLockArgs, WithdrawalLockArgs } from "./godwoken/normalizer";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import {
   DepositPayload,
@@ -33,7 +32,6 @@ import {
   Token,
   DepositRequest,
 } from "./lightGodwokenType";
-import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
@@ -478,20 +476,22 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const dummyHash: Hash = "0x" + "00".repeat(32);
     const dummyHexNumber: HexNumber = "0x0";
     const dummyRollupTypeHash: Hash = dummyHash;
-    const dummyWithdrawalLockArgs: WithdrawalLockArgs = {
-      account_script_hash: dummyHash,
-      withdrawal_block_hash: dummyHash,
-      withdrawal_block_number: dummyHexNumber,
-      sudt_script_hash: dummyHash,
-      sell_amount: dummyHexNumber,
-      sell_capacity: dummyHexNumber,
-      owner_lock_hash: dummyHash,
-      payment_lock_hash: dummyHash,
-    };
-    const serialized: HexString = new toolkit.Reader(
-      SerializeWithdrawalLockArgs(NormalizeWithdrawalLockArgs(dummyWithdrawalLockArgs)),
-    ).serializeJson();
-    const args = dummyRollupTypeHash + serialized.slice(2);
+    // const dummyWithdrawalLockArgs: WithdrawalLockArgs = {//192
+    //   account_script_hash: dummyHash,//32
+    //   withdrawal_block_hash: dummyHash,//32
+    //   withdrawal_block_number: dummyHexNumber,//8
+    //   sudt_script_hash: dummyHash,//32
+    //   sell_amount: dummyHexNumber,//16
+    //   sell_capacity: dummyHexNumber,//8
+    //   owner_lock_hash: dummyHash,//32
+    //   payment_lock_hash: dummyHash,//32
+    // };
+    // const serialized: HexString = new toolkit.Reader(
+    //   SerializeWithdrawalLockArgs(NormalizeWithdrawalLockArgs(dummyWithdrawalLockArgs)),
+    // ).serializeJson();
+    const dummyWithdrawalLockArgsByteLength = 192;
+    // debug("serialized", serialized, serialized.length);
+    const args = dummyRollupTypeHash + "00".repeat(dummyWithdrawalLockArgsByteLength);
     const lock: Script = {
       code_hash: dummyHash,
       hash_type: "data",

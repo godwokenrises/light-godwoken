@@ -1,7 +1,7 @@
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
-import { SerializeRcLockWitnessLock } from "./omni-lock";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 
@@ -163,9 +163,7 @@ async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, 
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: SerializeRcLockWitnessLock({
-        signature: new toolkit.Reader(signedMessage),
-      }),
+      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }),
     }),
   ).serializeJson();
   return signedWitness;
@@ -192,11 +190,8 @@ function generateUserMessage(tx: helpers.TransactionSkeletonType): HexString {
       toolkit.normalizers.NormalizeRawTransaction(helpers.createTransactionFromSkeleton(tx)),
     ),
   );
-  const rcLockBytelength = SerializeRcLockWitnessLock({
-    signature: new toolkit.Reader("0x" + "00".repeat(65)),
-  }).byteLength;
   const serializedWitness = core.SerializeWitnessArgs({
-    lock: new toolkit.Reader("0x" + "00".repeat(rcLockBytelength)),
+    lock: new toolkit.Reader("0x" + "00".repeat(85)),
   });
   hasher.update(rawTxHash);
   hashWitness(hasher, serializedWitness);
