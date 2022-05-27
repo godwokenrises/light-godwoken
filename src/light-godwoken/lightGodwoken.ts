@@ -32,12 +32,15 @@ import {
   LightGodwokenBase,
   Token,
   DepositRequest,
+  DepositEventEmitter,
+  PendingDepositTransaction,
 } from "./lightGodwokenType";
 import { SerializeWithdrawalLockArgs } from "./schemas/generated/index.esm";
 import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
-import { CellDep, DepType, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import EventEmitter from "events";
 
 const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -54,6 +57,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
   abstract getBlockProduceTime(): number | Promise<number>;
   abstract getWithdrawalWaitBlock(): number | Promise<number>;
+  abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
   abstract listWithdraw(): Promise<WithdrawResult[]>;
@@ -326,13 +330,173 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txSkeleton;
   }
 
-  async deposit(payload: DepositPayload): Promise<string> {
+  async deposit(payload: DepositPayload, eventEmitter?: EventEmitter): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
     const txHash = await this.provider.sendL1Transaction(signedTx);
     debugProductionEnv(`Deposit ${txHash}`);
+    if (eventEmitter) {
+      eventEmitter.emit("pending", txHash);
+      this.waitForDepositToComplete(txHash, eventEmitter);
+    }
     return txHash;
+  }
+
+  depositWithEvent(payload: DepositPayload): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.deposit(payload, eventEmitter);
+    return eventEmitter;
+  }
+
+  waitForDepositToComplete(txHash: HexString, eventEmitter: EventEmitter) {
+    debug("Waiting for deposit to complete...", txHash);
+    const maxLoop = 20;
+    let loop = 0;
+    let depositTx: TransactionWithStatus | null;
+    let depositCellOutPoint: OutPoint | null;
+    let depositCell: CellWithStatus | null;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      if (loop > maxLoop) {
+        // only when we find the deposit cell, and the deposit cell is not unlocked by user
+        if (depositCell && depositCell.status !== "live") {
+          eventEmitter.emit("success", txHash);
+        } else {
+          eventEmitter.emit("fail", txHash);
+        }
+        debugProductionEnv("wait for deposit to complete max loop exceeded:", txHash);
+        clearInterval(nIntervId);
+      }
+
+      // 1. wait for deposit tx to be commited
+      if (!depositTx) {
+        depositTx = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        loop = 0;
+        debug("depositTx", depositTx);
+      }
+
+      // 2. extract deposit cell outpoint
+      if (!!depositTx && !depositCellOutPoint) {
+        const txOutputs = depositTx.transaction.outputs;
+        for (let index = 0; index < txOutputs.length; index++) {
+          const output = txOutputs[index];
+          const depositLock = this.generateDepositLock();
+          if (
+            depositLock.code_hash === output.lock.code_hash &&
+            depositLock.hash_type === output.lock.hash_type &&
+            depositLock.args === output.lock.args
+          ) {
+            depositCellOutPoint = {
+              tx_hash: txHash,
+              index: BI.from(index).toHexString(),
+            };
+            loop = 0;
+            debug("depositCellOutPoint", depositCellOutPoint);
+            break;
+          }
+        }
+      }
+
+      // 3. wait for deposit cell to be consumed
+      if (depositCellOutPoint) {
+        depositCell = await this.provider.ckbRpc.get_live_cell(depositCellOutPoint, false);
+        debug("depositCell", depositCell);
+      }
+
+      // 4. extract unlocker cell，if output does not contain owner cell, emit success
+      if (depositCell && depositCell.status !== "live") {
+        const depositLock = await this.generateDepositLock();
+        const ownerLock = this.provider.getLayer1Lock();
+        const transactions = await this.provider.ckbIndexer.getTransactions({
+          script: depositLock,
+          script_type: "lock",
+        });
+        const txHashList = transactions.objects
+          .map((object) => object.tx_hash)
+          .slice(-10)
+          .reverse();
+        debug("txHashList", txHashList);
+        const promises = txHashList.map(async (txHash) => {
+          return this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+        });
+        const txList = await Promise.all(promises);
+        for (let index = 0; index < txList.length; index++) {
+          const tx = txList[index];
+          // eslint-disable-next-line no-loop-func
+          const txConsumedDepositCell = tx?.transaction.inputs.some((input) => {
+            return (
+              input.previous_output.tx_hash === depositCellOutPoint!.tx_hash &&
+              input.previous_output.index === depositCellOutPoint!.index
+            );
+          });
+          if (txConsumedDepositCell) {
+            // eslint-disable-next-line no-loop-func
+            const outputContainsOwnerLock = tx?.transaction.outputs.some((output) => {
+              return (
+                output.lock.code_hash === ownerLock.code_hash &&
+                output.lock.hash_type === ownerLock.hash_type &&
+                output.lock.args === ownerLock.args
+              );
+            });
+
+            if (!outputContainsOwnerLock) {
+              debug("deposit committed:", depositTx);
+              eventEmitter.emit("success", txHash);
+              clearInterval(nIntervId);
+            } else {
+              debug("deposit canceled:", depositTx);
+              eventEmitter.emit("fail", txHash);
+              clearInterval(nIntervId);
+            }
+            break;
+          }
+        }
+      }
+    }, 30000);
+  }
+
+  subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let index = 0; index < payload.length; index++) {
+      const element = payload[index];
+      this.waitForDepositToComplete(element.tx_hash, eventEmitter);
+    }
+    return eventEmitter;
+  }
+
+  waitForWithdrawalToComplete(txHash: HexString, eventEmitter: EventEmitter) {
+    const maxLoop = 30;
+    let loop = 0;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      if (loop > maxLoop) {
+        eventEmitter.emit("fail", txHash);
+        debugProductionEnv("withdrawal fail:", txHash);
+        clearInterval(nIntervId);
+      }
+
+      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
+      if (withdrawal && withdrawal.status === "pending") {
+        loop = 0;
+        debug("withdrawal pending:", withdrawal);
+        eventEmitter.emit("pending", txHash);
+      }
+      if (withdrawal && withdrawal.status === "committed") {
+        debug("withdrawal committed:", withdrawal);
+        eventEmitter.emit("success", txHash);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
+  }
+
+  subscribPendingWithdrawalTransactions(txHashList: Hash[]): DepositEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let index = 0; index < txHashList.length; index++) {
+      const txHash = txHashList[index];
+      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    }
+    return eventEmitter;
   }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {
