@@ -93,8 +93,8 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   eventEmit?.on("pending", (txHash) => {
     updateTxStatus(txHash, "pending");
   });
-  eventEmit?.emit("success", "0xe6d465455f8dba0ec6ca437d53962043b9e9a12366dceaab1f9c373896567829");
-  eventEmit?.emit("fail", "0xe94e5a6a0b81f90ce00b0a39fbb819189752ba4cd8487755cf930ed4fb44253b");
+  // eventEmit?.emit("success", "0x33a287e21ecd0c8d7295f75c50cefd083b77e1d008186d6bf3c4633d9bc270a0");
+  // eventEmit?.emit("fail", "0xe94e5a6a0b81f90ce00b0a39fbb819189752ba4cd8487755cf930ed4fb44253b");
 
   return (
     <WithdrawalListDiv>

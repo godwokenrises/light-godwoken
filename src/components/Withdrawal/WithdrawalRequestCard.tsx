@@ -11,6 +11,7 @@ import { ReactComponent as ArrowUpIcon } from "../../asserts/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { Tooltip } from "antd";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -50,9 +51,6 @@ const StyleWrapper = styled.div`
     align-self: center;
     align-items: center;
     justify-content: center;
-    span + span {
-      padding-left: 10px;
-    }
   }
   .time {
     font-size: 12px;
@@ -145,7 +143,7 @@ const WithdrawalRequestCard = ({
     return [`${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`];
   }, [amount, erc20]);
   return (
-    <StyleWrapper onClick={isMature ? undefined : handleToggleShowMore}>
+    <StyleWrapper onClick={handleToggleShowMore}>
       <div className="main-row">
         <div className="amount">
           {sudtAmount && (
@@ -163,9 +161,7 @@ const WithdrawalRequestCard = ({
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (isMature ? (
-              unlockButton && cell && unlockButton(cell)
-            ) : shouldShowMore ? (
+            (shouldShowMore ? (
               <div className="time">
                 <ArrowUpIcon />
               </div>
@@ -181,12 +177,18 @@ const WithdrawalRequestCard = ({
                 <ArrowDownIcon />
               </div>
             ))}
-          {status !== "pending" && <span>{status + " "}</span>}
-          {status === "success" && (
-            <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
-          )}
+          {status === "success" &&
+            (isMature ? (
+              unlockButton && cell && unlockButton(cell)
+            ) : (
+              <Tooltip title={status}>
+                <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+              </Tooltip>
+            ))}
           {status === "fail" && (
-            <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
+            <Tooltip title={status}>
+              <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
           )}
         </div>
       </div>
