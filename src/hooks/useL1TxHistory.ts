@@ -59,12 +59,14 @@ export function useL1TxHistory(storageKey: string) {
       const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        latestTxHistory.forEach((tx: L1TxHistoryInterface) => {
+        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
           if (tx.txHash === txHistory.txHash) {
             tx = { ...tx, ...txHistory };
+            return tx;
           }
+          return tx;
         });
-        writeStorage(storageKey, JSON.stringify(latestTxHistory));
+        writeStorage(storageKey, JSON.stringify(newHistory));
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }
