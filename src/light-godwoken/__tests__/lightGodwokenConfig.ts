@@ -70,6 +70,7 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
       SCANNER_URL: "",
       CHAIN_NAME: "",
+      SCANNER_API: "",
     },
   },
   v1: {
@@ -111,6 +112,7 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
       CHAIN_NAME: "https://testnet.ckb.dev",
       SCANNER_URL: "",
+      SCANNER_API: "",
     },
   },
 };
