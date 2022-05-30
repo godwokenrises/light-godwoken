@@ -163,7 +163,7 @@ async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, 
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }),
+      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
     }),
   ).serializeJson();
   return signedWitness;
