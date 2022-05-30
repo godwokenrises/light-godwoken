@@ -13,6 +13,9 @@ import {
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
   Token,
+  DepositEventEmitter,
+  DepositPayload,
+  PendingDepositTransaction,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
