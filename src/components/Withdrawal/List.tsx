@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useClock } from "../../hooks/useClock";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
@@ -47,35 +47,50 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
     },
   );
   const { data: withdrawalList, isLoading } = withdrawalListQuery;
-  withdrawalList?.forEach((withdraw) => {
-    if (!txHistory.find((history) => withdraw.cell.out_point?.tx_hash === history.txHash)) {
-      addTxToHistory({
-        type: "withdrawal",
-        txHash: withdraw.cell.out_point?.tx_hash || "",
-        capacity: withdraw.capacity,
-        amount: withdraw.amount,
-        token: withdraw.erc20,
-        status: "pending",
-      });
-    }
-  });
-  const formattedHistoryList = txHistory.map((history) => {
-    const targetWithdraw = withdrawalList?.find((withdraw) => withdraw.cell.out_point?.tx_hash === history.txHash);
-    if (targetWithdraw) {
-      return {
-        ...history,
-        status: history.status || "pending",
-        cell: targetWithdraw.cell,
-        remainingBlockNumber: targetWithdraw.remainingBlockNumber,
-      };
-    }
-    return { ...history, status: history.status || "pending" };
-  });
-  const pendingList = formattedHistoryList.filter((history) => history.status === "pending");
-  const completedList = formattedHistoryList.filter((history) => history.status !== "pending");
+  useMemo(() => {
+    withdrawalList?.forEach((withdraw) => {
+      if (!txHistory.find((history) => withdraw.cell.out_point?.tx_hash === history.txHash)) {
+        addTxToHistory({
+          type: "withdrawal",
+          txHash: withdraw.cell.out_point?.tx_hash || "",
+          capacity: withdraw.capacity,
+          amount: withdraw.amount,
+          token: withdraw.erc20,
+          status: "pending",
+        });
+      }
+    });
+  }, [addTxToHistory, txHistory, withdrawalList]);
 
-  const subscribePayload = pendingList.map((history) => history.txHash);
-  const eventEmit = lightGodwoken?.subscribPendingWithdrawalTransactions(subscribePayload);
+  const formattedHistoryList = useMemo(
+    () =>
+      txHistory.map((history) => {
+        const targetWithdraw = withdrawalList?.find((withdraw) => withdraw.cell.out_point?.tx_hash === history.txHash);
+        if (targetWithdraw) {
+          return {
+            ...history,
+            status: history.status || "pending",
+            cell: targetWithdraw.cell,
+            remainingBlockNumber: targetWithdraw.remainingBlockNumber,
+          };
+        }
+        return { ...history, status: history.status || "pending" };
+      }),
+    [txHistory, withdrawalList],
+  );
+  const pendingList = useMemo(
+    () => formattedHistoryList.filter((history) => history.status === "pending"),
+    [formattedHistoryList],
+  );
+  const completedList = useMemo(
+    () => formattedHistoryList.filter((history) => history.status !== "pending"),
+    [formattedHistoryList],
+  );
+
+  const eventEmit = useMemo(() => {
+    const subscribePayload = pendingList.map((history) => history.txHash);
+    return lightGodwoken?.subscribPendingWithdrawalTransactions(subscribePayload);
+  }, [lightGodwoken, pendingList]);
   const updateTxStatus = (txHash: string, status: string) => {
     const result = txHistory.find((tx) => {
       return tx.txHash === txHash;

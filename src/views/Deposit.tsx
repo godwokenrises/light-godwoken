@@ -175,7 +175,6 @@ export default function Deposit() {
           <CardHeader className="header">
             <Text className="title">
               <span>Deposit To Layer2</span>
-              <TransactionHistory type="deposit"></TransactionHistory>
             </Text>
             <Text className="description">
               To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first

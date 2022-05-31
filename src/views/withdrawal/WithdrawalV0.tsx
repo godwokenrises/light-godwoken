@@ -17,7 +17,6 @@ const WithdrawalV0: React.FC = () => {
           <CardHeader>
             <Text className="title">
               <span>Withdrawal</span>
-              <TransactionHistory type="withdrawal"></TransactionHistory>
             </Text>
           </CardHeader>
           <div className="request-withdrawal">

@@ -43,7 +43,9 @@ export function useL1TxHistory(storageKey: string) {
       const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
+        if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newTxHistory.txHash)) {
+          writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
+        }
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }

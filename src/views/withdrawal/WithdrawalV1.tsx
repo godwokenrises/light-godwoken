@@ -1,4 +1,3 @@
-import { TransactionHistory } from "../../components/TransactionHistory";
 import { WithdrawalList } from "../../components/Withdrawal/List";
 import RequestWithdrawalV1 from "../../components/Withdrawal/RequestWithdrawalV1";
 import { Card, CardHeader, PageContent, Text } from "../../style/common";
@@ -16,7 +15,6 @@ const WithdrawalV1: React.FC = () => {
           <CardHeader>
             <Text className="title">
               <span>Withdrawal</span>
-              <TransactionHistory type="withdrawal"></TransactionHistory>
             </Text>
           </CardHeader>
           <div className="request-withdrawal">

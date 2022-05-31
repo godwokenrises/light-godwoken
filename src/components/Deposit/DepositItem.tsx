@@ -208,7 +208,7 @@ const DepositItem = ({
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending ${timeLeft}`)}
+            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending(${timeLeft})`)}
           {status === "success" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />

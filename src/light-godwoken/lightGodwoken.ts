@@ -517,7 +517,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
-
       const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
       if (withdrawal && withdrawal.status === "pending") {
         loop = 0;

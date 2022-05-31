@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
@@ -57,21 +57,31 @@ export const DepositList: React.FC = () => {
     }
   });
 
-  const formattedTxHistory = txHistory.map((history) => {
-    const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
-    return {
-      capacity: BI.from(history.capacity),
-      amount: BI.from(history.amount),
-      token: history.token,
-      txHash: history.txHash,
-      status: history.status || "pending",
-      rawCell: targetDeposit?.rawCell,
-      cancelTime: targetDeposit?.cancelTime,
-    };
-  });
+  const formattedTxHistory = useMemo(
+    () =>
+      txHistory.map((history) => {
+        const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
+        return {
+          capacity: BI.from(history.capacity),
+          amount: BI.from(history.amount),
+          token: history.token,
+          txHash: history.txHash,
+          status: history.status || "pending",
+          rawCell: targetDeposit?.rawCell,
+          cancelTime: targetDeposit?.cancelTime,
+        };
+      }),
+    [depositList, txHistory],
+  );
 
-  const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
-  const completedList = formattedTxHistory.filter((history) => history.status !== "pending");
+  const pendingList = useMemo(
+    () => formattedTxHistory.filter((history) => history.status === "pending"),
+    [formattedTxHistory],
+  );
+  const completedList = useMemo(
+    () => formattedTxHistory.filter((history) => history.status !== "pending"),
+    [formattedTxHistory],
+  );
 
   const updateTxStatus = (txHash: string, status: string) => {
     const result = txHistory.find((tx) => {
@@ -82,8 +92,10 @@ export const DepositList: React.FC = () => {
       updateTxHistory(result);
     }
   };
-  const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
-  const eventEmit = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
+  const eventEmit = useMemo(() => {
+    const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
+    return lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
+  }, [lightGodwoken, pendingList]);
   eventEmit?.on("success", (txHash) => {
     updateTxStatus(txHash, "success");
   });
