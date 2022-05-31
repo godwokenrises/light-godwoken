@@ -10,7 +10,6 @@ import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { DepositEventEmitter, SUDT, Token } from "../light-godwoken/lightGodwokenType";
-import { TransactionHistory } from "../components/TransactionHistory";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import { useChainId } from "../hooks/useChainId";
 import {
