@@ -44,6 +44,9 @@ const StyleWrapper = styled.div`
     .sudt-amount + .ckb-amount {
       margin-top: 10px;
     }
+    &:hover {
+      cursor: pointer;
+    }
   }
   .right-side {
     height: 40px;
@@ -113,6 +116,7 @@ export interface Props {
   rawCell?: Cell;
   cancelTime?: BI;
   status: string;
+  txHash: string;
 }
 
 const DepositItem = ({
@@ -121,6 +125,7 @@ const DepositItem = ({
   token,
   rawCell,
   status,
+  txHash,
   cancelTime = BI.from(7 * 24)
     .mul(3600)
     .mul(1000),
@@ -129,7 +134,7 @@ const DepositItem = ({
   const now = useClock();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
-
+  const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
   const [CKBAmount] = useMemo(() => {
     if (capacity.eq("0")) {
       console.error("[warn] a withdrawal request cell with zero capacity");
@@ -149,18 +154,6 @@ const DepositItem = ({
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const cancelAble = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
 
-  const {
-    days: daysLeft,
-    hours: hoursLeft,
-    minutes: minutesLeft,
-    seconds: secondsLeft,
-  } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
-  const timeLeft =
-    daysLeft > 0
-      ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
-      : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-          .toString()
-          .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`;
   const cancelDeposit = async () => {
     setIsCancel(true);
     if (!rawCell) {
@@ -189,10 +182,14 @@ const DepositItem = ({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+
+  const goExpoloer = () => {
+    window.open(`${l1ScannerUrl}/transaction/${txHash}`, "_blank");
+  };
   return (
     <StyleWrapper>
       <div className="main-row">
-        <div className="amount">
+        <div className="amount" onClick={goExpoloer}>
           {sudtAmount && (
             <div className="sudt-amount">
               {token?.tokenURI ? <img src={token?.tokenURI} alt="" /> : ""}
@@ -207,8 +204,7 @@ const DepositItem = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" &&
-            (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending(${timeLeft})`)}
+          {status === "pending" && (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending`)}
           {status === "success" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />

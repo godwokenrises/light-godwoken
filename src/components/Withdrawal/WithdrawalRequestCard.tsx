@@ -101,9 +101,6 @@ const WithdrawalRequestCard = ({
   const [blockProduceTime, setBlockProduceTime] = useState(0);
   const lightGodwoken = useLightGodwoken();
 
-  const handleToggleShowMore = useCallback(() => {
-    setShouldShowMore((value) => !value);
-  }, []);
   useEffect(() => {
     const fetchBlockProduceTime = async () => {
       const result: number = (await lightGodwoken?.getBlockProduceTime()) || 0;
@@ -142,6 +139,12 @@ const WithdrawalRequestCard = ({
 
     return [`${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`];
   }, [amount, erc20]);
+
+  const handleToggleShowMore = useCallback(() => {
+    if (isMature) return;
+    setShouldShowMore((value) => !value);
+  }, [isMature]);
+
   return (
     <StyleWrapper onClick={handleToggleShowMore}>
       <div className="main-row">
@@ -161,7 +164,9 @@ const WithdrawalRequestCard = ({
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (shouldShowMore ? (
+            (isMature ? (
+              unlockButton && cell && unlockButton(cell)
+            ) : shouldShowMore ? (
               <div className="time">
                 <ArrowUpIcon />
               </div>
@@ -177,14 +182,11 @@ const WithdrawalRequestCard = ({
                 <ArrowDownIcon />
               </div>
             ))}
-          {status === "success" &&
-            (isMature ? (
-              unlockButton && cell && unlockButton(cell)
-            ) : (
-              <Tooltip title={status}>
-                <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
-              </Tooltip>
-            ))}
+          {status === "success" && (
+            <Tooltip title={status}>
+              <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
+          )}
           {status === "fail" && (
             <Tooltip title={status}>
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
