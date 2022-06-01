@@ -13,9 +13,6 @@ import {
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
   Token,
-  DepositEventEmitter,
-  DepositPayload,
-  PendingDepositTransaction,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
@@ -81,6 +78,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getVersion(): GodwokenVersion {
     return "v1";
   }
+
   getNativeAsset(): Token {
     return {
       name: "Common Knowledge Base",
@@ -96,6 +94,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalWaitBlock(): number {
     return 100;
+  }
+
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {

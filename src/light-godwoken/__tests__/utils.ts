@@ -22,7 +22,7 @@ export const randomScript = (byteLength: number): Script => {
 };
 
 export const generateCellInput = (capacity: number, type?: Script, sudtData?: number) => {
-  const tx_hash = randomHexString(20);
+  const tx_hash = randomHexString(32);
   const lock = {
     args: randomHexString(20),
     code_hash: randomHexString(32),

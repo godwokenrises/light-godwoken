@@ -137,6 +137,10 @@ export type DepositRequest = {
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
+  getMinimalDepositCapacity(): BI;
+
+  getMinimalWithdrawalCapacity(): BI;
+
   cancelDeposit(cell: Cell): Promise<HexString>;
 
   getCkbBlockProduceTime(): Promisable<number>;
@@ -184,6 +188,7 @@ export interface LightGodwokenBase {
 }
 
 export interface LightGodwokenV0 extends LightGodwokenBase {
+  getMinimalWithdrawalToV1Capacity(): BI;
   unlock: (payload: UnlockPayload) => Promise<Hash>;
   withdrawToV1WithEvent: (payload: BaseWithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }

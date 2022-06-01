@@ -58,6 +58,18 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
   }
 
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalToV1Capacity(): BI {
+    return BI.from(650).mul(100000000);
+  }
+
   async getChainId(): Promise<HexNumber> {
     return await this.godwokenClient.getChainId();
   }

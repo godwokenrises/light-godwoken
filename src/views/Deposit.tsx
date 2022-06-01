@@ -125,6 +125,8 @@ export default function Deposit() {
           decimals: selectedSudt?.decimals,
         });
         notification.success({ message: `deposit Tx(${hash}) is successful` });
+        setCKBInput("");
+        setSudtInputValue("");
       } catch (e) {
         handleError(e, selectedSudt);
         setIsModalVisible(false);
