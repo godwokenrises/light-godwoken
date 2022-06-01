@@ -28,6 +28,9 @@ export const DepositList: React.FC = () => {
   );
 
   const { data: depositList } = depositListQuery;
+  if (!lightGodwoken) {
+    return <DepositListDiv>please connect wallet first</DepositListDiv>;
+  }
   if (!depositList) {
     return (
       <DepositListDiv>
