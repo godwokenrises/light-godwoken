@@ -101,6 +101,7 @@ export default function Deposit() {
       // @ts-ignore
       message: e,
     });
+    alert(e);
     if (e instanceof Error) {
       notification.error({
         message: e,
