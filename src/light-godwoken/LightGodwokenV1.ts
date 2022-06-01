@@ -1,4 +1,4 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, CellDep } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -34,6 +34,45 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.updateConfigViaRpc();
+  }
+
+  async updateConfigViaRpc(): Promise<void> {
+    const rpcConfig = (await this.godwokenClient.getConfig()).nodeInfo;
+    let config = this.provider.getLightGodwokenConfig().layer2Config;
+    const depositCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.deposit.script });
+    config.SCRIPTS.deposit_lock.script_type_hash = rpcConfig.gwScripts.deposit.typeHash;
+    for await (const cell of depositCellcollector.collect()) {
+      const depositCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.deposit_lock.cell_dep = depositCellDep;
+    }
+    const withdrawalCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.withdraw.script });
+    config.SCRIPTS.withdrawal_lock.script_type_hash = rpcConfig.gwScripts.withdraw.typeHash;
+    for await (const cell of withdrawalCellcollector.collect()) {
+      const withdrawCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.withdrawal_lock.cell_dep = withdrawCellDep;
+    }
+    config.ROLLUP_CONFIG.rollup_type_hash = rpcConfig.rollupCell.typeHash;
+    config.ROLLUP_CONFIG.rollup_type_script = rpcConfig.rollupCell.typeScript;
+
+    const v1ConfigChanged =
+      JSON.stringify(config) !== JSON.stringify(this.provider.getLightGodwokenConfig().layer2Config);
+    if (v1ConfigChanged) {
+      debugProductionEnv("config changed via rpc:", v1ConfigChanged, config);
+    }
+    this.provider.lightGodwokenConfig.layer2Config = config;
   }
 
   getVersion(): GodwokenVersion {

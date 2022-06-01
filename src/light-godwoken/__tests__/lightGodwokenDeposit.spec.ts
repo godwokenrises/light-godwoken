@@ -9,6 +9,7 @@ let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
 let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
+sinon.stub(LightGodwokenV1.prototype, "updateConfigViaRpc").returns(Promise.resolve());
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
   const dummyEthereum = {
