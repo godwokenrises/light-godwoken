@@ -97,6 +97,10 @@ export default function Deposit() {
       return;
     }
     captureException(e);
+    notification.error({
+      // @ts-ignore
+      message: e,
+    });
     if (e instanceof Error) {
       notification.error({
         message: e,
