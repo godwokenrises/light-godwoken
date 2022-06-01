@@ -20,6 +20,7 @@ interface ERC20 extends Token {
 }
 export interface ProxyERC20 extends ERC20 {
   sudt_script_hash: Hash;
+  id?: number;
 }
 export interface SUDT extends Token {
   type: Script;
@@ -75,19 +76,18 @@ export interface WithdrawalEventEmitterPayload extends BaseWithdrawalEventEmitte
   withdrawal_address?: Address;
 }
 
-export interface WithdrawResult {
-  cell: Cell;
-
+export interface WithdrawBase {
   withdrawalBlockNumber: number;
-
-  // relative to withdrawalBlockNumber
   remainingBlockNumber: number;
-
   capacity: HexNumber;
   amount: HexNumber;
   sudt_script_hash: Hash;
-
   erc20?: ProxyERC20;
+}
+
+export interface WithdrawResult extends WithdrawBase {
+  cell?: Cell;
+  status?: "pending" | "succeed" | "failed";
 }
 
 export interface UnlockPayload {

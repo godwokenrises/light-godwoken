@@ -20,6 +20,7 @@ export type Layer2Config = {
   };
   GW_POLYJUICE_RPC_URL: string;
   SCANNER_URL: string;
+  SCANNER_API: string;
   CHAIN_NAME: string;
 };
 
