@@ -6,7 +6,7 @@ export const debug = (...args: any) => {
 
 export const debugProductionEnv = (...args: any) => {
   console.debug(...args);
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === "production" || true) {
     try {
       const message = args.reduce((acc: string, curr: any) => acc + JSON.stringify(curr) + ", ", "");
       Sentry.captureMessage(message);

@@ -11,12 +11,12 @@ import { config } from "@ckb-lumos/lumos";
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import { LightGodwokenError } from "./light-godwoken/constants/error";
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" || true) {
   Sentry.init({
     environment: process.env.NODE_ENV,
     release: "light-godwoken@" + process.env.REACT_APP_VERSION,
     debug: false,
-    dsn: process.env.REACT_APP_SENTRY_DSN,
+    dsn: "https://cee76b0263164a9b89c918b194cedbf8@o1235895.ingest.sentry.io/6385985",
     integrations: [new BrowserTracing()],
 
     // Set tracesSampleRate to 1.0 to capture 100%
