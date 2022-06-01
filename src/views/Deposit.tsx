@@ -97,9 +97,11 @@ export default function Deposit() {
       return;
     }
     captureException(e);
-    notification.error({
-      message: `Unknown Error, Please try again later`,
-    });
+    if (e instanceof Error) {
+      notification.error({
+        message: e,
+      });
+    }
   };
   const showModal = async () => {
     if (lightGodwoken) {
