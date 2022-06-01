@@ -45,6 +45,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   abstract godwokenClient: any;
+  abstract getMinimalDepositCapacity(): BI;
+  abstract getMinimalWithdrawalCapacity(): BI;
   abstract generateDepositLock(): Script;
   abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
