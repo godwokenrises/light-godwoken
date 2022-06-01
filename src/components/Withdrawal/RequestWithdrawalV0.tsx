@@ -80,6 +80,8 @@ const RequestWithdrawalV0: React.FC = () => {
           sudt_script_hash: sudt_script_hash,
         });
       }
+      setCKBInput("");
+      setSudtValue("");
     } catch (e) {
       handleError(e, selectedSudt);
       setLoading(false);

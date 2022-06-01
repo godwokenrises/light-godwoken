@@ -1,4 +1,4 @@
-import { Hash, HashType, HexNumber, Script } from "@ckb-lumos/lumos";
+import { BI, Hash, HashType, HexNumber, Script } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import {
@@ -22,6 +22,12 @@ export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements MockLightGodwokenV0Interface {
+  getMinimalDepositCapacity(): BI {
+    throw new Error("Method not implemented.");
+  }
+  getMinimalWithdrawalCapacity(): BI {
+    throw new Error("Method not implemented.");
+  }
   getWithdrawalWaitBlock(): number | Promise<number> {
     throw new Error("Method not implemented.");
   }
@@ -32,6 +38,9 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+  }
+  getMinimalWithdrawalToV1Capacity(): BI {
+    throw new Error("Method not implemented.");
   }
 
   getVersion(): GodwokenVersion {

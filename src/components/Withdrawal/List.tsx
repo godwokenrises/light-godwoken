@@ -38,7 +38,9 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   );
 
   const { data: withdrawalList } = withdrawalListQuery;
-
+  if (!lightGodwoken) {
+    return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
+  }
   if (!withdrawalList) {
     return (
       <WithdrawalListDiv>

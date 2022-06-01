@@ -1,5 +1,5 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, CellDep } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -37,10 +37,51 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
+    this.updateConfigViaRpc();
   }
+
+  async updateConfigViaRpc(): Promise<void> {
+    const rpcConfig = (await this.godwokenClient.getConfig()).nodeInfo;
+    let config = this.provider.getLightGodwokenConfig().layer2Config;
+    const depositCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.deposit.script });
+    config.SCRIPTS.deposit_lock.script_type_hash = rpcConfig.gwScripts.deposit.typeHash;
+    for await (const cell of depositCellcollector.collect()) {
+      const depositCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.deposit_lock.cell_dep = depositCellDep;
+    }
+    const withdrawalCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.withdraw.script });
+    config.SCRIPTS.withdrawal_lock.script_type_hash = rpcConfig.gwScripts.withdraw.typeHash;
+    for await (const cell of withdrawalCellcollector.collect()) {
+      const withdrawCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.withdrawal_lock.cell_dep = withdrawCellDep;
+    }
+    config.ROLLUP_CONFIG.rollup_type_hash = rpcConfig.rollupCell.typeHash;
+    config.ROLLUP_CONFIG.rollup_type_script = rpcConfig.rollupCell.typeScript;
+
+    const v1ConfigChanged =
+      JSON.stringify(config) !== JSON.stringify(this.provider.getLightGodwokenConfig().layer2Config);
+    if (v1ConfigChanged) {
+      debugProductionEnv("config changed via rpc:", v1ConfigChanged, config);
+    }
+    this.provider.lightGodwokenConfig.layer2Config = config;
+  }
+
   getVersion(): GodwokenVersion {
     return "v1";
   }
+
   getNativeAsset(): Token {
     return {
       name: "Common Knowledge Base",
@@ -56,6 +97,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalWaitBlock(): number {
     return 100;
+  }
+
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
@@ -304,17 +353,35 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     // submit WithdrawalRequestExtra
     const serializedRequest = new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalReqExtra)).serializeJson();
-    const txHash = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
-    debug("result:", txHash);
-    if (txHash !== null) {
-      const errorMessage = (txHash as any).message;
+    const result = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
+    debug("result:", result);
+    if (result !== null) {
+      const errorMessage = (result as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", new Layer2RpcError(txHash, errorMessage));
+        eventEmitter.emit("error", new Layer2RpcError(result, errorMessage));
       }
     }
-    eventEmitter.emit("sent", txHash);
-    debug("withdrawal request result:", txHash);
-    this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    eventEmitter.emit("sent", result);
+    debug("withdrawal request result:", result);
+    const maxLoop = 100;
+    let loop = 0;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      const withdrawal: any = await this.getWithdrawal(result as Hash);
+      if (withdrawal && withdrawal.status === "pending") {
+        debug("withdrawal pending:", withdrawal);
+        eventEmitter.emit("pending", result);
+      }
+      if (withdrawal && withdrawal.status === "committed") {
+        debug("withdrawal committed:", withdrawal);
+        eventEmitter.emit("success", result);
+        clearInterval(nIntervId);
+      }
+      if (withdrawal === null && loop > maxLoop) {
+        eventEmitter.emit("fail", result);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
   }
 
   generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {
