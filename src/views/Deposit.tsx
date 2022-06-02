@@ -124,8 +124,6 @@ export default function Deposit() {
     }
     e.on("sent", (txHash) => {
       notification.success({ message: `deposit Tx(${txHash}) is successful` });
-      setCKBInput("");
-      setSudtInputValue("");
       setIsModalVisible(false);
       addTxToHistory({
         type: "deposit",
@@ -138,6 +136,9 @@ export default function Deposit() {
     });
 
     e.on("success", (txHash) => {
+      setCKBInput("");
+      setSudtInputValue("");
+      setSelectedSudt(undefined);
       notification.success({ message: `Deposit Tx(${txHash}) is successful` });
     });
 
