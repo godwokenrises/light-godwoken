@@ -138,7 +138,7 @@ export default function Deposit() {
     });
 
     e.on("success", (txHash) => {
-      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
+      notification.success({ message: `Deposit Tx(${txHash}) is successful` });
     });
 
     e.on("fail", (result: unknown) => {
