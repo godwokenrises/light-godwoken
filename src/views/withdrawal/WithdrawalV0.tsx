@@ -25,7 +25,7 @@ const WithdrawalV0: React.FC = () => {
       </Card>
       {lightGodwoken && (
         <Card className="content">
-          <WithdrawalList unlockButton={(cell) => <Unlock cell={cell}></Unlock>}></WithdrawalList>
+          <WithdrawalList unlockButton={(cell) => <Unlock cell={cell!}></Unlock>}></WithdrawalList>
         </Card>
       )}
     </PageContent>

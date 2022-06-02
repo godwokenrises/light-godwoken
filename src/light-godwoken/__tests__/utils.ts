@@ -1,5 +1,5 @@
 import { Cell, HexString, Script, HashType, BI, helpers, utils } from "@ckb-lumos/lumos";
-import { RawWithdrwal } from "../schemas/codec";
+import { RawWithdrwal } from "../schemas/codecV0";
 import { RawWithdrawalRequestV1 } from "../schemas/codecV1";
 
 export const randomHexString = (byteLength: number) => {
@@ -22,7 +22,7 @@ export const randomScript = (byteLength: number): Script => {
 };
 
 export const generateCellInput = (capacity: number, type?: Script, sudtData?: number) => {
-  const tx_hash = randomHexString(20);
+  const tx_hash = randomHexString(32);
   const lock = {
     args: randomHexString(20),
     code_hash: randomHexString(32),

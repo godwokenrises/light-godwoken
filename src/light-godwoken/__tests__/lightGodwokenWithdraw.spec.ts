@@ -11,6 +11,7 @@ let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
 let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
+sinon.stub(LightGodwokenV1.prototype, "updateConfigViaRpc").returns(Promise.resolve());
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
   const dummyEthereum = {
@@ -20,8 +21,8 @@ beforeEach(() => {
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
   lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
-  sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve(9));
-  sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve(1));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x9"));
+  sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve("0x1"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
 
   sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));

@@ -85,7 +85,7 @@ export interface IWithdrawalRequestCardProps {
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
-  unlockButton?: (cell: Cell) => JSX.Element;
+  unlockButton?: (cell?: Cell) => JSX.Element;
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,

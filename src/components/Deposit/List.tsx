@@ -107,6 +107,16 @@ export const DepositList: React.FC = () => {
   eventEmit?.on("pending", (txHash) => {
     updateTxStatus(txHash, "pending");
   });
+  if (!lightGodwoken) {
+    return <DepositListDiv>please connect wallet first</DepositListDiv>;
+  }
+  if (!depositList) {
+    return (
+      <DepositListDiv>
+        <Placeholder />
+      </DepositListDiv>
+    );
+  }
   return (
     <DepositListDiv>
       <LinkList>

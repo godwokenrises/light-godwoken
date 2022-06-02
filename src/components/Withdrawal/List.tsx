@@ -21,7 +21,7 @@ const WithdrawalListDiv = styled.div`
   }
 `;
 interface Props {
-  unlockButton?: (cell: Cell) => JSX.Element;
+  unlockButton?: (cell?: Cell) => JSX.Element;
 }
 export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const lightGodwoken = useLightGodwoken();
@@ -40,6 +40,9 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const withdrawalListQuery = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
+      // if(lightGodwoken?.getVersion() === 'v1') {
+      //   return (lightGodwoken as LightGodwokenV1).listWithdrawWithScannerApi();
+      // }
       return lightGodwoken?.listWithdraw();
     },
     {
@@ -49,7 +52,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const { data: withdrawalList, isLoading } = withdrawalListQuery;
   useMemo(() => {
     withdrawalList?.forEach((withdraw) => {
-      if (!txHistory.find((history) => withdraw.cell.out_point?.tx_hash === history.txHash)) {
+      if (withdraw.cell && !txHistory.find((history) => withdraw.cell?.out_point?.tx_hash === history.txHash)) {
         addTxToHistory({
           type: "withdrawal",
           txHash: withdraw.cell.out_point?.tx_hash || "",
@@ -65,7 +68,9 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const formattedHistoryList = useMemo(
     () =>
       txHistory.map((history) => {
-        const targetWithdraw = withdrawalList?.find((withdraw) => withdraw.cell.out_point?.tx_hash === history.txHash);
+        const targetWithdraw = withdrawalList?.find(
+          (withdraw) => withdraw.cell && withdraw.cell.out_point?.tx_hash === history.txHash,
+        );
         if (targetWithdraw) {
           return {
             ...history,
@@ -112,6 +117,16 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
     updateTxStatus(txHash, "pending");
   });
 
+  if (!lightGodwoken) {
+    return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
+  }
+  if (!withdrawalList) {
+    return (
+      <WithdrawalListDiv>
+        <Placeholder />
+      </WithdrawalListDiv>
+    );
+  }
   return (
     <WithdrawalListDiv>
       <LinkList>

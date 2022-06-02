@@ -1,11 +1,13 @@
 import { BI } from "@ckb-lumos/bi";
+import { captureException } from "@sentry/react";
 import { notification } from "antd";
-import { NotEnoughCapacityError, NotEnoughSudtError } from "../../light-godwoken/constants/error";
+import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../../light-godwoken/constants/error";
 import { L1MappedErc20 } from "../../types/type";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
 
 export const handleError = (e: unknown, selectedSudt?: L1MappedErc20) => {
+  console.error(e);
   if (e instanceof NotEnoughCapacityError) {
     const expect = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.expected), 8, { maxDecimalPlace: 8 }));
     const actual = formatToThousands(getFullDisplayAmount(BI.from(e.metadata.actual), 8, { maxDecimalPlace: 8 }));
@@ -30,8 +32,15 @@ export const handleError = (e: unknown, selectedSudt?: L1MappedErc20) => {
     });
     return;
   }
-  console.error(e);
+  if (e instanceof TransactionSignError) {
+    notification.error({
+      message: `Sign Transaction Error, please try and confirm sign again`,
+    });
+    return;
+  }
+  captureException(e);
+
   notification.error({
-    message: `Server Error, Please try again later`,
+    message: `Unknown Error, Please try again later`,
   });
 };

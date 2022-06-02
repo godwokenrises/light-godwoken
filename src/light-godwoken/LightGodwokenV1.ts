@@ -1,6 +1,7 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, CellDep } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { Godwoken as GodwokenV1 } from "./godwoken-v1/src/index";
+import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
@@ -20,7 +21,7 @@ import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug, debugProductionEnv } from "./debug";
-import { V1DepositLockArgs } from "./schemas/codec";
+import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
   Layer2RpcError,
@@ -31,13 +32,56 @@ import {
 } from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   godwokenClient;
+  godwokenScannerClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
+    this.updateConfigViaRpc();
   }
+
+  async updateConfigViaRpc(): Promise<void> {
+    const rpcConfig = (await this.godwokenClient.getConfig()).nodeInfo;
+    let config = this.provider.getLightGodwokenConfig().layer2Config;
+    const depositCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.deposit.script });
+    config.SCRIPTS.deposit_lock.script_type_hash = rpcConfig.gwScripts.deposit.typeHash;
+    for await (const cell of depositCellcollector.collect()) {
+      const depositCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.deposit_lock.cell_dep = depositCellDep;
+    }
+    const withdrawalCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.withdraw.script });
+    config.SCRIPTS.withdrawal_lock.script_type_hash = rpcConfig.gwScripts.withdraw.typeHash;
+    for await (const cell of withdrawalCellcollector.collect()) {
+      const withdrawCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.withdrawal_lock.cell_dep = withdrawCellDep;
+    }
+    config.ROLLUP_CONFIG.rollup_type_hash = rpcConfig.rollupCell.typeHash;
+    config.ROLLUP_CONFIG.rollup_type_script = rpcConfig.rollupCell.typeScript;
+
+    const v1ConfigChanged =
+      JSON.stringify(config) !== JSON.stringify(this.provider.getLightGodwokenConfig().layer2Config);
+    if (v1ConfigChanged) {
+      debugProductionEnv("config changed via rpc:", v1ConfigChanged, config);
+    }
+    this.provider.lightGodwokenConfig.layer2Config = config;
+  }
+
   getVersion(): GodwokenVersion {
     return "v1";
   }
+
   getNativeAsset(): Token {
     return {
       name: "Common Knowledge Base",
@@ -53,6 +97,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalWaitBlock(): number {
     return 100;
+  }
+
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
@@ -99,6 +151,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
+        id: token.id,
         name: token.name,
         symbol: token.symbol,
         decimals: token.decimals,
@@ -214,6 +267,33 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     debug("found withdraw cells:", sortedWithdrawals);
     return sortedWithdrawals;
+  }
+
+  async listWithdrawWithScannerApi(): Promise<WithdrawResult[]> {
+    const ownerLockHash = await this.provider.getLayer1LockScriptHash();
+    const searchParams = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
+    debug("searchParams is:", searchParams);
+    const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
+    const collectedWithdrawals: WithdrawResult[] = searchParams.map((item) => {
+      let amount = "0x0";
+      let erc20 = undefined;
+      if (item.udt_id !== 1) {
+        amount = BI.from(item.amount).toHexString();
+        erc20 = this.getBuiltinErc20List().find(
+          (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
+        );
+      }
+      return {
+        withdrawalBlockNumber: item.block_number,
+        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        capacity: BI.from(item.capacity).toHexString(),
+        amount,
+        sudt_script_hash: item.udt_script_hash,
+        erc20,
+        status: item.state,
+      };
+    });
+    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -383,10 +463,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
 
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(layer2AccountScriptHash);
-    const nonce: number = await this.godwokenClient.getNonce(fromId!);
+    const nonce = await this.godwokenClient.getNonce(fromId!);
 
     const rawWithdrawalRequest = {
-      nonce,
+      nonce: BI.from(nonce).toNumber(),
       chain_id: BI.from(chainId),
       capacity: BI.from(payload.capacity),
       amount: BI.from(payload.amount),

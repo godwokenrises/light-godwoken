@@ -1,6 +1,6 @@
 import { notification } from "antd";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { LightGodwokenNotFoundError } from "../../light-godwoken/constants/error";
+import { LightGodwokenNotFoundError, NotEnoughCapacityError } from "../../light-godwoken/constants/error";
 
 export const ClaimSudt: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
@@ -11,8 +11,14 @@ export const ClaimSudt: React.FC = () => {
       notification.error({ message });
       throw new LightGodwokenNotFoundError("LightGodwoken Not Found!", message);
     }
-    const txHash = await lightGodwoken.claimUSDC();
-    notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
+    try {
+      const txHash = await lightGodwoken.claimUSDC();
+      notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
+    } catch (error) {
+      if (error instanceof NotEnoughCapacityError) {
+        notification.error({ message: "Claim error, you need get some ckb first" });
+      }
+    }
   };
-  return <div onClick={claimSudt}>Get 1,000 USDC</div>;
+  return <div onClick={claimSudt}>Get 1,000 USDC on L1</div>;
 };

@@ -67,6 +67,8 @@ const RequestWithdrawalV1: React.FC = () => {
         amount: amount,
         sudt_script_hash: sudt_script_hash,
       });
+      setCKBInput("");
+      setSudtValue("");
     } catch (e) {
       handleError(e, selectedSudt);
       setLoading(false);

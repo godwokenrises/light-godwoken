@@ -68,6 +68,7 @@ const v0Config: LightGodwokenConfig = {
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
     SCANNER_URL: "https://aggron.gwscan.com",
+    SCANNER_API: "https://aggron.gwscan.com",
     CHAIN_NAME: "Godwoken Testnet v0",
   },
 };
@@ -112,6 +113,7 @@ export const predefined_testnet: Record<GodwokenVersion, LightGodwokenConfig> = 
       },
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
       SCANNER_URL: "https://v1.betanet.gwscan.com/",
+      SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Testnet v1.1",
     },
   },
@@ -157,6 +159,7 @@ export const predefined_mainnet: Record<GodwokenVersion, LightGodwokenConfig> = 
       },
       GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
       SCANNER_URL: "https://v1.aggron.gwscan.com/zh-CN",
+      SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Mainet v1.1",
     },
   },

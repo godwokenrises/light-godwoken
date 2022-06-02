@@ -1,7 +1,7 @@
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
-import { SerializeRcLockWitnessLock } from "./omni-lock";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 
@@ -29,10 +29,11 @@ export async function generateClaimUSDCTxSkeleton(
   config: LightGodwokenConfig,
   ethAddress: HexString,
   indexer: any,
+  issuerPrivKey?: HexString,
 ): Promise<helpers.TransactionSkeletonType> {
   const { omni_lock: omniLock, sudt, secp256k1_blake160: secp256k1 } = config.layer1Config.SCRIPTS;
 
-  const issuerPubKey = hd.key.privateToPublic(issuerPrivateKey);
+  const issuerPubKey = hd.key.privateToPublic(issuerPrivKey || issuerPrivateKey);
   const issuerArgs = hd.key.publicKeyToBlake160(issuerPubKey);
   const issuerLock: Script = {
     code_hash: secp256k1.code_hash,
@@ -152,7 +153,10 @@ function getClaimSUDTCellDeps(config: LightGodwokenConfig): CellDep[] {
   ];
 }
 
-async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, ethereum: any): Promise<HexString> {
+export async function userSignTransaction(
+  txSkeleton: helpers.TransactionSkeletonType,
+  ethereum: any,
+): Promise<HexString> {
   const message = generateUserMessage(txSkeleton);
   let signedMessage = await ethereum.request({
     method: "personal_sign",
@@ -163,9 +167,7 @@ async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, 
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: SerializeRcLockWitnessLock({
-        signature: new toolkit.Reader(signedMessage),
-      }),
+      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
     }),
   ).serializeJson();
   return signedWitness;
@@ -192,11 +194,8 @@ function generateUserMessage(tx: helpers.TransactionSkeletonType): HexString {
       toolkit.normalizers.NormalizeRawTransaction(helpers.createTransactionFromSkeleton(tx)),
     ),
   );
-  const rcLockBytelength = SerializeRcLockWitnessLock({
-    signature: new toolkit.Reader("0x" + "00".repeat(65)),
-  }).byteLength;
   const serializedWitness = core.SerializeWitnessArgs({
-    lock: new toolkit.Reader("0x" + "00".repeat(rcLockBytelength)),
+    lock: new toolkit.Reader("0x" + "00".repeat(85)),
   });
   hasher.update(rawTxHash);
   hashWitness(hasher, serializedWitness);
