@@ -36,6 +36,7 @@ import { debug, debugProductionEnv } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError, NotEnoughSudtError } from "./constants/error";
 import { CellDep, DepType, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import { isSpecialWallet } from "./utils";
 
 const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -430,7 +431,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
     let signedMessage = await this.provider.ethereum.request({
       method: "personal_sign",
-      params: [this.provider.l2Address, message],
+      params: isSpecialWallet() ? [message] : [this.provider.l2Address, message],
     });
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
