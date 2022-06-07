@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useEffect, useMemo, useState } from "react";
 import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
 import { Token } from "../light-godwoken/lightGodwokenType";
 
@@ -44,7 +44,9 @@ export function useL1TxHistory(storageKey: string) {
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
         if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newTxHistory.txHash)) {
-          writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
+          const newTxHistoryList = [newTxHistory].concat(latestTxHistory);
+          setTxHistory(newTxHistoryList);
+          writeStorage(storageKey, JSON.stringify(newTxHistoryList));
         }
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
@@ -69,6 +71,7 @@ export function useL1TxHistory(storageKey: string) {
           return tx;
         });
         writeStorage(storageKey, JSON.stringify(newHistory));
+        setTxHistory(newHistory);
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }

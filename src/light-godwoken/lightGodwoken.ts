@@ -26,7 +26,8 @@ import {
   SUDT,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  WithdrawResult,
+  WithdrawResultWithCell,
+  WithdrawResultV1,
   GodwokenVersion,
   LightGodwokenBase,
   Token,
@@ -68,7 +69,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
-  abstract listWithdraw(): Promise<WithdrawResult[]>;
+  abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 

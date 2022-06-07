@@ -7,7 +7,7 @@ import {
   WithdrawalEventEmitterPayload,
   GodwokenVersion,
   LightGodwokenV0,
-  WithdrawResult,
+  WithdrawResultWithCell,
   ProxyERC20,
   SUDT,
   GetErc20Balances,
@@ -143,7 +143,7 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
     return Promise.resolve(result);
   }
 
-  async listWithdraw(): Promise<WithdrawResult[]> {
+  async listWithdraw(): Promise<WithdrawResultWithCell[]> {
     const result = [
       {
         cell: {

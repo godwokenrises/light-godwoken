@@ -95,9 +95,12 @@ export interface WithdrawBase {
   erc20?: ProxyERC20;
 }
 
-export interface WithdrawResult extends WithdrawBase {
-  cell?: Cell;
-  status?: "pending" | "succeed" | "failed";
+export interface WithdrawResultWithCell extends WithdrawBase {
+  cell: Cell;
+}
+export interface WithdrawResultV1 extends WithdrawBase {
+  layer1TxHash: HexString;
+  status: "pending" | "success" | "failed";
 }
 
 export interface UnlockPayload {
@@ -180,7 +183,7 @@ export interface LightGodwokenBase {
 
   getWithdrawalWaitBlock: () => Promise<number> | number;
 
-  listWithdraw: () => Promise<WithdrawResult[]>;
+  listWithdraw: () => Promise<WithdrawResultWithCell[]>;
 
   generateDepositLock: () => Script;
 

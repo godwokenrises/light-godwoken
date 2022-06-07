@@ -7,7 +7,7 @@ export function useClock(): number {
     const loop = () => {
       setTime(Date.now());
     };
-    let timeId = setInterval(loop, 1000);
+    let timeId = setInterval(loop, 10000);
     return () => {
       clearInterval(timeId);
     };

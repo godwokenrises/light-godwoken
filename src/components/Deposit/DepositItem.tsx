@@ -8,7 +8,6 @@ import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
 
 import { COLOR } from "../../style/variables";
-import getTimePeriods from "../../utils/getTimePeriods";
 import { useClock } from "../../hooks/useClock";
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { message, Tooltip } from "antd";
@@ -27,6 +26,7 @@ const StyleWrapper = styled.div`
     font-weight: 400;
     line-height: 1.5;
     font-size: 14px;
+    flex-wrap: wrap;
   }
   .amount {
     display: flex;
@@ -64,7 +64,12 @@ const StyleWrapper = styled.div`
   }
   .list-detail {
     padding-top: 10px;
+    width: 100%;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
+    a {
+      color: ${COLOR.brand};
+      text-decoration: none;
+    }
   }
 `;
 
@@ -215,6 +220,11 @@ const DepositItem = ({
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}
+        </div>
+        <div className="list-detail">
+          <MainText title={txHash}>
+            <a href={`${l1ScannerUrl}/transaction/${txHash}`}>Open In Explorer</a>
+          </MainText>
         </div>
       </div>
       <ConfirmModal

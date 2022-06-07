@@ -1,14 +1,11 @@
-import React, { useMemo, useState } from "react";
-import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { useQuery } from "react-query";
+import React, { useState } from "react";
 import styled from "styled-components";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";
-import { useChainId } from "../../hooks/useChainId";
-import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { BI } from "@ckb-lumos/bi";
 import { LinkList, Tab } from "../../style/common";
-import { LightGodwokenError } from "../../light-godwoken/constants/error";
+import { Token } from "../../light-godwoken/lightGodwokenType";
+import { Cell } from "@ckb-lumos/base";
 
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -19,12 +16,21 @@ const DepositListDiv = styled.div`
     overflow-y: auto;
   }
 `;
-export const DepositList: React.FC = () => {
-  const lightGodwoken = useLightGodwoken();
-  const l1Address = lightGodwoken?.provider.getL1Address();
-  const { data: chainId } = useChainId();
-  const historyKey = `${chainId}/${l1Address}/deposit`;
-  const { txHistory, updateTxHistory, addTxToHistory } = useL1TxHistory(historyKey);
+
+type TxHistoryType = {
+  capacity: BI;
+  amount: BI;
+  token: Token | undefined;
+  txHash: string;
+  status: string;
+  rawCell: Cell | undefined;
+  cancelTime: BI | undefined;
+};
+
+export const DepositList: React.FC<{ formattedTxHistory: TxHistoryType[]; isLoading: boolean }> = ({
+  formattedTxHistory,
+  isLoading,
+}) => {
   const [active, setActive] = useState("pending");
   const changeViewToPending = () => {
     setActive("pending");
@@ -32,91 +38,12 @@ export const DepositList: React.FC = () => {
   const changeViewToCompleted = () => {
     setActive("completed");
   };
-  const depositListQuery = useQuery(
-    ["queryDepositList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
-    () => {
-      return lightGodwoken?.getDepositList();
-    },
-    {
-      enabled: !!lightGodwoken,
-    },
+
+  const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
+  const completedList = formattedTxHistory.filter(
+    (history) => history.status === "success" || history.status === "fail",
   );
 
-  const { data: depositList, isLoading } = depositListQuery;
-
-  depositList?.forEach((deposit) => {
-    if (!txHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
-      addTxToHistory({
-        type: "deposit",
-        capacity: deposit.capacity.toHexString(),
-        amount: deposit.amount.toHexString(),
-        token: deposit.sudt,
-        txHash: deposit.rawCell.out_point?.tx_hash || "",
-        status: "pending",
-      });
-    }
-  });
-
-  const formattedTxHistory = useMemo(
-    () =>
-      txHistory.map((history) => {
-        const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
-        return {
-          capacity: BI.from(history.capacity),
-          amount: BI.from(history.amount),
-          token: history.token,
-          txHash: history.txHash,
-          status: history.status || "pending",
-          rawCell: targetDeposit?.rawCell,
-          cancelTime: targetDeposit?.cancelTime,
-        };
-      }),
-    [depositList, txHistory],
-  );
-
-  const pendingList = useMemo(
-    () => formattedTxHistory.filter((history) => history.status === "pending"),
-    [formattedTxHistory],
-  );
-  const completedList = useMemo(
-    () => formattedTxHistory.filter((history) => history.status !== "pending"),
-    [formattedTxHistory],
-  );
-
-  const updateTxStatus = (txHash: string, status: string) => {
-    const result = txHistory.find((tx) => {
-      return tx.txHash === txHash;
-    });
-    if (result) {
-      result.status = status;
-      updateTxHistory(result);
-    }
-  };
-  const eventEmit = useMemo(() => {
-    const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
-    return lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
-  }, [lightGodwoken, pendingList]);
-  eventEmit?.on("success", (txHash) => {
-    updateTxStatus(txHash, "success");
-  });
-  eventEmit?.on("fail", (e) => {
-    if (e instanceof LightGodwokenError) {
-      updateTxStatus(e.metadata, "fail");
-    }
-  });
-  eventEmit?.on("pending", (txHash) => {
-    updateTxStatus(txHash, "pending");
-  });
-  if (!lightGodwoken) {
-    return <DepositListDiv>please connect wallet first</DepositListDiv>;
-  }
-  if (!depositList) {
-    return (
-      <DepositListDiv>
-        <Placeholder />
-      </DepositListDiv>
-    );
-  }
   return (
     <DepositListDiv>
       <LinkList>

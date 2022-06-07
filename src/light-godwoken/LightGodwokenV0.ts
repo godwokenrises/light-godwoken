@@ -23,7 +23,7 @@ import {
   WithdrawalEventEmitterPayload,
   GodwokenVersion,
   LightGodwokenV0,
-  WithdrawResult,
+  WithdrawResultWithCell,
   ProxyERC20,
   SUDT,
   GetErc20Balances,
@@ -173,10 +173,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await contract.methods.balanceOf(this.provider.l2Address).call();
   }
 
-  async listWithdraw(): Promise<WithdrawResult[]> {
+  async listWithdraw(): Promise<WithdrawResultWithCell[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
     debug("searchParams is:", searchParams);
-    const collectedCells: WithdrawResult[] = [];
+    const collectedCells: WithdrawResultWithCell[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
 

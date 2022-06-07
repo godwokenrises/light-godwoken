@@ -4,20 +4,25 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import { Token } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
-import { useL1TxHistory } from "../../hooks/useL1TxHistory";
+import { L1TxHistoryInterface, useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useChainId } from "../../hooks/useChainId";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
+import { LightGodwokenV1 } from "../../light-godwoken";
+import EventEmitter from "events";
+import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
 
-const RequestWithdrawalV1: React.FC = () => {
+const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: L1TxHistoryInterface) => void }> = ({
+  addTxToHistory,
+}) => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
 
@@ -32,9 +37,6 @@ const RequestWithdrawalV1: React.FC = () => {
   const erc20BalanceQuery = useERC20Balance();
 
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
-  const l1Address = lightGodwoken?.provider.getL1Address();
-  const { data: chainId } = useChainId();
-  const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
   useEffect(() => {
     if (!CKBBalance) {
       setIsCKBValueValidate(false);
@@ -47,7 +49,7 @@ const RequestWithdrawalV1: React.FC = () => {
     setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
   }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
-  const sendWithdrawal = () => {
+  const sendWithdrawal = async () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();
     let amount = "0x0";
     let sudt_script_hash = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -60,15 +62,16 @@ const RequestWithdrawalV1: React.FC = () => {
     }
 
     setLoading(true);
-    let e: WithdrawalEventEmitter;
+    let e = new EventEmitter();
     try {
-      e = lightGodwoken.withdrawWithEvent({
+      await (lightGodwoken as LightGodwokenV1).withdraw(e, {
         capacity: capacity,
         amount: amount,
         sudt_script_hash: sudt_script_hash,
       });
       setCKBInput("");
       setSudtValue("");
+      setLoading(false);
     } catch (e) {
       handleError(e, selectedSudt);
       setLoading(false);
@@ -76,7 +79,7 @@ const RequestWithdrawalV1: React.FC = () => {
     }
 
     e.on("sent", (txHash) => {
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
+      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it to be committed` });
       setLoading(false);
       addTxToHistory({
         type: "withdrawal",
@@ -86,10 +89,6 @@ const RequestWithdrawalV1: React.FC = () => {
         token: selectedSudt,
         status: "pending",
       });
-    });
-
-    e.on("pending", (result) => {
-      console.log("pending triggered", result);
     });
 
     e.on("success", (txHash) => {

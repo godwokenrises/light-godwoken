@@ -58,8 +58,8 @@ const SubmitWithdrawal: React.FC<Props> = ({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleSubmit = () => {
-    sendWithdrawal();
+  const handleSubmit = async () => {
+    await sendWithdrawal();
     setIsModalVisible(false);
   };
 
