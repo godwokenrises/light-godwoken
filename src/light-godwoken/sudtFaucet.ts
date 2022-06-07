@@ -1,3 +1,4 @@
+import { isSpecialWallet } from "./utils";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
@@ -160,7 +161,7 @@ export async function userSignTransaction(
   const message = generateUserMessage(txSkeleton);
   let signedMessage = await ethereum.request({
     method: "personal_sign",
-    params: [ethereum.selectedAddress, message],
+    params: isSpecialWallet() ? [message] : [ethereum.selectedAddress, message],
   });
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
