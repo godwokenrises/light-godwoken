@@ -6,5 +6,5 @@ module.exports = {
       useESM: true,
     },
   },
-  testEnvironment: "node",
+  testEnvironment: "jsdom",
 };
