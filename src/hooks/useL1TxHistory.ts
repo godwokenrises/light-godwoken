@@ -1,5 +1,5 @@
-import { useCallback, useLayoutEffect, useEffect, useMemo, useState } from "react";
-import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { writeStorage } from "@rehooks/local-storage";
 import { Token } from "../light-godwoken/lightGodwokenType";
 
 type L1TxType = "deposit" | "withdrawal";
@@ -36,8 +36,6 @@ export function useL1TxHistory(storageKey: string) {
 
   const addTxToHistory = useCallback(
     (newTxHistory: L1TxHistoryInterface) => {
-      console.log("addTxToHistory", newTxHistory, storageKey);
-
       if (storageKey == null) {
         return;
       }
@@ -98,7 +96,6 @@ export function useL1TxHistory(storageKey: string) {
         });
         writeStorage(storageKey, JSON.stringify(newHistory));
         setTxHistory(newHistory);
-        console.log("updateTxWithStatus", txHash, status, newHistory);
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }

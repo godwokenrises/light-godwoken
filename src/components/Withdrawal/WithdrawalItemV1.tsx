@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
-import { BI, Cell, HexNumber, HexString } from "@ckb-lumos/lumos";
+import { BI, HexNumber, HexString } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";

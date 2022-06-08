@@ -82,14 +82,14 @@ const RequestWithdrawalV0: React.FC = () => {
     }
 
     e.on("sent", (txHash) => {
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
+      notification.success({ message: `Withdrawal Tx(${txHash}) has been sent, waiting for it to be committed.` });
       setCKBInput("");
       setSudtValue("");
       setLoading(false);
     });
 
     e.on("success", (txHash) => {
-      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
+      notification.success({ message: `Withdrawal Tx(${txHash}) is successful.` });
     });
 
     e.on("fail", (result: unknown) => {

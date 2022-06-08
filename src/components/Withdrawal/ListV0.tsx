@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useClock } from "../../hooks/useClock";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
@@ -6,10 +6,8 @@ import styled from "styled-components";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
 import { Cell } from "@ckb-lumos/base";
 import { Placeholder } from "../Placeholder";
-import { useChainId } from "../../hooks/useChainId";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { LinkList, Tab } from "../../style/common";
-import { LightGodwokenError } from "../../light-godwoken/constants/error";
 import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
 
 const WithdrawalListDiv = styled.div`
@@ -30,9 +28,6 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const l1Address = lightGodwoken?.provider.getL1Address();
   const { txHistory } = useL1TxHistory(`${godwokenVersion}/${l1Address}/withdrawal`);
 
-  console.log("====================================");
-  console.log("txHistory updated in list v0", txHistory);
-  console.log("====================================");
   const now = useClock();
   const [active, setActive] = useState("pending");
   const changeViewToPending = () => {

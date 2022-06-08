@@ -148,11 +148,6 @@ export default function Deposit() {
 
   useEffect(() => {
     return function cleanup() {
-      console.log("cleanup subscribPendingDepositTransactions");
-      console.log(
-        "depositListListener listener counndt",
-        (depositListListener as EventEmitter).listenerCount("success"),
-      );
       depositListListener.removeAllListeners();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import WithdrawalRequestCard from "./WithdrawalItemV1";
-import { Cell } from "@ckb-lumos/base";
 import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
 import LightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
