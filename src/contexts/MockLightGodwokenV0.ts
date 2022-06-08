@@ -18,7 +18,7 @@ import {
 import { GodwokenClient } from "../light-godwoken/godwoken/godwokenV0";
 import LightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
-  unlock: (payload: UnlockPayload) => Promise<Hash>;
+  unlock: (payload: UnlockPayload) => Promise<string>;
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements MockLightGodwokenV0Interface {

@@ -63,10 +63,14 @@ interface DepositListener {
 
 export interface WithdrawalEventEmitter {
   on: WithdrawListener;
+  removeAllListeners(event?: string | symbol): this;
+  emit: (event: "sent" | "pending" | "success" | "fail", payload: any) => void;
 }
 
 export interface DepositEventEmitter {
   on: DepositListener;
+  removeAllListeners(event?: string | symbol): this;
+  emit: (event: "sent" | "pending" | "success" | "fail", payload: any) => void;
 }
 
 export interface BaseWithdrawalEventEmitterPayload {

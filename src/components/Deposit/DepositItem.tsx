@@ -9,7 +9,7 @@ import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeBu
 
 import { COLOR } from "../../style/variables";
 import { useClock } from "../../hooks/useClock";
-import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { message, Tooltip } from "antd";
 
 const StyleWrapper = styled.div`
@@ -209,7 +209,21 @@ const DepositItem = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" && (cancelAble ? <SecondeButton onClick={showModal}>cancel</SecondeButton> : `pending`)}
+          {status === "pending" &&
+            (cancelAble ? (
+              <SecondeButton onClick={showModal}>cancel</SecondeButton>
+            ) : (
+              <span>
+                pending...{" "}
+                <Tooltip
+                  title={
+                    "This deposit will be committed in a few minites, you can cancel deposit here if it takes longer than 7 days."
+                  }
+                >
+                  <QuestionCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+                </Tooltip>
+              </span>
+            ))}
           {status === "success" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />

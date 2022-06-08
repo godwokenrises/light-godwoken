@@ -36,6 +36,8 @@ export function useL1TxHistory(storageKey: string) {
 
   const addTxToHistory = useCallback(
     (newTxHistory: L1TxHistoryInterface) => {
+      console.log("addTxToHistory", newTxHistory, storageKey);
+
       if (storageKey == null) {
         return;
       }
@@ -79,13 +81,39 @@ export function useL1TxHistory(storageKey: string) {
     [storageValue, storageKey],
   );
 
+  const updateTxWithStatus = useCallback(
+    (txHash: string, status: string) => {
+      if (storageKey == null) {
+        return;
+      }
+      const latestTxHistoryRaw = storageValue || "[]";
+      try {
+        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
+        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
+          if (tx.txHash === txHash) {
+            tx = { ...tx, status };
+            return tx;
+          }
+          return tx;
+        });
+        writeStorage(storageKey, JSON.stringify(newHistory));
+        setTxHistory(newHistory);
+        console.log("updateTxWithStatus", txHash, status, newHistory);
+      } catch (err) {
+        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+      }
+    },
+    [storageKey, storageValue],
+  );
+
   return useMemo(
     () => ({
       txHistory,
       addTxToHistory,
       setTxHistory,
       updateTxHistory,
+      updateTxWithStatus,
     }),
-    [addTxToHistory, txHistory, updateTxHistory],
+    [addTxToHistory, txHistory, updateTxHistory, updateTxWithStatus],
   );
 }

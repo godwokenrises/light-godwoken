@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { Token } from "../../light-godwoken/lightGodwokenType";
+import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
 import CKBInputPanel from "../Input/CKBInputPanel";
@@ -62,24 +62,23 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: L1TxHistoryInt
     }
 
     setLoading(true);
-    let e = new EventEmitter();
+    let eventEmitter: WithdrawalEventEmitter;
     try {
-      await (lightGodwoken as LightGodwokenV1).withdraw(e, {
+      eventEmitter = await (lightGodwoken as LightGodwokenV1).withdrawWithEvent({
         capacity: capacity,
         amount: amount,
         sudt_script_hash: sudt_script_hash,
       });
-      setCKBInput("");
-      setSudtValue("");
-      setLoading(false);
     } catch (e) {
       handleError(e, selectedSudt);
       setLoading(false);
       return;
     }
 
-    e.on("sent", (txHash) => {
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it to be committed` });
+    eventEmitter.on("sent", (txHash) => {
+      notification.success({ message: `Withdrawal Tx(${txHash}) has been sent, waiting for it to be committed.` });
+      setCKBInput("");
+      setSudtValue("");
       setLoading(false);
       addTxToHistory({
         type: "withdrawal",
@@ -87,15 +86,12 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: L1TxHistoryInt
         capacity,
         amount,
         token: selectedSudt,
-        status: "pending",
+        status: "l2Pending",
       });
     });
 
-    e.on("success", (txHash) => {
-      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
-    });
-
-    e.on("fail", (result: unknown) => {
+    eventEmitter.on("fail", (result: unknown) => {
+      console.log("fail triggerd:", result);
       setLoading(false);
       handleError(result, selectedSudt);
     });

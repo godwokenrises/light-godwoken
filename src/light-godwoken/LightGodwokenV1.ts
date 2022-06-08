@@ -296,7 +296,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       }
     }
     eventEmitter.emit("sent", txHash);
-    debug("withdrawal request result:", txHash);
+    debug("withdrawal request result:", txHash, eventEmitter);
     this.waitForWithdrawalToComplete(txHash, eventEmitter);
   }
 

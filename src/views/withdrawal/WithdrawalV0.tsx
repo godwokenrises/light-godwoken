@@ -1,4 +1,4 @@
-import { WithdrawalList } from "../../components/Withdrawal/List";
+import { WithdrawalList } from "../../components/Withdrawal/ListV0";
 import Unlock from "../../components/Withdrawal/Unlock";
 import RequestWithdrawal from "../../components/Withdrawal/RequestWithdrawalV0";
 import { Card, CardHeader, PageContent, Text } from "../../style/common";

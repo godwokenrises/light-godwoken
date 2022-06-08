@@ -508,7 +508,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return eventEmitter;
   }
 
-  waitForWithdrawalToComplete(txHash: HexString, eventEmitter: EventEmitter) {
+  waitForWithdrawalToComplete(txHash: HexString, eventEmitter: WithdrawalEventEmitter) {
     const maxLoop = 30;
     let loop = 0;
     const nIntervId = setInterval(async () => {
@@ -525,14 +525,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         eventEmitter.emit("pending", txHash);
       }
       if (withdrawal && withdrawal.status === "committed") {
-        debug("withdrawal committed:", withdrawal);
+        debug("withdrawal committed:", txHash, withdrawal);
         eventEmitter.emit("success", txHash);
         clearInterval(nIntervId);
       }
     }, 10000);
   }
 
-  subscribPendingWithdrawalTransactions(txHashList: Hash[]): DepositEventEmitter {
+  subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
     for (let index = 0; index < txHashList.length; index++) {
       const txHash = txHashList[index];

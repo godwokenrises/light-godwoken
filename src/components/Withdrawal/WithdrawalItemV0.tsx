@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import getTimePeriods from "../../utils/getTimePeriods";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
-import { BI, Cell, HexNumber } from "@ckb-lumos/lumos";
+import { BI, Cell, HexNumber, HexString } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
@@ -12,6 +12,7 @@ import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
+import Unlock from "./Unlock";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -62,6 +63,10 @@ const StyleWrapper = styled.div`
   .list-detail {
     padding-top: 10px;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
+    a {
+      color: ${COLOR.brand};
+      text-decoration: none;
+    }
   }
 `;
 
@@ -85,7 +90,7 @@ export interface IWithdrawalRequestCardProps {
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
-  unlockButton?: (cell?: Cell) => JSX.Element;
+  txHash?: HexString;
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
@@ -95,11 +100,12 @@ const WithdrawalRequestCard = ({
   erc20,
   now = 0,
   cell,
-  unlockButton,
+  txHash,
 }: IWithdrawalRequestCardProps) => {
   const [shouldShowMore, setShouldShowMore] = useState(false);
   const [blockProduceTime, setBlockProduceTime] = useState(0);
   const lightGodwoken = useLightGodwoken();
+  const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
 
   useEffect(() => {
     const fetchBlockProduceTime = async () => {
@@ -165,7 +171,7 @@ const WithdrawalRequestCard = ({
         <div className="right-side">
           {status === "pending" &&
             (isMature ? (
-              unlockButton && cell && unlockButton(cell)
+              cell && <Unlock cell={cell}></Unlock>
             ) : shouldShowMore ? (
               <div className="time">
                 <ArrowUpIcon />
@@ -183,9 +189,11 @@ const WithdrawalRequestCard = ({
               </div>
             ))}
           {status === "success" && (
-            <Tooltip title={status}>
-              <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
-            </Tooltip>
+            <>
+              <Tooltip title={status}>
+                <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+              </Tooltip>
+            </>
           )}
           {status === "fail" && (
             <Tooltip title={status}>
@@ -194,6 +202,15 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
+      {status === "success" && (
+        <div className="list-detail">
+          <FixedHeightRow>
+            <MainText title={txHash}>
+              <a href={`${l1ScannerUrl}/transaction/${txHash}`}>Open In Explorer</a>
+            </MainText>
+          </FixedHeightRow>
+        </div>
+      )}
       {shouldShowMore && (
         <div className="list-detail">
           <FixedHeightRow>

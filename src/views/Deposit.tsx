@@ -130,7 +130,6 @@ export default function Deposit() {
     const listener = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
     if (listener) {
       listener.on("success", (txHash) => {
-        notification.success({ message: `Deposit Tx(${txHash}) is successful` });
         updateTxWithStatus(txHash, "success");
       });
       listener.on("fail", (e) => {
@@ -141,10 +140,21 @@ export default function Deposit() {
       listener.on("pending", (txHash) => {
         updateTxWithStatus(txHash, "pending");
       });
-      (depositListListener as EventEmitter).removeAllListeners();
       setDepositListListener(listener);
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, godwokenVersion, txHistory]);
+
+  useEffect(() => {
+    return function cleanup() {
+      console.log("cleanup subscribPendingDepositTransactions");
+      console.log(
+        "depositListListener listener counndt",
+        (depositListListener as EventEmitter).listenerCount("success"),
+      );
+      depositListListener.removeAllListeners();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightGodwoken, godwokenVersion, txHistory]);
 

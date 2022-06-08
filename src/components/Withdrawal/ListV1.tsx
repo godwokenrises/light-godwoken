@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from "react";
-import { useClock } from "../../hooks/useClock";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
@@ -9,6 +8,8 @@ import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
 import LightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
+import EventEmitter from "events";
+import { WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -22,12 +23,13 @@ const WithdrawalListDiv = styled.div`
 
 interface Props {
   txHistory: L1TxHistoryInterface[];
+  updateTxWithStatus: (txHash: string, status: string) => void;
 }
 
-export const WithdrawalList: React.FC<Props> = ({ txHistory }) => {
+export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, updateTxWithStatus }) => {
   const lightGodwoken = useLightGodwoken();
-  const now = useClock();
   const [active, setActive] = useState("pending");
+  const [withdrawalEventEmitter, setWithdrawalEventEmitter] = useState(new EventEmitter() as WithdrawalEventEmitter);
   const changeViewToPending = () => {
     setActive("pending");
   };
@@ -43,10 +45,38 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory }) => {
       enabled: !!lightGodwoken,
     },
   );
-  const { data: withdrawalList, isLoading } = withdrawalListQuery;
+  const { data: withdrawalList, isLoading, refetch: refetchWithdrawalList } = withdrawalListQuery;
 
   const pendingList = withdrawalList?.filter((history) => history.status === "pending") || [];
   const completedList = withdrawalList?.filter((history) => history.status !== "pending") || [];
+  console.log("withdrawalList v1 in local storage", localTxHistory);
+  const displayLocalTxHistory = localTxHistory
+    .filter((history) => history.status === "l2Pending")
+    .map((history) => {
+      return {
+        ...history,
+        status: "l2Pending",
+      };
+    });
+
+  useEffect(() => {
+    const l2PendingList = localTxHistory.filter((history) => history.status === "l2Pending");
+    const newWithdrawalEventEmitter = (lightGodwoken as LightGodwokenV1).subscribPendingWithdrawalTransactions(
+      l2PendingList.map((tx) => tx.txHash),
+    );
+    setWithdrawalEventEmitter(newWithdrawalEventEmitter);
+    return function cleanup() {
+      withdrawalEventEmitter.removeAllListeners();
+      newWithdrawalEventEmitter.removeAllListeners();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, localTxHistory]);
+
+  withdrawalEventEmitter.on("success", (txHash) => {
+    console.log("success triggerd in subscribe withdrawal", txHash);
+    updateTxWithStatus(txHash, "l2Success");
+    refetchWithdrawalList();
+  });
 
   if (!lightGodwoken) {
     return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
@@ -71,9 +101,12 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory }) => {
       </LinkList>
       {active === "pending" && (
         <div className="list pending-list">
-          {pendingList.length === 0 && "There is no pending withdrawal request here"}
+          {pendingList.length + displayLocalTxHistory.length === 0 && "There is no pending withdrawal request here"}
+          {displayLocalTxHistory.map((withdraw, index) => (
+            <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
+          ))}
           {pendingList.map((withdraw, index) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
           ))}
         </div>
       )}
@@ -81,7 +114,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory }) => {
         <div className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw, index) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
           ))}
         </div>
       )}
