@@ -29,6 +29,7 @@ import { LightGodwokenConfig } from "./constants/configTypes";
 import { isMainnet } from "./env";
 import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
+import { isSpecialWallet } from "./utils";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -156,7 +157,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (!dummySign) {
       signedMessage = await this.ethereum.request({
         method: "personal_sign",
-        params: [this.ethereum.selectedAddress, message],
+        params: isSpecialWallet() ? [message] : [this.ethereum.selectedAddress, message],
       });
     }
     let v = Number.parseInt(signedMessage.slice(-2), 16);
