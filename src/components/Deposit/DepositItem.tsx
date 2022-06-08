@@ -2,21 +2,23 @@ import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI, Cell } from "@ckb-lumos/lumos";
-import { SUDT } from "../../light-godwoken/lightGodwokenType";
+import { Token } from "../../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
 
 import { COLOR } from "../../style/variables";
-import getTimePeriods from "../../utils/getTimePeriods";
 import { useClock } from "../../hooks/useClock";
-import { LoadingOutlined } from "@ant-design/icons";
-import { message } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { message, Tooltip } from "antd";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
   padding: 16px;
   border-radius: 12px;
+  & + & {
+    margin-top: 16px;
+  }
   .main-row {
     display: flex;
     flex-direction: row;
@@ -24,6 +26,7 @@ const StyleWrapper = styled.div`
     font-weight: 400;
     line-height: 1.5;
     font-size: 14px;
+    flex-wrap: wrap;
   }
   .amount {
     display: flex;
@@ -41,12 +44,16 @@ const StyleWrapper = styled.div`
     .sudt-amount + .ckb-amount {
       margin-top: 10px;
     }
+    &:hover {
+      cursor: pointer;
+    }
   }
   .right-side {
     height: 40px;
     display: flex;
     align-self: center;
     align-items: center;
+    justify-content: center;
   }
   .time {
     font-size: 12px;
@@ -57,7 +64,12 @@ const StyleWrapper = styled.div`
   }
   .list-detail {
     padding-top: 10px;
+    width: 100%;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
+    a {
+      color: ${COLOR.brand};
+      text-decoration: none;
+    }
   }
 `;
 
@@ -105,16 +117,29 @@ const ModalContent = styled.div`
 export interface Props {
   capacity: BI;
   amount: BI;
-  sudt?: SUDT;
-  rawCell: Cell;
-  cancelTime: BI;
+  token?: Token;
+  rawCell?: Cell;
+  cancelTime?: BI;
+  status: string;
+  txHash: string;
 }
-const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => {
+
+const DepositItem = ({
+  capacity,
+  amount,
+  token,
+  rawCell,
+  status,
+  txHash,
+  cancelTime = BI.from(7 * 24)
+    .mul(3600)
+    .mul(1000),
+}: Props) => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
-
+  const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
   const [CKBAmount] = useMemo(() => {
     if (capacity.eq("0")) {
       console.error("[warn] a withdrawal request cell with zero capacity");
@@ -124,25 +149,21 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
   }, [capacity]);
 
   const [sudtAmount] = useMemo(() => {
-    if (amount.eq(0) || !sudt) {
+    if (amount.eq(0) || !token) {
       return ["", ""];
     }
-    return [`${getDisplayAmount(amount, sudt.decimals)} ${sudt.symbol}`];
-  }, [amount, sudt]);
+    return [`${getDisplayAmount(amount, token.decimals)} ${token.symbol}`];
+  }, [amount, token]);
 
   const estimatedArrivalDate = useMemo(() => Date.now() + cancelTime.toNumber(), [cancelTime]);
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const cancelAble = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
 
-  const {
-    days: daysLeft,
-    hours: hoursLeft,
-    minutes: minutesLeft,
-    seconds: secondsLeft,
-  } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
-
   const cancelDeposit = async () => {
     setIsCancel(true);
+    if (!rawCell) {
+      throw new Error("no raw found");
+    }
     try {
       await lightGodwoken?.cancelDeposit(rawCell);
       message.success("cancel deposit request success");
@@ -166,13 +187,17 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
+
+  const goExpoloer = () => {
+    window.open(`${l1ScannerUrl}/transaction/${txHash}`, "_blank");
+  };
   return (
     <StyleWrapper>
       <div className="main-row">
-        <div className="amount">
+        <div className="amount" onClick={goExpoloer}>
           {sudtAmount && (
             <div className="sudt-amount">
-              {sudt?.tokenURI ? <img src={sudt?.tokenURI} alt="" /> : ""}
+              {token?.tokenURI ? <img src={token?.tokenURI} alt="" /> : ""}
               <MainText>{sudtAmount}</MainText>
             </div>
           )}
@@ -184,17 +209,36 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
           </div>
         </div>
         <div className="right-side">
-          {cancelAble ? (
-            <SecondeButton onClick={showModal}>cancel</SecondeButton>
-          ) : (
-            <MainText title="Estimated time left">
-              {daysLeft > 0
-                ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
-                : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-                    .toString()
-                    .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
-            </MainText>
+          {status === "pending" &&
+            (cancelAble ? (
+              <SecondeButton onClick={showModal}>cancel</SecondeButton>
+            ) : (
+              <span>
+                pending...{" "}
+                <Tooltip
+                  title={
+                    "This deposit will be committed in a few minites, you can cancel deposit here if it takes longer than 7 days."
+                  }
+                >
+                  <QuestionCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+                </Tooltip>
+              </span>
+            ))}
+          {status === "success" && (
+            <Tooltip title={status}>
+              <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
           )}
+          {status === "fail" && (
+            <Tooltip title={status}>
+              <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
+          )}
+        </div>
+        <div className="list-detail">
+          <MainText title={txHash}>
+            <a href={`${l1ScannerUrl}/transaction/${txHash}`}>Open In Explorer</a>
+          </MainText>
         </div>
       </div>
       <ConfirmModal
@@ -209,7 +253,7 @@ const DepositItem = ({ capacity, amount, sudt, rawCell, cancelTime }: Props) => 
           <div className="amount">
             {sudtAmount && (
               <div className="sudt-amount">
-                {sudt?.tokenURI ? <img src={sudt?.tokenURI} alt="" /> : ""}
+                {token?.tokenURI ? <img src={token?.tokenURI} alt="" /> : ""}
                 <MainText>{sudtAmount}</MainText>
               </div>
             )}

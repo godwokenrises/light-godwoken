@@ -9,10 +9,8 @@ import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
-import { SUDT, Token } from "../light-godwoken/lightGodwokenType";
-import { TransactionHistory } from "../components/TransactionHistory";
+import { DepositEventEmitter, SUDT, Token } from "../light-godwoken/lightGodwokenType";
 import { useL1TxHistory } from "../hooks/useL1TxHistory";
-import { useChainId } from "../hooks/useChainId";
 import {
   ConfirmModal,
   Card,
@@ -32,9 +30,17 @@ import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
 import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
 import { DepositList } from "../components/Deposit/List";
-import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../light-godwoken/constants/error";
+import {
+  LightGodwokenError,
+  NotEnoughCapacityError,
+  NotEnoughSudtError,
+  TransactionSignError,
+} from "../light-godwoken/constants/error";
 import { getFullDisplayAmount } from "../utils/formatTokenAmount";
 import { captureException } from "@sentry/react";
+import EventEmitter from "events";
+import { useQuery } from "react-query";
+import { useGodwokenVersion } from "../hooks/useGodwokenVersion";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -61,8 +67,91 @@ export default function Deposit() {
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const ethAddress = lightGodwoken?.provider.getL2Address();
-  const { data: chainId } = useChainId();
-  const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/deposit`);
+  const godwokenVersion = useGodwokenVersion();
+
+  const historyKey = `${godwokenVersion}/${l1Address}/deposit`;
+  const { txHistory, updateTxHistory, addTxToHistory } = useL1TxHistory(historyKey);
+
+  const [depositListListener, setDepositListListener] = useState(new EventEmitter() as DepositEventEmitter);
+
+  const depositListQuery = useQuery(
+    ["queryDepositList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
+    () => {
+      return lightGodwoken?.getDepositList();
+    },
+    {
+      enabled: !!lightGodwoken,
+    },
+  );
+
+  const { data: depositList, isLoading: depositListLoading } = depositListQuery;
+
+  depositList?.forEach((deposit) => {
+    if (!txHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
+      addTxToHistory({
+        type: "deposit",
+        capacity: deposit.capacity.toHexString(),
+        amount: deposit.amount.toHexString(),
+        token: deposit.sudt,
+        txHash: deposit.rawCell.out_point?.tx_hash || "",
+        status: "pending",
+      });
+    }
+  });
+
+  const formattedTxHistory = useMemo(
+    () =>
+      txHistory.map((history) => {
+        const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
+        return {
+          capacity: BI.from(history.capacity),
+          amount: BI.from(history.amount),
+          token: history.token,
+          txHash: history.txHash,
+          status: history.status || "pending",
+          rawCell: targetDeposit?.rawCell,
+          cancelTime: targetDeposit?.cancelTime,
+        };
+      }),
+    [depositList, txHistory],
+  );
+  const updateTxWithStatus = (txHash: string, status: string) => {
+    const result = txHistory.find((tx) => {
+      return tx.txHash === txHash;
+    });
+    if (result) {
+      result.status = status;
+      updateTxHistory(result);
+    }
+  };
+  useMemo(() => {
+    const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
+    const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
+    const listener = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
+    if (listener) {
+      listener.on("success", (txHash) => {
+        updateTxWithStatus(txHash, "success");
+      });
+      listener.on("fail", (e) => {
+        if (e instanceof LightGodwokenError) {
+          updateTxWithStatus(e.metadata, "fail");
+        }
+      });
+      listener.on("pending", (txHash) => {
+        updateTxWithStatus(txHash, "pending");
+      });
+      setDepositListListener(listener);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, godwokenVersion, txHistory]);
+
+  useEffect(() => {
+    return function cleanup() {
+      depositListListener.removeAllListeners();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, godwokenVersion, txHistory]);
 
   const handleError = (e: unknown, selectedSudt?: SUDT) => {
     console.error(e);
@@ -101,37 +190,35 @@ export default function Deposit() {
       message: `Unknown Error, Please try again later`,
     });
   };
-  const showModal = async () => {
-    if (lightGodwoken) {
-      const capacity = parseStringToBI(CKBInput, 8).toHexString();
-      let amount = "0x0";
-      if (selectedSudt && sudtInput) {
-        amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
-      }
-      setIsModalVisible(true);
-      try {
-        const hash = await lightGodwoken.deposit({
-          capacity: capacity,
-          amount: amount,
-          sudtType: selectedSudt?.type,
-        });
-
-        addTxToHistory({
-          type: "deposit",
-          txHash: hash,
-          capacity,
-          amount,
-          symbol: selectedSudt?.symbol,
-          decimals: selectedSudt?.decimals,
-        });
-        notification.success({ message: `deposit Tx(${hash}) is successful` });
-        setCKBInput("");
-        setSudtInputValue("");
-      } catch (e) {
-        handleError(e, selectedSudt);
-        setIsModalVisible(false);
-      }
+  const deposit = async () => {
+    if (!lightGodwoken) {
+      throw new Error("LightGodwoken not found");
+    }
+    const capacity = parseStringToBI(CKBInput, 8).toHexString();
+    let amount = "0x0";
+    if (selectedSudt && sudtInput) {
+      amount = parseStringToBI(sudtInput, selectedSudt.decimals).toHexString();
+    }
+    setIsModalVisible(true);
+    try {
+      const txHash = await lightGodwoken.deposit({
+        capacity: capacity,
+        amount: amount,
+        sudtType: selectedSudt?.type,
+      });
+      addTxToHistory({
+        type: "deposit",
+        txHash: txHash,
+        capacity,
+        amount,
+        token: selectedSudt,
+        status: "pending",
+      });
       setIsModalVisible(false);
+    } catch (e) {
+      handleError(e, selectedSudt);
+      setIsModalVisible(false);
+      return;
     }
   };
 
@@ -171,7 +258,6 @@ export default function Deposit() {
           <CardHeader className="header">
             <Text className="title">
               <span>Deposit To Layer2</span>
-              <TransactionHistory type="deposit"></TransactionHistory>
             </Text>
             <Text className="description">
               To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
@@ -203,13 +289,13 @@ export default function Deposit() {
             tokenList={tokenList}
             dataLoading={sudtBalanceQUery.isLoading}
           ></CurrencyInputPanel>
-          <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={showModal}>
+          <PrimaryButton disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate} onClick={deposit}>
             {inputError || "Deposit"}
           </PrimaryButton>
         </div>
       </Card>
       <Card>
-        <DepositList></DepositList>
+        <DepositList formattedTxHistory={formattedTxHistory} isLoading={depositListLoading} />
       </Card>
       <ConfirmModal
         title="Confirm Transaction"

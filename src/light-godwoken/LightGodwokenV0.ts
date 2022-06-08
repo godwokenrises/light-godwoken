@@ -23,7 +23,7 @@ import {
   WithdrawalEventEmitterPayload,
   GodwokenVersion,
   LightGodwokenV0,
-  WithdrawResult,
+  WithdrawResultWithCell,
   ProxyERC20,
   SUDT,
   GetErc20Balances,
@@ -173,10 +173,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await contract.methods.balanceOf(this.provider.l2Address).call();
   }
 
-  async listWithdraw(): Promise<WithdrawResult[]> {
+  async listWithdraw(): Promise<WithdrawResultWithCell[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
     debug("searchParams is:", searchParams);
-    const collectedCells: WithdrawResult[] = [];
+    const collectedCells: WithdrawResultWithCell[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
 
@@ -282,7 +282,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     payload: WithdrawalEventEmitterPayload,
     withdrawToV1 = false,
   ): Promise<void> {
-    eventEmitter.emit("sending");
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
@@ -297,7 +296,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       signatureMetamaskPersonalSign = await this.signMessageMetamaskPersonalSign(message);
     } catch (e) {
       const error = new TransactionSignError(message, (e as Error).message);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
     debug("signatureMetamaskPersonalSign:", signatureMetamaskPersonalSign);
@@ -320,31 +319,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
       )) as unknown as HexString;
     } catch (e: any) {
-      eventEmitter.emit("error", new Layer2RpcError(txHash, e.message));
+      eventEmitter.emit("fail", new Layer2RpcError(txHash, e.message));
       return;
     }
     eventEmitter.emit("sent", txHash);
     debug("withdrawal request result:", txHash);
-    const maxLoop = 100;
-    let loop = 0;
-    const nIntervId = setInterval(async () => {
-      loop++;
-      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
-      if (withdrawal && withdrawal.status === "pending") {
-        debug("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", txHash);
-      }
-      if (withdrawal && withdrawal.status === "committed") {
-        debug("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", txHash);
-        clearInterval(nIntervId);
-      }
-      if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", txHash);
-        debugProductionEnv("withdrawal fail:", txHash);
-        clearInterval(nIntervId);
-      }
-    }, 10000);
+    this.waitForWithdrawalToComplete(txHash, eventEmitter);
   }
 
   async generateRawWithdrawalRequest(
@@ -386,7 +366,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         { expected: BI.from(minCapacity), actual: BI.from(payload.capacity) },
         message,
       );
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -400,7 +380,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         errMsg,
       );
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -416,7 +396,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           errMsg,
         );
         debugProductionEnv(error);
-        eventEmitter.emit("error", error);
+        eventEmitter.emit("fail", error);
         throw error;
       }
     }

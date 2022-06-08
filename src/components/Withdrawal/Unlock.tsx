@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { notification } from "antd";
-import { Cell } from "@ckb-lumos/lumos";
+import { Cell, utils } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { Actions, ConfirmModal, LoadingWrapper, PlainButton, SecondeButton, Text, Tips } from "../../style/common";
 import { LoadingOutlined } from "@ant-design/icons";
 import { NotEnoughCapacityError } from "../../light-godwoken/constants/error";
 import { captureException } from "@sentry/react";
+import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import { useL1TxHistory } from "../../hooks/useL1TxHistory";
+import { Token } from "../../light-godwoken/lightGodwokenType";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -26,6 +29,16 @@ const Unlock = ({ cell }: Props) => {
   const lightGodwoken = useLightGodwoken();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const godwokenVersion = useGodwokenVersion();
+  const l1Address = lightGodwoken?.provider.getL1Address();
+  const { addTxToHistory } = useL1TxHistory(`${godwokenVersion}/${l1Address}/withdrawal`);
+  const tokenMap = lightGodwoken?.getBuiltinSUDTMapByTypeHash() || {};
+
+  let token: Token, amount: string;
+  if (cell.cell_output.type) {
+    token = tokenMap[utils.computeScriptHash(cell.cell_output.type)];
+    amount = utils.readBigUInt128LECompatible(cell.data).toHexString();
+  }
   if (lightGodwoken?.getVersion().toString() !== "v0") {
     return <></>;
   }
@@ -38,6 +51,14 @@ const Unlock = ({ cell }: Props) => {
           window.open(`${lightGodwoken.getConfig().layer1Config.SCANNER_URL}/transaction/${txHash}`, "_blank");
         };
         notification.success({ message: `Unlock Tx(${txHash}) is successful`, onClick: linkToExplorer });
+        addTxToHistory({
+          type: "withdrawal",
+          txHash,
+          capacity: cell.cell_output.capacity,
+          amount: amount,
+          token: token,
+          status: "success",
+        });
       } catch (e) {
         console.error(e);
         if (e instanceof NotEnoughCapacityError) {

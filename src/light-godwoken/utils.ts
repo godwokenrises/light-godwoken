@@ -1,3 +1,3 @@
 export const isSpecialWallet = () => {
-  return (window.ethereum as any)?.isSafePal || (window.ethereum as any)?.isAlphaWallet;
+  return window && ((window.ethereum as any)?.isSafePal || (window.ethereum as any)?.isAlphaWallet);
 };

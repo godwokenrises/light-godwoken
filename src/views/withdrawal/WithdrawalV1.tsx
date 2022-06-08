@@ -1,13 +1,18 @@
-import { TransactionHistory } from "../../components/TransactionHistory";
-import { WithdrawalList } from "../../components/Withdrawal/List";
+import { WithdrawalList } from "../../components/Withdrawal/ListV1";
 import RequestWithdrawalV1 from "../../components/Withdrawal/RequestWithdrawalV1";
-import { ResultList } from "./WithdrawalStyle";
 import { Card, CardHeader, PageContent, Text } from "../../style/common";
 import { WalletConnect } from "../../components/WalletConnect";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 
 const WithdrawalV1: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
+  const godwokenVersion = useGodwokenVersion();
+  const l1Address = lightGodwoken?.provider.getL1Address();
+  const { txHistory, addTxToHistory, updateTxWithStatus } = useL1TxHistory(
+    `${godwokenVersion}/${l1Address}/withdrawal`,
+  );
 
   return (
     <PageContent>
@@ -17,26 +22,16 @@ const WithdrawalV1: React.FC = () => {
           <CardHeader>
             <Text className="title">
               <span>Withdrawal</span>
-              <TransactionHistory type="withdrawal"></TransactionHistory>
             </Text>
           </CardHeader>
           <div className="request-withdrawal">
-            <RequestWithdrawalV1></RequestWithdrawalV1>
+            <RequestWithdrawalV1 addTxToHistory={addTxToHistory}></RequestWithdrawalV1>
           </div>
         </div>
       </Card>
       {lightGodwoken && (
         <Card className="content">
-          <ResultList className="withdrawal-request">
-            <CardHeader>
-              <Text className="title">
-                <span>Withdrawal Request List</span>
-              </Text>
-            </CardHeader>
-            <div className="list">
-              <WithdrawalList></WithdrawalList>
-            </div>
-          </ResultList>
+          <WithdrawalList txHistory={txHistory} updateTxWithStatus={updateTxWithStatus}></WithdrawalList>
         </Card>
       )}
     </PageContent>

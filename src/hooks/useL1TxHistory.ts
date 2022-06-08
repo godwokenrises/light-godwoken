@@ -1,5 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { useLocalStorage, writeStorage } from "@rehooks/local-storage";
+import { writeStorage } from "@rehooks/local-storage";
+import { Token } from "../light-godwoken/lightGodwokenType";
 
 type L1TxType = "deposit" | "withdrawal";
 
@@ -8,6 +9,8 @@ export interface L1TxHistoryInterface {
   txHash: string;
   capacity: string;
   amount: string;
+  token?: Token;
+  status?: string;
   symbol?: string;
   decimals?: number;
   outPoint?: string;
@@ -40,7 +43,11 @@ export function useL1TxHistory(storageKey: string) {
       const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        writeStorage(storageKey, JSON.stringify([newTxHistory].concat(latestTxHistory)));
+        if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newTxHistory.txHash)) {
+          const newTxHistoryList = [newTxHistory].concat(latestTxHistory);
+          setTxHistory(newTxHistoryList);
+          writeStorage(storageKey, JSON.stringify(newTxHistoryList));
+        }
       } catch (err) {
         console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
       }
@@ -48,12 +55,62 @@ export function useL1TxHistory(storageKey: string) {
     [storageValue, storageKey],
   );
 
+  const updateTxHistory = useCallback(
+    (txHistory: L1TxHistoryInterface) => {
+      if (storageKey == null) {
+        return;
+      }
+      const latestTxHistoryRaw = storageValue || "[]";
+      try {
+        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
+        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
+          if (tx.txHash === txHistory.txHash) {
+            tx = { ...tx, ...txHistory };
+            return tx;
+          }
+          return tx;
+        });
+        writeStorage(storageKey, JSON.stringify(newHistory));
+        setTxHistory(newHistory);
+      } catch (err) {
+        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+      }
+    },
+    [storageValue, storageKey],
+  );
+
+  const updateTxWithStatus = useCallback(
+    (txHash: string, status: string) => {
+      if (storageKey == null) {
+        return;
+      }
+      const latestTxHistoryRaw = storageValue || "[]";
+      try {
+        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
+        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
+          if (tx.txHash === txHash) {
+            tx = { ...tx, status };
+            return tx;
+          }
+          return tx;
+        });
+        writeStorage(storageKey, JSON.stringify(newHistory));
+        setTxHistory(newHistory);
+      } catch (err) {
+        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+      }
+    },
+    [storageKey, storageValue],
+  );
+
   return useMemo(
     () => ({
       txHistory,
       addTxToHistory,
       setTxHistory,
+      updateTxHistory,
+      updateTxWithStatus,
     }),
-    [addTxToHistory, txHistory],
+    [addTxToHistory, txHistory, updateTxHistory, updateTxWithStatus],
   );
 }
