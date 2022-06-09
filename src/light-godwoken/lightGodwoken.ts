@@ -27,7 +27,6 @@ import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResultWithCell,
-  GodwokenVersion,
   LightGodwokenBase,
   Token,
   DepositRequest,
@@ -35,10 +34,12 @@ import {
   PendingDepositTransaction,
 } from "./lightGodwokenType";
 import { debug, debugProductionEnv } from "./debug";
-import { LightGodwokenConfig } from "./constants/configTypes";
+import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
+  DepositCellNotFoundError,
   DepositTimeoutError,
+  DepositTxNotFoundError,
   Layer1RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
@@ -48,6 +49,7 @@ import {
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import { isSpecialWallet } from "./utils";
+import { getAdvancedSettings } from "./constants/configManager";
 
 const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -59,7 +61,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract godwokenClient: any;
   abstract getMinimalDepositCapacity(): BI;
   abstract getMinimalWithdrawalCapacity(): BI;
-  abstract generateDepositLock(): Script;
+  abstract generateDepositLock(cancelTimeout?: number): Script;
   abstract getNativeAsset(): Token;
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
@@ -72,6 +74,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  getAdvancedSettings() {
+    const cancelTimeOut = getAdvancedSettings(this.getVersion()).MIN_CANCEL_DEPOSIT_TIME;
+    return {
+      cancelTimeOut,
+    };
+  }
+
+  getCancelTimeout(): number {
+    return this.getAdvancedSettings().cancelTimeOut;
+  }
 
   getCkbBlockProduceTime(): number {
     return 7460;
@@ -103,8 +116,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         rawCell: cell,
         blockNumber: BI.from(cell.block_number),
         capacity: BI.from(cell.cell_output.capacity),
-        cancelTime: BI.from(7 * 24) // hours per week
-          .mul(3600) // seconds  per hour
+        cancelTime: BI.from(this.getCancelTimeout())
           .mul(1000) // milliseconds per second
           .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.block_number)).mul(this.getCkbBlockProduceTime())),
         amount,
@@ -126,8 +138,36 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return depositList;
   }
 
-  async cancelDeposit(cell: Cell): Promise<HexString> {
-    let txSkeleton = await this.createCancelDepositTx(cell);
+  async cancelDeposit(depositTxHash: string, cancelTimeout: number): Promise<HexString> {
+    const depositLock = this.generateDepositLock(cancelTimeout);
+    const tx = await this.provider.ckbRpc.get_transaction(depositTxHash);
+    if (!tx) {
+      throw new DepositTxNotFoundError(depositTxHash, "Deposit transaction not found");
+    }
+    const txOutputs = tx.transaction.outputs;
+    let depositCell: Cell | undefined;
+    for (let index = 0; index < txOutputs.length; index++) {
+      const output = txOutputs[index];
+      if (utils.computeScriptHash(output.lock) === utils.computeScriptHash(depositLock)) {
+        depositCell = {
+          cell_output: {
+            capacity: output.capacity,
+            lock: output.lock,
+            type: output.type,
+          },
+          data: tx.transaction.outputs_data[index],
+          out_point: {
+            tx_hash: depositTxHash,
+            index: BI.from(index).toHexString(),
+          },
+        };
+        break;
+      }
+    }
+    if (!depositCell) {
+      throw new DepositCellNotFoundError(depositTxHash, "Deposit cell not found");
+    }
+    let txSkeleton = await this.createCancelDepositTx(depositCell);
     txSkeleton = await this.payTxFee(txSkeleton);
     const transaction = helpers.createTransactionFromSkeleton(txSkeleton);
     transaction.inputs[1].since = MIN_RELATIVE_TIME;

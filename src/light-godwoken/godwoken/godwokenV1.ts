@@ -1,42 +1,7 @@
 import { RPC } from "ckb-js-toolkit";
 import { Hash, Hexadecimal, HexNumber, HexString, Script } from "@ckb-lumos/base";
-
-export function numberToUInt32LE(value: number): HexString {
-  const buf = Buffer.alloc(4);
-  buf.writeUInt32LE(value);
-  return `0x${buf.toString("hex")}`;
-}
-
-export function UInt32LEToNumber(hex: HexString): number {
-  const buf = Buffer.from(hex.slice(2, 10), "hex");
-  return buf.readUInt32LE(0);
-}
-
-export function u32ToHex(value: number): HexString {
-  return `0x${value.toString(16)}`;
-}
-
-export function hexToU32(hex: HexString): number {
-  // return parseInt(hex.slice(2), "hex");
-  return +hex;
-}
-
-export function toBuffer(ab: ArrayBuffer): Buffer {
-  const buf = Buffer.alloc(ab.byteLength);
-  const view = new Uint8Array(ab);
-  for (let i = 0; i < buf.length; ++i) {
-    buf[i] = view[i];
-  }
-  return buf;
-}
-
-export function toArrayBuffer(buf: Buffer) {
-  const ab = new ArrayBuffer(buf.length);
-  const view = new Uint8Array(ab);
-  for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i];
-  }
-  return ab;
+interface LastL2BlockCommittedInfo {
+  transaction_hash: Hash;
 }
 
 type PolyScript = {
@@ -106,6 +71,9 @@ export class Godwoken {
     return await this.rpcCall("submit_withdrawal_request", data);
   }
 
+  async getLastSubmittedInfo(): Promise<LastL2BlockCommittedInfo> {
+    return await this.rpcCall("get_last_submitted_info");
+  }
   // TODO
   // async function getWithdrawal(withdrawalHash: Hash) {
   //   withdrawal_hash

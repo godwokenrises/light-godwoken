@@ -22,6 +22,7 @@ export type Layer2Config = {
   SCANNER_URL: string;
   SCANNER_API: string;
   CHAIN_NAME: string;
+  MIN_CANCEL_DEPOSIT_TIME: number;
 };
 
 export type ScriptType = {
@@ -47,3 +48,10 @@ export type LightGodwokenConfig = {
   layer1Config: Layer1Config;
   layer2Config: Layer2Config;
 };
+
+export type LightGodwokenConfigMap = {
+  v0: LightGodwokenConfig;
+  v1: LightGodwokenConfig;
+};
+
+export type GodwokenVersion = keyof LightGodwokenConfigMap;
