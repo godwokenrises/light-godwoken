@@ -7,6 +7,8 @@ function getProductionSetting() {
   };
 }
 
+const commitHash = require('child_process').exec('git rev-parse --short HEAD')
+
 module.exports = {
   babel: {
     ...getProductionSetting(),
@@ -15,13 +17,12 @@ module.exports = {
     alias: {},
     plugins: [
       new SentryPlugin({
-        release: "light-godwoken@" + process.env.npm_package_version,
+        release: "light-godwoken@" + process.env.npm_package_version + "@" + commitHash,
         include: "./build",
       }),
-    ],
-    configure: {
+    
       /* Any webpack configuration options: https://webpack.js.org/configuration */
-    },
+    ],
     configure: (webpackConfig, { env, paths }) => {
       return webpackConfig;
     },
