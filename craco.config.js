@@ -7,7 +7,7 @@ function getProductionSetting() {
   };
 }
 
-const commitHash = require('child_process').exec('git rev-parse --short HEAD')
+const commitHash = require('child_process').execSync('git rev-parse --short HEAD')
 
 module.exports = {
   babel: {
