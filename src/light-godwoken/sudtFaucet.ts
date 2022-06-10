@@ -1,3 +1,4 @@
+import { isSpecialWallet } from "./utils";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
@@ -29,10 +30,11 @@ export async function generateClaimUSDCTxSkeleton(
   config: LightGodwokenConfig,
   ethAddress: HexString,
   indexer: any,
+  issuerPrivKey?: HexString,
 ): Promise<helpers.TransactionSkeletonType> {
   const { omni_lock: omniLock, sudt, secp256k1_blake160: secp256k1 } = config.layer1Config.SCRIPTS;
 
-  const issuerPubKey = hd.key.privateToPublic(issuerPrivateKey);
+  const issuerPubKey = hd.key.privateToPublic(issuerPrivKey || issuerPrivateKey);
   const issuerArgs = hd.key.publicKeyToBlake160(issuerPubKey);
   const issuerLock: Script = {
     code_hash: secp256k1.code_hash,
@@ -152,18 +154,21 @@ function getClaimSUDTCellDeps(config: LightGodwokenConfig): CellDep[] {
   ];
 }
 
-async function userSignTransaction(txSkeleton: helpers.TransactionSkeletonType, ethereum: any): Promise<HexString> {
+export async function userSignTransaction(
+  txSkeleton: helpers.TransactionSkeletonType,
+  ethereum: any,
+): Promise<HexString> {
   const message = generateUserMessage(txSkeleton);
   let signedMessage = await ethereum.request({
     method: "personal_sign",
-    params: [ethereum.selectedAddress, message],
+    params: isSpecialWallet() ? [message] : [ethereum.selectedAddress, message],
   });
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }),
+      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
     }),
   ).serializeJson();
   return signedWitness;

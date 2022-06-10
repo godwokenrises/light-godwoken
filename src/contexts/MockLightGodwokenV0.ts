@@ -1,4 +1,4 @@
-import { Hash, HashType, HexNumber, Script } from "@ckb-lumos/lumos";
+import { BI, Hash, HashType, HexNumber, Script } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "../light-godwoken/lightGodwoken";
 import {
@@ -7,7 +7,7 @@ import {
   WithdrawalEventEmitterPayload,
   GodwokenVersion,
   LightGodwokenV0,
-  WithdrawResult,
+  WithdrawResultWithCell,
   ProxyERC20,
   SUDT,
   GetErc20Balances,
@@ -18,10 +18,16 @@ import {
 import { GodwokenClient } from "../light-godwoken/godwoken/godwokenV0";
 import LightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
 export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
-  unlock: (payload: UnlockPayload) => Promise<Hash>;
+  unlock: (payload: UnlockPayload) => Promise<string>;
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 }
 export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements MockLightGodwokenV0Interface {
+  getMinimalDepositCapacity(): BI {
+    throw new Error("Method not implemented.");
+  }
+  getMinimalWithdrawalCapacity(): BI {
+    throw new Error("Method not implemented.");
+  }
   getWithdrawalWaitBlock(): number | Promise<number> {
     throw new Error("Method not implemented.");
   }
@@ -32,6 +38,9 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+  }
+  getMinimalWithdrawalToV1Capacity(): BI {
+    throw new Error("Method not implemented.");
   }
 
   getVersion(): GodwokenVersion {
@@ -134,7 +143,7 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
     return Promise.resolve(result);
   }
 
-  async listWithdraw(): Promise<WithdrawResult[]> {
+  async listWithdraw(): Promise<WithdrawResultWithCell[]> {
     const result = [
       {
         cell: {
@@ -557,9 +566,8 @@ export default class MockLightGodwokenV0 extends DefaultLightGodwoken implements
   }
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
     const txHash = await Promise.resolve("0xb352e1c8dbe5178cc6c40ef7a341d7b15209eb80bb97a0cb5e4fa1f846e8c4a9");
-    eventEmitter.emit("sent", txHash);
+    eventEmitter.emit("pending", txHash);
   }
 
   async unlock(payload: UnlockPayload): Promise<Hash> {

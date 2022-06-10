@@ -46,6 +46,7 @@ export const TOKEN_LIST_V0 = [
 
 export const TOKEN_LIST_V1 = [
   {
+    id: 80,
     symbol: "USDC",
     name: "USD Coin",
     decimals: 18,

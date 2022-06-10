@@ -1,5 +1,5 @@
 import { RPC } from "ckb-js-toolkit";
-import { Hash, Hexadecimal, HexNumber, HexString, Script } from "@ckb-lumos/base";
+import { Hash, HexNumber, HexString, Script } from "@ckb-lumos/base";
 
 export function numberToUInt32LE(value: number): HexString {
   const buf = Buffer.alloc(4);
@@ -39,33 +39,6 @@ export function toArrayBuffer(buf: Buffer) {
   return ab;
 }
 
-type PolyScript = {
-  script: Script;
-  typeHash: Hash;
-};
-
-export type PolyConfig = {
-  nodeInfo: {
-    rollupCell: {
-      typeHash: Hash;
-      typeScript: Script;
-    };
-    rollupConfig: {
-      requiredStakingCapacity: Hexadecimal;
-      challengeMaturityBlocks: Hexadecimal;
-      finalityBlocks: Hexadecimal;
-      rewardBurnRate: Hexadecimal;
-      chainId: Hexadecimal;
-    };
-    gwScripts: {
-      deposit: PolyScript;
-      withdraw: PolyScript;
-    };
-    eoaScripts: {
-      eth: PolyScript;
-    };
-  };
-};
 export class Godwoken {
   private rpc: RPC;
 
@@ -81,12 +54,6 @@ export class Godwoken {
   async getChainId(): Promise<string> {
     const result = await this.rpc["eth_chainId"]();
     console.debug("chain_id:", result);
-    return result;
-  }
-
-  async getConfig(): Promise<PolyConfig> {
-    const result = await this.rpc["poly_version"]();
-    console.debug("poly_version:", result);
     return result;
   }
 

@@ -3,6 +3,7 @@ import {
   Actions,
   ConfirmModal,
   InputInfo,
+  LoadingWrapper,
   MainText,
   PlainButton,
   PrimaryButton,
@@ -13,6 +14,7 @@ import {
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import styled from "styled-components";
 import { formatToThousands } from "../../utils/numberFormat";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const TimeInfo = styled.div`
   width: 100%;
@@ -58,8 +60,8 @@ const SubmitWithdrawal: React.FC<Props> = ({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleSubmit = () => {
-    sendWithdrawal();
+  const handleSubmit = async () => {
+    await sendWithdrawal();
     setIsModalVisible(false);
   };
 
@@ -105,6 +107,14 @@ const SubmitWithdrawal: React.FC<Props> = ({
         <Tips>
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity.
         </Tips>
+        {loading && (
+          <>
+            <LoadingWrapper>
+              <LoadingOutlined />
+            </LoadingWrapper>
+            <Tips>Waiting for User Confirmation</Tips>
+          </>
+        )}
         <Actions>
           <PlainButton onClick={handleCancel}>Cancel</PlainButton>
           <SecondeButton /*loading={loading}*/ onClick={() => handleSubmit()}>Confirm</SecondeButton>

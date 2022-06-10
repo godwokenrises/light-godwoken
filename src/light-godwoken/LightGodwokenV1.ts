@@ -1,4 +1,5 @@
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, CellDep } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -7,12 +8,13 @@ import {
   GodwokenVersion,
   LightGodwokenV1,
   ProxyERC20,
-  WithdrawResult,
   SUDT,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
   Token,
+  WithdrawResultV1,
+  WithdrawResultWithCell,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { getTokenList } from "./constants/tokens";
@@ -30,14 +32,60 @@ import {
   TransactionSignError,
 } from "./constants/error";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
+  listWithdraw(): Promise<WithdrawResultWithCell[]> {
+    throw new Error("Method not implemented.");
+  }
   godwokenClient;
+  godwokenScannerClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
+    this.updateConfigViaRpc();
   }
+
+  async updateConfigViaRpc(): Promise<void> {
+    const rpcConfig = (await this.godwokenClient.getConfig()).nodeInfo;
+    let config = this.provider.getLightGodwokenConfig().layer2Config;
+    const depositCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.deposit.script });
+    config.SCRIPTS.deposit_lock.script_type_hash = rpcConfig.gwScripts.deposit.typeHash;
+    for await (const cell of depositCellcollector.collect()) {
+      const depositCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.deposit_lock.cell_dep = depositCellDep;
+    }
+    const withdrawalCellcollector = this.provider.ckbIndexer.collector({ type: rpcConfig.gwScripts.withdraw.script });
+    config.SCRIPTS.withdrawal_lock.script_type_hash = rpcConfig.gwScripts.withdraw.typeHash;
+    for await (const cell of withdrawalCellcollector.collect()) {
+      const withdrawCellDep: CellDep = {
+        out_point: {
+          tx_hash: cell.out_point!.tx_hash,
+          index: cell.out_point!.index,
+        },
+        dep_type: "code",
+      };
+      config.SCRIPTS.withdrawal_lock.cell_dep = withdrawCellDep;
+    }
+    config.ROLLUP_CONFIG.rollup_type_hash = rpcConfig.rollupCell.typeHash;
+    config.ROLLUP_CONFIG.rollup_type_script = rpcConfig.rollupCell.typeScript;
+
+    const v1ConfigChanged =
+      JSON.stringify(config) !== JSON.stringify(this.provider.getLightGodwokenConfig().layer2Config);
+    if (v1ConfigChanged) {
+      debugProductionEnv("config changed via rpc:", v1ConfigChanged, config);
+    }
+    this.provider.lightGodwokenConfig.layer2Config = config;
+  }
+
   getVersion(): GodwokenVersion {
     return "v1";
   }
+
   getNativeAsset(): Token {
     return {
       name: "Common Knowledge Base",
@@ -53,6 +101,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getWithdrawalWaitBlock(): number {
     return 100;
+  }
+
+  getMinimalDepositCapacity(): BI {
+    return BI.from(400).mul(100000000);
+  }
+
+  getMinimalWithdrawalCapacity(): BI {
+    return BI.from(400).mul(100000000);
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
@@ -99,6 +155,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
+        id: token.id,
         name: token.name,
         symbol: token.symbol,
         decimals: token.decimals,
@@ -146,74 +203,32 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return balance;
   }
 
-  async listWithdraw(): Promise<WithdrawResult[]> {
-    const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
+  async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
+    const ownerLockHash = await this.provider.getLayer1LockScriptHash();
+    const searchParams = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
     debug("searchParams is:", searchParams);
-    const collectedCells: WithdrawResult[] = [];
-    const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-
-    const ownerLockHash = this.provider.getLayer1LockScriptHash();
-
-    for await (const cell of collector.collect()) {
-      debug("iteration --> cell is:", cell);
-
-      // // a rollup_type_hash exists before this args, to make args friendly to prefix search
-      // struct WithdrawalLockArgs {
-      //   withdrawal_block_hash: Byte32,
-      //   withdrawal_block_number: Uint64,
-      //   account_script_hash: Byte32,
-      //   // layer1 lock to withdraw after challenge period
-      //   owner_lock_hash: Byte32,
-      // }
-
-      // according to the args shape:
-      // withdrawal_block_number byte location is 64~72
-      // owner_lock_hash byte location is 104~136
-      const rawLockArgs = cell.cell_output.lock.args;
-      if (rawLockArgs === null || rawLockArgs === undefined) {
-        console.warn("cell args is not valid", cell);
-        continue;
+    const collectedWithdrawals: WithdrawResultV1[] = searchParams.map((item) => {
+      let amount = "0x0";
+      let erc20 = undefined;
+      if (item.udt_id !== 1) {
+        amount = BI.from(item.amount).toHexString();
+        erc20 = this.getBuiltinErc20List().find(
+          (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
+        );
       }
-      const lockArgsOwnerScriptHash = rawLockArgs.slice(210, 274);
-      debug("lockArgsOwnerScriptHash is:", lockArgsOwnerScriptHash);
-
-      const withdrawBlock = utils.readBigUInt64LECompatible(`0x${rawLockArgs.slice(130, 146)}`);
-      debug("withdrawBlock is:", withdrawBlock.toNumber());
-
-      let sudtTypeHash = "0x" + "00".repeat(32);
-      let erc20: ProxyERC20 | undefined = undefined;
-      let amount: HexNumber = "0x0";
-
-      if (cell.cell_output.type) {
-        const sudtType: Script = {
-          code_hash: cell.cell_output.type.code_hash,
-          args: cell.cell_output.type.args,
-          hash_type: cell.cell_output.type.hash_type as HashType,
-        };
-        sudtTypeHash = utils.computeScriptHash(sudtType);
-        const builtinErc20List = this.getBuiltinErc20List();
-        erc20 = builtinErc20List.find((e) => e.sudt_script_hash === sudtTypeHash);
-        amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
-      }
-
-      if (lockArgsOwnerScriptHash === ownerLockHash.slice(2)) {
-        collectedCells.push({
-          cell,
-          withdrawalBlockNumber: withdrawBlock.toNumber(),
-          remainingBlockNumber: Math.max(0, withdrawBlock.toNumber() - lastFinalizedBlockNumber),
-          capacity: cell.cell_output.capacity,
-          amount,
-          sudt_script_hash: sudtTypeHash,
-          erc20,
-        });
-      }
-    }
-    const sortedWithdrawals = collectedCells.sort((a, b) => {
-      return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
+      return {
+        layer1TxHash: item.layer1_tx_hash,
+        withdrawalBlockNumber: item.block_number,
+        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        capacity: BI.from(item.capacity).toHexString(),
+        amount,
+        sudt_script_hash: item.udt_script_hash,
+        erc20,
+        status: item.state === "succeed" ? "success" : item.state,
+      };
     });
-    debug("found withdraw cells:", sortedWithdrawals);
-    return sortedWithdrawals;
+    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -246,7 +261,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
-    eventEmitter.emit("sending");
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     const typedMsg = await this.generateTypedMsg(rawWithdrawalRequest);
     debug("typedMsg:", typedMsg);
@@ -257,7 +271,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         params: [this.provider.l2Address, JSON.stringify(typedMsg)],
       });
     } catch (e: any) {
-      eventEmitter.emit("error", new TransactionSignError(JSON.stringify(typedMsg), e.message));
+      eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
     }
 
     // construct WithdrawalRequestExx tra
@@ -273,35 +287,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     // submit WithdrawalRequestExtra
     const serializedRequest = new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalReqExtra)).serializeJson();
-    const result = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
-    debug("result:", result);
-    if (result !== null) {
-      const errorMessage = (result as any).message;
+    const txHash = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
+    debug("result:", txHash);
+    if (txHash !== null) {
+      const errorMessage = (txHash as any).message;
       if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("error", new Layer2RpcError(result, errorMessage));
+        eventEmitter.emit("fail", new Layer2RpcError(txHash, errorMessage));
       }
     }
-    eventEmitter.emit("sent", result);
-    debug("withdrawal request result:", result);
-    const maxLoop = 100;
-    let loop = 0;
-    const nIntervId = setInterval(async () => {
-      loop++;
-      const withdrawal: any = await this.getWithdrawal(result as Hash);
-      if (withdrawal && withdrawal.status === "pending") {
-        debug("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", result);
-      }
-      if (withdrawal && withdrawal.status === "committed") {
-        debug("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", result);
-        clearInterval(nIntervId);
-      }
-      if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", result);
-        clearInterval(nIntervId);
-      }
-    }, 10000);
+    eventEmitter.emit("sent", txHash);
+    debug("withdrawal request result:", txHash, eventEmitter);
+    this.waitForWithdrawalToComplete(txHash, eventEmitter);
   }
 
   generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {
@@ -393,7 +389,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         errMsg,
       );
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
 
@@ -431,7 +427,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       ).toString()}`;
       const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
       debugProductionEnv(error);
-      eventEmitter.emit("error", error);
+      eventEmitter.emit("fail", error);
       throw error;
     }
   }

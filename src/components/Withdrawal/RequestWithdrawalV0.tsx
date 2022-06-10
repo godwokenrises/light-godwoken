@@ -13,8 +13,6 @@ import { CKB_L1 } from "./const";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
-import { useChainId } from "../../hooks/useChainId";
-import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
@@ -34,9 +32,6 @@ const RequestWithdrawalV0: React.FC = () => {
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
-  const l1Address = lightGodwoken?.provider.getL1Address();
-  const { data: chainId } = useChainId();
-  const { addTxToHistory } = useL1TxHistory(`${chainId}/${l1Address}/withdrawal`);
 
   useEffect(() => {
     if (!CKBBalance) {
@@ -87,29 +82,14 @@ const RequestWithdrawalV0: React.FC = () => {
     }
 
     e.on("sent", (txHash) => {
-      notification.info({ message: `Withdrawal Tx(${txHash}) has sent, waiting for it is committed` });
-      addTxToHistory({
-        type: "withdrawal",
-        txHash,
-        capacity,
-        amount,
-        symbol: selectedSudt?.symbol,
-        decimals: selectedSudt?.decimals,
-      });
+      notification.success({ message: `Withdrawal Tx(${txHash}) has been sent, waiting for it to be committed.` });
+      setCKBInput("");
+      setSudtValue("");
       setLoading(false);
-    });
-
-    e.on("pending", (result) => {
-      console.log("pending triggered", result);
     });
 
     e.on("success", (txHash) => {
-      notification.success({ message: `Withdrawal Tx(${txHash}) is successful` });
-    });
-
-    e.on("error", (result: unknown) => {
-      setLoading(false);
-      handleError(result, selectedSudt);
+      notification.success({ message: `Withdrawal Tx(${txHash}) is successful.` });
     });
 
     e.on("fail", (result: unknown) => {
@@ -117,6 +97,7 @@ const RequestWithdrawalV0: React.FC = () => {
       handleError(result, selectedSudt);
     });
   };
+
   const handleSelectedChange = (value: Token, balance: string) => {
     setSelectedSudt(value as L1MappedErc20);
     setSudtBalance(balance);
