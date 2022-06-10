@@ -1,4 +1,3 @@
-import { predefined_testnet, predefined_mainnet } from "./constants/lightGodwokenConfig";
 import {
   Address,
   Indexer,
@@ -21,14 +20,14 @@ import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
-import { GodwokenVersion, LightGodwokenProvider } from "./lightGodwokenType";
+import { LightGodwokenProvider } from "./lightGodwokenType";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
-import { LightGodwokenConfig } from "./constants/configTypes";
-import { isMainnet } from "./env";
+import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./constants/configTypes";
 import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { isSpecialWallet } from "./utils";
+import { initConfig } from "./constants/configManager";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -38,15 +37,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum;
   web3;
   lightGodwokenConfig;
-  constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfig) {
-    const predefinedLightGodwokenConfig = isMainnet ? predefined_mainnet : predefined_testnet;
+  constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfigMap) {
     if (lightGodwokenConfig) {
-      validateLightGodwokenConfig(lightGodwokenConfig);
+      validateLightGodwokenConfig(lightGodwokenConfig[env]);
     }
     config.initializeConfig(config.predefined.AGGRON4);
-    this.lightGodwokenConfig = lightGodwokenConfig || predefinedLightGodwokenConfig[env];
+    this.lightGodwokenConfig = initConfig(env, lightGodwokenConfig);
 
-    debug("lightGodwokenConfig", lightGodwokenConfig);
     const { layer1Config, layer2Config } = this.lightGodwokenConfig;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);

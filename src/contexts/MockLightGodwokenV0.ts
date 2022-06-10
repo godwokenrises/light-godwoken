@@ -5,7 +5,6 @@ import {
   UnlockPayload,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  GodwokenVersion,
   LightGodwokenV0,
   WithdrawResultWithCell,
   ProxyERC20,
@@ -17,6 +16,7 @@ import {
 } from "../light-godwoken/lightGodwokenType";
 import { GodwokenClient } from "../light-godwoken/godwoken/godwokenV0";
 import LightGodwokenProvider from "../light-godwoken/lightGodwokenProvider";
+import { GodwokenVersion } from "../light-godwoken/constants/configTypes";
 export interface MockLightGodwokenV0Interface extends LightGodwokenV0 {
   unlock: (payload: UnlockPayload) => Promise<string>;
   withdrawToV1WithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;

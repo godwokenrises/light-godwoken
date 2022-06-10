@@ -21,7 +21,6 @@ import {
   UnlockPayload,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  GodwokenVersion,
   LightGodwokenV0,
   WithdrawResultWithCell,
   ProxyERC20,
@@ -51,6 +50,8 @@ import {
   NotEnoughSudtError,
   TransactionSignError,
 } from "./constants/error";
+import { GodwokenVersion } from "./constants/configTypes";
+import { getAdvancedSettings } from "./constants/configManager";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   constructor(provider: LightGodwokenProvider) {
@@ -175,7 +176,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async listWithdraw(): Promise<WithdrawResultWithCell[]> {
     const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    debug("searchParams is:", searchParams);
     const collectedCells: WithdrawResultWithCell[] = [];
     const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
@@ -539,13 +539,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   generateDepositLock(): Script {
+    const cancelTimeOut = getAdvancedSettings("v0").MIN_CANCEL_DEPOSIT_TIME;
     const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
       layer2_lock: layer2Lock,
-      cancel_timeout: BI.from("0xc0000000000004b0"),
+      cancel_timeout: BI.from(`0xc0${BI.from(cancelTimeOut).toHexString().slice(2).padStart(14, "0")}`),
+      // cancel_timeout: BI.from("0xc0000000000004b0"), // default value
       // cancel_timeout: "0xc000000000000001", // min time to test cancel deposit
     };
     const depositLockArgsHexString: HexString = new toolkit.Reader(

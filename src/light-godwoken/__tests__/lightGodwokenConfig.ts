@@ -1,5 +1,4 @@
-import { Layer1Config, LightGodwokenConfig } from "../constants/configTypes";
-import { GodwokenVersion } from "../lightGodwokenType";
+import { Layer1Config, LightGodwokenConfigMap } from "../constants/configTypes";
 
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {
@@ -30,7 +29,7 @@ const layer1ConfigAggron: Layer1Config = {
   SCANNER_URL: "",
 };
 
-export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
+export const testConfig: LightGodwokenConfigMap = {
   v0: {
     layer1Config: layer1ConfigAggron,
     layer2Config: {
@@ -71,6 +70,7 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       SCANNER_URL: "",
       CHAIN_NAME: "",
       SCANNER_API: "",
+      MIN_CANCEL_DEPOSIT_TIME: 1200,
     },
   },
   v1: {
@@ -113,6 +113,7 @@ export const testConfig: Record<GodwokenVersion, LightGodwokenConfig> = {
       CHAIN_NAME: "https://testnet.ckb.dev",
       SCANNER_URL: "",
       SCANNER_API: "",
+      MIN_CANCEL_DEPOSIT_TIME: 604800,
     },
   },
 };

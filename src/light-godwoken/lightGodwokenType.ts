@@ -1,6 +1,6 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { LightGodwokenConfig } from "./constants/configTypes";
+import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -144,8 +144,6 @@ export interface LightGodwokenProvider {
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
 }
 
-export type GodwokenVersion = "v0" | "v1";
-
 export type DepositRequest = {
   blockNumber: BI;
   capacity: BI;
@@ -162,7 +160,7 @@ export interface LightGodwokenBase {
 
   getMinimalWithdrawalCapacity(): BI;
 
-  cancelDeposit(cell: Cell): Promise<HexString>;
+  cancelDeposit(depositTxHash: string, cancelTimeout: number): Promise<HexString>;
 
   getCkbBlockProduceTime(): Promisable<number>;
 

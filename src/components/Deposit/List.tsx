@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";
-import { BI } from "@ckb-lumos/bi";
 import { LinkList, Tab } from "../../style/common";
-import { Token } from "../../light-godwoken/lightGodwokenType";
-import { Cell } from "@ckb-lumos/base";
+import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
 
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -17,18 +15,8 @@ const DepositListDiv = styled.div`
   }
 `;
 
-type TxHistoryType = {
-  capacity: BI;
-  amount: BI;
-  token: Token | undefined;
-  txHash: string;
-  status: string;
-  rawCell: Cell | undefined;
-  cancelTime: BI | undefined;
-};
-
-export const DepositList: React.FC<{ formattedTxHistory: TxHistoryType[]; isLoading: boolean }> = ({
-  formattedTxHistory,
+export const DepositList: React.FC<{ depositHistory: DepositHistoryType[]; isLoading: boolean }> = ({
+  depositHistory,
   isLoading,
 }) => {
   const [active, setActive] = useState("pending");
@@ -39,10 +27,8 @@ export const DepositList: React.FC<{ formattedTxHistory: TxHistoryType[]; isLoad
     setActive("completed");
   };
 
-  const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
-  const completedList = formattedTxHistory.filter(
-    (history) => history.status === "success" || history.status === "fail",
-  );
+  const pendingList = depositHistory.filter((history) => history.status === "pending");
+  const completedList = depositHistory.filter((history) => history.status === "success" || history.status === "fail");
 
   return (
     <DepositListDiv>

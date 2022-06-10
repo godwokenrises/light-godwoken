@@ -17,9 +17,9 @@ beforeEach(() => {
   const dummyEthereum = {
     on: () => {},
   };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig.v1);
+  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig);
   lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
+  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
   sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x9"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve("0x1"));

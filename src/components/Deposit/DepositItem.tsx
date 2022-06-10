@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
-import { BI, Cell } from "@ckb-lumos/lumos";
-import { Token } from "../../light-godwoken/lightGodwokenType";
+import { BI } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
@@ -11,6 +10,9 @@ import { COLOR } from "../../style/variables";
 import { useClock } from "../../hooks/useClock";
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { message, Tooltip } from "antd";
+import { DepositHistoryType, useDepositHistory } from "../../hooks/useDepositTxHistory";
+import { parse } from "date-fns";
+import { DATE_FORMAT } from "../../utils/dateUtils";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -114,58 +116,36 @@ const ModalContent = styled.div`
   }
 `;
 
-export interface Props {
-  capacity: BI;
-  amount: BI;
-  token?: Token;
-  rawCell?: Cell;
-  cancelTime?: BI;
-  status: string;
-  txHash: string;
-}
-
-const DepositItem = ({
-  capacity,
-  amount,
-  token,
-  rawCell,
-  status,
-  txHash,
-  cancelTime = BI.from(7 * 24)
-    .mul(3600)
-    .mul(1000),
-}: Props) => {
+const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTimeout }: DepositHistoryType) => {
   const lightGodwoken = useLightGodwoken();
   const now = useClock();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
+  const { updateTxWithStatus } = useDepositHistory();
   const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
   const [CKBAmount] = useMemo(() => {
-    if (capacity.eq("0")) {
-      console.error("[warn] a withdrawal request cell with zero capacity");
-      return ["", ""];
-    }
-    return [`${getDisplayAmount(capacity, 8)} CKB`];
+    return [`${getDisplayAmount(BI.from(capacity), 8)} CKB`];
   }, [capacity]);
 
   const [sudtAmount] = useMemo(() => {
-    if (amount.eq(0) || !token) {
+    if (BI.from(amount).eq(0) || !token) {
       return ["", ""];
     }
-    return [`${getDisplayAmount(amount, token.decimals)} ${token.symbol}`];
+    return [`${getDisplayAmount(BI.from(amount), token.decimals)} ${token.symbol}`];
   }, [amount, token]);
 
-  const estimatedArrivalDate = useMemo(() => Date.now() + cancelTime.toNumber(), [cancelTime]);
+  cancelTimeout = lightGodwoken?.getAdvancedSettings().cancelTimeOut || 0;
+  const estimatedArrivalDate = useMemo(
+    () => parse(date, DATE_FORMAT, new Date()).getTime() + cancelTimeout * 1000,
+    [cancelTimeout, date],
+  );
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
-  const cancelAble = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
+  const cancelable = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
 
   const cancelDeposit = async () => {
     setIsCancel(true);
-    if (!rawCell) {
-      throw new Error("no raw found");
-    }
     try {
-      await lightGodwoken?.cancelDeposit(rawCell);
+      await lightGodwoken?.cancelDeposit(txHash, cancelTimeout);
       message.success("cancel deposit request success");
     } catch (error) {
       if (error instanceof Error) {
@@ -210,7 +190,7 @@ const DepositItem = ({
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (cancelAble ? (
+            (cancelable ? (
               <SecondeButton onClick={showModal}>cancel</SecondeButton>
             ) : (
               <span>

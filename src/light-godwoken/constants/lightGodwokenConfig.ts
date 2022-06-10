@@ -1,5 +1,4 @@
-import { GodwokenVersion } from "../lightGodwokenType";
-import { Layer1Config, LightGodwokenConfig } from "./configTypes";
+import { Layer1Config, LightGodwokenConfig, LightGodwokenConfigMap } from "./configTypes";
 
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {
@@ -70,10 +69,11 @@ const v0Config: LightGodwokenConfig = {
     SCANNER_URL: "https://aggron.gwscan.com",
     SCANNER_API: "https://aggron.gwscan.com",
     CHAIN_NAME: "Godwoken Testnet v0",
+    MIN_CANCEL_DEPOSIT_TIME: 1200, // 20 minutes in seconds
   },
 };
 
-export const predefined_testnet: Record<GodwokenVersion, LightGodwokenConfig> = {
+export const predefined_testnet: LightGodwokenConfigMap = {
   v0: v0Config,
   v1: {
     layer1Config: layer1ConfigAggron,
@@ -115,11 +115,12 @@ export const predefined_testnet: Record<GodwokenVersion, LightGodwokenConfig> = 
       SCANNER_URL: "https://v1.betanet.gwscan.com/",
       SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Testnet v1.1",
+      MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
     },
   },
 };
 
-export const predefined_mainnet: Record<GodwokenVersion, LightGodwokenConfig> = {
+export const predefined_mainnet: LightGodwokenConfigMap = {
   v0: v0Config,
   v1: {
     layer1Config: layer1ConfigAggron,
@@ -161,6 +162,7 @@ export const predefined_mainnet: Record<GodwokenVersion, LightGodwokenConfig> = 
       SCANNER_URL: "https://v1.aggron.gwscan.com/zh-CN",
       SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Mainet v1.1",
+      MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
     },
   },
 };
