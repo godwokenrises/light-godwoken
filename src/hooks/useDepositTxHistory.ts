@@ -1,4 +1,3 @@
-import { LightGodwokenBase } from "./../light-godwoken/lightGodwokenType";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { writeStorage } from "@rehooks/local-storage";
 import { Token } from "../light-godwoken/lightGodwokenType";

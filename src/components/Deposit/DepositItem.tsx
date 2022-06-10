@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from "react";
 import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
-import { BI, Cell } from "@ckb-lumos/lumos";
-import { Token } from "../../light-godwoken/lightGodwokenType";
+import { BI } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
@@ -12,7 +11,7 @@ import { useClock } from "../../hooks/useClock";
 import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { message, Tooltip } from "antd";
 import { DepositHistoryType, useDepositHistory } from "../../hooks/useDepositTxHistory";
-import { format, parse } from "date-fns";
+import { parse } from "date-fns";
 import { DATE_FORMAT } from "../../utils/dateUtils";
 
 const StyleWrapper = styled.div`

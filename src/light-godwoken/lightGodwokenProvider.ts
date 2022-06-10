@@ -27,7 +27,7 @@ import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./
 import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { isSpecialWallet } from "./utils";
-import { getAdvancedSettings, initConfig } from "./constants/configManager";
+import { initConfig } from "./constants/configManager";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
