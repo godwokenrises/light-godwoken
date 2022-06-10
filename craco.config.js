@@ -7,7 +7,7 @@ function getProductionSetting() {
   };
 }
 
-const commitHash = require('child_process').execSync('git rev-parse --short HEAD')
+const commitHash = require("child_process").execSync("git rev-parse --short HEAD");
 
 module.exports = {
   babel: {
@@ -20,7 +20,7 @@ module.exports = {
         release: "light-godwoken@" + process.env.npm_package_version + "@" + commitHash,
         include: "./build",
       }),
-    
+
       /* Any webpack configuration options: https://webpack.js.org/configuration */
     ],
     configure: (webpackConfig, { env, paths }) => {

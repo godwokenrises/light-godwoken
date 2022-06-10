@@ -1,10 +1,11 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { writeStorage } from "@rehooks/local-storage";
 import { Token } from "../light-godwoken/lightGodwokenType";
+import { format } from "date-fns";
 
 type L1TxType = "deposit" | "withdrawal";
 
-export interface L1TxHistoryInterface {
+export interface BaseL1TxHistoryInterface {
   type: L1TxType;
   txHash: string;
   capacity: string;
@@ -15,7 +16,10 @@ export interface L1TxHistoryInterface {
   decimals?: number;
   outPoint?: string;
   recipient?: string;
-  date?: string;
+}
+
+export interface L1TxHistoryInterface extends BaseL1TxHistoryInterface {
+  date: string;
 }
 
 export function useL1TxHistory(storageKey: string) {
@@ -35,16 +39,16 @@ export function useL1TxHistory(storageKey: string) {
   }, [storageValue, storageKey]);
 
   const addTxToHistory = useCallback(
-    (newTxHistory: L1TxHistoryInterface) => {
+    (newTxHistory: BaseL1TxHistoryInterface) => {
       if (storageKey == null) {
         return;
       }
-      newTxHistory.date = new Date().toLocaleString();
+      const newRecord = { ...newTxHistory, date: format(new Date(), "yyyy-MM-dd HH:mm:ss") };
       const latestTxHistoryRaw = storageValue || "[]";
       try {
         const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newTxHistory.txHash)) {
-          const newTxHistoryList = [newTxHistory].concat(latestTxHistory);
+        if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newRecord.txHash)) {
+          const newTxHistoryList = [newRecord].concat(latestTxHistory);
           setTxHistory(newTxHistoryList);
           writeStorage(storageKey, JSON.stringify(newTxHistoryList));
         }

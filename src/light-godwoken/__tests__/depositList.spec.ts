@@ -11,7 +11,7 @@ beforeEach(() => {
   const dummyEthereum = {
     on: () => {},
   };
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig.v0);
+  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig);
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
 });
 

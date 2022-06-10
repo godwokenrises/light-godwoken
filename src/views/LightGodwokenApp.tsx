@@ -23,6 +23,8 @@ export default function LightGodwokenApp(props: Props) {
 
   const WithdrawalComp = lightGodwoken?.getVersion().toString() === "v0" ? Withdrawal : WithdrawalV1;
 
+  console.log("LightGodwokenApp render");
+
   return (
     {
       withdrawal: <WithdrawalComp></WithdrawalComp>,

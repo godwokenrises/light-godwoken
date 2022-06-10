@@ -11,13 +11,13 @@ import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
-import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
+import { BaseL1TxHistoryInterface } from "../../hooks/useL1TxHistory";
 import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
 import { LightGodwokenV1 } from "../../light-godwoken";
 
-const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: L1TxHistoryInterface) => void }> = ({
+const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistoryInterface) => void }> = ({
   addTxToHistory,
 }) => {
   const [CKBInput, setCKBInput] = useState("");
@@ -77,14 +77,15 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: L1TxHistoryInt
       setCKBInput("");
       setSudtValue("");
       setLoading(false);
-      addTxToHistory({
-        type: "withdrawal",
-        txHash,
-        capacity,
-        amount,
-        token: selectedSudt,
-        status: "l2Pending",
-      });
+      // commented here, will reopen after godwoken 1.2 goes live
+      // addTxToHistory({
+      //   type: "withdrawal",
+      //   txHash,
+      //   capacity,
+      //   amount,
+      //   token: selectedSudt,
+      //   status: "l2Pending",
+      // });
     });
 
     eventEmitter.on("fail", (result: unknown) => {

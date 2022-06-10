@@ -3,4 +3,5 @@ export const COLOR = {
   secondary: "#333333",
   label: "#666666",
   brand: "#00cc9b",
+  warn: "#f5c842",
 };

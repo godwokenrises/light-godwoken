@@ -10,7 +10,6 @@ import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { DepositEventEmitter, SUDT, Token } from "../light-godwoken/lightGodwokenType";
-import { useL1TxHistory } from "../hooks/useL1TxHistory";
 import {
   ConfirmModal,
   Card,
@@ -41,6 +40,8 @@ import { captureException } from "@sentry/react";
 import EventEmitter from "events";
 import { useQuery } from "react-query";
 import { useGodwokenVersion } from "../hooks/useGodwokenVersion";
+import { useDepositHistory } from "../hooks/useDepositTxHistory";
+import { format } from "date-fns";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -64,13 +65,13 @@ export default function Deposit() {
   const { data: l2CKBBalance } = useL2CKBBalance();
 
   const maxAmount = CKBBalance ? BI.from(CKBBalance).toString() : undefined;
+  const cancelTimeout = lightGodwoken?.getCancelTimeout() || 0;
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const ethAddress = lightGodwoken?.provider.getL2Address();
   const godwokenVersion = useGodwokenVersion();
 
-  const historyKey = `${godwokenVersion}/${l1Address}/deposit`;
-  const { txHistory, updateTxHistory, addTxToHistory } = useL1TxHistory(historyKey);
+  const { txHistory: depositHistory, addTxToHistory, updateTxWithStatus } = useDepositHistory();
 
   const [depositListListener, setDepositListListener] = useState(new EventEmitter() as DepositEventEmitter);
 
@@ -79,53 +80,31 @@ export default function Deposit() {
     () => {
       return lightGodwoken?.getDepositList();
     },
-    {
-      enabled: !!lightGodwoken,
-    },
   );
 
   const { data: depositList, isLoading: depositListLoading } = depositListQuery;
 
+  // apend rpc fetched deposit list to local storage
   depositList?.forEach((deposit) => {
-    if (!txHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
+    if (!depositHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
       addTxToHistory({
-        type: "deposit",
         capacity: deposit.capacity.toHexString(),
         amount: deposit.amount.toHexString(),
         token: deposit.sudt,
         txHash: deposit.rawCell.out_point?.tx_hash || "",
         status: "pending",
+        date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        cancelTimeout,
       });
     }
   });
 
-  const formattedTxHistory = useMemo(
-    () =>
-      txHistory.map((history) => {
-        const targetDeposit = depositList?.find((deposit) => deposit.rawCell.out_point?.tx_hash === history.txHash);
-        return {
-          capacity: BI.from(history.capacity),
-          amount: BI.from(history.amount),
-          token: history.token,
-          txHash: history.txHash,
-          status: history.status || "pending",
-          rawCell: targetDeposit?.rawCell,
-          cancelTime: targetDeposit?.cancelTime,
-        };
-      }),
-    [depositList, txHistory],
+  const depositHistoryFilteredByCancelTimeout = depositHistory.filter(
+    (history) => history.cancelTimeout === cancelTimeout,
   );
-  const updateTxWithStatus = (txHash: string, status: string) => {
-    const result = txHistory.find((tx) => {
-      return tx.txHash === txHash;
-    });
-    if (result) {
-      result.status = status;
-      updateTxHistory(result);
-    }
-  };
+
   useMemo(() => {
-    const pendingList = formattedTxHistory.filter((history) => history.status === "pending");
+    const pendingList = depositHistory.filter((history) => history.status === "pending");
     const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
     const listener = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
     if (listener) {
@@ -144,14 +123,14 @@ export default function Deposit() {
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken, godwokenVersion, txHistory]);
+  }, [lightGodwoken, godwokenVersion, depositHistory]);
 
   useEffect(() => {
     return function cleanup() {
       depositListListener.removeAllListeners();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken, godwokenVersion, txHistory]);
+  }, [lightGodwoken, godwokenVersion, depositHistory]);
 
   const handleError = (e: unknown, selectedSudt?: SUDT) => {
     console.error(e);
@@ -207,12 +186,13 @@ export default function Deposit() {
         sudtType: selectedSudt?.type,
       });
       addTxToHistory({
-        type: "deposit",
         txHash: txHash,
         capacity,
         amount,
         token: selectedSudt,
         status: "pending",
+        date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        cancelTimeout,
       });
       setIsModalVisible(false);
     } catch (e) {
@@ -295,7 +275,7 @@ export default function Deposit() {
         </div>
       </Card>
       <Card>
-        <DepositList formattedTxHistory={formattedTxHistory} isLoading={depositListLoading} />
+        <DepositList depositHistory={depositHistoryFilteredByCancelTimeout} isLoading={depositListLoading} />
       </Card>
       <ConfirmModal
         title="Confirm Transaction"
