@@ -324,9 +324,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
     eventEmitter.emit("sent", txHash);
     debug("withdrawal request result:", txHash);
-<<<<<<< Updated upstream
-    this.waitForWithdrawalToComplete(txHash, eventEmitter);
-=======
     const maxLoop = 100;
     let loop = 0;
     const nIntervId = setInterval(async () => {
@@ -347,7 +344,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         clearInterval(nIntervId);
       }
     }, 10000);
->>>>>>> Stashed changes
   }
 
   async generateRawWithdrawalRequest(
@@ -418,13 +414,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           { expected: BI.from(payload.amount), actual: BI.from(layer2Erc20Balance) },
           errMsg,
         );
-<<<<<<< Updated upstream
-        debugProductionEnv(error);
-        eventEmitter.emit("fail", error);
-=======
         // debugProductionEnv(error);
-        eventEmitter.emit("error", error);
->>>>>>> Stashed changes
+        eventEmitter.emit("fail", error);
         throw error;
       }
     }
