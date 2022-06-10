@@ -324,7 +324,30 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
     eventEmitter.emit("sent", txHash);
     debug("withdrawal request result:", txHash);
+<<<<<<< Updated upstream
     this.waitForWithdrawalToComplete(txHash, eventEmitter);
+=======
+    const maxLoop = 100;
+    let loop = 0;
+    const nIntervId = setInterval(async () => {
+      loop++;
+      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
+      if (withdrawal && withdrawal.status === "pending") {
+        debug("withdrawal pending:", withdrawal);
+        eventEmitter.emit("pending", txHash);
+      }
+      if (withdrawal && withdrawal.status === "committed") {
+        debug("withdrawal committed:", withdrawal);
+        eventEmitter.emit("success", txHash);
+        clearInterval(nIntervId);
+      }
+      if (withdrawal === null && loop > maxLoop) {
+        eventEmitter.emit("fail", txHash);
+        // debugProductionEnv("withdrawal fail:", txHash);
+        clearInterval(nIntervId);
+      }
+    }, 10000);
+>>>>>>> Stashed changes
   }
 
   async generateRawWithdrawalRequest(
@@ -379,7 +402,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
         errMsg,
       );
-      debugProductionEnv(error);
+      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }
@@ -395,8 +418,13 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           { expected: BI.from(payload.amount), actual: BI.from(layer2Erc20Balance) },
           errMsg,
         );
+<<<<<<< Updated upstream
         debugProductionEnv(error);
         eventEmitter.emit("fail", error);
+=======
+        // debugProductionEnv(error);
+        eventEmitter.emit("error", error);
+>>>>>>> Stashed changes
         throw error;
       }
     }

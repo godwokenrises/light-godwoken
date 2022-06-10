@@ -133,7 +133,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     transaction.inputs[1].since = MIN_RELATIVE_TIME;
     let signedTx = await this.provider.signL1Tx(transaction);
     const txHash = await this.provider.sendL1Transaction(signedTx);
-    debugProductionEnv(`Cancel deposit: ${txHash}`);
+    // debugProductionEnv(`Cancel deposit: ${txHash}`);
     return txHash;
   }
 
@@ -375,7 +375,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw error;
     }
 
-    debugProductionEnv(`Deposit ${txHash}`);
+    // debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
       eventEmitter.emit("sent", txHash);
       this.waitForDepositToComplete(txHash, eventEmitter);
