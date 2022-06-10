@@ -8,9 +8,14 @@ import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeBu
 
 import { COLOR } from "../../style/variables";
 import { useClock } from "../../hooks/useClock";
-import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { message, Tooltip } from "antd";
-import { DepositHistoryType, useDepositHistory } from "../../hooks/useDepositTxHistory";
+import {
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  LoadingOutlined,
+  QuestionCircleOutlined,
+} from "@ant-design/icons";
+import { notification, Tooltip } from "antd";
+import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
 import { parse } from "date-fns";
 import { DATE_FORMAT } from "../../utils/dateUtils";
 
@@ -121,7 +126,6 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
   const now = useClock();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isCancel, setIsCancel] = useState(false);
-  const { updateTxWithStatus } = useDepositHistory();
   const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
   const [CKBAmount] = useMemo(() => {
     return [`${getDisplayAmount(BI.from(capacity), 8)} CKB`];
@@ -134,7 +138,7 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
     return [`${getDisplayAmount(BI.from(amount), token.decimals)} ${token.symbol}`];
   }, [amount, token]);
 
-  cancelTimeout = lightGodwoken?.getAdvancedSettings().cancelTimeOut || 0;
+  cancelTimeout = lightGodwoken?.getCancelTimeout() || 0;
   const estimatedArrivalDate = useMemo(
     () => parse(date, DATE_FORMAT, new Date()).getTime() + cancelTimeout * 1000,
     [cancelTimeout, date],
@@ -146,11 +150,12 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
     setIsCancel(true);
     try {
       await lightGodwoken?.cancelDeposit(txHash, cancelTimeout);
-      message.success("cancel deposit request success");
+      notification.success({ message: "Cancel deposit success" });
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message);
+        notification.error({ message: error.message });
       }
+      throw error;
     } finally {
       setIsCancel(false);
       handleCancel();
@@ -210,8 +215,8 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
             </Tooltip>
           )}
           {status === "fail" && (
-            <Tooltip title={status}>
-              <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
+            <Tooltip title="User canceled deposit">
+              <ExclamationCircleOutlined style={{ color: COLOR.warn, height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}
         </div>
