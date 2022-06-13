@@ -16,7 +16,7 @@ import {
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
-import { getTokenList } from "./constants/tokens";
+import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
@@ -177,7 +177,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const collectedWithdrawals: WithdrawResultV1[] = searchParams.map((item) => {
       let amount = "0x0";
       let erc20 = undefined;
-      if (item.udt_id !== 1) {
+      if (item.udt_id !== CKB_SUDT_ID) {
         amount = BI.from(item.amount).toHexString();
         erc20 = this.getBuiltinErc20List().find(
           (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
