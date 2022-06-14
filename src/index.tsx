@@ -17,8 +17,6 @@ if (process.env.NODE_ENV === "production") {
     environment: process.env.NODE_ENV,
     release: "light-godwoken@" + process.env.REACT_APP_VERSION + "@" + process.env.REACT_APP_COMMIT_HASH,
     debug: false,
-    // dsn: "https://cee76b0263164a9b89c918b194cedbf8@o1235895.ingest.sentry.io/6385985",
-    // dsn: "https://4f42ad25553a4472bc6f64a8ed2c432c@sentry.nervos.org/17",
     dsn: process.env.REACT_APP_SENTRY_DSN,
     integrations: [new BrowserTracing()],
 
