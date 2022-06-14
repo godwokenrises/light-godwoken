@@ -4,7 +4,7 @@ import LightGodwokenV1 from "../LightGodwokenV1";
 import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { deBifyRawWithdrawalRequestV0, deBifyRawWithdrawalRequestV1, dummyScriptHash } from "./utils";
-import { BI } from "@ckb-lumos/lumos";
+import { BI, utils } from "@ckb-lumos/lumos";
 import { testConfig } from "./lightGodwokenConfig";
 
 let lightGodwokenV0: LightGodwokenV0;
@@ -35,7 +35,7 @@ describe("test light godwoken v1 withdrawal", () => {
     sinon.stub(lightGodwokenV1, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV1.generateRawWithdrawalRequest(eventEmitter, {
-      capacity: "0x2e90edd000",
+      capacity: BI.from(200000000000).toHexString(),
       amount: "0x0",
       sudt_script_hash: dummyScriptHash,
     });
@@ -43,7 +43,7 @@ describe("test light godwoken v1 withdrawal", () => {
     expect(deBifyRawWithdrawalRequestV1(rawWithdrawalRequest)).toEqual({
       account_script_hash: "0x7ad59fa0e426c5e5b0bc13f25bcae43263ab3be70fcb2d36bdb6df2119e7bea5",
       amount: "0x0",
-      capacity: "0x2e90edd000",
+      capacity: BI.from(200000000000).toHexString(),
       chain_id: "0x11",
       fee: "0x0",
       nonce: 1,
@@ -72,18 +72,20 @@ describe("test light godwoken v1 withdrawal", () => {
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 2000 sudt", async () => {
     const erc20Address = lightGodwokenV1.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV1, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
-    sinon.stub(lightGodwokenV1, "getErc20Balance").returns(Promise.resolve("0x6c6b935b8bbd400000"));
+    sinon
+      .stub(lightGodwokenV1, "getErc20Balance")
+      .returns(Promise.resolve(BI.from(2000).mul(BI.from(10).pow(18)).toHexString()));
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV1.generateRawWithdrawalRequest(eventEmitter, {
-      capacity: "0x2e90edd000",
-      amount: "0x6c6b935b8bbd400000",
+      capacity: BI.from(200000000000).toHexString(),
+      amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
       sudt_script_hash: erc20Address,
     });
 
     expect(deBifyRawWithdrawalRequestV1(rawWithdrawalRequest)).toEqual({
       account_script_hash: "0x7ad59fa0e426c5e5b0bc13f25bcae43263ab3be70fcb2d36bdb6df2119e7bea5",
-      amount: "0x6c6b935b8bbd400000",
-      capacity: "0x2e90edd000",
+      amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
+      capacity: BI.from(200000000000).toHexString(),
       chain_id: "0x11",
       fee: "0x0",
       nonce: 1,
@@ -95,13 +97,15 @@ describe("test light godwoken v1 withdrawal", () => {
   it("should throw error when withdraw 2000 ckb and 2000 sudt and user balance is 2000 ckb and 1999 sudt", async () => {
     const erc20Address = lightGodwokenV1.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV1, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
-    sinon.stub(lightGodwokenV1, "getErc20Balance").returns(Promise.resolve("0x6c5db2a4d815dc0000"));
+    sinon
+      .stub(lightGodwokenV1, "getErc20Balance")
+      .returns(Promise.resolve(BI.from(1999).mul(BI.from(10).pow(18)).toHexString()));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
     try {
       await lightGodwokenV1.generateRawWithdrawalRequest(eventEmitter as any, {
         capacity: "0x2e90edd000",
-        amount: "0x6c6b935b8bbd400000",
+        amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
         sudt_script_hash: erc20Address,
       });
     } catch (error) {
@@ -117,7 +121,7 @@ describe("test light godwoken v0 withdrawal", () => {
 
     const eventEmitter = new EventEmitter();
     const rawWithdrawalRequest = await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter, {
-      capacity: "0x2e90edd000",
+      capacity: BI.from(200000000000).toHexString(),
       amount: "0x0",
       sudt_script_hash: dummyScriptHash,
     });
@@ -125,7 +129,7 @@ describe("test light godwoken v0 withdrawal", () => {
     expect(deBifyRawWithdrawalRequestV0(rawWithdrawalRequest)).toEqual({
       account_script_hash: "0xe913f07b850fb1f310d78cde13681681f6c4b472724017b9d8ae2d32baf6ddb9",
       amount: "0x0",
-      capacity: "0x2e90edd000",
+      capacity: BI.from(200000000000).toHexString(),
       fee: { amount: "0x0", sudt_id: 1 },
       nonce: 2,
       owner_lock_hash: "0x3837aad0e28da55d366d62b7df9b1b0613c39c730c4c409b9722d4bed8cfa926",
@@ -141,7 +145,7 @@ describe("test light godwoken v0 withdrawal", () => {
     let errMsg = "";
     try {
       await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter as any, {
-        capacity: "0x2e90edd000",
+        capacity: BI.from(200000000000).toHexString(),
         amount: "0x0",
         sudt_script_hash: dummyScriptHash,
       });
@@ -155,18 +159,20 @@ describe("test light godwoken v0 withdrawal", () => {
     const erc20Address = lightGodwokenV0.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
     sinon.stub(lightGodwokenV0, "getBuiltinErc20ByTypeHash").returns({ address: "" } as any);
-    sinon.stub(lightGodwokenV0, "getErc20Balance").returns(Promise.resolve("0x6c6b935b8bbd400000"));
+    sinon
+      .stub(lightGodwokenV0, "getErc20Balance")
+      .returns(Promise.resolve(BI.from(2000).mul(BI.from(10).pow(18)).toHexString()));
     const eventEmitter = { emit: jest.fn() };
     const rawWithdrawalRequest = await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter as any, {
-      capacity: "0x2e90edd000",
-      amount: "0x6c6b935b8bbd400000",
+      capacity: BI.from(200000000000).toHexString(),
+      amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
       sudt_script_hash: erc20Address,
     });
 
     expect(deBifyRawWithdrawalRequestV0(rawWithdrawalRequest)).toEqual({
       account_script_hash: "0xe913f07b850fb1f310d78cde13681681f6c4b472724017b9d8ae2d32baf6ddb9",
-      amount: "0x6c6b935b8bbd400000",
-      capacity: "0x2e90edd000",
+      amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
+      capacity: BI.from(200000000000).toHexString(),
       fee: { amount: "0x0", sudt_id: 1 },
       nonce: 2,
       owner_lock_hash: "0x3837aad0e28da55d366d62b7df9b1b0613c39c730c4c409b9722d4bed8cfa926",
@@ -181,13 +187,15 @@ describe("test light godwoken v0 withdrawal", () => {
     const erc20Address = lightGodwokenV0.getBuiltinErc20List()[0].sudt_script_hash;
     sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
     sinon.stub(lightGodwokenV0, "getBuiltinErc20ByTypeHash").returns({ address: "" } as any);
-    sinon.stub(lightGodwokenV0, "getErc20Balance").returns(Promise.resolve("0x6c5db2a4d815dc0000"));
+    sinon
+      .stub(lightGodwokenV0, "getErc20Balance")
+      .returns(Promise.resolve(BI.from(1999).mul(BI.from(10).pow(18)).toHexString()));
     const eventEmitter = { emit: jest.fn() };
     let errMsg = "";
     try {
       await lightGodwokenV0.generateRawWithdrawalRequest(eventEmitter as any, {
-        capacity: "0x2e90edd000",
-        amount: "0x6c6b935b8bbd400000",
+        capacity: BI.from(200000000000).toHexString(),
+        amount: BI.from(2000).mul(BI.from(10).pow(18)).toHexString(),
         sudt_script_hash: erc20Address,
       });
     } catch (error) {

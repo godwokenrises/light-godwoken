@@ -6,27 +6,46 @@ const { Bytes } = blockchain;
 const { Uint8 } = number;
 
 // vector SmtProof <byte>;
+const SmtProofCodec = vector(Uint8);
 
 // table SmtProofEntry {
 //     mask: byte,
 //     proof: SmtProof,
 // }
+const SmtProofEntryCodec = table(
+  {
+    mask: Uint8,
+    proof: SmtProofCodec,
+  },
+  ["mask", "proof"],
+);
 
 // vector SmtProofEntryVec <SmtProofEntry>;
+const SmtProofEntryVecCodec = vector(SmtProofEntryCodec);
+
 // array Auth[byte; 21];
+const AuthCodec = array(Uint8, 21);
 
 // table Identity {
 //     identity: Auth,
 //     proofs: SmtProofEntryVec,
 // }
+const IdentityCodec = table(
+  {
+    identity: AuthCodec,
+    proofs: SmtProofEntryVecCodec,
+  },
+  ["identity", "proofs"],
+);
+
 // option IdentityOpt (Identity);
+const IdentityOptCodec = option(IdentityCodec);
 
 // table OmniLockWitnessLock {
 //     signature: BytesOpt,
 //     omni_identity: IdentityOpt,
 //     preimage: BytesOpt,
 // }
-
 export type OmniLockWitnessLock = {
   signature?: HexString;
   omni_identity?: {
@@ -41,23 +60,7 @@ export type OmniLockWitnessLock = {
 export const OmniLockWitnessLockCodec = table(
   {
     signature: option(Bytes),
-    omni_identity: option(
-      table(
-        {
-          identity: array(Uint8, 21),
-          proofs: vector(
-            table(
-              {
-                mask: Uint8,
-                proof: vector(Uint8),
-              },
-              ["mask", "proof"],
-            ),
-          ),
-        },
-        ["identity", "proofs"],
-      ),
-    ),
+    omni_identity: IdentityOptCodec,
     preimage: option(Bytes),
   },
   ["signature", "omni_identity", "preimage"],

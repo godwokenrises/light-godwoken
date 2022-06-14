@@ -1,3 +1,5 @@
+export const CKB_SUDT_ID = 1; // This is default sudt id fro ckb on Godwoken
+
 export const TOKEN_LIST_V0 = [
   {
     symbol: "USDC",

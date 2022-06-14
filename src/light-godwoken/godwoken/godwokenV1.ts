@@ -1,3 +1,7 @@
+/**
+ * This file is copied from:
+ * https://github.com/zeroqn/godwoken-examples/blob/develop/packages/godwoken/src/index.ts
+ */
 import { RPC } from "ckb-js-toolkit";
 import { Hash, Hexadecimal, HexNumber, HexString, Script } from "@ckb-lumos/base";
 interface LastL2BlockCommittedInfo {

@@ -99,7 +99,7 @@ export async function generateClaimUSDCTxSkeleton(
       lock: userOmniLock,
       type: sudtType,
     },
-    data: "0x0000a0dec5adc9353600000000000000", // 1000 sudt in uint128
+    data: utils.toBigUInt128LE(BI.from(1000).mul(BI.from(10).pow(18))), // 1000 sudt in uint128
   };
   const exchangeCell: Cell = {
     cell_output: {
