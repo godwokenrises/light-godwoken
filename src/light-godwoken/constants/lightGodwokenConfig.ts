@@ -73,6 +73,50 @@ const v0Config: LightGodwokenConfig = {
   },
 };
 
+const v0ConfigForAcceptance: LightGodwokenConfig = {
+  layer1Config: layer1ConfigAggron,
+  layer2Config: {
+    SCRIPTS: {
+      deposit_lock: {
+        script_type_hash: "0x5a2506bb68d81a11dcadad4cb7eae62a17c43c619fe47ac8037bc8ce2dd90360",
+        cell_dep: {
+          out_point: {
+            tx_hash: "0x97614145cdec9ba924001c11cd49f1c424927437b40ed3ca3b82fff358f2e3de",
+            index: "0x0",
+          },
+          dep_type: "code",
+        },
+      },
+      withdrawal_lock: {
+        script_type_hash: "0x170ef156e9f6132dbca6069dfd3e436f7d91c29d3ac7332c4b33e633b6a299b5",
+        cell_dep: {
+          out_point: {
+            tx_hash: "0xb4b07dcd1571ac18683b515ada40e13b99bd0622197b6817047adc9f407f4828",
+            index: "0x0",
+          },
+          dep_type: "code",
+        },
+      },
+      eth_account_lock: {
+        script_type_hash: "0xdeec13a7b8e100579541384ccaf4b5223733e4a5483c3aec95ddc4c1d5ea5b22",
+      },
+    },
+    ROLLUP_CONFIG: {
+      rollup_type_hash: "0x27c8b9a5345d4004b86d5a2daa3ae44a7c261a8e3f7953fd54b1421146d043bf",
+      rollup_type_script: {
+        code_hash: "0x5c365147bb6c40e817a2a53e0dec3661f7390cc77f0c02db138303177b12e9fb",
+        hash_type: "type",
+        args: "0x118f5ff3ebbcdf10d90e8f0e5b59b0a793c3d325aa699201ff234e0af3dcde55",
+      },
+    },
+    GW_POLYJUICE_RPC_URL: "https://rpc-staging.ckbapp.dev/",
+    SCANNER_URL: "https://aggron.gwscan.com",
+    SCANNER_API: "https://aggron.gwscan.com",
+    CHAIN_NAME: "Godwoken Testnet v0",
+    MIN_CANCEL_DEPOSIT_TIME: 1200, // 20 minutes in seconds
+  },
+};
+
 export const predefined_testnet: LightGodwokenConfigMap = {
   v0: v0Config,
   v1: {
@@ -118,6 +162,11 @@ export const predefined_testnet: LightGodwokenConfigMap = {
       MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
     },
   },
+};
+
+export const predefined_acceptance_test: LightGodwokenConfigMap = {
+  ...predefined_testnet,
+  v0: v0ConfigForAcceptance,
 };
 
 export const predefined_mainnet: LightGodwokenConfigMap = {

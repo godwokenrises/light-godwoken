@@ -3,7 +3,7 @@ import { CellDep, Indexer } from "@ckb-lumos/lumos";
 import { isMainnet } from "../env";
 import { Godwoken } from "../godwoken/godwokenV1";
 import { Layer2Config, LightGodwokenConfig, LightGodwokenConfigMap } from "./configTypes";
-import { predefined_testnet, predefined_mainnet } from "./lightGodwokenConfig";
+import { predefined_testnet, predefined_mainnet, predefined_acceptance_test } from "./lightGodwokenConfig";
 import { writeStorage } from "@rehooks/local-storage";
 import { debug } from "../debug";
 import { GodwokenVersion } from "./configTypes";
@@ -63,7 +63,8 @@ export function getConfigFromLocalStorage(path: string): LightGodwokenConfigMap 
   } catch (error) {
     captureException(error);
     debug("[getConfigFromLocalStorage] load config error", error);
-    config = isMainnet ? predefined_mainnet : predefined_testnet;
+    // config = isMainnet ? predefined_mainnet : predefined_testnet;
+    config = isMainnet ? predefined_mainnet : predefined_acceptance_test;
   }
   return config;
 }
