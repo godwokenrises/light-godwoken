@@ -412,7 +412,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       if (eventEmitter) {
         eventEmitter.emit("fail", error);
       }
-      throw error;
+      throw e;
     }
 
     debugProductionEnv(`Deposit ${txHash}`);
