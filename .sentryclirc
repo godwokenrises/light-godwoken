@@ -1,6 +1,3 @@
-[auth]
-token=71f94d9f0c6947b3a3f6198f27a1ad056a7b0d67c7cd466d8b85ab987c005860
-
 [defaults]
 url=https://sentry.nervos.org/
 org=godwoken-bridge-ui
