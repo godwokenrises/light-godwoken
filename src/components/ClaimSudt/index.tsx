@@ -20,5 +20,5 @@ export const ClaimSudt: React.FC = () => {
       }
     }
   };
-  return <div onClick={claimSudt}>Get 1,000 USDC on L1</div>;
+  return <div onClick={claimSudt}>Get 1,000 Test Token(TTKN) on L1</div>;
 };
