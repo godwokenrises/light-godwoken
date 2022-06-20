@@ -111,7 +111,7 @@ describe("test light godwoken v1 withdrawal", () => {
     } catch (error) {
       errMsg = (error as any).message;
     }
-    expect(errMsg).toEqual("Godwoken USDC balance 1999000000000000000000 is less than 2000000000000000000000");
+    expect(errMsg).toEqual("Godwoken TTKN balance 1999000000000000000000 is less than 2000000000000000000000");
   });
 });
 
