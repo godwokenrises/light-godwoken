@@ -1,7 +1,4 @@
-[auth]
-token=ba05c49abfae47e6b20fc12b4f7c29c3d84645f5d8a44f739f7bc0cad058a717
-
 [defaults]
-url=https://sentry.io/
-org=cryptape-y6
-project=light-godwoken
+url=https://sentry.nervos.org/
+org=godwoken-bridge-ui
+project=godwoken-bridge-ui

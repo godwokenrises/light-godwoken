@@ -1,6 +1,6 @@
 {
   "name": "withdraw-demo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
@@ -16,6 +16,7 @@
     "@polyjuice-provider/godwoken": "^0.1.1",
     "@polyjuice-provider/web3": "^0.1.1",
     "@rehooks/local-storage": "^2.4.4",
+    "@sentry/cli": "^2.1.0",
     "@sentry/react": "^6.19.7",
     "@sentry/tracing": "^6.19.7",
     "@testing-library/jest-dom": "^5.16.1",
@@ -48,7 +49,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "craco --max_old_space_size=4096 build",
+    "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
