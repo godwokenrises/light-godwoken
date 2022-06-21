@@ -222,7 +222,9 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
         </div>
         <div className="list-detail">
           <MainText title={txHash}>
-            <a href={`${l1ScannerUrl}/transaction/${txHash}`}>Open In Explorer</a>
+            <a target="blank" href={`${l1ScannerUrl}/transaction/${txHash}`}>
+              Open In Explorer
+            </a>
           </MainText>
         </div>
       </div>
