@@ -30,7 +30,13 @@ import {
   SudtNotFoundError,
   TransactionSignError,
 } from "./constants/error";
-import { getAdvancedSettings, getLatestConfigFromRpc, setLatestConfigToLocalStorage } from "./constants/configManager";
+import {
+  getAdvancedSettings,
+  getLatestConfigFromRpc,
+  getConfigFromLocalStorage,
+  setLatestConfigToLocalStorage,
+  getLatestConfigFromLocalStorage,
+} from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
@@ -46,8 +52,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async updateConfigViaRpc(): Promise<void> {
+    const currentConfig = await getLatestConfigFromLocalStorage();
     const latestConfig = await getLatestConfigFromRpc();
-    setLatestConfigToLocalStorage(latestConfig);
+    if (JSON.stringify(currentConfig) !== JSON.stringify(latestConfig)) {
+      alert("Onchain Godwoken configuration has been updated. \n Update your local configuration?");
+      setLatestConfigToLocalStorage(latestConfig);
+    }
   }
 
   getVersion(): GodwokenVersion {
