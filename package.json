@@ -16,7 +16,6 @@
     "@polyjuice-provider/godwoken": "^0.1.1",
     "@polyjuice-provider/web3": "^0.1.1",
     "@rehooks/local-storage": "^2.4.4",
-    "@sentry/cli": "^2.1.0",
     "@sentry/react": "^6.19.7",
     "@sentry/tracing": "^6.19.7",
     "@testing-library/jest-dom": "^5.16.1",
@@ -100,5 +99,9 @@
   },
   "resolutions": {
     "acorn": "npm:acorn-with-stage3"
+  },
+  "engines": {
+    "npm": "please-use-yarn",
+    "yarn": ">= 1.19.1"
   }
 }
