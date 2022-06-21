@@ -96,11 +96,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getBuiltinSUDTList(): SUDT[] {
     const sudtList: SUDT[] = [];
+    const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v1.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
+        code_hash: sudtScriptConfig.code_hash,
+        hash_type: sudtScriptConfig.hash_type as HashType,
+        args: token.l1LockArgs,
       };
       sudtList.push({
         type: tokenL1Script,
@@ -114,11 +115,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
+    const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v1.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
+        code_hash: sudtScriptConfig.code_hash,
+        hash_type: sudtScriptConfig.hash_type as HashType,
+        args: token.l1LockArgs,
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
