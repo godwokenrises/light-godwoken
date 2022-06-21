@@ -1,5 +1,6 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import isEqual from "lodash/isEqual";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -54,7 +55,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   async updateConfigViaRpc(): Promise<void> {
     const currentConfig = await getLatestConfigFromLocalStorage();
     const latestConfig = await getLatestConfigFromRpc();
-    if (JSON.stringify(currentConfig) !== JSON.stringify(latestConfig)) {
+    console.log(isEqual(currentConfig, latestConfig));
+    if (!isEqual(currentConfig, latestConfig)) {
       alert("Onchain Godwoken configuration has been updated. \n Update your local configuration?");
       setLatestConfigToLocalStorage(latestConfig);
     }
