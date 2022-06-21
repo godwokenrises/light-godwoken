@@ -3,7 +3,7 @@
 - basic knowledge of [godwoken](https://www.nervos.org/godwoken) layer 2 network
 - basic knowledge of [ckb](https://docs.nervos.org/docs/basics/introduction) and ckb [transaction](https://docs.nervos.org/docs/reference/transaction)
 
-The workflow of withdrawing assets from a layer 2 address to a layer 1 address depend on the Godwoken web3 service and the Scaner API Service:
+The workflow of withdrawing assets from a layer 2 address to a layer 1 address depends on the Godwoken web3 service and the Scaner API Service:
 
 ![withdrawal](../image/withdrawal-diagram.png)
 
@@ -133,7 +133,7 @@ const collector = ckbIndexer.collector({ lock: searchParams.script });
 
 ### List Withdrawals
 
-The Scanner API provides a method to fetch withdrwals list.
+The Scanner API provides a method to fetch withdrawals list.
 
 ```sh
 curl --location --request GET 'https://api.aggron.gwscan.com/api/withdrawal_histories?owner_lock_hash=<Your Owner Lock Hash>'
@@ -183,7 +183,7 @@ curl --location --request GET 'https://api.aggron.gwscan.com/api/withdrawal_hist
 </details>
 
 ### Deposit asset to Godwoken
-The workflow of deposit depend on the CKB web3 service and the CKB indexer Service:
+The workflow of deposit depends on the CKB web3 service and the CKB indexer Service:
 
 ![deposit](../image/deposit-diagram.png)
 
