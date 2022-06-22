@@ -103,11 +103,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
+    const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
+        code_hash: sudtScriptConfig.code_hash,
+        hash_type: sudtScriptConfig.hash_type as HashType,
+        args: token.l1LockArgs,
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
@@ -135,11 +136,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
+    const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: token.l1Lock.code_hash,
-        args: token.l1Lock.args,
-        hash_type: token.l1Lock.hash_type as HashType,
+        code_hash: sudtScriptConfig.code_hash,
+        hash_type: sudtScriptConfig.hash_type as HashType,
+        args: token.l1LockArgs,
       };
       map.push({
         type: tokenL1Script,
@@ -350,19 +352,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
   ): Promise<RawWithdrwal> {
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const rollupTypeHash = layer2Config.ROLLUP_CONFIG.rollup_type_hash;
-    const ethAccountTypeHash = layer2Config.SCRIPTS.eth_account_lock.script_type_hash;
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
     debug("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
-    const ethAddress = this.provider.l2Address;
-    const l2AccountScript: Script = {
-      code_hash: ethAccountTypeHash,
-      hash_type: "type",
-      args: rollupTypeHash + ethAddress.slice(2),
-    };
-    const accountScriptHash = utils.computeScriptHash(l2AccountScript);
+    const accountScriptHash = this.provider.getLayer2LockScriptHash();
     debug("accountScriptHash:", accountScriptHash);
     const fromId = await this.godwokenClient.getAccountIdByScriptHash(accountScriptHash);
     debug("fromId:", fromId);

@@ -1,13 +1,13 @@
-# How to Withdraw Asset from Godwoken(Layer 2) to CKB(Layer 1)
+# How to Move Asset between Godwoken(Layer 2) and CKB(Layer 1)
 
 - basic knowledge of [godwoken](https://www.nervos.org/godwoken) layer 2 network
 - basic knowledge of [ckb](https://docs.nervos.org/docs/basics/introduction) and ckb [transaction](https://docs.nervos.org/docs/reference/transaction)
 
-There are two steps withdrawing assets from a layer 2 address to a layer 1 address.
+The workflow of withdrawing assets from a layer 2 address to a layer 1 address depends on the Godwoken web3 service and the Scaner API Service:
 
-![withdrawal](../image/sequence-godwoken-withdrawal.png)
+![withdrawal](../image/withdrawal-diagram.png)
 
-### Step 1. Submit Withdrawal Request to Godwoken
+## Submit Withdrawal Request to Godwoken
 
 The first step is to call [gw_submit_withdrawal_request](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request) RPC method to burn assets on layer 2 chain
 and in the meantime, Godwoken creates the assets on layer 1 which can later be unlocked by the receiver address.
@@ -131,131 +131,87 @@ const searchParams = getWithdrawalCellSearchParams(AliceL2);
 const collector = ckbIndexer.collector({ lock: searchParams.script });
 ```
 
-### Step 2. Unlock Withdrawal Cells
+### List Withdrawals
 
-The second step is to unlock the asset created in step one, it needs to take some time(about 5 days) before one can unlock the assets for safety reasons.
-We will support fast withdrawal in near future. When the waiting time is due, the receiver address can make a layer 1 transaction to unlock the asset cell,
-the transaction should take the withdrawal cell as input and another ckb cell to pay the transaction fee, in the output withdraw cell, just change the lock of the asset cell to the receiver lock.
+The Scanner API provides a method to fetch withdrawals list.
 
-![unlock](../image/unlock.png)
-
-Here is an example:
+```sh
+curl --location --request GET 'https://api.aggron.gwscan.com/api/withdrawal_histories?owner_lock_hash=<Your Owner Lock Hash>'
+```
 
 <details>
-  <summary markdown="span">example</summary>
+  <summary markdown="span">sample return value of withdrawal_histories</summary>
 
-```json5
+```JSON
 {
-  version: "0x0",
-  cell_deps: [
-    {
-      // withdraw cell dep
-      out_point: {
-        tx_hash: "0xb4b07dcd1571ac18683b515ada40e13b99bd0622197b6817047adc9f407f4828",
-        index: "0x0",
-      },
-      dep_type: "code",
-    },
-    {
-      // rollup cell dep
-      out_point: {
-        tx_hash: "0x6ab0949b8ce8e7b268d12848c2668a049c3c0ac0d5e803311dd2512c96ce3072",
-        index: "0x0",
-      },
-      dep_type: "code",
-    },
-    {
-      // omni lock cell dep
-      out_point: {
-        tx_hash: "0x9154df4f7336402114d04495175b37390ce86a4906d2d4001cf02c3e6d97f39c",
-        index: "0x0",
-      },
-      dep_type: "code",
-    },
-    {
-      // secp256k1 cell dep
-      out_point: {
-        tx_hash: "0xf8de3bb47d055cdf460d93a2a6e1b05f7432f9777c8c474abf4eec1d4aee5d37",
-        index: "0x0",
-      },
-      dep_type: "dep_group",
-    },
-  ],
-  header_deps: [],
-  inputs: [
-    {
-      // withdrawal cell
-      since: "0x0",
-      previous_output: {
-        index: "0x27",
-        tx_hash: "0xfd6b226ca0cf63860b6958b75c498d44d780b273b9a5dd5563925dfb99c7b2d8",
-      },
-    },
-    {
-      // owner cell
-      since: "0x0",
-      previous_output: {
-        index: "0x0",
-        tx_hash: "0xe68156b56efe7da6143a4f4c6b1fd6e57cad34d5677a3eb2ebe0ab4a5a8b8c07",
-      },
-    },
-  ],
-  outputs: [
-    {
-      // with changing the lock of withdrawal cell to owner lock, the assets is unlocked by owner
-      capacity: "0xba43b7400",
-      lock: {
-        code_hash: "0x79f90bb5e892d80dd213439eeab551120eb417678824f282b4ffb5f21bad2e1e",
-        hash_type: "type",
-        args: "0x01a08bcc398854db4eaffd9c28b881c65f91e3a28b00",
-      },
-      type: null,
-    },
-    {
-      // owner cell exchange after paying tx fee
-      capacity: "0x95623ea60",
-      lock: {
-        code_hash: "0x79f90bb5e892d80dd213439eeab551120eb417678824f282b4ffb5f21bad2e1e",
-        hash_type: "type",
-        args: "0x01a08bcc398854db4eaffd9c28b881c65f91e3a28b00",
-      },
-    },
-  ],
-  outputs_data: ["0x", "0x"],
-  witnesses: ["0x1c000000100000001c0000001c000000080000000000000004000000", "..."],
+    "data": [
+        {
+            "attributes": {
+                "amount": "72100000000",
+                "block_hash": "0x839e577623b90dc406bd18777f9827269a09a8d622a0d439a961315648285dd3",
+                "block_number": 362820,
+                "capacity": "72100000000",
+                "is_fast_withdrawal": false,
+                "l2_script_hash": "0x1ddfd18bee966192f8e35e8fbaaae93b88c476960754077d039cf1e56c633c22",
+                "layer1_block_number": 5259967,
+                "layer1_output_index": 66,
+                "layer1_tx_hash": "0xba70322ac9c91a3bc93f515e5f346a9df8741008b474b85a465a2de2467c66c4",
+                "owner_lock_hash": "0xfda77156f5ec403242a03875b2b29e14ba1c910b14a62fbe0baa3e367ae1f0a6",
+                "payment_lock_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "sell_amount": "0",
+                "sell_capacity": "0",
+                "state": "succeed",
+                "timestamp": "2022-05-05T02:17:59.091000Z",
+                "udt_id": 1,
+                "udt_script_hash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "id": "394079",
+            "relationships": {
+                "udt": {
+                    "data": {
+                        "id": "1",
+                        "type": "udt"
+                    }
+                }
+            },
+            "type": "withdrawal_history"
+        }
+    ]
 }
 ```
 
 </details>
 
-#### Cell Dependencies
+### Deposit asset to Godwoken
+The workflow of deposit depends on the CKB web3 service and the CKB indexer Service:
 
-The `cell_deps` should contain `rollup cellDep`, `lock cellDep` and `withdraw cellDep`. Remember to add `sudt cellDep` if you have any SUDT withdrawn, then other `cellDep`s required by the receiver lock. You can get `withdraw cellDep` and `sudt cellDep` from some static config file, `lock cellDep` depends on which lock you would use, we use Omni-lock in the example, so we added `Omni-lock cellDep`. `rollup cellDep` should be obtained from mem pool:
+![deposit](../image/deposit-diagram.png)
 
-```ts
-async function getRollupCellDep(): Promise<CellDep> {
-  const result = await this.godwokenClient.getLastSubmittedInfo();
-  const txHash = result.transaction_hash;
-  const tx = await this.getPendingTransaction(txHash);
+All you need to do is to forge a tx to transfer assets to this deposit lock:
 
-  if (tx == null) {
-    throw new Error("Last submitted tx not found!");
-  }
-
-  let rollupIndex = tx.transaction.outputs.findIndex((o: any) => {
-    return o.type && utils.computeScriptHash(o.type) === ROLLUP_CONFIG.rollup_type_hash;
-  });
-  return {
-    out_point: {
-      tx_hash: txHash,
-      index: `0x${rollupIndex.toString(16)}`,
-    },
-    dep_type: "code",
-  };
+```json5
+{
+  "code_hash": <deposit lock code_hash>
+  "hash_type": <deposit lock hash_type>
+  "args": <Your deposit lock args>
 }
 ```
 
-## Reference:
+The deposit lock args structure is declared [here](https://github.com/nervosnetwork/godwoken/blob/develop/crates/types/schemas/godwoken.mol#L175-L183) as:
+
+```json5
+// --- deposit lock ---
+// a rollup_type_hash exists before this args, to make args friendly to prefix search
+table DepositLockArgs {
+    // layer1 lock hash
+    owner_lock_hash: Byte32,
+    layer2_lock: Script,
+    cancel_timeout: Uint64, // v0/v1 has different min cancel_timeout, please refer to godwoken docs
+    registry_id: Uint32, // only v1
+}
+```
+
+## Reference
 
 - [Godwoken Docs](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request)
 - [More Godwoken Demos](https://github.com/classicalliu/gw-demos)
@@ -263,3 +219,4 @@ async function getRollupCellDep(): Promise<CellDep> {
 - [Polyjuice Provider](https://github.com/nervosnetwork/polyjuice-provider)
 - [Godwoken Web3](https://github.com/nervosnetwork/godwoken-web3#godwoken-web3-api) A Web3 RPC compatible layer build upon Godwoken/Polyjuice.
 - [lumos](https://github.com/nervosnetwork/lumos) A library for building dAPP on CKB
+- [Scanner API](https://github.com/Magickbase/ckb-wallet-and-explorer/wiki/Godwoken-Explorer)
