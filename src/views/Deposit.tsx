@@ -195,6 +195,7 @@ export default function Deposit() {
         cancelTimeout,
       });
       setIsModalVisible(false);
+      setTimeout(() => window.location.reload(), 1000);
     } catch (e) {
       handleError(e, selectedSudt);
       setIsModalVisible(false);
