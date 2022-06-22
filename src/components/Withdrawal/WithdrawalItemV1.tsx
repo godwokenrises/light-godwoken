@@ -213,7 +213,10 @@ const WithdrawalRequestCard = ({
           </FixedHeightRow>
           <FixedHeightRow>
             <MainText>
-              Layer 1 Tx: <a href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>Open In Explorer</a>
+              Layer 1 Tx:{" "}
+              <a target="blank" href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>
+                Open In Explorer
+              </a>
             </MainText>
           </FixedHeightRow>
         </div>

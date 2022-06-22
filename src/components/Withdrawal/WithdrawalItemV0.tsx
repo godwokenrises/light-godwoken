@@ -206,7 +206,9 @@ const WithdrawalRequestCard = ({
         <div className="list-detail">
           <FixedHeightRow>
             <MainText title={txHash}>
-              <a href={`${l1ScannerUrl}/transaction/${txHash}`}>Open In Explorer</a>
+              <a target="blank" href={`${l1ScannerUrl}/transaction/${txHash}`}>
+                Open In Explorer
+              </a>
             </MainText>
           </FixedHeightRow>
         </div>
