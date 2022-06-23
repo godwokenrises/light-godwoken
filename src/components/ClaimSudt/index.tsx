@@ -17,6 +17,8 @@ export const ClaimSudt: React.FC = () => {
     } catch (error) {
       if (error instanceof NotEnoughCapacityError) {
         notification.error({ message: "Claim error, you need get some ckb first" });
+      } else {
+        throw error;
       }
     }
   };
