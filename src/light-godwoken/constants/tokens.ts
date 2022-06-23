@@ -95,8 +95,17 @@ export const TOKEN_LIST_V1 = [
     l1LockArgs: "0x1b072aa0ded384067106ea0c43c85bd71bafa5afdb432123511da46b390a4e33",
   },
 ];
+export const TOKEN_LIST_V0_MAINNET = [];
 
-export const getTokenList = () => {
+export const TOKEN_LIST_V1_MAINNET = [];
+
+export const getTokenList = (isMainnet = false) => {
+  if (isMainnet) {
+    return {
+      v0: TOKEN_LIST_V0_MAINNET,
+      v1: TOKEN_LIST_V1_MAINNET,
+    };
+  }
   return {
     v0: TOKEN_LIST_V0,
     v1: TOKEN_LIST_V1,

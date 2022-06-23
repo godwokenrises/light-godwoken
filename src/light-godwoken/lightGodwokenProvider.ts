@@ -41,7 +41,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (lightGodwokenConfig) {
       validateLightGodwokenConfig(lightGodwokenConfig[env]);
     }
-    config.initializeConfig(config.predefined.AGGRON4);
     this.lightGodwokenConfig = initConfig(env, lightGodwokenConfig);
 
     const { layer1Config, layer2Config } = this.lightGodwokenConfig;

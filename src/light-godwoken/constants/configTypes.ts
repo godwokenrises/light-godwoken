@@ -22,6 +22,7 @@ export type Layer2Config = {
   SCANNER_URL: string;
   SCANNER_API: string;
   CHAIN_NAME: string;
+  FINALITY_BLOCKS: number;
   MIN_CANCEL_DEPOSIT_TIME: number;
 };
 

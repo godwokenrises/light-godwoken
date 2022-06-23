@@ -37,6 +37,7 @@ import {
 import { GodwokenVersion } from "./constants/configTypes";
 import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
+import { isMainnet } from "./env";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   godwokenScannerClient;
@@ -91,7 +92,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v0.forEach((token) => {
+    getTokenList(isMainnet).v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -124,7 +125,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v0.forEach((token) => {
+    getTokenList(isMainnet).v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
