@@ -39,7 +39,7 @@ import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec, V0DepositLockArgs } from "./schemas/codecV0";
-import { debug, debugProductionEnv } from "./debug";
+import { debug } from "./debug";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 import {
   Erc20NotFoundError,
@@ -342,7 +342,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       }
       if (withdrawal === null && loop > maxLoop) {
         eventEmitter.emit("fail", txHash);
-        // debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
     }, 10000);
@@ -391,7 +390,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(layer2CkbBalance) },
         errMsg,
       );
-      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }
@@ -407,7 +405,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           { expected: BI.from(payload.amount), actual: BI.from(layer2Erc20Balance) },
           errMsg,
         );
-        // debugProductionEnv(error);
+        // (error);
         eventEmitter.emit("fail", error);
         throw error;
       }

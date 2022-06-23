@@ -33,7 +33,7 @@ import {
   DepositEventEmitter,
   PendingDepositTransaction,
 } from "./lightGodwokenType";
-import { debug, debugProductionEnv } from "./debug";
+import { debug } from "./debug";
 import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
@@ -51,7 +51,6 @@ import EventEmitter from "events";
 import { isSpecialWallet } from "./utils";
 import { getAdvancedSettings } from "./constants/configManager";
 
-const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
@@ -170,10 +169,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let txSkeleton = await this.createCancelDepositTx(depositCell);
     txSkeleton = await this.payTxFee(txSkeleton);
     const transaction = helpers.createTransactionFromSkeleton(txSkeleton);
-    transaction.inputs[1].since = MIN_RELATIVE_TIME;
+    // first cell input is owner ckb cell, second input is deposit cell
+    transaction.inputs[1].since = `0xc0${BI.from(cancelTimeout).toHexString().slice(2).padStart(14, "0")}`;
     let signedTx = await this.provider.signL1Tx(transaction);
     const txHash = await this.provider.sendL1Transaction(signedTx);
-    // debugProductionEnv(`Cancel deposit: ${txHash}`);
     return txHash;
   }
 
@@ -415,7 +414,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw e;
     }
 
-    // debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
       eventEmitter.emit("sent", txHash);
       this.waitForDepositToComplete(txHash, eventEmitter);
@@ -445,7 +443,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         } else {
           eventEmitter.emit("fail", new DepositTimeoutError(txHash, "Deposit timeout"));
         }
-        debugProductionEnv("wait for deposit to complete max loop exceeded:", txHash);
         clearInterval(nIntervId);
       }
 
@@ -555,7 +552,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       loop++;
       if (loop > maxLoop) {
         eventEmitter.emit("fail", new WithdrawalTimeoutError(txHash, "Withdrawal timeout"));
-        debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
       const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
