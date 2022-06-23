@@ -13,7 +13,7 @@ export const ClaimSudt: React.FC = () => {
     }
     try {
       const txHash = await lightGodwoken.claimUSDC();
-      notification.success({ message: `claim 1,000  USDC successful Tx: ${txHash}` });
+      notification.success({ message: `claim 1,000 TTKN successful Tx: ${txHash}` });
     } catch (error) {
       if (error instanceof NotEnoughCapacityError) {
         notification.error({ message: "Claim error, you need get some ckb first" });
