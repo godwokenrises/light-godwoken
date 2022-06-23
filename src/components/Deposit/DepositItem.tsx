@@ -199,7 +199,6 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
               <SecondeButton onClick={showModal}>cancel</SecondeButton>
             ) : (
               <span>
-                pending...{" "}
                 <Tooltip
                   title={
                     "This deposit will be committed in a few minutes, you can cancel deposit here if it takes longer than 7 days."
