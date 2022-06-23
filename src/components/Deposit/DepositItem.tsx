@@ -199,10 +199,9 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
               <SecondeButton onClick={showModal}>cancel</SecondeButton>
             ) : (
               <span>
-                pending...{" "}
                 <Tooltip
                   title={
-                    "This deposit will be committed in a few minites, you can cancel deposit here if it takes longer than 7 days."
+                    "This deposit will be committed in a few minutes, you can cancel deposit here if it takes longer than 7 days."
                   }
                 >
                   <QuestionCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
