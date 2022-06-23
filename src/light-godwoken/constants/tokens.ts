@@ -11,6 +11,15 @@ export const TOKEN_LIST_V0 = [
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
   },
   {
+    id: 2656,
+    symbol: "dCKB",
+    name: "Wrapped CKB",
+    decimals: 18,
+    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    address: "0x5ae3Bd82b66E668412B4912770F5f843C026DB4B",
+    l1LockArgs: "0xc43009f083e70ae3fee342d59b8df9eec24d669c1c3a3151706d305f5362c37e",
+  },
+  {
     id: 35,
     symbol: "DAI|eth",
     name: "Wrapped DAI (ForceBridge from Ethereum)",
@@ -57,6 +66,15 @@ export const TOKEN_LIST_V1 = [
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
     address: "0x3c41edd22658b2d6cf0eb26da941d74fe45bea52",
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
+  },
+  {
+    id: 6167,
+    symbol: "dCKB",
+    name: "Wrapped CKB",
+    decimals: 18,
+    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    address: "0x070A38c2e3D7695Ca80c4762e72Cee92B871fFd2",
+    l1LockArgs: "0xc43009f083e70ae3fee342d59b8df9eec24d669c1c3a3151706d305f5362c37e",
   },
   {
     id: 29378,
