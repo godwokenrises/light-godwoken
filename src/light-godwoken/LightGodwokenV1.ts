@@ -20,7 +20,7 @@ import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
-import { debug, debugProductionEnv } from "./debug";
+import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
@@ -356,7 +356,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(balance) },
         errMsg,
       );
-      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }
@@ -394,7 +393,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         payload.amount,
       ).toString()}`;
       const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
-      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }
