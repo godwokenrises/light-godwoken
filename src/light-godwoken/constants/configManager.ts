@@ -1,4 +1,3 @@
-import { captureException } from "@sentry/react";
 import { CellDep, Indexer } from "@ckb-lumos/lumos";
 import { isMainnet } from "../env";
 import { Godwoken } from "../godwoken/godwokenV1";
@@ -45,24 +44,18 @@ export async function fetchLatestV1Config(config?: LightGodwokenConfig): Promise
 }
 
 export function getCurrentConfigFromLocalStorage(): LightGodwokenConfigMap {
-  return getConfigFromLocalStorage("current-config");
+  return getConfigFromLocalStorageOrPredefined("current-config");
 }
 
 export function getLatestConfigFromLocalStorage(): LightGodwokenConfigMap {
-  return getConfigFromLocalStorage("latest-config");
+  return getConfigFromLocalStorageOrPredefined("latest-config");
 }
 
-export function getConfigFromLocalStorage(path: string): LightGodwokenConfigMap {
+export function getConfigFromLocalStorageOrPredefined(path: string): LightGodwokenConfigMap {
   let config;
-  try {
-    const configString = localStorage.getItem(path);
-    config = JSON.parse(configString!);
-    if (!config) {
-      throw new Error(`[getConfigFromLocalStorage] Local config path ${path} is empty`);
-    }
-  } catch (error) {
-    captureException(error);
-    debug("[getConfigFromLocalStorage] load config error", error);
+  const configString = localStorage.getItem(path);
+  config = JSON.parse(configString!);
+  if (!config) {
     config = isMainnet ? predefined_mainnet : predefined_testnet;
   }
   return config;
