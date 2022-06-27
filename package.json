@@ -34,6 +34,7 @@
     "ethers": "^5.6.5",
     "events": "^3.3.0",
     "jsbi": "^4.1.0",
+    "lodash": "^4.17.21",
     "numeral": "^2.0.6",
     "react": "^17.0.2",
     "react-bootstrap": "^2.0.3",
