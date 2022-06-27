@@ -1,5 +1,4 @@
 import { WithdrawalList } from "../../components/Withdrawal/ListV0";
-import Unlock from "../../components/Withdrawal/Unlock";
 import RequestWithdrawal from "../../components/Withdrawal/RequestWithdrawalV0";
 import { Card, CardHeader, PageContent, Text } from "../../style/common";
 import { WalletConnect } from "../../components/WalletConnect";
@@ -25,7 +24,7 @@ const WithdrawalV0: React.FC = () => {
       </Card>
       {lightGodwoken && (
         <Card className="content">
-          <WithdrawalList unlockButton={(cell) => <Unlock cell={cell!}></Unlock>}></WithdrawalList>
+          <WithdrawalList />
         </Card>
       )}
     </PageContent>

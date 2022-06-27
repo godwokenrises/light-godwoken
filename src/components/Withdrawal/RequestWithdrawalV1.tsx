@@ -110,6 +110,12 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
     });
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol]);
 
+  useMemo(() => {
+    setCKBInput("");
+    setSudtValue("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken]);
+
   return (
     <>
       <PageMain className="main">

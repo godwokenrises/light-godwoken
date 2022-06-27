@@ -28,5 +28,6 @@ export class Erc20NotFoundError extends LightGodwokenError<string> {}
 export class DepositTxNotFoundError extends LightGodwokenError<string> {}
 export class DepositCellNotFoundError extends LightGodwokenError<string> {}
 export class DepositTimeoutError extends LightGodwokenError<string> {}
+export class DepositRejectedError extends LightGodwokenError<string> {}
 export class DepositCanceledError extends LightGodwokenError<string> {}
 export class WithdrawalTimeoutError extends LightGodwokenError<string> {}

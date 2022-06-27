@@ -26,7 +26,6 @@ import {
   SUDT,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  WithdrawResultWithCell,
   LightGodwokenBase,
   Token,
   DepositRequest,
@@ -38,6 +37,7 @@ import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
   DepositCellNotFoundError,
+  DepositRejectedError,
   DepositTimeoutError,
   DepositTxNotFoundError,
   Layer1RpcError,
@@ -70,7 +70,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
-  abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
+  // abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
@@ -429,11 +429,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   waitForDepositToComplete(txHash: HexString, eventEmitter: EventEmitter) {
     debug("Waiting for deposit to complete...", txHash);
-    const maxLoop = 20;
+    const maxLoop = 60;
     let loop = 0;
     let depositTx: TransactionWithStatus | null;
     let depositCellOutPoint: OutPoint | null;
     let depositCell: CellWithStatus | null;
+
     const nIntervId = setInterval(async () => {
       loop++;
       if (loop > maxLoop) {
@@ -453,6 +454,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           depositTx = txOnChain;
           loop = 0;
           debug("depositTx", depositTx);
+        }
+        if (txOnChain && txOnChain.tx_status.status === "rejected") {
+          clearInterval(nIntervId);
+          eventEmitter.emit("fail", new DepositRejectedError(txHash, "Deposit rejected"));
         }
       }
 
@@ -533,7 +538,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           }
         }
       }
-    }, 30000);
+    }, 10000);
   }
 
   subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
@@ -568,14 +573,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }, 10000);
   }
 
-  subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
-    const eventEmitter = new EventEmitter();
-    for (let index = 0; index < txHashList.length; index++) {
-      const txHash = txHashList[index];
-      this.waitForWithdrawalToComplete(txHash, eventEmitter);
-    }
-    return eventEmitter;
-  }
+  // subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
+  //   const eventEmitter = new EventEmitter();
+  //   for (let index = 0; index < txHashList.length; index++) {
+  //     const txHash = txHashList[index];
+  //     this.waitForWithdrawalToComplete(txHash, eventEmitter);
+  //   }
+  //   return eventEmitter;
+  // }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {
     const feeRate = await this.provider.getMinFeeRate();

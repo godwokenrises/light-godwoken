@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
@@ -57,19 +57,6 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, upd
         status: "l2Pending",
       };
     });
-
-  useEffect(() => {
-    const l2PendingList = localTxHistory.filter((history) => history.status === "l2Pending");
-    const newWithdrawalEventEmitter = (lightGodwoken as LightGodwokenV1).subscribPendingWithdrawalTransactions(
-      l2PendingList.map((tx) => tx.txHash),
-    );
-    setWithdrawalEventEmitter(newWithdrawalEventEmitter);
-    return function cleanup() {
-      withdrawalEventEmitter.removeAllListeners();
-      newWithdrawalEventEmitter.removeAllListeners();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken, localTxHistory]);
 
   withdrawalEventEmitter.on("success", (txHash) => {
     console.log("success triggerd in subscribe withdrawal", txHash);

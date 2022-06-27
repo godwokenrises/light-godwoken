@@ -1,28 +1,11 @@
-import {
-  BI,
-  Cell,
-  CellDep,
-  core,
-  DepType,
-  Hash,
-  HashType,
-  helpers,
-  HexNumber,
-  HexString,
-  Script,
-  toolkit,
-  utils,
-  WitnessArgs,
-} from "@ckb-lumos/lumos";
+import { BI, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
-  UnlockPayload,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   LightGodwokenV0,
-  WithdrawResultWithCell,
   ProxyERC20,
   SUDT,
   GetErc20Balances,
@@ -30,11 +13,12 @@ import {
   GetL2CkbBalancePayload,
   BaseWithdrawalEventEmitterPayload,
   Token,
+  WithdrawResultV0,
+  CKB_SUDT_ID,
 } from "./lightGodwokenType";
 import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
-import { getCellDep } from "./constants/configUtils";
 import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
@@ -52,11 +36,14 @@ import {
 } from "./constants/error";
 import { GodwokenVersion } from "./constants/configTypes";
 import { getAdvancedSettings } from "./constants/configManager";
+import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
+  godwokenScannerClient;
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
   }
 
   getMinimalDepositCapacity(): BI {
@@ -176,62 +163,32 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await contract.methods.balanceOf(this.provider.l2Address).call();
   }
 
-  async listWithdraw(): Promise<WithdrawResultWithCell[]> {
-    const searchParams = this.getWithdrawalCellSearchParams(this.provider.l2Address);
-    const collectedCells: WithdrawResultWithCell[] = [];
-    const collector = this.provider.ckbIndexer.collector({ lock: searchParams.script });
+  async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
+    const ownerLockHash = await this.provider.getLayer1LockScriptHash();
+    const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash);
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-
-    const ownerCKBLock = helpers.parseAddress(this.provider.l1Address);
-    const ownerLock: Script = {
-      code_hash: ownerCKBLock.code_hash,
-      args: ownerCKBLock.args,
-      hash_type: ownerCKBLock.hash_type as HashType,
-    };
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    debug("ownerLockHash is:", ownerLockHash);
-
-    for await (const cell of collector.collect()) {
-      const rawLockArgs = cell.cell_output.lock.args;
-      const withdrawBlockBytes = `0x${rawLockArgs.slice(194, 194 + 16)}`;
-      const withdrawBlock = utils.readBigUInt64LECompatible(withdrawBlockBytes).toNumber();
-      const containsOwnerLock = rawLockArgs.includes(ownerLockHash.substring(2));
-      debug("withdrawBlock is:", withdrawBlock);
-      debug("containsOwnerLock is:", containsOwnerLock);
-
-      let sudtTypeHash = "0x" + "00".repeat(32);
-      let erc20: ProxyERC20 | undefined = undefined;
-      let amount: HexNumber = "0x0";
-
-      if (cell.cell_output.type) {
-        const sudtType: Script = {
-          code_hash: cell.cell_output.type.code_hash,
-          args: cell.cell_output.type.args,
-          hash_type: cell.cell_output.type.hash_type as HashType,
-        };
-        sudtTypeHash = utils.computeScriptHash(sudtType);
-        const builtinErc20List = this.getBuiltinErc20List();
-        erc20 = builtinErc20List.find((e) => e.sudt_script_hash === sudtTypeHash);
-        amount = `0x${utils.readBigUInt128LE(cell.data).toString(16)}`;
+    const collectedWithdrawals: WithdrawResultV0[] = histories.map((item) => {
+      let amount = "0x0";
+      let erc20 = undefined;
+      if (item.udt_id !== CKB_SUDT_ID) {
+        amount = BI.from(item.amount).toHexString();
+        erc20 = this.getBuiltinErc20List().find(
+          (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
+        );
       }
-
-      if (containsOwnerLock) {
-        collectedCells.push({
-          cell,
-          withdrawalBlockNumber: withdrawBlock,
-          remainingBlockNumber: Math.max(0, withdrawBlock - lastFinalizedBlockNumber),
-          capacity: cell.cell_output.capacity,
-          amount,
-          sudt_script_hash: sudtTypeHash,
-          erc20,
-        });
-      }
-    }
-    const sortedWithdrawals = collectedCells.sort((a, b) => {
-      return a.withdrawalBlockNumber - b.withdrawalBlockNumber;
+      return {
+        isFastWithdrawal: item.is_fast_withdrawal,
+        layer1TxHash: item.layer1_tx_hash,
+        withdrawalBlockNumber: item.block_number,
+        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        capacity: BI.from(item.capacity).toHexString(),
+        amount,
+        sudt_script_hash: item.udt_script_hash,
+        erc20,
+        status: item.state === "succeed" ? "success" : item.state,
+      };
     });
-    debug("found withdraw cells:", sortedWithdrawals);
-    return sortedWithdrawals;
+    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -445,107 +402,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     });
 
     return rawWithdrawalRequest;
-  }
-
-  async unlock(payload: UnlockPayload): Promise<Hash> {
-    const l1Address = this.provider.l1Address;
-    const l1Lock = helpers.parseAddress(l1Address);
-    const outputCells: Cell[] = [];
-    if (payload.cell.cell_output.type) {
-      const dummySudtCell = {
-        cell_output: {
-          capacity: "0x0",
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      };
-      const sudtCapacity = helpers.minimalCellCapacity(dummySudtCell);
-      const capacityLeft = BI.from(payload.cell.cell_output.capacity).sub(sudtCapacity);
-      outputCells.push({
-        cell_output: {
-          capacity: capacityLeft.toHexString(),
-          lock: l1Lock,
-        },
-        data: "0x",
-      });
-      outputCells.push({
-        cell_output: {
-          capacity: `0x${sudtCapacity.toString(16)}`,
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      });
-    } else {
-      outputCells.push({
-        cell_output: {
-          capacity: payload.cell.cell_output.capacity,
-          lock: l1Lock,
-          type: payload.cell.cell_output.type,
-        },
-        data: payload.cell.data,
-      });
-    }
-    const newWitnessArgs: WitnessArgs = {
-      lock: "0x0000000004000000",
-    };
-    const withdrawalWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
-    ).serializeJson();
-
-    let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const withdrawalLockDep: CellDep = {
-      out_point: {
-        tx_hash: layer2Config.SCRIPTS.withdrawal_lock.cell_dep.out_point.tx_hash,
-        index: layer2Config.SCRIPTS.withdrawal_lock.cell_dep.out_point.index,
-      },
-      dep_type: layer2Config.SCRIPTS.withdrawal_lock.cell_dep.dep_type as DepType,
-    };
-    const rollupCellDep: CellDep = await this.getRollupCellDep();
-    const { layer1Config } = this.provider.getLightGodwokenConfig();
-    txSkeleton = txSkeleton
-      .update("inputs", (inputs) => {
-        return inputs.push(payload.cell);
-      })
-      .update("outputs", (outputs) => {
-        return outputs.push(...outputCells);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(withdrawalLockDep);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(rollupCellDep);
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.omni_lock));
-      })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
-      })
-      .update("witnesses", (witnesses) => {
-        return witnesses.push(withdrawalWitness);
-      });
-
-    if (payload.cell.cell_output.type) {
-      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
-      });
-    }
-    // fee paid for this tx should cost no more than 1000 shannon
-    const maxTxFee = BI.from(1000);
-    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, maxTxFee);
-    let signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
-    const txFee = await this.calculateTxFee(signedTx);
-    txSkeleton = txSkeleton.update("outputs", (outputs) => {
-      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
-      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
-      return outputs;
-    });
-    signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
-    const txHash = await this.provider.sendL1Transaction(signedTx);
-    return txHash;
   }
 
   generateDepositLock(): Script {
