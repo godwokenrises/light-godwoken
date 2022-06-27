@@ -234,7 +234,7 @@ export const predefined_mainnet: LightGodwokenConfigMap = {
           args: "0xab21bfe2bf85927bb42faaf3006a355222e24d5ea1d4dec0e62f53a8e0c04690",
         },
       },
-      GW_POLYJUICE_RPC_URL: "https://rpc.godwoken.io/",
+      GW_POLYJUICE_RPC_URL: "https://v1.mainnet.godwoken.io/rpc",
       SCANNER_URL: "https://v1.gwscan.com/",
       SCANNER_API: "https://api.v1.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Mainet v1",

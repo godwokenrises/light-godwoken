@@ -108,7 +108,44 @@ export const TOKEN_LIST_V1 = [
   },
 ];
 
-export const TOKEN_LIST_V0_MAINNET = [];
+export const TOKEN_LIST_V0_MAINNET: LightGodwokenTokenType[] = [
+  // {
+  //   id: 0,
+  //   symbol: "USDC",
+  //   name: "USD Coin",
+  //   decimals: 6,
+  //   tokenURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=002",
+  //   address: "0xC3b946c53E2e62200515d284249f2a91d9DF7954",
+  //   l1LockArgs: "0x000000000000",
+  // },
+  // {
+  //   id: 0,
+  //   symbol: "USDT",
+  //   name: "Tether USD",
+  //   decimals: 6,
+  //   tokenURI: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=002",
+  //   address: "0x07a388453944bB54BE709AE505F14aEb5d5cbB2C",
+  //   l1LockArgs: "0x000000000000",
+  // },
+  // {
+  //   id: 0,
+  //   symbol: "dCKB",
+  //   name: "NexisDAO CKB",
+  //   decimals: 8,
+  //   tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+  //   address: "0x53A1964a163f64Da59eFE6A802e35b5529d078E2",
+  //   l1LockArgs: "0x000000000000",
+  // },
+  // {
+  //   id: 0,
+  //   symbol: "TAI",
+  //   name: "NexisDAO TAI",
+  //   decimals: 6,
+  //   tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+  //   address: "0xf4187511D43B90751a28b6811d13AFB49BeF8452",
+  //   l1LockArgs: "0x000000000000",
+  // },
+];
 
 export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V1_TOKENS.map((token) => {
   return {
