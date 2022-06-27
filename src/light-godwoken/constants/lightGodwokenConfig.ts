@@ -140,8 +140,8 @@ const v0ConfigLina: LightGodwokenConfig = {
       },
     },
     GW_POLYJUICE_RPC_URL: "https://mainnet.godwoken.io/rpc",
-    SCANNER_URL: "https://layerview.io",
-    SCANNER_API: "https://aggron.gwscan.com",
+    SCANNER_URL: "https://v0.gwscan.com",
+    SCANNER_API: "https://api.gwscan.com/api/",
     CHAIN_NAME: "Godwoken v0 mainnet",
     FINALITY_BLOCKS: 3600,
     MIN_CANCEL_DEPOSIT_TIME: 172800, // two days
@@ -235,11 +235,11 @@ export const predefined_mainnet: LightGodwokenConfigMap = {
         },
       },
       GW_POLYJUICE_RPC_URL: "https://rpc.godwoken.io/",
-      SCANNER_URL: "https://v1.aggron.gwscan.com/zh-CN",
-      SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
+      SCANNER_URL: "https://v1.gwscan.com/",
+      SCANNER_API: "https://api.v1.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Mainet v1",
       FINALITY_BLOCKS: 16800,
-      MIN_CANCEL_DEPOSIT_TIME: 604800, // TODO
+      MIN_CANCEL_DEPOSIT_TIME: 604800,
     },
   },
 };

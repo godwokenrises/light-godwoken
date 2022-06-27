@@ -1,3 +1,15 @@
+import { GODWOKEN_V1_TOKENS } from "./godwokenTokensV1";
+
+type LightGodwokenTokenType = {
+  id: number;
+  symbol: string;
+  name: string;
+  decimals: number;
+  tokenURI: string;
+  address: string;
+  l1LockArgs: string;
+};
+
 export const CKB_SUDT_ID = 1; // This is default sudt id fro ckb on Godwoken
 
 export const TOKEN_LIST_V0 = [
@@ -95,9 +107,20 @@ export const TOKEN_LIST_V1 = [
     l1LockArgs: "0x1b072aa0ded384067106ea0c43c85bd71bafa5afdb432123511da46b390a4e33",
   },
 ];
+
 export const TOKEN_LIST_V0_MAINNET = [];
 
-export const TOKEN_LIST_V1_MAINNET = [];
+export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V1_TOKENS.map((token) => {
+  return {
+    id: 0,
+    symbol: token.info.symbol,
+    name: token.info.name,
+    decimals: token.info.decimals,
+    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    address: token.erc20Info.ethAddress,
+    l1LockArgs: token.erc20Info.sudtScriptArgs,
+  };
+});
 
 export const getTokenList = (isMainnet = false) => {
   if (isMainnet) {
