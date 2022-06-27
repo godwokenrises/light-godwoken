@@ -218,6 +218,11 @@ const DepositItem = ({ capacity, amount, token, status, txHash, date, cancelTime
               <ExclamationCircleOutlined style={{ color: COLOR.warn, height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}
+          {status === "rejected" && (
+            <Tooltip title="The tx is rejected on chain">
+              <ExclamationCircleOutlined style={{ color: COLOR.error, height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
+          )}
         </div>
         <div className="list-detail">
           <MainText title={txHash}>

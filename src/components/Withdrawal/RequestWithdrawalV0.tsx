@@ -117,6 +117,12 @@ const RequestWithdrawalV0: React.FC = () => {
     );
   }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol, targetValue]);
 
+  useMemo(() => {
+    setCKBInput("");
+    setSudtValue("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken]);
+
   return (
     <>
       <PageMain className="main">

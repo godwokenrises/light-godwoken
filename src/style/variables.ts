@@ -4,4 +4,5 @@ export const COLOR = {
   label: "#666666",
   brand: "#00cc9b",
   warn: "#f5c842",
+  error: "#ff0000",
 };
