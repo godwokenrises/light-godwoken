@@ -13,30 +13,34 @@ export const Provider: React.FC = (props) => {
   const location = useLocation();
   useEffect(() => {
     detectEthereumProvider().then((ethereum: any) => {
-      ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-        if (!accounts || !accounts[0]) return;
+      if (ethereum) {
+        ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
+          if (!accounts || !accounts[0]) return;
 
-        let instance: DefaultLightGodwoken;
-        if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
-          instance = new LightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
+          let instance: DefaultLightGodwoken;
+          if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
+            instance = new LightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
+            setLightGodwoken(instance);
+          } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
+            const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
+            setLightGodwoken(lightGodwokenV1);
+          }
+        });
+
+        ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
+          if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
+
+          let instance: DefaultLightGodwoken;
+          if (location.pathname.startsWith("/v0")) {
+            instance = new LightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
+          } else {
+            instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
+          }
           setLightGodwoken(instance);
-        } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
-          const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
-          setLightGodwoken(lightGodwokenV1);
-        }
-      });
-
-      ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
-        if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
-
-        let instance: DefaultLightGodwoken;
-        if (location.pathname.startsWith("/v0")) {
-          instance = new LightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
-        } else {
-          instance = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
-        }
-        setLightGodwoken(instance);
-      });
+        });
+      } else {
+        alert("Please install MetaMask to use Godwoken Bridge!");
+      }
     });
   }, [lightGodwoken, location.pathname]);
 
