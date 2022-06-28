@@ -1,5 +1,6 @@
 import { LightGodwokenTokenType } from "./configTypes";
 
+// https://github.com/nervosnetwork/godwoken-info/blob/mainnet_v1/mainnet_v1/bridged-token-list.json
 export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
   {
     id: 0,
