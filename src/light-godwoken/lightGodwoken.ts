@@ -783,19 +783,30 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async getSudtBalances(payload: GetSudtBalances): Promise<GetSudtBalancesResult> {
-    const result: GetSudtBalancesResult = { balances: [] };
-    for (let index = 0; index < payload.types.length; index++) {
-      const type = payload.types[index];
-      const collector = this.provider.ckbIndexer.collector({
-        lock: helpers.parseAddress(this.provider.l1Address),
-        type,
-      });
-      let collectedSum = BI.from(0);
-      for await (const cell of collector.collect()) {
-        collectedSum = collectedSum.add(utils.readBigUInt128LECompatible(cell.data));
+    const result: GetSudtBalancesResult = { balances: new Array(payload.types.length).fill("0x0") };
+    const sudtTypeScript = payload.types[0]; // any sudt type script
+    const collector = this.provider.ckbIndexer.collector({
+      lock: helpers.parseAddress(this.provider.l1Address),
+      type: {
+        ...sudtTypeScript,
+        args: "0x",
+      },
+    });
+
+    // type hash list of all sudt that user want to query
+    const typeScriptHashList = payload.types.map((typeScript) => utils.computeScriptHash(typeScript));
+
+    for await (const cell of collector.collect()) {
+      const currentCellTypeHash = utils.computeScriptHash(cell.cell_output.type!);
+      const currentSudtIndex = typeScriptHashList.indexOf(currentCellTypeHash);
+      if (currentSudtIndex !== -1) {
+        let currentSudtSum = result.balances[currentSudtIndex];
+        result.balances[currentSudtIndex] = BI.from(currentSudtSum)
+          .add(utils.readBigUInt128LECompatible(cell.data))
+          .toHexString();
       }
-      result.balances.push("0x" + collectedSum.toString(16));
     }
+
     return result;
   }
 
