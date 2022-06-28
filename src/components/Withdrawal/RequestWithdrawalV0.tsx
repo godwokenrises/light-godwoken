@@ -1,6 +1,6 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { notification } from "antd";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
@@ -12,19 +12,17 @@ import WithdrawalTarget from "./WithdrawalTarget";
 import { CKB_L1 } from "./const";
 import { PageMain } from "./requestWithdrawalStyle";
 import SubmitWithdrawal from "./SubmitWithdrawal";
-import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
-import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../utils/inputValidate";
+import { assertsLightGodwokenV0, isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
+import { getInputError } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
+import { getDisplayAmount } from "../../utils/formatTokenAmount";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
   const [sudtValue, setSudtValue] = useState("");
   const [targetValue, setWithdrawalTarget] = useState(CKB_L1);
-
   const [loading, setLoading] = useState(false);
-  const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
-  const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
   const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
@@ -32,20 +30,6 @@ const RequestWithdrawalV0: React.FC = () => {
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
-
-  useEffect(() => {
-    if (!CKBBalance) {
-      setIsCKBValueValidate(false);
-    } else {
-      setIsCKBValueValidate(
-        isCKBInputValidate(CKBInput, CKBBalance, { minimumCKBAmount: targetValue === CKB_L1 ? 400 : 650 }),
-      );
-    }
-  }, [CKBBalance, CKBInput, targetValue]);
-
-  useEffect(() => {
-    setIsSudtValueValidate(isSudtInputValidate(sudtValue, sudtBalance, selectedSudt?.decimals));
-  }, [sudtValue, sudtBalance, selectedSudt?.decimals]);
 
   const sendWithdrawal = () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();
@@ -103,7 +87,22 @@ const RequestWithdrawalV0: React.FC = () => {
     setSudtBalance(balance);
   };
 
+  const minimalWithdrawCKBAmount = useMemo(() => {
+    if (!lightGodwoken) return 0;
+
+    assertsLightGodwokenV0(lightGodwoken);
+
+    if (targetValue === CKB_L1) {
+      return Number(getDisplayAmount(lightGodwoken.getMinimalWithdrawalCapacity()));
+    }
+    return Number(getDisplayAmount(lightGodwoken.getMinimalWithdrawalToV1Capacity()));
+  }, [lightGodwoken, targetValue]);
+
   const inputError = useMemo(() => {
+    if (!lightGodwoken) return "waiting";
+
+    assertsLightGodwokenV0(lightGodwoken);
+
     return getInputError(
       {
         CKBInput,
@@ -113,9 +112,20 @@ const RequestWithdrawalV0: React.FC = () => {
         sudtDecimals: selectedSudt?.decimals,
         sudtSymbol: selectedSudt?.symbol,
       },
-      { minimumCKBAmount: targetValue === CKB_L1 ? 400 : 650 },
+      {
+        minimumCKBAmount: minimalWithdrawCKBAmount,
+      },
     );
-  }, [CKBInput, CKBBalance, sudtValue, sudtBalance, selectedSudt?.decimals, selectedSudt?.symbol, targetValue]);
+  }, [
+    lightGodwoken,
+    CKBInput,
+    CKBBalance,
+    sudtValue,
+    sudtBalance,
+    selectedSudt?.decimals,
+    selectedSudt?.symbol,
+    minimalWithdrawCKBAmount,
+  ]);
 
   useMemo(() => {
     setCKBInput("");
@@ -133,7 +143,7 @@ const RequestWithdrawalV0: React.FC = () => {
           label="Withdraw"
           isLoading={l2CKBBalanceQuery.isLoading}
           CKBBalance={CKBBalance}
-          placeholder={targetValue === CKB_L1 ? "Minimum 400 CKB" : "Minimum 650 CKB"}
+          placeholder={minimalWithdrawCKBAmount ? `Minimum ${minimalWithdrawCKBAmount} CKB` : ""}
         ></CKBInputPanel>
         <div className="icon">
           <PlusOutlined />
@@ -157,7 +167,7 @@ const RequestWithdrawalV0: React.FC = () => {
           sudtInput={sudtValue}
           tokenURI={selectedSudt?.tokenURI}
           sudtSymbol={selectedSudt?.symbol}
-          disabled={!CKBInput || !isCKBValueValidate || !isSudtValueValidate}
+          disabled={!!inputError}
         ></SubmitWithdrawal>
       </PageMain>
     </>

@@ -37,9 +37,11 @@ import {
 import { GodwokenVersion } from "./constants/configTypes";
 import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
+
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   godwokenScannerClient;
+
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
@@ -51,7 +53,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   getMinimalWithdrawalCapacity(): BI {
-    return BI.from(400).mul(100000000);
+    // TODO docs for 425 ckb here
+    return BI.from(425).mul(100000000);
   }
 
   getMinimalWithdrawalToV1Capacity(): BI {
