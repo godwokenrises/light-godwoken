@@ -56,3 +56,13 @@ export type LightGodwokenConfigMap = {
 };
 
 export type GodwokenVersion = keyof LightGodwokenConfigMap;
+
+export type LightGodwokenTokenType = {
+  id: number;
+  symbol: string;
+  name: string;
+  decimals: number;
+  tokenURI: string;
+  address: string;
+  l1LockArgs: string;
+};

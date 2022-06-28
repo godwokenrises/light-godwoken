@@ -1,20 +1,10 @@
-import { GODWOKEN_V0_TOKENS } from "./godwokenTokensV0";
-import { GODWOKEN_V1_TOKENS } from "./godwokenTokensV1";
-import { TOKEN_LOGOS_MAP } from "./tokenLogos";
-
-type LightGodwokenTokenType = {
-  id: number;
-  symbol: string;
-  name: string;
-  decimals: number;
-  tokenURI: string;
-  address: string;
-  l1LockArgs: string;
-};
+import { LightGodwokenTokenType } from "./configTypes";
+import { TOKEN_LIST_V0_MAINNET } from "./godwokenTokensV0";
+import { TOKEN_LIST_V1_MAINNET } from "./godwokenTokensV1";
 
 export const CKB_SUDT_ID = 1; // This is default sudt id fro ckb on Godwoken
 
-export const TOKEN_LIST_V0 = [
+export const TOKEN_LIST_V0: LightGodwokenTokenType[] = [
   {
     id: 120,
     symbol: "TTKN",
@@ -62,7 +52,7 @@ export const TOKEN_LIST_V0 = [
   },
 ];
 
-export const TOKEN_LIST_V1 = [
+export const TOKEN_LIST_V1: LightGodwokenTokenType[] = [
   {
     id: 80,
     symbol: "TTKN",
@@ -109,34 +99,6 @@ export const TOKEN_LIST_V1 = [
     l1LockArgs: "0x1b072aa0ded384067106ea0c43c85bd71bafa5afdb432123511da46b390a4e33",
   },
 ];
-
-export const TOKEN_LIST_V0_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V0_TOKENS.map((token) => {
-  const defaultLogo =
-    TOKEN_LOGOS_MAP[token.info.symbol] || "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002";
-  return {
-    id: token.erc20Info.accountID || 0,
-    symbol: token.info.symbol,
-    name: token.info.name,
-    decimals: token.info.decimals,
-    tokenURI: token.info.logoURI || defaultLogo,
-    address: token.erc20Info.ethAddress,
-    l1LockArgs: token.erc20Info.sudtScriptArgs,
-  };
-});
-
-export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V1_TOKENS.map((token) => {
-  const defaultLogo =
-    TOKEN_LOGOS_MAP[token.info.symbol] || "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002";
-  return {
-    id: 0,
-    symbol: token.info.symbol,
-    name: token.info.name,
-    decimals: token.info.decimals,
-    tokenURI: defaultLogo,
-    address: token.erc20Info.ethAddress,
-    l1LockArgs: token.erc20Info.sudtScriptArgs,
-  };
-});
 
 export const getTokenList = (isMainnet = false) => {
   if (isMainnet) {
