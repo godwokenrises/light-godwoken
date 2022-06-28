@@ -5,6 +5,7 @@ import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
+import { NotEnoughCapacityError } from "./constants/error";
 
 const issuerPrivateKey = process.env.REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY!;
 
@@ -74,7 +75,11 @@ export async function generateClaimUSDCTxSkeleton(
     }
   }
   if (collectedSum.lt(needCkb)) {
-    throw new Error("Not enough CKB, go get some CKB from faucet.");
+    throw new NotEnoughCapacityError(
+      { expected: needCkb, actual: collectedSum },
+      "Not enough CKB, go get some CKB from faucet.",
+    );
+    // throw new Error("Not enough CKB, go get some CKB from faucet.");
   }
 
   // collect one isuer cell, so that the issuer will need to sign the transaction, which is essential in sudt mint
