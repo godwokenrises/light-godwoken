@@ -12,19 +12,15 @@ async function main() {
   const factory = new ContractFactory(CONTRACT_INTERFACE, BYTECODE, signer);
   const tx = factory.getDeployTransaction();
 
-  try {
-    await signer
-      .sendTransaction({ ...tx, gasLimit: 1000000 })
-      .then((tx) => {
-        console.log(tx.hash);
-        return tx.wait();
-      })
-      .then((receipt) => {
-        console.log(receipt.contractAddress);
-      });
-  } catch (e) {
-
-  }
+  await signer
+    .sendTransaction({ ...tx, gasLimit: 1000000 })
+    .then((tx) => {
+      console.log(tx.hash);
+      return tx.wait();
+    })
+    .then((receipt) => {
+      console.log(receipt.contractAddress);
+    });
 }
 
 main();
