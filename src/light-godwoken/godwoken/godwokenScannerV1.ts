@@ -17,6 +17,10 @@ type WithdrawalHistory = {
   udt_script_hash: Hash;
 };
 
+interface WithdrawalHistoryV0 extends WithdrawalHistory {
+  is_fast_withdrawal: boolean;
+}
+
 export class GodwokenScanner {
   private axios;
 
@@ -32,8 +36,20 @@ export class GodwokenScanner {
       },
       timeout: 5000,
     });
-    console.debug("getWithdrawalHistories:", result.data);
+    console.debug("getWithdrawalHistories v1:", result.data);
     const withdrawalHistories: WithdrawalHistory[] = result.data.data.map((item: any) => item.attributes);
+    return withdrawalHistories;
+  }
+
+  async getWithdrawalHistoriesV0(ownerLockHash: Hash): Promise<WithdrawalHistoryV0[]> {
+    const result = await this.axios.get("/withdrawal_histories", {
+      params: {
+        owner_lock_hash: ownerLockHash,
+      },
+      timeout: 5000,
+    });
+    console.debug("getWithdrawalHistories v0:", result.data);
+    const withdrawalHistories: WithdrawalHistoryV0[] = result.data.data.map((item: any) => item.attributes);
     return withdrawalHistories;
   }
 }

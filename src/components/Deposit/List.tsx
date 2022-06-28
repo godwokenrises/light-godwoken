@@ -28,7 +28,7 @@ export const DepositList: React.FC<{ depositHistory: DepositHistoryType[]; isLoa
   };
 
   const pendingList = depositHistory.filter((history) => history.status === "pending");
-  const completedList = depositHistory.filter((history) => history.status === "success" || history.status === "fail");
+  const completedList = depositHistory.filter((history) => history.status !== "pending");
 
   return (
     <DepositListDiv>

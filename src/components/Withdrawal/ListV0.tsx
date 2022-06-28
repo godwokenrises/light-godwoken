@@ -4,11 +4,9 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
 import styled from "styled-components";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
-import { Cell } from "@ckb-lumos/base";
 import { Placeholder } from "../Placeholder";
-import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { LinkList, Tab } from "../../style/common";
-import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import { LightGodwokenV0 } from "../../light-godwoken";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -19,14 +17,8 @@ const WithdrawalListDiv = styled.div`
     overflow-y: auto;
   }
 `;
-interface Props {
-  unlockButton?: (cell?: Cell) => JSX.Element;
-}
-export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
+export const WithdrawalList: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
-  const godwokenVersion = useGodwokenVersion();
-  const l1Address = lightGodwoken?.provider.getL1Address();
-  const { txHistory } = useL1TxHistory(`${godwokenVersion}/${l1Address}/withdrawal`);
 
   const now = useClock();
   const [active, setActive] = useState("pending");
@@ -39,7 +31,7 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   const withdrawalListQuery = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
-      return lightGodwoken?.listWithdraw();
+      return (lightGodwoken as LightGodwokenV0).listWithdrawWithScannerApi();
     },
     {
       enabled: !!lightGodwoken,
@@ -47,16 +39,12 @@ export const WithdrawalList: React.FC<Props> = ({ unlockButton }: Props) => {
   );
   const { data: withdrawalList, isLoading } = withdrawalListQuery;
 
-  const pendingList =
-    withdrawalList?.map((history) => {
-      return {
-        ...history,
-        status: "pending",
-        cell: history.cell,
-        remainingBlockNumber: history.remainingBlockNumber,
-      };
-    }) || [];
-  const completedList = txHistory.filter((history) => history.status === "success" || history.status === "fail");
+  const formattedWithdrawalList = withdrawalList || [];
+
+  const pendingList = formattedWithdrawalList.filter((history) => history.status === "pending");
+  const completedList = formattedWithdrawalList.filter(
+    (history) => history.status === "success" || history.status === "failed",
+  );
 
   if (!lightGodwoken) {
     return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;

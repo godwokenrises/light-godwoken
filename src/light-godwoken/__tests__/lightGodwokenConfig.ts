@@ -71,6 +71,7 @@ export const testConfig: LightGodwokenConfigMap = {
       CHAIN_NAME: "",
       SCANNER_API: "",
       MIN_CANCEL_DEPOSIT_TIME: 1200,
+      FINALITY_BLOCKS: 100,
     },
   },
   v1: {
@@ -114,6 +115,7 @@ export const testConfig: LightGodwokenConfigMap = {
       SCANNER_URL: "",
       SCANNER_API: "",
       MIN_CANCEL_DEPOSIT_TIME: 604800,
+      FINALITY_BLOCKS: 100,
     },
   },
 };

@@ -1,5 +1,6 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import isEqual from "lodash/isEqual";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -20,7 +21,7 @@ import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
-import { debug, debugProductionEnv } from "./debug";
+import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
@@ -30,14 +31,29 @@ import {
   SudtNotFoundError,
   TransactionSignError,
 } from "./constants/error";
-import { getAdvancedSettings, getLatestConfigFromRpc, setLatestConfigToLocalStorage } from "./constants/configManager";
+import {
+  getAdvancedSettings,
+  getLatestConfigFromRpc,
+  setLatestConfigToLocalStorage,
+  getLatestConfigFromLocalStorage,
+} from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
+import { isMainnet } from "./env";
+import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
+import { BigNumber, providers } from "ethers";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
     throw new Error("Method not implemented.");
   }
   godwokenClient;
   godwokenScannerClient;
+
+  /**
+   * use {@see getMulticallProvider} to instead
+   * @private
+   */
+  private multicallProvider: MulticallProvider | null = null;
+
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
@@ -45,9 +61,36 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     this.updateConfigViaRpc();
   }
 
+  getWithdrawalWaitBlock(): number {
+    return this.provider.getConfig().layer2Config.FINALITY_BLOCKS;
+  }
+
+  async getMulticallProvider(): Promise<MulticallProvider | null> {
+    const multicallContractAddress = this.getConfig().layer2Config.MULTICALL_ADDRESS;
+
+    if (!multicallContractAddress) {
+      return null;
+    }
+
+    if (!this.multicallProvider) {
+      const chainId = Number(await this.getChainId());
+      setMulticallAddress(chainId, multicallContractAddress);
+      this.multicallProvider = new MulticallProvider(
+        new providers.JsonRpcProvider(this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL),
+        chainId,
+      );
+    }
+
+    return this.multicallProvider;
+  }
+
   async updateConfigViaRpc(): Promise<void> {
+    const currentConfig = await getLatestConfigFromLocalStorage();
     const latestConfig = await getLatestConfigFromRpc();
-    setLatestConfigToLocalStorage(latestConfig);
+    if (!isEqual(currentConfig, latestConfig)) {
+      alert("Onchain Godwoken configuration has been updated. \n Update your local configuration?");
+      setLatestConfigToLocalStorage(latestConfig);
+    }
   }
 
   getVersion(): GodwokenVersion {
@@ -65,10 +108,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   getBlockProduceTime(): number {
     return 30 * 1000;
-  }
-
-  getWithdrawalWaitBlock(): number {
-    return 100;
   }
 
   getMinimalDepositCapacity(): BI {
@@ -97,7 +136,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getBuiltinSUDTList(): SUDT[] {
     const sudtList: SUDT[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v1.forEach((token) => {
+    getTokenList(isMainnet).v1.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -116,7 +155,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v1.forEach((token) => {
+    getTokenList(isMainnet).v1.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -135,7 +174,32 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return map;
   }
+
+  async getErc20BalancesViaMulticall(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const multicall = await this.getMulticallProvider();
+    if (!multicall) throw new Error("Cannot find MULTICALL_ADDRESS in the config");
+
+    const calls = payload.addresses.map((address) =>
+      new MulticallContract(address, [
+        {
+          stateMutability: "view",
+          inputs: [{ name: "_owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "balance", type: "uint256" }],
+          type: "function",
+        },
+      ]).balanceOf(this.provider.l2Address),
+    );
+
+    const balances: BigNumber[] = await multicall.all(calls);
+    return { balances: balances.map((b) => b.toHexString()) };
+  }
+
   async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    if (this.getConfig().layer2Config.MULTICALL_ADDRESS) {
+      return this.getErc20BalancesViaMulticall(payload);
+    }
+
     const result: GetErc20BalancesResult = { balances: [] };
     if (!window.ethereum) {
       return result;
@@ -174,9 +238,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
-    const searchParams = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
+    const histories = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    const collectedWithdrawals: WithdrawResultV1[] = searchParams.map((item) => {
+    const collectedWithdrawals: WithdrawResultV1[] = histories.map((item) => {
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {

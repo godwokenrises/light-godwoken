@@ -115,10 +115,14 @@ const SubmitWithdrawal: React.FC<Props> = ({
             <Tips>Waiting for User Confirmation</Tips>
           </>
         )}
-        <Actions>
-          <PlainButton onClick={handleCancel}>Cancel</PlainButton>
-          <SecondeButton /*loading={loading}*/ onClick={() => handleSubmit()}>Confirm</SecondeButton>
-        </Actions>
+        {!loading && (
+          <>
+            <Actions>
+              <PlainButton onClick={handleCancel}>Cancel</PlainButton>
+              <SecondeButton /*loading={loading}*/ onClick={() => handleSubmit()}>Confirm</SecondeButton>
+            </Actions>
+          </>
+        )}
       </ConfirmModal>
     </>
   );

@@ -1,6 +1,10 @@
+import { LightGodwokenTokenType } from "./configTypes";
+import { TOKEN_LIST_V0_MAINNET } from "./godwokenTokensV0";
+import { TOKEN_LIST_V1_MAINNET } from "./godwokenTokensV1";
+
 export const CKB_SUDT_ID = 1; // This is default sudt id fro ckb on Godwoken
 
-export const TOKEN_LIST_V0 = [
+export const TOKEN_LIST_V0: LightGodwokenTokenType[] = [
   {
     id: 120,
     symbol: "TTKN",
@@ -48,14 +52,14 @@ export const TOKEN_LIST_V0 = [
   },
 ];
 
-export const TOKEN_LIST_V1 = [
+export const TOKEN_LIST_V1: LightGodwokenTokenType[] = [
   {
     id: 80,
     symbol: "TTKN",
     name: "Godwoken Bridge Test Token",
     decimals: 18,
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
-    address: "0x088338e5Df007e2d7B38fd6A1eBc1EB766c6E360",
+    address: "0x3c41edd22658b2d6cf0eb26da941d74fe45bea52",
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
   },
   {
@@ -64,7 +68,7 @@ export const TOKEN_LIST_V1 = [
     name: "Wrapped DAI (ForceBridge from Ethereum)",
     decimals: 18,
     tokenURI: "https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=002",
-    address: "0xAa41d1dEC760A9231Ad181d7932F5c6FBfb4dDb6",
+    address: "0x24a9467fd390d8ca70e848ce8a2e9bbe087eab0e",
     l1LockArgs: "0xcb8c7b352d88142993bae0f6a1cfc0ec0deac41e3377a2f7038ff6b103548353",
   },
   {
@@ -73,7 +77,7 @@ export const TOKEN_LIST_V1 = [
     name: "Wrapped USDC (ForceBridge from Ethereum)",
     decimals: 6,
     tokenURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=002",
-    address: "0x678dc904ca5539184314beb9d9e753e2b0397aa6",
+    address: "0x20FB98bb94aD9B98c0f0089138012E49323d0fEf",
     l1LockArgs: "0x5497b6d3d55443d573420ca8e413ee1be8553c6f7a8a6e36bf036bf71f0e3c39",
   },
   {
@@ -82,7 +86,7 @@ export const TOKEN_LIST_V1 = [
     name: "Wrapped USDT (ForceBridge from Ethereum)",
     decimals: 6,
     tokenURI: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=002",
-    address: "0xc8df91072917d3fed008c7bc1f1fcf8a8cc2c4f3",
+    address: "0x90fc553aBad2b8B6ffe9282e36db52cE6388C648",
     l1LockArgs: "0xf0a746d4d8df5c18826e11030c659ded11e7218b854f86e6bbdc2af726ad1ec3",
   },
   {
@@ -91,12 +95,18 @@ export const TOKEN_LIST_V1 = [
     name: "Wrapped ETH (ForceBridge from Ethereum)",
     decimals: 18,
     tokenURI: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=002",
-    address: "0x8bda183108dedcd0becfda0ce8989931fed6f7ba",
+    address: "0xf0d66bf1260D21fE90329A7A311e84979FEB004d",
     l1LockArgs: "0x1b072aa0ded384067106ea0c43c85bd71bafa5afdb432123511da46b390a4e33",
   },
 ];
 
-export const getTokenList = () => {
+export const getTokenList = (isMainnet = false) => {
+  if (isMainnet) {
+    return {
+      v0: TOKEN_LIST_V0_MAINNET,
+      v1: TOKEN_LIST_V1_MAINNET,
+    };
+  }
   return {
     v0: TOKEN_LIST_V0,
     v1: TOKEN_LIST_V1,
