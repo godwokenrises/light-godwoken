@@ -1,6 +1,6 @@
 import { GODWOKEN_V0_TOKENS } from "./godwokenTokensV0";
 import { GODWOKEN_V1_TOKENS } from "./godwokenTokensV1";
-import { TOKEN_LOGOS, TOKEN_LOGOS_MAP } from "./tokenLogos";
+import { TOKEN_LOGOS_MAP } from "./tokenLogos";
 
 type LightGodwokenTokenType = {
   id: number;

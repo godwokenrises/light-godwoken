@@ -179,6 +179,44 @@ export const TOKEN_LOGOS = [
   },
 ];
 
-export const TOKEN_LOGOS_MAP: Record<string, string> = TOKEN_LOGOS.reduce((previousValue, currentValue) => {
+export const TOKEN_LOGOS_MAP_FB: Record<string, string> = TOKEN_LOGOS.reduce((previousValue, currentValue) => {
   return Object.assign(previousValue, { [currentValue.symbol]: currentValue.logoURI });
 }, {});
+
+// grabed from https://github.com/nervosnetwork/godwoken-info/blob/mainnet_v1/mainnet_v0/ERC20TokenList.json
+export const TOKEN_LOGOS_MAP_MAINNET_V0: Record<string, string> = {
+  ETH: "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=002",
+  USDT: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=002",
+  DAI: "https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=002",
+  LINK: "https://cryptologos.cc/logos/chainlink-link-logo.svg?v=002",
+  BAND: "https://cryptologos.cc/logos/band-protocol-band-logo.svg?v=013",
+  BAT: "https://cryptologos.cc/logos/basic-attention-token-bat-logo.svg?v=002",
+  SNX: "https://cryptologos.cc/logos/synthetix-network-token-snx-logo.svg?v=002",
+  UNI: "https://cryptologos.cc/logos/uniswap-uni-logo.svg?v=013",
+  YFI: "https://cryptologos.cc/logos/yearn-finance-yfi-logo.svg?v=013",
+  BUSD: "https://cryptologos.cc/logos/binance-usd-busd-logo.svg?v=002",
+  COMP: "https://cryptologos.cc/logos/compound-comp-logo.svg?v=013",
+  MKR: "https://cryptologos.cc/logos/maker-mkr-logo.svg?v=002",
+  IOTX: "https://cryptologos.cc/logos/iotex-iotx-logo.svg?v=002",
+  BEL: "https://cryptologos.cc/logos/belacoin-bela-logo.svg?v=013",
+  PAX: "https://cryptologos.cc/logos/paxos-standard-pax-logo.svg?v=002",
+  USDC: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=002",
+  SXP: "https://cryptologos.cc/logos/swipe-sxp-logo.svg?v=002",
+  SUSHI: "https://cryptologos.cc/logos/sushiswap-sushi-logo.svg?v=013",
+  AAVE: "https://cryptologos.cc/logos/aave-aave-logo.svg?v=013",
+  "1INCH": "https://cryptologos.cc/logos/1inch-1inch-logo.svg?v=013",
+  LTO: "https://cryptologos.cc/logos/lto-network-lto-logo.svg?v=002",
+  MATIC: "https://cryptologos.cc/logos/matic-network-matic-logo.svg?v=002",
+  BNT: "https://cryptologos.cc/logos/bancor-bnt-logo.svg?v=002",
+  BZRX: "https://cryptologos.cc/logos/bzx-protocol-bzrx-logo.svg?v=013",
+  MDT: "https://cryptologos.cc/logos/measurable-data-token-mdt-logo.svg?v=013",
+  PNT: "https://cryptologos.cc/logos/pnetwork-pnt-logo.svg?v=013",
+  PERL: "https://cryptologos.cc/logos/perlin-perl-logo.svg?v=002",
+  BAL: "https://cryptologos.cc/logos/balancer-bal-logo.svg?v=013",
+  BLZ: "https://cryptologos.cc/logos/bluzelle-blz-logo.svg?v=002",
+  COTI: "https://cryptologos.cc/logos/coti-coti-logo.svg?v=013",
+  TRX: "https://cryptologos.cc/logos/tron-trx-logo.svg?v=002",
+  TUSD: "https://cryptologos.cc/logos/trueusd-tusd-logo.svg?v=002",
+};
+
+export const TOKEN_LOGOS_MAP: Record<string, string> = Object.assign(TOKEN_LOGOS_MAP_FB, TOKEN_LOGOS_MAP_MAINNET_V0);
