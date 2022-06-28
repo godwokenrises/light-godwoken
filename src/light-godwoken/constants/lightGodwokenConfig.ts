@@ -29,7 +29,36 @@ const layer1ConfigAggron: Layer1Config = {
   SCANNER_URL: "https://pudge.explorer.nervos.org",
 };
 
-const v0Config: LightGodwokenConfig = {
+const layer1ConfigLina: Layer1Config = {
+  SCRIPTS: {
+    omni_lock: {
+      code_hash: "0x9f3aeaf2fc439549cbc870c653374943af96a0658bd6b51be8d8983183e6f52f",
+      hash_type: "type",
+      tx_hash: "0xaa8ab7e97ed6a268be5d7e26d63d115fa77230e51ae437fc532988dd0c3ce10a",
+      index: "0x1",
+      dep_type: "code",
+    },
+    secp256k1_blake160: {
+      code_hash: "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8",
+      hash_type: "type",
+      tx_hash: "0x71a7ba8fc96349fea0ed3a5c47992e3b4084b031a42264a018e0072e8172e46c",
+      index: "0x0",
+      dep_type: "dep_group",
+    },
+    sudt: {
+      code_hash: "0x5e7a36a77e68eecc013dfa2fe6a23f3b6c344b04005808694ae6dd45eea4cfd5",
+      hash_type: "type",
+      tx_hash: "0xc7813f6a415144643970c2e88e0bb6ca6a8edc5dd7c1022746f628284a9936d5",
+      index: "0x0",
+      dep_type: "code",
+    },
+  },
+  CKB_INDEXER_URL: "https://mainnet.ckb.dev/indexer",
+  CKB_RPC_URL: "https://mainnet.ckb.dev/rpc",
+  SCANNER_URL: "https://explorer.nervos.org",
+};
+
+const v0ConfigAggron: LightGodwokenConfig = {
   layer1Config: layer1ConfigAggron,
   layer2Config: {
     SCRIPTS: {
@@ -69,12 +98,58 @@ const v0Config: LightGodwokenConfig = {
     SCANNER_URL: "https://aggron.gwscan.com",
     SCANNER_API: "https://api.aggron.gwscan.com",
     CHAIN_NAME: "Godwoken Testnet v0",
+    FINALITY_BLOCKS: 10000,
     MIN_CANCEL_DEPOSIT_TIME: 1200, // 20 minutes in seconds
   },
 };
 
+const v0ConfigLina: LightGodwokenConfig = {
+  layer1Config: layer1ConfigLina,
+  layer2Config: {
+    SCRIPTS: {
+      deposit_lock: {
+        script_type_hash: "0xe24164e2204f998b088920405dece3dcfd5c1fbcb23aecfce4b3d3edf1488897",
+        cell_dep: {
+          out_point: {
+            tx_hash: "0x23fe9d6410c93b49039a9efa3b1549ff18772c03919bc6f2aa91643c4caa01ba",
+            index: "0x0",
+          },
+          dep_type: "code",
+        },
+      },
+      withdrawal_lock: {
+        script_type_hash: "0xf1717ee388b181fcb14352055c00b7ea7cd7c27350ffd1a2dd231e059dde2fed",
+        cell_dep: {
+          out_point: {
+            tx_hash: "0x3d727bd8bb1d87ba79638b63bfbf4c9a4feb9ac5ac5a0b356f3aaf4ccb4d3a1c",
+            index: "0x0",
+          },
+          dep_type: "code",
+        },
+      },
+      eth_account_lock: {
+        script_type_hash: "0x1563080d175bf8ddd44a48e850cecf0c0b4575835756eb5ffd53ad830931b9f9",
+      },
+    },
+    ROLLUP_CONFIG: {
+      rollup_type_hash: "0x40d73f0d3c561fcaae330eabc030d8d96a9d0af36d0c5114883658a350cb9e3b",
+      rollup_type_script: {
+        code_hash: "0xa9267ff5a16f38aa9382608eb9022883a78e6a40855107bb59f8406cce00e981",
+        hash_type: "type",
+        args: "0x2d8d67c8d73453c1a6d6d600e491b303910802e0cc90a709da9b15d26c5c48b3",
+      },
+    },
+    GW_POLYJUICE_RPC_URL: "https://mainnet.godwoken.io/rpc",
+    SCANNER_URL: "https://v0.gwscan.com",
+    SCANNER_API: "https://api.gwscan.com/api/",
+    CHAIN_NAME: "Godwoken v0 mainnet",
+    FINALITY_BLOCKS: 3600,
+    MIN_CANCEL_DEPOSIT_TIME: 172800, // two days
+  },
+};
+
 export const predefined_testnet: LightGodwokenConfigMap = {
-  v0: v0Config,
+  v0: v0ConfigAggron,
   v1: {
     layer1Config: layer1ConfigAggron,
     layer2Config: {
@@ -115,6 +190,7 @@ export const predefined_testnet: LightGodwokenConfigMap = {
       SCANNER_URL: "https://v1.betanet.gwscan.com/",
       SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Testnet v1.1",
+      FINALITY_BLOCKS: 100,
       MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
 
       MULTICALL_ADDRESS: "0x65ba0AeE059920dA4D7F8b17B782AF26F463ad5C",
@@ -123,48 +199,49 @@ export const predefined_testnet: LightGodwokenConfigMap = {
 };
 
 export const predefined_mainnet: LightGodwokenConfigMap = {
-  v0: v0Config,
+  v0: v0ConfigLina,
   v1: {
-    layer1Config: layer1ConfigAggron,
+    layer1Config: layer1ConfigLina,
     layer2Config: {
       SCRIPTS: {
         deposit_lock: {
-          script_type_hash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
+          script_type_hash: "0xff602581f07667eef54232cce850cbca2c418b3418611c132fca849d1edcd775",
           cell_dep: {
             out_point: {
-              tx_hash: "0x9caeec735f3cd2a60b9d12be59bb161f7c61ddab1ac22c4383a94c33ba6404a2",
+              tx_hash: "0x61e576a7e5d2398ecc5b1a969d1af0142c87db0996c2f6fce41bf28f68d805b2",
               index: "0x0",
             },
             dep_type: "code",
           },
         },
         withdrawal_lock: {
-          script_type_hash: "0x06ae0706bb2d7997d66224741d3ec7c173dbb2854a6d2cf97088796b677269c6",
+          script_type_hash: "0x3714af858b8b82b2bb8f13d51f3cffede2dd8d352a6938334bb79e6b845e3658",
           cell_dep: {
             out_point: {
-              tx_hash: "0x9c607a9a75ea4699dd01b1c2a478002343998cac8346d2aa582f35b532bd2b93",
+              tx_hash: "0xe6389b5cf63eec1e2592e930414bc43f92508e529bdd5f5a07fa1dd140f4f20a",
               index: "0x0",
             },
             dep_type: "code",
           },
         },
         eth_account_lock: {
-          script_type_hash: "0x07521d0aa8e66ef441ebc31204d86bb23fc83e9edc58c19dbb1b0ebe64336ec0",
+          script_type_hash: "0x096df264f38fff07f3acd318995abc2c71ae0e504036fe32bc38d5b6037364d4",
         },
       },
       ROLLUP_CONFIG: {
-        rollup_type_hash: "0x702359ea7f073558921eb50d8c1c77e92f760c8f8656bde4995f26b8963e2dd8",
+        rollup_type_hash: "0x1ca35cb5fda4bd542e71d94a6d5f4c0d255d6d6fba73c41cf45d2693e59b3072",
         rollup_type_script: {
-          code_hash: "0x1e44736436b406f8e48a30dfbddcf044feb0c9eebfe63b0f81cb5bb727d84854",
+          code_hash: "0xfef1d086d9f74d143c60bf03bd04bab29200dbf484c801c72774f2056d4c6718",
           hash_type: "type",
-          args: "0x86c7429247beba7ddd6e4361bcdfc0510b0b644131e2afb7e486375249a01802",
+          args: "0xab21bfe2bf85927bb42faaf3006a355222e24d5ea1d4dec0e62f53a8e0c04690",
         },
       },
-      GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
-      SCANNER_URL: "https://v1.aggron.gwscan.com/zh-CN",
-      SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
-      CHAIN_NAME: "Godwoken Mainet v1.1",
-      MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
+      GW_POLYJUICE_RPC_URL: "https://v1.mainnet.godwoken.io/rpc",
+      SCANNER_URL: "https://v1.gwscan.com/",
+      SCANNER_API: "https://api.v1.gwscan.com/api/",
+      CHAIN_NAME: "Godwoken Mainet v1",
+      FINALITY_BLOCKS: 16800,
+      MIN_CANCEL_DEPOSIT_TIME: 604800,
     },
   },
 };
