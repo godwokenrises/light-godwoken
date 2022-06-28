@@ -37,10 +37,18 @@ import {
 import { GodwokenVersion } from "./constants/configTypes";
 import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { isMainnet } from "./env";
+import { Contract as MulticallContract } from "ethers-multicall/dist/contract";
+import { BigNumber } from "ethers";
+import { setMulticallAddress } from "ethers-multicall";
+import { Provider as MulticallProvider } from "ethers-multicall/dist/provider";
+import { PolyjuiceJsonRpcProvider } from "@polyjuice-provider/ethers";
+
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
   godwokenScannerClient;
+
+  multicallProvider: MulticallProvider | null = null;
+
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
@@ -92,7 +100,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList(isMainnet).v0.forEach((token) => {
+    getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -125,7 +133,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList(isMainnet).v0.forEach((token) => {
+    getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -143,10 +151,14 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    if (this.getConfig().layer2Config.MULTICALL_ADDRESS) {
+      return this.getErc20BalancesViaMulticall(payload);
+    }
     const result: GetErc20BalancesResult = { balances: [] };
     let promises = [];
     for (let index = 0; index < payload.addresses.length; index++) {
       const address = payload.addresses[index];
+
       const contract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
       const erc20BalancePromise = contract.methods.balanceOf(this.provider.l2Address).call();
       promises.push(erc20BalancePromise);
@@ -157,6 +169,54 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       });
     });
     return result;
+  }
+
+  async getMulticallProvider(): Promise<MulticallProvider | null> {
+    const multicallContractAddress = this.getConfig().layer2Config.MULTICALL_ADDRESS;
+
+    if (!multicallContractAddress) {
+      return null;
+    }
+
+    if (!this.multicallProvider) {
+      const chainId = Number(await this.getChainId());
+      setMulticallAddress(chainId, multicallContractAddress);
+      this.multicallProvider = new MulticallProvider(
+        new PolyjuiceJsonRpcProvider(
+          {
+            web3Url: this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
+            rollupTypeHash: this.getConfig().layer2Config.ROLLUP_CONFIG.rollup_type_hash,
+            ethAccountLockCodeHash: this.getConfig().layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
+          },
+          this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
+        ),
+        chainId,
+      );
+    }
+
+    return this.multicallProvider;
+  }
+
+  async getErc20BalancesViaMulticall(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const multicall = await this.getMulticallProvider();
+    if (!multicall) throw new Error("Cannot find MULTICALL_ADDRESS in the config");
+
+    const godwokenAddress = this.provider.getLayer2LockScriptHash().slice(0, 42);
+
+    const calls = payload.addresses.map((address) =>
+      new MulticallContract(address, [
+        {
+          stateMutability: "view",
+          inputs: [{ name: "_owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "balance", type: "uint256" }],
+          type: "function",
+        },
+      ]).balanceOf(godwokenAddress),
+    );
+
+    const balances: BigNumber[] = await multicall.all(calls);
+    return { balances: balances.map((b) => b.toHexString()) };
   }
 
   async getErc20Balance(address: HexString): Promise<Hexadecimal> {
