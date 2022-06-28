@@ -116,6 +116,8 @@ export const predefined_testnet: LightGodwokenConfigMap = {
       SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
       CHAIN_NAME: "Godwoken Testnet v1.1",
       MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
+
+      MULTICALL_ADDRESS: "0x65ba0AeE059920dA4D7F8b17B782AF26F463ad5C",
     },
   },
 };

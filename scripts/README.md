@@ -7,3 +7,9 @@ cd scripts
 echo PRIVATE_KEY=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee > .env.local
 ts-node ./deploy-proxy-erc20-to-testnet.ts
 ```
+
+## Deployment Info
+
+### Godwoken V1
+
+- multicall2: 0x4Eea394b7BAbb203c943275ae3781E47bb92C513
