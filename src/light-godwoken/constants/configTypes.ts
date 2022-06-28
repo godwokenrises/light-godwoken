@@ -23,6 +23,8 @@ export type Layer2Config = {
   SCANNER_API: string;
   CHAIN_NAME: string;
   MIN_CANCEL_DEPOSIT_TIME: number;
+
+  MULTICALL_ADDRESS?: string;
 };
 
 export type ScriptType = {

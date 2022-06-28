@@ -1,17 +1,17 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { BI, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
-  WithdrawalEventEmitter,
-  WithdrawalEventEmitterPayload,
-  LightGodwokenV1,
-  ProxyERC20,
-  SUDT,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  LightGodwokenV1,
+  ProxyERC20,
+  SUDT,
   Token,
+  WithdrawalEventEmitter,
+  WithdrawalEventEmitterPayload,
   WithdrawResultV1,
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
@@ -19,9 +19,8 @@ import DefaultLightGodwoken from "./lightGodwoken";
 import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
-import { debug, debugProductionEnv } from "./debug";
-import { V1DepositLockArgs } from "./schemas/codecV1";
+import { RawWithdrawalRequestV1, V1DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
+import { debug } from "./debug";
 import {
   EthAddressFormatError,
   Layer2RpcError,
@@ -32,17 +31,47 @@ import {
 } from "./constants/error";
 import { getAdvancedSettings, getLatestConfigFromRpc, setLatestConfigToLocalStorage } from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
+import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
+import { BigNumber, providers } from "ethers";
+
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
     throw new Error("Method not implemented.");
   }
+
   godwokenClient;
   godwokenScannerClient;
+
+  /**
+   * use {@see getMulticallProvider} to instead
+   * @private
+   */
+  private multicallProvider: MulticallProvider | null = null;
+
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
     this.updateConfigViaRpc();
+  }
+
+  async getMulticallProvider(): Promise<MulticallProvider | null> {
+    const multicallContractAddress = this.getConfig().layer2Config.MULTICALL_ADDRESS;
+
+    if (!multicallContractAddress) {
+      return null;
+    }
+
+    if (!this.multicallProvider) {
+      const chainId = Number(await this.getChainId());
+      setMulticallAddress(chainId, multicallContractAddress);
+      this.multicallProvider = new MulticallProvider(
+        new providers.JsonRpcProvider(this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL),
+        chainId,
+      );
+    }
+
+    return this.multicallProvider;
   }
 
   async updateConfigViaRpc(): Promise<void> {
@@ -113,6 +142,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return sudtList;
   }
+
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
@@ -135,7 +165,32 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return map;
   }
+
+  async getErc20BalancesViaMulticall(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const multicall = await this.getMulticallProvider();
+    if (!multicall) throw new Error("Cannot find MULTICALL_ADDRESS in the config");
+
+    const calls = payload.addresses.map((address) =>
+      new MulticallContract(address, [
+        {
+          stateMutability: "view",
+          inputs: [{ name: "_owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "balance", type: "uint256" }],
+          type: "function",
+        },
+      ]).balanceOf(this.provider.l2Address),
+    );
+
+    const balances: BigNumber[] = await multicall.all(calls);
+    return { balances: balances.map((b) => b.toHexString()) };
+  }
+
   async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    if (this.getConfig().layer2Config.MULTICALL_ADDRESS) {
+      return this.getErc20BalancesViaMulticall(payload);
+    }
+
     const result: GetErc20BalancesResult = { balances: [] };
     if (!window.ethereum) {
       return result;
@@ -159,6 +214,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return result;
   }
+
   async getErc20Balance(address: string): Promise<string> {
     if (!window.ethereum) {
       return "result";
@@ -213,6 +269,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       script_type: "lock",
     };
   }
+
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
     return result;
