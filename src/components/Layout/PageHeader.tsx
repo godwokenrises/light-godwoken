@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ReactComponent as Logo } from "../../asserts/logo.svg";
-import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
+import { ReactComponent as Logo } from "../../assets/logo.svg";
+import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
 
 import styled from "styled-components";
 import { Popover } from "antd";
