@@ -26,18 +26,18 @@ import {
   SUDT,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
-  WithdrawResultWithCell,
   LightGodwokenBase,
   Token,
   DepositRequest,
   DepositEventEmitter,
   PendingDepositTransaction,
 } from "./lightGodwokenType";
-import { debug, debugProductionEnv } from "./debug";
+import { debug } from "./debug";
 import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
   DepositCellNotFoundError,
+  DepositRejectedError,
   DepositTimeoutError,
   DepositTxNotFoundError,
   Layer1RpcError,
@@ -51,7 +51,6 @@ import EventEmitter from "events";
 import { isSpecialWallet } from "./utils";
 import { getAdvancedSettings } from "./constants/configManager";
 
-const MIN_RELATIVE_TIME = "0xc000000000000001";
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
   constructor(provider: LightGodwokenProvider) {
@@ -71,7 +70,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
-  abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
+  // abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
@@ -170,10 +169,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let txSkeleton = await this.createCancelDepositTx(depositCell);
     txSkeleton = await this.payTxFee(txSkeleton);
     const transaction = helpers.createTransactionFromSkeleton(txSkeleton);
-    transaction.inputs[1].since = MIN_RELATIVE_TIME;
+    // first cell input is owner ckb cell, second input is deposit cell
+    transaction.inputs[1].since = `0xc0${BI.from(cancelTimeout).toHexString().slice(2).padStart(14, "0")}`;
     let signedTx = await this.provider.signL1Tx(transaction);
     const txHash = await this.provider.sendL1Transaction(signedTx);
-    // debugProductionEnv(`Cancel deposit: ${txHash}`);
     return txHash;
   }
 
@@ -415,7 +414,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw e;
     }
 
-    // debugProductionEnv(`Deposit ${txHash}`);
     if (eventEmitter) {
       eventEmitter.emit("sent", txHash);
       this.waitForDepositToComplete(txHash, eventEmitter);
@@ -431,11 +429,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   waitForDepositToComplete(txHash: HexString, eventEmitter: EventEmitter) {
     debug("Waiting for deposit to complete...", txHash);
-    const maxLoop = 20;
+    const maxLoop = 60;
     let loop = 0;
     let depositTx: TransactionWithStatus | null;
     let depositCellOutPoint: OutPoint | null;
     let depositCell: CellWithStatus | null;
+
     const nIntervId = setInterval(async () => {
       loop++;
       if (loop > maxLoop) {
@@ -445,7 +444,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         } else {
           eventEmitter.emit("fail", new DepositTimeoutError(txHash, "Deposit timeout"));
         }
-        debugProductionEnv("wait for deposit to complete max loop exceeded:", txHash);
         clearInterval(nIntervId);
       }
 
@@ -456,6 +454,10 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           depositTx = txOnChain;
           loop = 0;
           debug("depositTx", depositTx);
+        }
+        if (txOnChain && txOnChain.tx_status.status === "rejected") {
+          clearInterval(nIntervId);
+          eventEmitter.emit("fail", new DepositRejectedError(txHash, "Deposit rejected"));
         }
       }
 
@@ -536,7 +538,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           }
         }
       }
-    }, 30000);
+    }, 10000);
   }
 
   subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
@@ -555,7 +557,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       loop++;
       if (loop > maxLoop) {
         eventEmitter.emit("fail", new WithdrawalTimeoutError(txHash, "Withdrawal timeout"));
-        debugProductionEnv("withdrawal fail:", txHash);
         clearInterval(nIntervId);
       }
       const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
@@ -572,14 +573,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }, 10000);
   }
 
-  subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
-    const eventEmitter = new EventEmitter();
-    for (let index = 0; index < txHashList.length; index++) {
-      const txHash = txHashList[index];
-      this.waitForWithdrawalToComplete(txHash, eventEmitter);
-    }
-    return eventEmitter;
-  }
+  // subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
+  //   const eventEmitter = new EventEmitter();
+  //   for (let index = 0; index < txHashList.length; index++) {
+  //     const txHash = txHashList[index];
+  //     this.waitForWithdrawalToComplete(txHash, eventEmitter);
+  //   }
+  //   return eventEmitter;
+  // }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {
     const feeRate = await this.provider.getMinFeeRate();

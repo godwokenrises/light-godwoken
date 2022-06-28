@@ -10,9 +10,8 @@ import { ReactComponent as ArrowDownIcon } from "../../asserts/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../asserts/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
-import Unlock from "./Unlock";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -91,6 +90,7 @@ export interface IWithdrawalRequestCardProps {
   erc20?: ProxyERC20;
   now?: number;
   txHash?: HexString;
+  isFastWithdrawal: boolean;
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
@@ -99,8 +99,8 @@ const WithdrawalRequestCard = ({
   status,
   erc20,
   now = 0,
-  cell,
   txHash,
+  isFastWithdrawal,
 }: IWithdrawalRequestCardProps) => {
   const [shouldShowMore, setShouldShowMore] = useState(false);
   const [blockProduceTime, setBlockProduceTime] = useState(0);
@@ -128,6 +128,13 @@ const WithdrawalRequestCard = ({
     minutes: minutesLeft,
     seconds: secondsLeft,
   } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
+  const isDue = daysLeft === 0 && hoursLeft === 0 && minutesLeft === 0 && secondsLeft === 0;
+  const countdownText =
+    daysLeft > 0
+      ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
+      : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
+          .toString()
+          .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`;
   const [CKBAmount] = useMemo(() => {
     if (capacity === "0") {
       console.error("[warn] a withdrawal request cell with zero capacity");
@@ -166,26 +173,25 @@ const WithdrawalRequestCard = ({
               <CKBIcon></CKBIcon>
             </div>
             <MainText>{CKBAmount}</MainText>
+            {isFastWithdrawal && (
+              <span className="fast-withdrawal-icon" style={{ marginLeft: 8 }}>
+                <Tooltip title="This is a fast withdrawal, target is godwoken v1 network">
+                  <FieldTimeOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+                </Tooltip>
+              </span>
+            )}
           </div>
         </div>
         <div className="right-side">
           {status === "pending" &&
-            (isMature ? (
-              cell && <Unlock cell={cell}></Unlock>
-            ) : shouldShowMore ? (
+            (shouldShowMore ? (
               <div className="time">
                 <ArrowUpIcon />
               </div>
             ) : (
               <div className="time">
-                <MainText title="Estimated time left">
-                  {daysLeft > 0
-                    ? `${daysLeft}+${daysLeft > 1 ? " days" : " day"} left`
-                    : `${hoursLeft > 0 ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}${minutesLeft
-                        .toString()
-                        .padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
-                </MainText>
-                <ArrowDownIcon />
+                <MainText title="Estimated time left">{isDue ? "Unlocking, please wait..." : countdownText}</MainText>
+                {isDue ? null : <ArrowDownIcon />}
               </div>
             ))}
           {status === "success" && (
@@ -195,8 +201,8 @@ const WithdrawalRequestCard = ({
               </Tooltip>
             </>
           )}
-          {status === "fail" && (
-            <Tooltip title={status}>
+          {status === "failed" && (
+            <Tooltip title="Withdrawal failed">
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}

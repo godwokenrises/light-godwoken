@@ -1,17 +1,18 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { BI, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import isEqual from "lodash/isEqual";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
-  GetErc20Balances,
-  GetErc20BalancesResult,
-  GetL2CkbBalancePayload,
+  WithdrawalEventEmitter,
+  WithdrawalEventEmitterPayload,
   LightGodwokenV1,
   ProxyERC20,
   SUDT,
+  GetErc20Balances,
+  GetErc20BalancesResult,
+  GetL2CkbBalancePayload,
   Token,
-  WithdrawalEventEmitter,
-  WithdrawalEventEmitterPayload,
   WithdrawResultV1,
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
@@ -19,8 +20,9 @@ import DefaultLightGodwoken from "./lightGodwoken";
 import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrawalRequestV1, V1DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
+import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
+import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
   Layer2RpcError,
@@ -29,7 +31,12 @@ import {
   SudtNotFoundError,
   TransactionSignError,
 } from "./constants/error";
-import { getAdvancedSettings, getLatestConfigFromRpc, setLatestConfigToLocalStorage } from "./constants/configManager";
+import {
+  getAdvancedSettings,
+  getLatestConfigFromRpc,
+  setLatestConfigToLocalStorage,
+  getLatestConfigFromLocalStorage,
+} from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
 import { BigNumber, providers } from "ethers";
@@ -38,7 +45,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
     throw new Error("Method not implemented.");
   }
-
   godwokenClient;
   godwokenScannerClient;
 
@@ -75,8 +81,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async updateConfigViaRpc(): Promise<void> {
+    const currentConfig = await getLatestConfigFromLocalStorage();
     const latestConfig = await getLatestConfigFromRpc();
-    setLatestConfigToLocalStorage(latestConfig);
+    if (!isEqual(currentConfig, latestConfig)) {
+      alert("Onchain Godwoken configuration has been updated. \n Update your local configuration?");
+      setLatestConfigToLocalStorage(latestConfig);
+    }
   }
 
   getVersion(): GodwokenVersion {
@@ -142,7 +152,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return sudtList;
   }
-
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
@@ -214,7 +223,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return result;
   }
-
   async getErc20Balance(address: string): Promise<string> {
     if (!window.ethereum) {
       return "result";
@@ -230,9 +238,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
-    const searchParams = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
+    const histories = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    const collectedWithdrawals: WithdrawResultV1[] = searchParams.map((item) => {
+    const collectedWithdrawals: WithdrawResultV1[] = histories.map((item) => {
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
@@ -269,7 +277,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       script_type: "lock",
     };
   }
-
   async getWithdrawal(txHash: Hash): Promise<unknown> {
     const result = this.godwokenClient.getWithdrawal(txHash);
     return result;

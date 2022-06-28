@@ -30,6 +30,7 @@ import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
 import { DepositList } from "../components/Deposit/List";
 import {
+  DepositRejectedError,
   LightGodwokenError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
@@ -112,7 +113,9 @@ export default function Deposit() {
         updateTxWithStatus(txHash, "success");
       });
       listener.on("fail", (e) => {
-        if (e instanceof LightGodwokenError) {
+        if (e instanceof DepositRejectedError) {
+          updateTxWithStatus(e.metadata, "rejected");
+        } else if (e instanceof LightGodwokenError) {
           updateTxWithStatus(e.metadata, "fail");
         }
       });
@@ -122,8 +125,16 @@ export default function Deposit() {
       setDepositListListener(listener);
     }
 
+    setCKBInput("");
+    setSudtInputValue("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightGodwoken, godwokenVersion, depositHistory]);
+
+  useMemo(() => {
+    setCKBInput("");
+    setSudtInputValue("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, godwokenVersion, ethAddress]);
 
   useEffect(() => {
     return function cleanup() {
@@ -160,7 +171,7 @@ export default function Deposit() {
     }
     if (e instanceof TransactionSignError) {
       notification.error({
-        message: `Sign Transaction Error, please try and confirm sign again`,
+        message: `User cancelled sign in metamask, please try again.`,
       });
       return;
     }

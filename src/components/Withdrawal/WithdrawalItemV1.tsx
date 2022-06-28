@@ -191,7 +191,6 @@ const WithdrawalRequestCard = ({
           )}
           {status === "l2Pending" && (
             <>
-              pending...
               <Tooltip title={"Godwoken withdrawal pending, this transaction will be committed in a few minites."}>
                 <QuestionCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
               </Tooltip>
@@ -213,7 +212,7 @@ const WithdrawalRequestCard = ({
           </FixedHeightRow>
           <FixedHeightRow>
             <MainText>
-              Layer 1 Tx:{" "}
+              Layer 1 Tx:
               <a target="blank" href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>
                 Open In Explorer
               </a>
