@@ -1,6 +1,10 @@
+import { LightGodwokenTokenType } from "./configTypes";
+import { TOKEN_LIST_V0_MAINNET } from "./godwokenTokensV0";
+import { TOKEN_LIST_V1_MAINNET } from "./godwokenTokensV1";
+
 export const CKB_SUDT_ID = 1; // This is default sudt id fro ckb on Godwoken
 
-export const TOKEN_LIST_V0 = [
+export const TOKEN_LIST_V0: LightGodwokenTokenType[] = [
   {
     id: 120,
     symbol: "TTKN",
@@ -48,7 +52,7 @@ export const TOKEN_LIST_V0 = [
   },
 ];
 
-export const TOKEN_LIST_V1 = [
+export const TOKEN_LIST_V1: LightGodwokenTokenType[] = [
   {
     id: 80,
     symbol: "TTKN",
@@ -96,7 +100,13 @@ export const TOKEN_LIST_V1 = [
   },
 ];
 
-export const getTokenList = () => {
+export const getTokenList = (isMainnet = false) => {
+  if (isMainnet) {
+    return {
+      v0: TOKEN_LIST_V0_MAINNET,
+      v1: TOKEN_LIST_V1_MAINNET,
+    };
+  }
   return {
     v0: TOKEN_LIST_V0,
     v1: TOKEN_LIST_V1,

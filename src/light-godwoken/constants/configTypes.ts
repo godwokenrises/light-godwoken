@@ -22,6 +22,7 @@ export type Layer2Config = {
   SCANNER_URL: string;
   SCANNER_API: string;
   CHAIN_NAME: string;
+  FINALITY_BLOCKS: number;
   MIN_CANCEL_DEPOSIT_TIME: number;
 
   MULTICALL_ADDRESS?: string;
@@ -57,3 +58,13 @@ export type LightGodwokenConfigMap = {
 };
 
 export type GodwokenVersion = keyof LightGodwokenConfigMap;
+
+export type LightGodwokenTokenType = {
+  id: number;
+  symbol: string;
+  name: string;
+  decimals: number;
+  tokenURI: string;
+  address: string;
+  l1LockArgs: string;
+};
