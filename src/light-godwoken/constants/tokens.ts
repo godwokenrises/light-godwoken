@@ -1,4 +1,6 @@
+import { GODWOKEN_V0_TOKENS } from "./godwokenTokensV0";
 import { GODWOKEN_V1_TOKENS } from "./godwokenTokensV1";
+import { TOKEN_LOGOS, TOKEN_LOGOS_MAP } from "./tokenLogos";
 
 type LightGodwokenTokenType = {
   id: number;
@@ -108,52 +110,29 @@ export const TOKEN_LIST_V1 = [
   },
 ];
 
-export const TOKEN_LIST_V0_MAINNET: LightGodwokenTokenType[] = [
-  // {
-  //   id: 0,
-  //   symbol: "USDC",
-  //   name: "USD Coin",
-  //   decimals: 6,
-  //   tokenURI: "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=002",
-  //   address: "0xC3b946c53E2e62200515d284249f2a91d9DF7954",
-  //   l1LockArgs: "0x000000000000",
-  // },
-  // {
-  //   id: 0,
-  //   symbol: "USDT",
-  //   name: "Tether USD",
-  //   decimals: 6,
-  //   tokenURI: "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=002",
-  //   address: "0x07a388453944bB54BE709AE505F14aEb5d5cbB2C",
-  //   l1LockArgs: "0x000000000000",
-  // },
-  // {
-  //   id: 0,
-  //   symbol: "dCKB",
-  //   name: "NexisDAO CKB",
-  //   decimals: 8,
-  //   tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
-  //   address: "0x53A1964a163f64Da59eFE6A802e35b5529d078E2",
-  //   l1LockArgs: "0x000000000000",
-  // },
-  // {
-  //   id: 0,
-  //   symbol: "TAI",
-  //   name: "NexisDAO TAI",
-  //   decimals: 6,
-  //   tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
-  //   address: "0xf4187511D43B90751a28b6811d13AFB49BeF8452",
-  //   l1LockArgs: "0x000000000000",
-  // },
-];
+export const TOKEN_LIST_V0_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V0_TOKENS.map((token) => {
+  const defaultLogo =
+    TOKEN_LOGOS_MAP[token.info.symbol] || "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002";
+  return {
+    id: token.erc20Info.accountID || 0,
+    symbol: token.info.symbol,
+    name: token.info.name,
+    decimals: token.info.decimals,
+    tokenURI: token.info.logoURI || defaultLogo,
+    address: token.erc20Info.ethAddress,
+    l1LockArgs: token.erc20Info.sudtScriptArgs,
+  };
+});
 
 export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = GODWOKEN_V1_TOKENS.map((token) => {
+  const defaultLogo =
+    TOKEN_LOGOS_MAP[token.info.symbol] || "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002";
   return {
     id: 0,
     symbol: token.info.symbol,
     name: token.info.name,
     decimals: token.info.decimals,
-    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    tokenURI: defaultLogo,
     address: token.erc20Info.ethAddress,
     l1LockArgs: token.erc20Info.sudtScriptArgs,
   };
