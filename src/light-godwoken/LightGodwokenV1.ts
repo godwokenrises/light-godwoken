@@ -39,17 +39,49 @@ import {
 } from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
 import { isMainnet } from "./env";
+import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
+import { BigNumber, providers } from "ethers";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
     throw new Error("Method not implemented.");
   }
   godwokenClient;
   godwokenScannerClient;
+
+  /**
+   * use {@see getMulticallProvider} to instead
+   * @private
+   */
+  private multicallProvider: MulticallProvider | null = null;
+
   constructor(provider: LightGodwokenProvider) {
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
     this.updateConfigViaRpc();
+  }
+
+  getWithdrawalWaitBlock(): number {
+    return this.provider.getConfig().layer2Config.FINALITY_BLOCKS;
+  }
+
+  async getMulticallProvider(): Promise<MulticallProvider | null> {
+    const multicallContractAddress = this.getConfig().layer2Config.MULTICALL_ADDRESS;
+
+    if (!multicallContractAddress) {
+      return null;
+    }
+
+    if (!this.multicallProvider) {
+      const chainId = Number(await this.getChainId());
+      setMulticallAddress(chainId, multicallContractAddress);
+      this.multicallProvider = new MulticallProvider(
+        new providers.JsonRpcProvider(this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL),
+        chainId,
+      );
+    }
+
+    return this.multicallProvider;
   }
 
   async updateConfigViaRpc(): Promise<void> {
@@ -142,7 +174,32 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     });
     return map;
   }
+
+  async getErc20BalancesViaMulticall(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    const multicall = await this.getMulticallProvider();
+    if (!multicall) throw new Error("Cannot find MULTICALL_ADDRESS in the config");
+
+    const calls = payload.addresses.map((address) =>
+      new MulticallContract(address, [
+        {
+          stateMutability: "view",
+          inputs: [{ name: "_owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "balance", type: "uint256" }],
+          type: "function",
+        },
+      ]).balanceOf(this.provider.l2Address),
+    );
+
+    const balances: BigNumber[] = await multicall.all(calls);
+    return { balances: balances.map((b) => b.toHexString()) };
+  }
+
   async getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult> {
+    if (this.getConfig().layer2Config.MULTICALL_ADDRESS) {
+      return this.getErc20BalancesViaMulticall(payload);
+    }
+
     const result: GetErc20BalancesResult = { balances: [] };
     if (!window.ethereum) {
       return result;
@@ -363,6 +420,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         { expected: BI.from(payload.capacity), actual: BI.from(balance) },
         errMsg,
       );
+      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }
@@ -400,6 +458,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         payload.amount,
       ).toString()}`;
       const error = new NotEnoughSudtError({ expected: BI.from(payload.amount), actual: BI.from(sudtBalance) }, errMsg);
+      // debugProductionEnv(error);
       eventEmitter.emit("fail", error);
       throw error;
     }

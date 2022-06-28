@@ -24,6 +24,8 @@ export type Layer2Config = {
   CHAIN_NAME: string;
   FINALITY_BLOCKS: number;
   MIN_CANCEL_DEPOSIT_TIME: number;
+
+  MULTICALL_ADDRESS?: string;
 };
 
 export type ScriptType = {

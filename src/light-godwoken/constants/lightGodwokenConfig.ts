@@ -192,6 +192,8 @@ export const predefined_testnet: LightGodwokenConfigMap = {
       CHAIN_NAME: "Godwoken Testnet v1.1",
       FINALITY_BLOCKS: 100,
       MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
+
+      MULTICALL_ADDRESS: "0x65ba0AeE059920dA4D7F8b17B782AF26F463ad5C",
     },
   },
 };
