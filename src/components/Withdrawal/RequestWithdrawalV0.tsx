@@ -16,6 +16,7 @@ import { assertsLightGodwokenV0, isInstanceOfLightGodwokenV0 } from "../../utils
 import { getInputError } from "../../utils/inputValidate";
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
+import { getEstimateWaitTime } from "../../utils/dateUtils";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 
 const RequestWithdrawalV0: React.FC = () => {
@@ -30,6 +31,8 @@ const RequestWithdrawalV0: React.FC = () => {
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
+  const withdrawalWaitBlock = lightGodwoken?.getWithdrawalWaitBlock() || 0;
+  const blockProduceTime = lightGodwoken?.getBlockProduceTime() || 0;
 
   const sendWithdrawal = () => {
     const capacity = parseStringToBI(CKBInput, 8).toHexString();
@@ -159,8 +162,10 @@ const RequestWithdrawalV0: React.FC = () => {
         ></CurrencyInputPanel>
         <SubmitWithdrawal
           sendWithdrawal={sendWithdrawal}
-          blockWait={targetValue === CKB_L1 ? "1000" : "1"}
-          estimatedTime={targetValue === CKB_L1 ? "5 days" : "a few minutes"}
+          blockWait={targetValue === CKB_L1 ? String(withdrawalWaitBlock) : "1"}
+          estimatedTime={
+            targetValue === CKB_L1 ? getEstimateWaitTime(withdrawalWaitBlock, blockProduceTime) : "a few minutes"
+          }
           loading={loading}
           buttonText={inputError}
           CKBInput={CKBInput}

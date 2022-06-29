@@ -61,10 +61,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     this.updateConfigViaRpc();
   }
 
-  getWithdrawalWaitBlock(): number {
-    return this.provider.getConfig().layer2Config.FINALITY_BLOCKS;
-  }
-
   async getMulticallProvider(): Promise<MulticallProvider | null> {
     const multicallContractAddress = this.getConfig().layer2Config.MULTICALL_ADDRESS;
 
@@ -104,10 +100,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       decimals: 18,
       tokenURI: "",
     };
-  }
-
-  getBlockProduceTime(): number {
-    return 30 * 1000;
   }
 
   getMinimalDepositCapacity(): BI {

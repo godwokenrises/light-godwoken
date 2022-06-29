@@ -23,8 +23,8 @@ export type Layer2Config = {
   SCANNER_API: string;
   CHAIN_NAME: string;
   FINALITY_BLOCKS: number;
+  BLOCK_PRODUCE_TIME: number;
   MIN_CANCEL_DEPOSIT_TIME: number;
-
   MULTICALL_ADDRESS?: string;
 };
 

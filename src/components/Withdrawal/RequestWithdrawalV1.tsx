@@ -16,6 +16,7 @@ import { getInputError, isCKBInputValidate, isSudtInputValidate } from "../../ut
 import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
 import { LightGodwokenV1 } from "../../light-godwoken";
+import { getEstimateWaitTime } from "../../utils/dateUtils";
 
 const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistoryInterface) => void }> = ({
   addTxToHistory,
@@ -32,6 +33,8 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
   const l2CKBBalanceQuery = useL2CKBBalance();
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
+  const withdrawalWaitBlock = lightGodwoken?.getWithdrawalWaitBlock() || 0;
+  const blockProduceTime = lightGodwoken?.getBlockProduceTime() || 0;
 
   const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   useEffect(() => {
@@ -141,8 +144,8 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
         ></CurrencyInputPanel>
         <SubmitWithdrawal
           sendWithdrawal={sendWithdrawal}
-          blockWait="100"
-          estimatedTime="50 mins"
+          blockWait={String(withdrawalWaitBlock)}
+          estimatedTime={getEstimateWaitTime(withdrawalWaitBlock, blockProduceTime)}
           loading={loading}
           buttonText={inputError}
           CKBInput={CKBInput}
