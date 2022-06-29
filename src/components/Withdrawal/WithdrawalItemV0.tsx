@@ -89,7 +89,7 @@ export interface IWithdrawalRequestCardProps {
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
-  txHash?: HexString;
+  layer1TxHash?: HexString;
   isFastWithdrawal: boolean;
 }
 const WithdrawalRequestCard = ({
@@ -99,7 +99,7 @@ const WithdrawalRequestCard = ({
   status,
   erc20,
   now = 0,
-  txHash,
+  layer1TxHash,
   isFastWithdrawal,
 }: IWithdrawalRequestCardProps) => {
   const [shouldShowMore, setShouldShowMore] = useState(false);
@@ -211,8 +211,8 @@ const WithdrawalRequestCard = ({
       {status === "success" && (
         <div className="list-detail">
           <FixedHeightRow>
-            <MainText title={txHash}>
-              <a target="blank" href={`${l1ScannerUrl}/transaction/${txHash}`}>
+            <MainText title={layer1TxHash}>
+              <a target="blank" href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>
                 Open In Explorer
               </a>
             </MainText>

@@ -7,7 +7,7 @@ import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError } from "./constants/error";
 
-const issuerPrivateKey = process.env.REACT_APP_CKB_USDC_ISSUER_PRIVATE_KEY!;
+const issuerPrivateKey = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 
 export async function claimUSDC(
   ethereum: any,

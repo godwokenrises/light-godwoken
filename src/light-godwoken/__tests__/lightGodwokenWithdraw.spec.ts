@@ -4,14 +4,13 @@ import LightGodwokenV1 from "../LightGodwokenV1";
 import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { deBifyRawWithdrawalRequestV0, deBifyRawWithdrawalRequestV1, dummyScriptHash } from "./utils";
-import { BI, utils } from "@ckb-lumos/lumos";
+import { BI } from "@ckb-lumos/lumos";
 import { testConfig } from "./lightGodwokenConfig";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
 let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
-sinon.stub(LightGodwokenV1.prototype, "updateConfigViaRpc").returns(Promise.resolve());
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
   const dummyEthereum = {

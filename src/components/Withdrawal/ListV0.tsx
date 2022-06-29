@@ -38,14 +38,11 @@ export const WithdrawalList: React.FC = () => {
     },
   );
   const { data: withdrawalList, isLoading } = withdrawalListQuery;
-
   const formattedWithdrawalList = withdrawalList || [];
-
   const pendingList = formattedWithdrawalList.filter((history) => history.status === "pending");
   const completedList = formattedWithdrawalList.filter(
     (history) => history.status === "success" || history.status === "failed",
   );
-
   if (!lightGodwoken) {
     return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
   }
