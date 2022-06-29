@@ -31,12 +31,7 @@ import {
   SudtNotFoundError,
   TransactionSignError,
 } from "./constants/error";
-import {
-  getAdvancedSettings,
-  getLatestConfigFromRpc,
-  setLatestConfigToLocalStorage,
-  getLatestConfigFromLocalStorage,
-} from "./constants/configManager";
+import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
 import { isMainnet } from "./env";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
@@ -58,7 +53,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     super(provider);
     this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
-    this.updateConfigViaRpc();
   }
 
   getWithdrawalWaitBlock(): number {
@@ -82,15 +76,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
 
     return this.multicallProvider;
-  }
-
-  async updateConfigViaRpc(): Promise<void> {
-    const currentConfig = await getLatestConfigFromLocalStorage();
-    const latestConfig = await getLatestConfigFromRpc();
-    if (!isEqual(currentConfig, latestConfig)) {
-      alert("Onchain Godwoken configuration has been updated. \n Update your local configuration?");
-      setLatestConfigToLocalStorage(latestConfig);
-    }
   }
 
   getVersion(): GodwokenVersion {
