@@ -17,6 +17,9 @@ export class NotEnoughSudtError extends LightGodwokenError<{ expected: BI; actua
 export class Layer1RpcError extends LightGodwokenError<string> {}
 export class Layer2RpcError extends LightGodwokenError<string> {}
 
+export class V1WithdrawTokenNotEnoughError extends LightGodwokenError<string> {}
+export class V0WithdrawTokenNotEnoughError extends LightGodwokenError<string> {}
+
 export class EthAddressFormatError extends LightGodwokenError<{ address: string }> {}
 export class Layer2AccountIdNotFoundError extends LightGodwokenError<string> {}
 export class ERC20TokenNotFoundError extends LightGodwokenError<{ sudtScriptHash: HexString }> {}

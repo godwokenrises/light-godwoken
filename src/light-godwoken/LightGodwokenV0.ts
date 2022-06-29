@@ -33,6 +33,7 @@ import {
   NotEnoughCapacityError,
   NotEnoughSudtError,
   TransactionSignError,
+  V0WithdrawTokenNotEnoughError,
 } from "./constants/error";
 import { GodwokenVersion } from "./constants/configTypes";
 import { getAdvancedSettings } from "./constants/configManager";
@@ -338,31 +339,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       txHash = (await this.godwokenClient.submitWithdrawalRequest(
         new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
       )) as unknown as HexString;
-    } catch (e: any) {
-      eventEmitter.emit("fail", new Layer2RpcError(txHash, e.message));
+    } catch (error) {
+      const rpcError = new V0WithdrawTokenNotEnoughError(JSON.stringify(error), "Send withdrawal failed!");
+      eventEmitter.emit("fail", rpcError);
       return;
     }
-    eventEmitter.emit("sent", txHash);
-    debug("withdrawal request result:", txHash);
-    const maxLoop = 100;
-    let loop = 0;
-    const nIntervId = setInterval(async () => {
-      loop++;
-      const withdrawal: any = await this.getWithdrawal(txHash as unknown as Hash);
-      if (withdrawal && withdrawal.status === "pending") {
-        debug("withdrawal pending:", withdrawal);
-        eventEmitter.emit("pending", txHash);
-      }
-      if (withdrawal && withdrawal.status === "committed") {
-        debug("withdrawal committed:", withdrawal);
-        eventEmitter.emit("success", txHash);
-        clearInterval(nIntervId);
-      }
-      if (withdrawal === null && loop > maxLoop) {
-        eventEmitter.emit("fail", txHash);
-        clearInterval(nIntervId);
-      }
-    }, 10000);
+    if (txHash) {
+      eventEmitter.emit("sent", txHash);
+      debug("withdrawal request result:", txHash);
+      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    }
   }
 
   async generateRawWithdrawalRequest(
