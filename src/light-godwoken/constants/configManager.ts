@@ -5,10 +5,10 @@ import { writeStorage } from "@rehooks/local-storage";
 import { GodwokenVersion } from "./configTypes";
 
 export function getPredefinedConfig(): LightGodwokenConfigMap {
-  let config = isMainnet ? predefined_mainnet : predefined_testnet;
-  return config;
+  return isMainnet ? predefined_mainnet : predefined_testnet;
 }
 
+// TODO deprecate initConfig, and refactor it to application level, `DefaultLightGodwokenProvider` would be design in stateless
 export function initConfig(env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfigMap): LightGodwokenConfig {
   const config = lightGodwokenConfig || getPredefinedConfig();
   if (!localStorage.getItem("advanced-settings")) {
