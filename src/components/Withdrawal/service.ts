@@ -1,7 +1,13 @@
 import { BI } from "@ckb-lumos/bi";
 import { captureException } from "@sentry/react";
 import { notification } from "antd";
-import { NotEnoughCapacityError, NotEnoughSudtError, TransactionSignError } from "../../light-godwoken/constants/error";
+import {
+  NotEnoughCapacityError,
+  NotEnoughSudtError,
+  TransactionSignError,
+  V0WithdrawTokenNotEnoughError,
+  V1WithdrawTokenNotEnoughError,
+} from "../../light-godwoken/constants/error";
 import { L1MappedErc20 } from "../../types/type";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
@@ -38,8 +44,20 @@ export const handleError = (e: unknown, selectedSudt?: L1MappedErc20) => {
     });
     return;
   }
-  captureException(e);
+  if (e instanceof V1WithdrawTokenNotEnoughError) {
+    notification.error({
+      message: `Withdrawalable token not enough, token can be withdrawed after staying on layer 2 for at least challenge time`,
+    });
+    return;
+  }
+  if (e instanceof V0WithdrawTokenNotEnoughError) {
+    notification.error({
+      message: `Withdrawalable token not enough, token can be withdrawed after staying on layer 2 for at least challenge time`,
+    });
+    return;
+  }
 
+  captureException(e);
   notification.error({
     message: `Unknown Error, Please try again later`,
   });

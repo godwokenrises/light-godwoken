@@ -30,6 +30,7 @@ import {
   NotEnoughSudtError,
   SudtNotFoundError,
   TransactionSignError,
+  V1WithdrawTokenNotEnoughError,
 } from "./constants/error";
 import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
@@ -283,7 +284,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
     }
 
-    // construct WithdrawalRequestExx tra
+    // construct WithdrawalRequestExtra
     const withdrawalReq = {
       raw: rawWithdrawalRequest,
       signature: signedMessage,
@@ -296,17 +297,19 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     // submit WithdrawalRequestExtra
     const serializedRequest = new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalReqExtra)).serializeJson();
-    const txHash = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
-    debug("result:", txHash);
-    if (txHash !== null) {
-      const errorMessage = (txHash as any).message;
-      if (errorMessage !== undefined && errorMessage !== null) {
-        eventEmitter.emit("fail", new Layer2RpcError(txHash, errorMessage));
-      }
+    let txHash: string | null = null;
+    try {
+      txHash = await this.godwokenClient.submitWithdrawalRequest(serializedRequest);
+      debug("result:", txHash);
+    } catch (error) {
+      const rpcError = new V1WithdrawTokenNotEnoughError(JSON.stringify(error), "Send withdrawal failed!");
+      eventEmitter.emit("fail", rpcError);
     }
-    eventEmitter.emit("sent", txHash);
-    debug("withdrawal request result:", txHash, eventEmitter);
-    this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    if (txHash) {
+      eventEmitter.emit("sent", txHash);
+      debug("withdrawal request result:", txHash, eventEmitter);
+      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    }
   }
 
   generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {

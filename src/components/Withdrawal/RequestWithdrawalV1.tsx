@@ -80,19 +80,9 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
       setCKBInput("");
       setSudtValue("");
       setLoading(false);
-      // commented here, will reopen after godwoken 1.2 goes live
-      // addTxToHistory({
-      //   type: "withdrawal",
-      //   txHash,
-      //   capacity,
-      //   amount,
-      //   token: selectedSudt,
-      //   status: "l2Pending",
-      // });
     });
 
     eventEmitter.on("fail", (result: unknown) => {
-      console.log("fail triggerd:", result);
       setLoading(false);
       handleError(result, selectedSudt);
     });
