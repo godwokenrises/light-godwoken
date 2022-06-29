@@ -65,13 +65,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;
-  abstract getBlockProduceTime(): number | Promise<number>;
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
   // abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  getBlockProduceTime(): number {
+    return this.provider.getConfig().layer2Config.BLOCK_PRODUCE_TIME * 1000;
+  }
 
   getWithdrawalWaitBlock(): number {
     return this.provider.getConfig().layer2Config.FINALITY_BLOCKS;
