@@ -72,6 +72,7 @@ export const testConfig: LightGodwokenConfigMap = {
       SCANNER_API: "",
       MIN_CANCEL_DEPOSIT_TIME: 1200,
       FINALITY_BLOCKS: 100,
+      BLOCK_PRODUCE_TIME: 45,
     },
   },
   v1: {
@@ -116,6 +117,7 @@ export const testConfig: LightGodwokenConfigMap = {
       SCANNER_API: "",
       MIN_CANCEL_DEPOSIT_TIME: 604800,
       FINALITY_BLOCKS: 100,
+      BLOCK_PRODUCE_TIME: 36,
     },
   },
 };
