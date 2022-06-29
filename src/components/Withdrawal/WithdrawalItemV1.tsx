@@ -198,6 +198,17 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
+      {status === "success" && (
+        <div className="list-detail">
+          <FixedHeightRow>
+            <MainText title={layer1TxHash}>
+              <a target="blank" href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>
+                Open In Explorer
+              </a>
+            </MainText>
+          </FixedHeightRow>
+        </div>
+      )}
       {shouldShowMore && (
         <div className="list-detail">
           <FixedHeightRow>
