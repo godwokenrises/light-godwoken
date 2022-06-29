@@ -72,6 +72,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
 
+  // in milliseconds
   getBlockProduceTime(): number {
     return this.provider.getConfig().layer2Config.BLOCK_PRODUCE_TIME * 1000;
   }

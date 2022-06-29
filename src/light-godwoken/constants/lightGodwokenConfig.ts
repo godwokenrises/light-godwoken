@@ -58,6 +58,7 @@ const layer1ConfigLina: Layer1Config = {
   SCANNER_URL: "https://explorer.nervos.org",
 };
 
+// https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/testnet_v0/config/scripts-deploy-result.json
 const v0ConfigAggron: LightGodwokenConfig = {
   layer1Config: layer1ConfigAggron,
   layer2Config: {
@@ -105,6 +106,7 @@ const v0ConfigAggron: LightGodwokenConfig = {
   },
 };
 
+// https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/mainnet_v0/config/scripts-result.json
 const v0ConfigLina: LightGodwokenConfig = {
   layer1Config: layer1ConfigLina,
   layer2Config: {
@@ -151,6 +153,7 @@ const v0ConfigLina: LightGodwokenConfig = {
   },
 };
 
+// https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/testnet_v1_1/scripts-deploy-result.json
 const v1ConfigAggron: LightGodwokenConfig = {
   layer1Config: layer1ConfigAggron,
   layer2Config: {
@@ -198,6 +201,7 @@ const v1ConfigAggron: LightGodwokenConfig = {
   },
 };
 
+// https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/mainnet_v1/scripts-deploy-result.json
 const v1ConfigLina: LightGodwokenConfig = {
   layer1Config: layer1ConfigLina,
   layer2Config: {
