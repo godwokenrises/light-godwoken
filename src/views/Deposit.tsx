@@ -22,11 +22,11 @@ import {
   LoadingWrapper,
   Tips,
 } from "../style/common";
-import { ReactComponent as PlusIcon } from "./../asserts/plus.svg";
+import { ReactComponent as PlusIcon } from "./../assets/plus.svg";
 import { WalletInfo } from "../components/WalletInfo";
 import { getDepositInputError, isDepositCKBInputValidate, isSudtInputValidate } from "../utils/inputValidate";
 import { formatToThousands, parseStringToBI } from "../utils/numberFormat";
-import { ReactComponent as CKBIcon } from "../asserts/ckb.svg";
+import { ReactComponent as CKBIcon } from "../assets/ckb.svg";
 import { WalletConnect } from "../components/WalletConnect";
 import { DepositList } from "../components/Deposit/List";
 import {

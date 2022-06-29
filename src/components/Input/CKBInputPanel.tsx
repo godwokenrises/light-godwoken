@@ -3,7 +3,7 @@ import { getDisplayAmount, getFullDisplayAmount } from "../../utils/formatTokenA
 import NumericalInput from "./NumericalInput";
 import { BI } from "@ckb-lumos/lumos";
 import { InputCard, Text, Row } from "../../style/common";
-import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
+import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { Placeholder } from "../Placeholder";
 import { formatToThousands } from "../../utils/numberFormat";
 

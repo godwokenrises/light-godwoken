@@ -11,7 +11,7 @@ import {
   Text,
   Tips,
 } from "../../style/common";
-import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
+import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import styled from "styled-components";
 import { formatToThousands } from "../../utils/numberFormat";
 import { LoadingOutlined } from "@ant-design/icons";

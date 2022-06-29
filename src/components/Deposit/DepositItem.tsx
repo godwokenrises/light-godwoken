@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI } from "@ckb-lumos/lumos";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { ReactComponent as CKBIcon } from "../../asserts/ckb.svg";
+import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { Actions, ConfirmModal, LoadingWrapper, MainText, PlainButton, SecondeButton, Tips } from "../../style/common";
 
 import { COLOR } from "../../style/variables";
