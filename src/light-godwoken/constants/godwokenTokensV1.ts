@@ -4,15 +4,6 @@ import { LightGodwokenTokenType } from "./configTypes";
 export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
   {
     id: 0,
-    symbol: "pCKB",
-    name: "pCKB",
-    decimals: 18,
-    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
-    address: "0x7538C85caE4E4673253fFd2568c1F1b48A71558a",
-    l1LockArgs: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  },
-  {
-    id: 0,
     symbol: "dCKB",
     name: "dCKB",
     decimals: 8,
