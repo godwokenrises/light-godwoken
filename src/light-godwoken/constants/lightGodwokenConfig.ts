@@ -96,10 +96,11 @@ const v0ConfigAggron: LightGodwokenConfig = {
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-web3-rpc.ckbapp.dev",
     SCANNER_URL: "https://aggron.gwscan.com",
-    SCANNER_API: "https://api.aggron.gwscan.com",
+    SCANNER_API: "https://api.aggron.gwscan.com/api",
     CHAIN_NAME: "Godwoken Testnet v0",
     FINALITY_BLOCKS: 10000,
     MIN_CANCEL_DEPOSIT_TIME: 1200, // 20 minutes in seconds
+    MULTICALL_ADDRESS: "0xaf98A74b133CD8373EE055b399b0cE19cF8C4523",
   },
 };
 

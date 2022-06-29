@@ -1,7 +1,7 @@
 import { message } from "antd";
 import styled from "styled-components";
 import { PrimaryText, Text } from "../../style/common";
-import { ReactComponent as CopyIcon } from "../../asserts/copy.svg";
+import { ReactComponent as CopyIcon } from "../../assets/copy.svg";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { BI } from "@ckb-lumos/lumos";
 import { Placeholder } from "../Placeholder";

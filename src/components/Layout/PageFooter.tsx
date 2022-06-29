@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ReactComponent as Hamburger } from "../../asserts/hamburger.svg";
+import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
 
 import styled from "styled-components";
 import { Popover } from "antd";
