@@ -150,6 +150,8 @@ const v0ConfigLina: LightGodwokenConfig = {
     FINALITY_BLOCKS: 3600,
     BLOCK_PRODUCE_TIME: 45,
     MIN_CANCEL_DEPOSIT_TIME: 172800, // two days
+
+    MULTICALL_ADDRESS: "0x277FD6c744f7C16A997E5D626131eBd81d2D58Aa",
   },
 };
 
