@@ -3,18 +3,18 @@ import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
-  WithdrawalEventEmitter,
-  WithdrawalEventEmitterPayload,
-  LightGodwokenV0,
-  ProxyERC20,
-  SUDT,
+  BaseWithdrawalEventEmitterPayload,
+  CKB_SUDT_ID,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
-  BaseWithdrawalEventEmitterPayload,
+  LightGodwokenV0,
+  ProxyERC20,
+  SUDT,
   Token,
+  WithdrawalEventEmitter,
+  WithdrawalEventEmitterPayload,
   WithdrawResultV0,
-  CKB_SUDT_ID,
 } from "./lightGodwokenType";
 import { getTokenList } from "./constants/tokens";
 import { AbiItems } from "@polyjuice-provider/base";
@@ -22,7 +22,7 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrwal, RawWithdrwalCodec, WithdrawalRequestExtraCodec, V0DepositLockArgs } from "./schemas/codecV0";
+import { RawWithdrwal, RawWithdrwalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
 import { debug } from "./debug";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 import {
@@ -60,7 +60,17 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   getMinimalWithdrawalCapacity(): BI {
-    return BI.from(400).mul(100000000);
+    const minimalCapacity =
+      8 + // capacity
+      32 + // withdrawal_lock.code_hash
+      1 + // withdrawal_lock.hash_type
+      303 + // withdrawal_lock.args TODO: explain why this is 303
+      32 + // sudt_type.code_hash
+      1 + // sudt_type.hash_type
+      32 + // sudt_type.args
+      16; // sudt_amount
+
+    return BI.from(minimalCapacity).mul(100000000);
   }
 
   getMinimalWithdrawalToV1Capacity(): BI {
