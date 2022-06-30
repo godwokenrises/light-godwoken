@@ -194,7 +194,7 @@ const v1ConfigAggron: LightGodwokenConfig = {
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
     SCANNER_URL: "https://v1.betanet.gwscan.com/",
-    SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
+    SCANNER_API: "https://api.v1.betanet.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Testnet v1",
     FINALITY_BLOCKS: 100,
     BLOCK_PRODUCE_TIME: 30,
@@ -248,6 +248,9 @@ const v1ConfigLina: LightGodwokenConfig = {
     // Assuming layer 1 block produce time is 12 secondes, layer 2 produces 1 block every 3 layer 1 blocks
     BLOCK_PRODUCE_TIME: 12 * 3,
     MIN_CANCEL_DEPOSIT_TIME: 604800,
+
+    // TODO: replace with https://github.com/mds1/multicall/issues/33 when the multicall is ready
+    MULTICALL_ADDRESS: "0x59EAD430BA0451d266fF237aD0A31F437B7BBA9B",
   },
 };
 

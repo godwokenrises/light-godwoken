@@ -2,7 +2,6 @@ import {
   Address,
   Indexer,
   RPC,
-  config,
   helpers,
   Transaction,
   HexString,

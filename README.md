@@ -1,64 +1,27 @@
-# Light Godwoken
+# Godwoken Bridge
 
-This is a demo UI for depositing and withdrawing assets to Godwoken, which is a CKB Layer 2 chain to CKB chain.
-You will need to have MetaMask installed to use this demo.
+An asset bridge for `CKB <=> Godwoken`
 
-## Quick Start
+## Accessing the Godwoken Bridge
 
-- MetaMask
+- mainnet: https://mainnet.bridge.godwoken.io
+- testnet: https://testnet.bridge.godwoken.io
+
+## Development
+
 - NodeJS >= 14
+- Yarn >= 1.22
 
 ```sh
 yarn install
+yarn test
 yarn start
 ```
 
 ## Documentation
 
-- [Introduction to Godwoken Bridge](docs/introduction.md)
-- [How to Get Test Tokens](docs/test-tokens.md)
+- [intro](docs/introduction.md)
+- [claiming test token](docs/test-tokens.md)
 
-## How to Use
+Check out [docs](docs) for more information.
 
-```ts
-import detectEthereumProvider from "@metamask/detect-provider";
-import { useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider } from "react-query";
-import Page from "./components/Layout/Page";
-import { LightGodwokenContext } from "./contexts/LightGodwokenContext";
-import { LightGodwokenV1 } from "./light-godwoken";
-import DefaultLightGodwoken from "./light-godwoken/lightGodwoken";
-import DefaultLightGodwokenProvider from "./light-godwoken/lightGodwokenProvider";
-import LightGodwokenApp from "./views/LightGodwokenApp";
-function App() {
-  const queryClient = new QueryClient();
-  const [lightGodwoken, setLightGodwoken] = useState<DefaultLightGodwoken>();
-
-  useEffect(() => {
-    detectEthereumProvider().then((ethereum: any) => {
-      ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-        if (!accounts || !accounts[0]) return;
-        const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
-        setLightGodwoken(lightGodwokenV1);
-      });
-
-      ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
-        if (!accounts || !accounts[0]) return;
-        const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
-        setLightGodwoken(lightGodwokenV1);
-      });
-    });
-  }, [lightGodwoken]);
-  return (
-    <QueryClientProvider client={queryClient}>
-      <LightGodwokenContext.Provider value={lightGodwoken}>
-        <Page>
-          <LightGodwokenApp activeView="deposit" />
-        </Page>
-      </LightGodwokenContext.Provider>
-    </QueryClientProvider>
-  );
-}
-
-export default App;
-```
