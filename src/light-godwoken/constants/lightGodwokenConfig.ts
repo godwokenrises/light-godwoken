@@ -194,7 +194,7 @@ const v1ConfigAggron: LightGodwokenConfig = {
     },
     GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
     SCANNER_URL: "https://v1.betanet.gwscan.com/",
-    SCANNER_API: "https://api.v1-betanet.gwscan.com/api/",
+    SCANNER_API: "https://api.v1.betanet.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Testnet v1",
     FINALITY_BLOCKS: 100,
     BLOCK_PRODUCE_TIME: 30,
