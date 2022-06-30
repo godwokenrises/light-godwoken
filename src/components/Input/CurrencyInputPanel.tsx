@@ -131,6 +131,23 @@ export default function CurrencyInputPanel({
       }),
     );
   };
+  const tokenListWithBalance: Array<Token & { balance: string }> = (tokenList || []).map((token, index) => {
+    return {
+      ...token,
+      balance: (balancesList || [])[index],
+    };
+  });
+
+  const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
+    const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
+    const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
+    if (aValue.gt(0) && bValue.lte(0)) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
   return (
     <InputCard>
       <Row className="first-row">
@@ -175,25 +192,27 @@ export default function CurrencyInputPanel({
       >
         <TokenList className="token-list">
           <List
-            dataSource={tokenList}
-            renderItem={(erc20, index) => (
+            dataSource={tokenListWithBalanceSorted}
+            renderItem={(tokenWithBalance, index) => (
               <List.Item
-                className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => !dataLoading && handleErc20Selected(index, erc20)}
+                className={tokenWithBalance.symbol === selectedCurrency?.symbol ? "selected" : ""}
+                onClick={() => !dataLoading && handleErc20Selected(index, tokenWithBalance)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
-                    <img className="icon" src={erc20.tokenURI} alt="" />
+                    <img className="icon" src={tokenWithBalance.tokenURI} alt="" />
                     <div className="symbol-name">
-                      <Text className="symbol">{erc20.symbol}</Text>
-                      <Text className="name">{erc20.name}</Text>
+                      <Text className="symbol">{tokenWithBalance.symbol}</Text>
+                      <Text className="name">{tokenWithBalance.name}</Text>
                     </div>
                   </div>
                   <div>
                     {dataLoading ? (
                       <LoadingOutlined />
-                    ) : balancesList && balancesList[index] && balancesList[index] !== "0x0" ? (
-                      formatToThousands(getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals))
+                    ) : tokenWithBalance.balance && tokenWithBalance.balance !== "0x0" ? (
+                      formatToThousands(
+                        getFullDisplayAmount(BI.from(tokenWithBalance.balance), tokenWithBalance.decimals),
+                      )
                     ) : (
                       "-"
                     )}
