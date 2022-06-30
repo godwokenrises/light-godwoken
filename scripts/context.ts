@@ -22,6 +22,14 @@ const GODWOKEN_V1_TESTNET: Context = {
   },
 };
 
+const GODWOKEN_V1_MAINNET: Context = {
+  godwoken: {
+    version: "v1",
+    rpcUrl: "https://v1.mainnet.godwoken.io/rpc",
+    chainId: 71402,
+  },
+};
+
 const GODWOKEN_V0_TESTNET: Context = {
   godwoken: {
     version: "v0",
