@@ -22,6 +22,7 @@
           - [Scanner API docs](#scanner-api-docs)
       - [Link to Godwoken withdrawal docs](#link-to-godwoken-withdrawal-docs)
   - [References](#references)
+  - [Known Issues](#known-issues)
 
 ## Introduction to Godwoken Bridge
 
@@ -183,3 +184,7 @@ For more infomation about withdraw, please refer to Godwoken docs:
 - [Polyjuice Provider](https://github.com/nervosnetwork/polyjuice-provider)
 - [Godwoken Web3](https://github.com/nervosnetwork/godwoken-web3#godwoken-web3-api) A Web3 RPC compatible layer build upon Godwoken/Polyjuice.
 - [lumos](https://github.com/nervosnetwork/lumos) A library for building dAPP on CKB
+
+## Known Issues
+
+1. If you are a new user of Godwoken network, you may encounter some unkonwn errors on Godwoken Bridge page, this is because that your account is not registered on Godwoken network. Just deposit some CKB to Godwoken network, the problems will be gone.
