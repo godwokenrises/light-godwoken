@@ -137,15 +137,12 @@ export default function CurrencyInputPanel({
       balance: (balancesList || [])[index],
     };
   });
+
   const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
     const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
     const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
-    const aActualValue = aValue.div(BI.from(10).pow(a.decimals));
-    const bActualValue = bValue.div(BI.from(10).pow(b.decimals));
-    if (aActualValue.gt(bActualValue)) {
+    if (aValue.gt(0) && bValue.lte(0)) {
       return -1;
-    } else if (aActualValue.lt(bActualValue)) {
-      return 1;
     } else {
       return 0;
     }
