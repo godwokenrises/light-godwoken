@@ -111,8 +111,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
-        name: token.name,
-        symbol: token.symbol,
+        name: token.layer2DisplayName || token.name,
+        symbol: token.layer2UAN || token.symbol,
         decimals: token.decimals,
         address: token.address,
         tokenURI: token.tokenURI,
@@ -144,8 +144,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       };
       map.push({
         type: tokenL1Script,
-        name: token.name,
-        symbol: token.symbol,
+        name: token.layer1DisplayName || token.name,
+        symbol: token.layer1UAN || token.symbol,
         decimals: token.decimals,
         tokenURI: token.tokenURI,
       });
