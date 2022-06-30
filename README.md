@@ -15,7 +15,7 @@ yarn start
 
 ## Documentation
 
-- [How to Withdraw Asset from Godwoken to CKB](docs/how-to-withdraw-from-godwoken.md)
+- [Introduction to Godwoken Bridge](docs/introduction.md)
 - [How to Get Test Tokens](docs/test-tokens.md)
 
 ## How to Use
