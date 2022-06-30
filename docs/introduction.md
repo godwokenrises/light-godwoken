@@ -1,29 +1,5 @@
 # About Godwoken Bridge
 
-## Table of Contents
-
-- [About Godwoken Bridge](#about-godwoken-bridge)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction to Godwoken Bridge](#introduction-to-godwoken-bridge)
-    - [Mainnet](#mainnet)
-    - [Testnet](#testnet)
-  - [Functionalities](#functionalities)
-    - [Deposit](#deposit)
-      - [Deposit Diagram](#deposit-diagram)
-      - [How does deposit work](#how-does-deposit-work)
-        - [How to make a deposit request](#how-to-make-a-deposit-request)
-        - [How to fetch deposit result](#how-to-fetch-deposit-result)
-      - [Link to Godwoken Deposit docs](#link-to-godwoken-deposit-docs)
-    - [Withdrawal](#withdrawal)
-      - [Withdrawal Diagram](#withdrawal-diagram)
-      - [How does withdrawal work](#how-does-withdrawal-work)
-        - [How to make a withdrawal request](#how-to-make-a-withdrawal-request)
-        - [How to fetch withdrawal list](#how-to-fetch-withdrawal-list)
-          - [Scanner API docs](#scanner-api-docs)
-      - [Link to Godwoken withdrawal docs](#link-to-godwoken-withdrawal-docs)
-  - [References](#references)
-  - [Known Issues](#known-issues)
-
 ## Introduction to Godwoken Bridge
 
 Godwoken Bridge is a token bridge between CKB layer 1 network and Godwoken layer 2 network.
@@ -46,8 +22,8 @@ By depositing assets, it means moving your token assets from CKB layer 1 network
 
 ```mermaid
 sequenceDiagram
-    participant A as User
-    participant B as CKB web3
+    participant A as Bridge UI
+    participant B as Deposit contract <br /> (deposit lock)
     participant C as CKB indexer
     A->>B: Deposit request
     B-->>A: OK
@@ -69,9 +45,9 @@ All you need to do is to forge a tx to transfer assets to this deposit lock:
 
 ```json5
 {
-  "code_hash": <deposit lock code_hash>
-  "hash_type": <deposit lock hash_type>
-  "args": <Your deposit lock args>
+  "code_hash": "<deposit lock code_hash>",
+  "hash_type": "<deposit lock hash_type>",
+  "args": "<Your deposit lock args>"
 }
 ```
 
@@ -91,9 +67,9 @@ table DepositLockArgs {
 
 ##### How to fetch deposit result
 
-As illustrated in the deposit diagram above, user need to collect deposit cells from CKB indexer. When you got a deposit cell from indexer, and the deposit cell status is dead and transferred to the custodian lock, that means the deposit is successful.
+The user needs to collect deposit cells from the CKB indexer. When the user got a deposit cell from the indexer, and the deposit cell status is dead and transferred to the custodian lock, that means the deposit is successful.
 
-For terminal user, after making a deposit request and get a transaction hash, you can track the depsit result using CKB explorer:
+After making a deposit request and getting a transaction hash, the user can track the deposit result by CKB explorer:
 
 - [mainet](https://explorer.nervos.org/)
 - [testnet](https://pudge.explorer.nervos.org/)
@@ -108,7 +84,7 @@ For more infomation about deposit, please refer to Godwoken docs:
 
 ### Withdrawal
 
-By withdrawing assets, it means moving your token assets from Godwoken layer 2 network back to CKB layer 1 network.
+Withdrawal means moving the user's assets from the Godwoken layer 2 network back to the CKB layer 1 network.
 
 #### Withdrawal Diagram
 
