@@ -11,6 +11,8 @@
     - [Deposit](#deposit)
       - [Deposit Diagram](#deposit-diagram)
       - [How does deposit work](#how-does-deposit-work)
+        - [How to make a deposit request](#how-to-make-a-deposit-request)
+        - [How to fetch deposit result](#how-to-fetch-deposit-result)
       - [Link to Godwoken Deposit docs](#link-to-godwoken-deposit-docs)
     - [Withdrawal](#withdrawal)
       - [Withdrawal Diagram](#withdrawal-diagram)
@@ -60,6 +62,8 @@ sequenceDiagram
 
 #### How does deposit work
 
+##### How to make a deposit request
+
 All you need to do is to forge a tx to transfer assets to this deposit lock:
 
 ```json5
@@ -83,6 +87,17 @@ table DepositLockArgs {
     registry_id: Uint32, // only v1
 }
 ```
+
+##### How to fetch deposit result
+
+As illustrated in the deposit diagram above, user need to collect deposit cells from CKB indexer. When you got a deposit cell from indexer, and the deposit cell status is dead and transferred to the custodian lock, that means the deposit is successful.
+
+For terminal user, after making a deposit request and get a transaction hash, you can track the depsit result using CKB explorer:
+
+- [mainet](https://explorer.nervos.org/)
+- [testnet](https://pudge.explorer.nervos.org/)
+
+Just search by the transaction hash, and you can find the deposit cell.
 
 #### Link to Godwoken Deposit docs
 
