@@ -92,6 +92,23 @@ export default function CurrencyInputPanel({
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const tokenListWithBalance: Array<Token & { balance: string }> = (tokenList || []).map((token, index) => {
+    return {
+      ...token,
+      balance: (balancesList || [])[index],
+    };
+  });
+
+  const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
+    const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
+    const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
+    if (aValue.gt(0) && bValue.lte(0)) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
   useEffect(() => {
     setCurrencyBalance(undefined);
     setSelectedCurrency(undefined);
@@ -115,8 +132,9 @@ export default function CurrencyInputPanel({
     setIsModalVisible(false);
     onUserInput("");
 
+    const tokenWithBalance = tokenListWithBalanceSorted[index];
     if (balancesList && balancesList.length && index !== undefined && erc20) {
-      const balance = balancesList[index];
+      const balance = tokenWithBalance.balance;
       onSelectedChange(erc20, balance);
       setCurrencyBalance(balance);
     }
@@ -131,22 +149,6 @@ export default function CurrencyInputPanel({
       }),
     );
   };
-  const tokenListWithBalance: Array<Token & { balance: string }> = (tokenList || []).map((token, index) => {
-    return {
-      ...token,
-      balance: (balancesList || [])[index],
-    };
-  });
-
-  const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
-    const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
-    const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
-    if (aValue.gt(0) && bValue.lte(0)) {
-      return -1;
-    } else {
-      return 0;
-    }
-  });
 
   return (
     <InputCard>
