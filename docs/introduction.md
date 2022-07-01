@@ -90,7 +90,7 @@ Withdrawal means moving the user's assets from the Godwoken layer 2 network back
 
 ```mermaid
 sequenceDiagram
-    participant A as User
+    participant A as Bridge UI
     participant B as Godwoken web3
     participant C as Scanner API
     A->>B: Withdrawal request
