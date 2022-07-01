@@ -199,7 +199,9 @@ const v1ConfigAggron: LightGodwokenConfig = {
     FINALITY_BLOCKS: 100,
     BLOCK_PRODUCE_TIME: 30,
     MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
-    MULTICALL_ADDRESS: "0x65ba0AeE059920dA4D7F8b17B782AF26F463ad5C",
+
+    // https://github.com/mds1/multicall/blob/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7/README.md
+    MULTICALL_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
 };
 
@@ -249,8 +251,8 @@ const v1ConfigLina: LightGodwokenConfig = {
     BLOCK_PRODUCE_TIME: 12 * 3,
     MIN_CANCEL_DEPOSIT_TIME: 604800,
 
-    // TODO: replace with https://github.com/mds1/multicall/issues/33 when the multicall is ready
-    MULTICALL_ADDRESS: "0x59EAD430BA0451d266fF237aD0A31F437B7BBA9B",
+    // https://github.com/mds1/multicall/commit/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7
+    MULTICALL_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
 };
 
