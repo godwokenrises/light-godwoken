@@ -398,4 +398,22 @@ export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
     address: "0x82455018F2c32943b3f12F4e59D0DA2FAf2257Ef",
     l1LockArgs: "0x0a2117bce7a84cac80e7c5971919d12987e4da58f79e010c6c2f58c7d6e687e1",
   },
+  {
+    id: 0,
+    symbol: "YOK",
+    name: "YokaiSwap Token",
+    decimals: 18,
+    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    address: "0x885fb612947ccF1C7611894Bd828D388b046fc24",
+    l1LockArgs: "0x656edac5463ef828a1a95f214b56adfe8f37da148fbc7ff424905e5264297c70",
+  },
+  {
+    id: 0,
+    symbol: "COOP",
+    name: "Cooperative",
+    decimals: 18,
+    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    address: "0x8D5DcCcdE88E2E48e1b91dC58B21AC3248B4E000",
+    l1LockArgs: "0x928123cdb74b08e0f058cc1aaa67b5e8fc9c17612061b433716a61e499f7c5f7",
+  },
 ];
