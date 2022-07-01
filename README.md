@@ -20,4 +20,8 @@ yarn start
 
 ## Documentation
 
+- [intro](docs/introduction.md)
+- [claiming test token](docs/test-tokens.md)
+
 Check out [docs](docs) for more information.
+
