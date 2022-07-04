@@ -27,6 +27,7 @@ if (process.env.NODE_ENV === "production") {
     allowUrls: [
       /http?:\/\/localhost/,
       /https?:\/\/testnet\.bridge\.godwoken\.io/,
+      /https?:\/\/mainnet\.bridge\.godwoken\.io/,
       /https?:\/\/light-godwoken\.vercel\.app/,
       /https?:\/\/light-godwoken-mainnet\.vercel\.app/,
     ],
