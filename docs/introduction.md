@@ -6,7 +6,7 @@ Godwoken Bridge is a token bridge between CKB layer 1 network and Godwoken layer
 
 ### Mainnet
 
-- https://mainnet.bridge.godwoken.io/
+- https://bridge.godwoken.io/
 
 ### Testnet
 

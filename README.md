@@ -4,7 +4,7 @@ An asset bridge for `CKB <=> Godwoken`
 
 ## Accessing the Godwoken Bridge
 
-- mainnet: https://mainnet.bridge.godwoken.io
+- mainnet: https://bridge.godwoken.io
 - testnet: https://testnet.bridge.godwoken.io
 
 ## Development
@@ -20,8 +20,8 @@ yarn start
 
 ## Documentation
 
-- [intro](docs/introduction.md)
-- [claiming test token](docs/test-tokens.md)
+- [Introduction](docs/introduction.md)
+- [Claim Testnet Token](docs/test-tokens.md)
 
 Check out [docs](docs) for more information.
 
