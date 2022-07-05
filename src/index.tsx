@@ -26,6 +26,8 @@ if (process.env.NODE_ENV === "production") {
     tracesSampleRate: 1.0,
     allowUrls: [
       /http?:\/\/localhost/,
+      /https?:\/\/bridge\.godwoken\.io/,
+      /https?:\/\/mainnet\.bridge\.godwoken\.io/,
       /https?:\/\/testnet\.bridge\.godwoken\.io/,
       /https?:\/\/light-godwoken\.vercel\.app/,
       /https?:\/\/light-godwoken-mainnet\.vercel\.app/,
