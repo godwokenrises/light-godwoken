@@ -92,6 +92,23 @@ export default function CurrencyInputPanel({
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const tokenListWithBalance: Array<Token & { balance: string }> = (tokenList || []).map((token, index) => {
+    return {
+      ...token,
+      balance: (balancesList || [])[index],
+    };
+  });
+
+  const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
+    const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
+    const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
+    if (aValue.gt(0) && bValue.lte(0)) {
+      return -1;
+    } else {
+      return 0;
+    }
+  });
+
   useEffect(() => {
     setCurrencyBalance(undefined);
     setSelectedCurrency(undefined);
@@ -115,8 +132,9 @@ export default function CurrencyInputPanel({
     setIsModalVisible(false);
     onUserInput("");
 
+    const tokenWithBalance = tokenListWithBalanceSorted[index];
     if (balancesList && balancesList.length && index !== undefined && erc20) {
-      const balance = balancesList[index];
+      const balance = tokenWithBalance.balance;
       onSelectedChange(erc20, balance);
       setCurrencyBalance(balance);
     }
@@ -131,6 +149,7 @@ export default function CurrencyInputPanel({
       }),
     );
   };
+
   return (
     <InputCard>
       <Row className="first-row">
@@ -179,30 +198,31 @@ export default function CurrencyInputPanel({
       >
         <TokenList className="token-list">
           <List
-            dataSource={tokenList}
-            renderItem={(erc20, index) => (
+            dataSource={tokenListWithBalanceSorted}
+            renderItem={(tokenWithBalance, index) => (
               <List.Item
-                className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => !dataLoading && handleErc20Selected(index, erc20)}
+                className={tokenWithBalance.symbol === selectedCurrency?.symbol ? "selected" : ""}
+                onClick={() => !dataLoading && handleErc20Selected(index, tokenWithBalance)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
-                    {!!erc20.tokenURI ? (
-                      <img className="icon" src={erc20.tokenURI} alt="" />
+                    {!!tokenWithBalance.tokenURI ? (
+                      <img className="icon" src={tokenWithBalance.tokenURI} alt="" />
                     ) : (
                       <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
                     )}
-
                     <div className="symbol-name">
-                      <Text className="symbol">{erc20.symbol}</Text>
-                      <Text className="name">{erc20.name}</Text>
+                      <Text className="symbol">{tokenWithBalance.symbol}</Text>
+                      <Text className="name">{tokenWithBalance.name}</Text>
                     </div>
                   </div>
                   <div>
                     {dataLoading ? (
                       <LoadingOutlined />
-                    ) : balancesList && balancesList[index] && balancesList[index] !== "0x0" ? (
-                      formatToThousands(getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals))
+                    ) : tokenWithBalance.balance && tokenWithBalance.balance !== "0x0" ? (
+                      formatToThousands(
+                        getFullDisplayAmount(BI.from(tokenWithBalance.balance), tokenWithBalance.decimals),
+                      )
                     ) : (
                       "-"
                     )}
