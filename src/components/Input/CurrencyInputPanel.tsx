@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { List } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalItemV0";
 import NumericalInput from "./NumericalInput";
-import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
+import { DownOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { Token } from "../../light-godwoken/lightGodwokenType";
@@ -157,7 +157,11 @@ export default function CurrencyInputPanel({
         <CurrencyWrapper className="currency-wrapper" onClick={showCurrencySelectModal}>
           {selectedCurrency ? (
             <div className="currency-icon">
-              <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
+              {!!selectedCurrency.tokenURI ? (
+                <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
+              ) : (
+                <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
+              )}
               <Text>{selectedCurrency.symbol}</Text>
             </div>
           ) : (
@@ -183,7 +187,12 @@ export default function CurrencyInputPanel({
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
-                    <img className="icon" src={erc20.tokenURI} alt="" />
+                    {!!erc20.tokenURI ? (
+                      <img className="icon" src={erc20.tokenURI} alt="" />
+                    ) : (
+                      <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
+                    )}
+
                     <div className="symbol-name">
                       <Text className="symbol">{erc20.symbol}</Text>
                       <Text className="name">{erc20.name}</Text>
