@@ -102,15 +102,7 @@ export default function CurrencyInputPanel({
   const tokenListWithBalanceSorted = tokenListWithBalance
     // sort token list by dict order
     .sort((a, b) => {
-      const aSymbol = a.symbol;
-      const bSymbol = b.symbol;
-      if (aSymbol > bSymbol) {
-        return 1;
-      } else if (aSymbol < bSymbol) {
-        return -1;
-      } else {
-        return 0;
-      }
+      return a.symbol.localeCompare(b.symbol);
     })
     // sort token list by token balance
     .sort((a, b) => {
