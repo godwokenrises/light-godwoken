@@ -99,15 +99,21 @@ export default function CurrencyInputPanel({
     };
   });
 
-  const tokenListWithBalanceSorted = tokenListWithBalance.sort((a, b) => {
-    const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
-    const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
-    if (aValue.gt(0) && bValue.lte(0)) {
-      return -1;
-    } else {
-      return 0;
-    }
-  });
+  const tokenListWithBalanceSorted = tokenListWithBalance
+    // sort token list by dict order
+    .sort((a, b) => {
+      return a.symbol.localeCompare(b.symbol);
+    })
+    // sort token list by token balance
+    .sort((a, b) => {
+      const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
+      const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
+      if (aValue.gt(0) && bValue.lte(0)) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
 
   useEffect(() => {
     setCurrencyBalance(undefined);
