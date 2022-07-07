@@ -29,7 +29,6 @@ import {
   Erc20NotFoundError,
   EthAddressFormatError,
   Layer2AccountIdNotFoundError,
-  Layer2RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
   TransactionSignError,

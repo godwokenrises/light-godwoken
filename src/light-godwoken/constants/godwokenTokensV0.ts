@@ -17,7 +17,7 @@ export const TOKEN_LIST_V0_MAINNET: LightGodwokenTokenType[] = [
     symbol: "TAI",
     name: "TAI",
     decimals: 8,
-    tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
+    tokenURI: "",
     address: "0xf4187511D43B90751a28b6811d13AFB49BeF8452",
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
   },

@@ -1,6 +1,5 @@
 import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
 import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
-import isEqual from "lodash/isEqual";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -25,7 +24,6 @@ import { debug } from "./debug";
 import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
-  Layer2RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
   SudtNotFoundError,
@@ -34,7 +32,6 @@ import {
 } from "./constants/error";
 import { getAdvancedSettings } from "./constants/configManager";
 import { GodwokenVersion } from "./constants/configTypes";
-import { isMainnet } from "./env";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
 import { BigNumber, providers } from "ethers";
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {

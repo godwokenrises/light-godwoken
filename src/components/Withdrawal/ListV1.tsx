@@ -7,8 +7,8 @@ import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
 import LightGodwokenV1 from "../../light-godwoken/LightGodwokenV1";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
-import EventEmitter from "events";
-import { WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import Tooltip from "antd/lib/tooltip";
+import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -25,10 +25,10 @@ interface Props {
   updateTxWithStatus: (txHash: string, status: string) => void;
 }
 
-export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, updateTxWithStatus }) => {
+export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) => {
   const lightGodwoken = useLightGodwoken();
   const [active, setActive] = useState("pending");
-  const [withdrawalEventEmitter, setWithdrawalEventEmitter] = useState(new EventEmitter() as WithdrawalEventEmitter);
+
   const changeViewToPending = () => {
     setActive("pending");
   };
@@ -44,7 +44,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, upd
       enabled: !!lightGodwoken,
     },
   );
-  const { data: withdrawalList, isLoading, refetch: refetchWithdrawalList } = withdrawalListQuery;
+  const { data: withdrawalList, isLoading } = withdrawalListQuery;
 
   const pendingList = withdrawalList?.filter((history) => history.status === "pending") || [];
   const completedList = withdrawalList?.filter((history) => history.status !== "pending") || [];
@@ -57,12 +57,6 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, upd
         status: "l2Pending",
       };
     });
-
-  withdrawalEventEmitter.on("success", (txHash) => {
-    console.log("success triggerd in subscribe withdrawal", txHash);
-    updateTxWithStatus(txHash, "l2Success");
-    refetchWithdrawalList();
-  });
 
   if (!lightGodwoken) {
     return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
@@ -79,7 +73,10 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, upd
     <WithdrawalListDiv>
       <LinkList>
         <Tab onClick={changeViewToPending} className={active === "pending" ? "active" : ""}>
-          Pending
+          <Tooltip title="After a successful withdrawal transaction is sent, it usually comes up in the pending list within five minutes.">
+            Pending
+            <QuestionCircleOutlined style={{ marginLeft: 8, color: "#000000", height: "21px", lineHeight: "21px" }} />
+          </Tooltip>
         </Tab>
         <Tab onClick={changeViewToCompleted} className={active === "completed" ? "active" : ""}>
           Completed

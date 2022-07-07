@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { List, Tooltip } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalItemV0";
 import NumericalInput from "./NumericalInput";
-import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
+import { DownOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { TokenExtra } from "../../light-godwoken/lightGodwokenType";
@@ -92,6 +92,29 @@ export default function CurrencyInputPanel({
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const tokenListWithBalance: Array<TokenExtra & { balance: string }> = (tokenList || []).map((token, index) => {
+    return {
+      ...token,
+      balance: (balancesList || [])[index],
+    };
+  });
+
+  const tokenListWithBalanceSorted = tokenListWithBalance
+    // sort token list by dict order
+    .sort((a, b) => {
+      return a.symbol.localeCompare(b.symbol);
+    })
+    // sort token list by token balance
+    .sort((a, b) => {
+      const aValue: BI = !!a.balance && a.balance !== "0x0" ? BI.from(a.balance) : BI.from(0);
+      const bValue: BI = !!b.balance && b.balance !== "0x0" ? BI.from(b.balance) : BI.from(0);
+      if (aValue.gt(0) && bValue.lte(0)) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+
   useEffect(() => {
     setCurrencyBalance(undefined);
     setSelectedCurrency(undefined);
@@ -115,8 +138,9 @@ export default function CurrencyInputPanel({
     setIsModalVisible(false);
     onUserInput("");
 
+    const tokenWithBalance = tokenListWithBalanceSorted[index];
     if (balancesList && balancesList.length && index !== undefined && erc20) {
-      const balance = balancesList[index];
+      const balance = tokenWithBalance.balance;
       onSelectedChange(erc20, balance);
       setCurrencyBalance(balance);
     }
@@ -131,6 +155,7 @@ export default function CurrencyInputPanel({
       }),
     );
   };
+
   return (
     <InputCard>
       <Row className="first-row">
@@ -157,7 +182,11 @@ export default function CurrencyInputPanel({
         <CurrencyWrapper className="currency-wrapper" onClick={showCurrencySelectModal}>
           {selectedCurrency ? (
             <div className="currency-icon">
-              <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
+              {!!selectedCurrency.tokenURI ? (
+                <img className="ckb-logo" src={selectedCurrency.tokenURI} alt="" />
+              ) : (
+                <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
+              )}
               <Text>{selectedCurrency.symbol}</Text>
             </div>
           ) : (
@@ -175,27 +204,33 @@ export default function CurrencyInputPanel({
       >
         <TokenList className="token-list">
           <List
-            dataSource={tokenList}
-            renderItem={(erc20, index) => (
+            dataSource={tokenListWithBalanceSorted}
+            renderItem={(tokenWithBalance, index) => (
               <List.Item
-                className={erc20.symbol === selectedCurrency?.symbol ? "selected" : ""}
-                onClick={() => !dataLoading && handleErc20Selected(index, erc20)}
+                className={tokenWithBalance.symbol === selectedCurrency?.symbol ? "selected" : ""}
+                onClick={() => !dataLoading && handleErc20Selected(index, tokenWithBalance)}
               >
                 <FixedHeightRow className="currency-item">
                   <div className="info">
-                    <img className="icon" src={erc20.tokenURI} alt="" />
-                    <Tooltip title={erc20.hover}>
+                    {!!tokenWithBalance.tokenURI ? (
+                      <img className="icon" src={tokenWithBalance.tokenURI} alt="" />
+                    ) : (
+                      <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
+                    )}
+                    <Tooltip title={tokenWithBalance.hover}>
                       <div className="symbol-name">
-                        <Text className="symbol">{erc20.symbol}</Text>
-                        <Text className="name">{erc20.name}</Text>
+                        <Text className="symbol">{tokenWithBalance.symbol}</Text>
+                        <Text className="name">{tokenWithBalance.name}</Text>
                       </div>
                     </Tooltip>
                   </div>
                   <div>
                     {dataLoading ? (
                       <LoadingOutlined />
-                    ) : balancesList && balancesList[index] && balancesList[index] !== "0x0" ? (
-                      formatToThousands(getFullDisplayAmount(BI.from(balancesList[index]), erc20.decimals))
+                    ) : tokenWithBalance.balance && tokenWithBalance.balance !== "0x0" ? (
+                      formatToThousands(
+                        getFullDisplayAmount(BI.from(tokenWithBalance.balance), tokenWithBalance.decimals),
+                      )
                     ) : (
                       "-"
                     )}
