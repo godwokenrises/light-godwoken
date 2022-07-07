@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { writeStorage } from "@rehooks/local-storage";
-import { Token } from "../light-godwoken/lightGodwokenType";
+import { TokenExtra } from "../light-godwoken/lightGodwokenType";
 import { useLightGodwoken } from "./useLightGodwoken";
 
 export interface DepositHistoryType {
@@ -9,7 +9,7 @@ export interface DepositHistoryType {
   capacity: string;
   amount: string;
   cancelTimeout: number;
-  token?: Token;
+  token?: TokenExtra;
   status: string;
 }
 

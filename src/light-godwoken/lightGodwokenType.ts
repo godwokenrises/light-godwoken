@@ -15,15 +15,18 @@ export interface Token {
   decimals: number;
   tokenURI: string;
 }
+export interface TokenExtra extends Token {
+  hover?: string;
+}
 
-interface ERC20 extends Token {
+interface ERC20 extends TokenExtra {
   address: string;
 }
 export interface ProxyERC20 extends ERC20 {
   sudt_script_hash: Hash;
   id?: number;
 }
-export interface SUDT extends Token {
+export interface SUDT extends TokenExtra {
   type: Script;
 }
 
@@ -179,7 +182,7 @@ export interface LightGodwokenBase {
 
   getVersion: () => GodwokenVersion;
 
-  getNativeAsset: () => Token;
+  getNativeAsset: () => TokenExtra;
 
   getChainId: () => Promise<HexNumber> | HexNumber;
 

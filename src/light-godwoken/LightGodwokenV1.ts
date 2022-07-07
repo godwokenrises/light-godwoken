@@ -12,7 +12,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
-  Token,
+  TokenExtra,
   WithdrawResultV1,
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
@@ -79,7 +79,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return "v1";
   }
 
-  getNativeAsset(): Token {
+  getNativeAsset(): TokenExtra {
     return {
       name: "Common Knowledge Base",
       symbol: "CKB",
@@ -123,7 +123,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       sudtList.push({
         type: tokenL1Script,
         name: token.layer1DisplayName || token.name,
-        symbol: token.layer1UAN || token.symbol,
+        symbol: token.symbol,
+        hover: token.layer1UAN || token.symbol,
         decimals: token.decimals,
         tokenURI: token.tokenURI,
       });
@@ -143,7 +144,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       map.push({
         id: token.id,
         name: token.layer2DisplayName || token.name,
-        symbol: token.layer2UAN || token.symbol,
+        symbol: token.symbol,
+        hover: token.layer2UAN || token.symbol,
         decimals: token.decimals,
         address: token.address,
         tokenURI: token.tokenURI,

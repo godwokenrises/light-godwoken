@@ -9,7 +9,7 @@ import CurrencyInputPanel from "../components/Input/CurrencyInputPanel";
 import { useSUDTBalance } from "../hooks/useSUDTBalance";
 import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
-import { DepositEventEmitter, SUDT, Token } from "../light-godwoken/lightGodwokenType";
+import { DepositEventEmitter, SUDT, TokenExtra } from "../light-godwoken/lightGodwokenType";
 import {
   ConfirmModal,
   Card,
@@ -236,7 +236,7 @@ export default function Deposit() {
     setIsSudtValueValidate(isSudtInputValidate(sudtInput, selectedSudtBalance, selectedSudt?.decimals));
   }, [sudtInput, selectedSudtBalance, selectedSudt?.decimals]);
 
-  const handleSelectedChange = (value: Token, balance: string) => {
+  const handleSelectedChange = (value: TokenExtra, balance: string) => {
     setSelectedSudt(value as SUDT);
     setSelectedSudtBalance(balance);
   };

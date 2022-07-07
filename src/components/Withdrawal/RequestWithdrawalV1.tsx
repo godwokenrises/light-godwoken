@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { Token, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import { TokenExtra, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
 import CKBInputPanel from "../Input/CKBInputPanel";
@@ -87,7 +87,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
       handleError(result, selectedSudt);
     });
   };
-  const handleSelectedChange = (value: Token, balance: string) => {
+  const handleSelectedChange = (value: TokenExtra, balance: string) => {
     setSelectedSudt(value as L1MappedErc20);
     setSudtBalance(balance);
   };

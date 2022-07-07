@@ -1,11 +1,11 @@
 import styled from "styled-components";
-import { List } from "antd";
+import { List, Tooltip } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalItemV0";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
-import { Token } from "../../light-godwoken/lightGodwokenType";
+import { TokenExtra } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
 import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
 import { formatToThousands } from "../../utils/numberFormat";
@@ -71,9 +71,9 @@ interface CurrencyInputPanelProps {
   label?: string;
   autoFocus?: boolean;
   balancesList: string[] | undefined;
-  tokenList: Token[] | undefined;
+  tokenList: TokenExtra[] | undefined;
   dataLoading: boolean;
-  onSelectedChange: (value: Token, balance: string) => void;
+  onSelectedChange: (value: TokenExtra, balance: string) => void;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -87,7 +87,7 @@ export default function CurrencyInputPanel({
 }: CurrencyInputPanelProps) {
   const lightGodwoken = useLightGodwoken();
   const [selectedCurrencyBalance, setCurrencyBalance] = useState<string>();
-  const [selectedCurrency, setSelectedCurrency] = useState<Token>();
+  const [selectedCurrency, setSelectedCurrency] = useState<TokenExtra>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -109,7 +109,7 @@ export default function CurrencyInputPanel({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleErc20Selected = (index: number, erc20: Token) => {
+  const handleErc20Selected = (index: number, erc20: TokenExtra) => {
     setDisableInput(false);
     setSelectedCurrency(erc20);
     setIsModalVisible(false);
@@ -184,10 +184,12 @@ export default function CurrencyInputPanel({
                 <FixedHeightRow className="currency-item">
                   <div className="info">
                     <img className="icon" src={erc20.tokenURI} alt="" />
-                    <div className="symbol-name">
-                      <Text className="symbol">{erc20.symbol}</Text>
-                      <Text className="name">{erc20.name}</Text>
-                    </div>
+                    <Tooltip title={erc20.hover}>
+                      <div className="symbol-name">
+                        <Text className="symbol">{erc20.symbol}</Text>
+                        <Text className="name">{erc20.name}</Text>
+                      </div>
+                    </Tooltip>
                   </div>
                   <div>
                     {dataLoading ? (

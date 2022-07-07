@@ -11,7 +11,7 @@ import {
   LightGodwokenV0,
   ProxyERC20,
   SUDT,
-  Token,
+  TokenExtra,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResultV0,
@@ -86,7 +86,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return "v0";
   }
 
-  getNativeAsset(): Token {
+  getNativeAsset(): TokenExtra {
     return {
       name: "Common Knowledge Base",
       symbol: "CKB",
@@ -112,7 +112,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
         name: token.layer2DisplayName || token.name,
-        symbol: token.layer2UAN || token.symbol,
+        symbol: token.symbol,
+        hover: token.layer2UAN || token.symbol,
         decimals: token.decimals,
         address: token.address,
         tokenURI: token.tokenURI,
@@ -145,7 +146,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       map.push({
         type: tokenL1Script,
         name: token.layer1DisplayName || token.name,
-        symbol: token.layer1UAN || token.symbol,
+        hover: token.layer1DisplayName || token.name,
+        symbol: token.symbol,
         decimals: token.decimals,
         tokenURI: token.tokenURI,
       });
