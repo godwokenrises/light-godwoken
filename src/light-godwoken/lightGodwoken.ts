@@ -312,7 +312,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     eventEmiter?: EventEmitter,
   ): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
-    if (!BI.from(payload.capacity).eq(await this.provider.getL1CkbBalance())) {
+    if (!BI.from(payload.capacity).eq(await this.getL1CkbBalance())) {
       // if user don't deposit all ckb, we will need to collect 64 more ckb for exchange
       neededCapacity = neededCapacity.add(BI.from(6400000000));
     }
@@ -776,14 +776,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<HexNumber> {
-    const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
-    let collectedSum = BI.from(0);
-    for await (const cell of collector.collect()) {
-      if (!cell.cell_output.type && (!cell.data || cell.data === "0x" || cell.data === "0x0")) {
-        collectedSum = collectedSum.add(cell.cell_output.capacity);
-      }
-    }
-    return "0x" + collectedSum.toString(16);
+    return (await this.provider.getL1CkbBalance(payload)).toHexString();
   }
 
   async getSudtBalances(payload: GetSudtBalances): Promise<GetSudtBalancesResult> {

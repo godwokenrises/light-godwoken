@@ -19,7 +19,7 @@ import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
-import { LightGodwokenProvider } from "./lightGodwokenType";
+import { GetL1CkbBalancePayload, LightGodwokenProvider } from "./lightGodwokenType";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./constants/configTypes";
@@ -88,9 +88,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return this.l1Address;
   }
 
-  async getL1CkbBalance(): Promise<BI> {
+  async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<BI> {
+    const queryAddress = !!payload && !!payload.l1Address ? payload.l1Address : this.l1Address;
     const ckbCollector = this.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.l1Address),
+      lock: helpers.parseAddress(queryAddress),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
     });
