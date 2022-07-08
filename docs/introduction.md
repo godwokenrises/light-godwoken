@@ -109,7 +109,7 @@ sequenceDiagram
 
 The first step is to call [gw_submit_withdrawal_request](https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request) RPC method to burn assets on layer 2 chain
 and in the meantime, Godwoken creates the assets on layer 1 which can later be unlocked by the receiver address.
-Note that when making such a request you need to provide some info as parameters,
+Note that when making such a request you need to provide some info as parameters.
 
 ```json5
 {
@@ -148,7 +148,7 @@ Godwoken Scanner API docs can be found here:
 
 #### Link to Godwoken withdrawal docs
 
-For more infomation about withdraw, please refer to Godwoken docs:
+For more infomation about withdrawal, please refer to Godwoken docs:
 
 - https://docs.godwoken.io/depAndWthd#withdrawal
 - https://github.com/nervosnetwork/godwoken/blob/develop/docs/RPC.md#method-gw_submit_withdrawal_request
@@ -158,9 +158,9 @@ For more infomation about withdraw, please refer to Godwoken docs:
 - [More Godwoken Demos](https://github.com/classicalliu/gw-demos)
 - [Godwoken config info](https://github.com/nervosnetwork/godwoken-info/)
 - [Polyjuice Provider](https://github.com/nervosnetwork/polyjuice-provider)
-- [Godwoken Web3](https://github.com/nervosnetwork/godwoken-web3#godwoken-web3-api) A Web3 RPC compatible layer build upon Godwoken/Polyjuice.
-- [lumos](https://github.com/nervosnetwork/lumos) A library for building dAPP on CKB
+- [Godwoken Web3](https://github.com/nervosnetwork/godwoken-web3#godwoken-web3-api) A Web3 RPC compatible layer built upon Godwoken/Polyjuice.
+- [lumos](https://github.com/nervosnetwork/lumos) A library for building dApps on CKB
 
 ## Known Issues
 
-1. If you are a new user of Godwoken network, you may encounter some unkonwn errors on Godwoken Bridge page, this is because that your account is not registered on Godwoken network. Just deposit some CKB to Godwoken network, the problems will be gone.
+1. If you are a new user of Godwoken network, you may encounter some unknown errors on Godwoken Bridge page, this may be because your account is not registered on the Godwoken network. This can be fixed by depositing some CKB to the Godwoken network, then the issue should be resolved. 
