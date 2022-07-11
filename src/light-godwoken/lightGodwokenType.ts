@@ -43,6 +43,10 @@ export interface GetSudtBalances {
   types: Script[];
 }
 
+export interface GetSudtBalance {
+  type: Script;
+}
+
 export interface GodwokenNetworkConfig {
   testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
 }

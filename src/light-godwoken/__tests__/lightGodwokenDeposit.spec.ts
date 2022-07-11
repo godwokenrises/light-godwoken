@@ -7,7 +7,7 @@ import {
   outputCapacityOf,
   randomScript,
   outputSudtAmountOf,
-  sudtTypeScriptWithoutArgs,
+  randomSudtTypeScriptWithoutArgs,
   randomSudtTypeScript,
 } from "./utils";
 import { testConfig } from "./lightGodwokenConfig";
@@ -39,7 +39,7 @@ const stubCellCollector = (options: StubOptions) => {
   const lightGodwokenInstance = options.version === "v0" ? lightGodwokenV0 : lightGodwokenV1;
   const lightGodwokenProviderInstance = options.version === "v0" ? lightGodwokenProviderV0 : lightGodwokenProviderV1;
   const mockCell = generateCellInput(options.capacity);
-  const sudtTypeWithoutArgs = sudtTypeScriptWithoutArgs(lightGodwokenInstance.getConfig());
+  const sudtTypeWithoutArgs = randomSudtTypeScriptWithoutArgs(lightGodwokenInstance.getConfig());
   const mockCollector = { collect: sinon.stub().returns([mockCell]) };
   const mockFreeSudtCollector = { collect: sinon.stub().returns([]) };
   if (options.amount > 0 && !!options.type) {

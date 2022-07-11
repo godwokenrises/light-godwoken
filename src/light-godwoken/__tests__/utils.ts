@@ -22,7 +22,7 @@ export const randomScript = (byteLength: number): Script => {
   };
 };
 
-export const sudtTypeScriptWithoutArgs = (config: LightGodwokenConfig): Script => {
+export const randomSudtTypeScriptWithoutArgs = (config: LightGodwokenConfig): Script => {
   return {
     code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
     hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,

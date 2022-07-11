@@ -1,6 +1,13 @@
+import sinon from "sinon";
 import LightGodwokenV1 from "../LightGodwokenV1";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
-import { generateCellInput, randomHexString } from "./utils";
+import {
+  generateCellInput,
+  outputCapacityOf,
+  randomHexString,
+  randomSudtTypeScript,
+  randomSudtTypeScriptWithoutArgs,
+} from "./utils";
 import { testConfig } from "./lightGodwokenConfig";
 import { BI, Cell, Script } from "@ckb-lumos/lumos";
 
@@ -25,11 +32,7 @@ describe("test light godwoken generateDepositOutputCell", () => {
     expect(outputCells[0].cell_output.capacity).toEqual(BI.from(400_00000000).toHexString());
   });
   it("should deposit 400 CKB, 300 pure CKB and 100 free CKB", async () => {
-    const typeScript: Script = {
-      code_hash: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-      hash_type: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
-      args: randomHexString(32),
-    };
+    const typeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
     const collectedCells: Cell[] = [generateCellInput(300)];
     const freeCKBCells: Cell[] = [generateCellInput(144 + 100, typeScript, 1)];
     const outputCells = await lightGodwokenV1.generateDepositOutputCell(collectedCells, freeCKBCells, {
@@ -41,19 +44,11 @@ describe("test light godwoken generateDepositOutputCell", () => {
     expect(outputCells[1].cell_output.capacity).toEqual(BI.from(400_00000000).toHexString());
   });
   it("should deposit 400 CKB, 250 pure CKB and 100 from free CKB and 50 from sudt cell", async () => {
-    const freeTypeScript: Script = {
-      code_hash: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-      hash_type: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
-      args: randomHexString(32),
-    };
-    const depositSudtTypeScript: Script = {
-      code_hash: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-      hash_type: lightGodwokenV1.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
-      args: randomHexString(32),
-    };
+    const freeTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    const depositSudtTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
     const pureCKBCells: Cell[] = [generateCellInput(250)];
-    const freeCKBCells: Cell[] = [generateCellInput(144 + 100, freeTypeScript, 1)];
     const sudtCells: Cell[] = [generateCellInput(144 + 50, depositSudtTypeScript, 2)];
+    const freeCKBCells: Cell[] = [generateCellInput(144 + 100, freeTypeScript, 1)];
     const outputCells = await lightGodwokenV1.generateDepositOutputCell([...pureCKBCells, ...sudtCells], freeCKBCells, {
       capacity: BI.from(400_00000000).toHexString(),
       amount: BI.from(2).mul(1000000000000000000).toHexString(),
@@ -70,5 +65,42 @@ describe("test light godwoken generateDepositOutputCell", () => {
     expect(outputCells[2].cell_output.capacity).toEqual(BI.from(144_00000000).toHexString());
     expect(outputCells[2].cell_output.type).toEqual(undefined);
     expect(outputCells[2].cell_output.lock).toEqual(lightGodwokenV1.provider.getLayer1Lock());
+  });
+  it("should generateDepositTx if user deposit 400 CKB, and user has 250 pure CKB and 100 from free CKB and 50 from sudt cell", async () => {
+    const freeTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    const depositSudtTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    const mockCell = generateCellInput(250);
+    const sudtTypeWithoutArgs = randomSudtTypeScriptWithoutArgs(lightGodwokenV1.getConfig());
+    const sudtCells: Cell[] = [generateCellInput(144 + 50, depositSudtTypeScript, 2)];
+    const freeCKBCells: Cell[] = [generateCellInput(144 + 100, freeTypeScript, 1)];
+    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
+    const mockSudtCollector = { collect: sinon.stub().returns([...sudtCells]) };
+    const mockFreeSudtCollector = { collect: sinon.stub().returns([...sudtCells, ...freeCKBCells]) };
+    sinon
+      .stub(lightGodwokenProviderV1.ckbIndexer, "collector")
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      })
+      .returns(mockCollector)
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: sudtTypeWithoutArgs,
+      })
+      .returns(mockFreeSudtCollector)
+      .withArgs({
+        lock: lightGodwokenV1.provider.getLayer1Lock(),
+        type: depositSudtTypeScript,
+      })
+      .returns(mockSudtCollector);
+
+    const tx = await lightGodwokenV1.generateDepositTx({
+      capacity: BI.from(400_00000000).toHexString(),
+      amount: BI.from(1).mul(1000000000000000000).toHexString(),
+      sudtType: depositSudtTypeScript,
+    });
+
+    expect(outputCapacityOf(tx).toString()).toEqual(String(250 + 144 + 50 + 144 + 100));
   });
 });
