@@ -377,6 +377,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           freeCapacityProviderCells.push(cell);
           collectedCapatity = collectedCapatity.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
         }
+        if (collectedCapatity.gte(neededCapacity)) {
+          break;
+        }
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
