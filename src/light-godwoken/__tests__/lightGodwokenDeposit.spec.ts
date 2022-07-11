@@ -2,9 +2,16 @@ import sinon from "sinon";
 import LightGodwokenV1 from "../LightGodwokenV1";
 import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
-import { generateCellInput, outputCapacityOf, randomScript, outputSudtAmountOf } from "./utils";
+import {
+  generateCellInput,
+  outputCapacityOf,
+  randomScript,
+  outputSudtAmountOf,
+  sudtTypeScriptWithoutArgs,
+  randomSudtTypeScript,
+} from "./utils";
 import { testConfig } from "./lightGodwokenConfig";
-import { BI } from "@ckb-lumos/lumos";
+import { BI, Script } from "@ckb-lumos/lumos";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -21,6 +28,58 @@ beforeEach(() => {
   lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
 });
 
+type StubOptions = {
+  version: "v0" | "v1";
+  capacity: number;
+  amount: number;
+  type?: Script;
+};
+
+const stubCellCollector = (options: StubOptions) => {
+  const lightGodwokenInstance = options.version === "v0" ? lightGodwokenV0 : lightGodwokenV1;
+  const lightGodwokenProviderInstance = options.version === "v0" ? lightGodwokenProviderV0 : lightGodwokenProviderV1;
+  const mockCell = generateCellInput(options.capacity);
+  const sudtTypeWithoutArgs = sudtTypeScriptWithoutArgs(lightGodwokenInstance.getConfig());
+  const mockCollector = { collect: sinon.stub().returns([mockCell]) };
+  const mockFreeSudtCollector = { collect: sinon.stub().returns([]) };
+  if (options.amount > 0 && !!options.type) {
+    const mockSudtCell = generateCellInput(144, options.type, options.amount);
+    const mockSudtCollector = { collect: sinon.stub().returns([mockSudtCell]) };
+    sinon
+      .stub(lightGodwokenProviderInstance.ckbIndexer, "collector")
+      .withArgs({
+        lock: lightGodwokenInstance.provider.getLayer1Lock(),
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      })
+      .returns(mockCollector)
+      .withArgs({
+        lock: lightGodwokenInstance.provider.getLayer1Lock(),
+        type: sudtTypeWithoutArgs,
+      })
+      .returns(mockFreeSudtCollector)
+      .withArgs({
+        lock: lightGodwokenInstance.provider.getLayer1Lock(),
+        type: options.type,
+      })
+      .returns(mockSudtCollector);
+  } else {
+    sinon
+      .stub(lightGodwokenProviderInstance.ckbIndexer, "collector")
+      .withArgs({
+        lock: lightGodwokenInstance.provider.getLayer1Lock(),
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      })
+      .returns(mockCollector)
+      .withArgs({
+        lock: lightGodwokenInstance.provider.getLayer1Lock(),
+        type: sudtTypeWithoutArgs,
+      })
+      .returns(mockFreeSudtCollector);
+  }
+};
+
 describe("test light godwoken v1 deposit", () => {
   it("should generateDepositLock works fine", async () => {
     const lock = await lightGodwokenV1.generateDepositLock();
@@ -31,10 +90,7 @@ describe("test light godwoken v1 deposit", () => {
     });
   });
   it("should deposit 2000 ckb ok when user balance is 2000", async () => {
-    const mockCell = generateCellInput(2000);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV1.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v1", capacity: 2000, amount: 0 });
     const tx = await lightGodwokenV1.generateDepositTx({
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
     });
@@ -43,10 +99,7 @@ describe("test light godwoken v1 deposit", () => {
     expect(outputCapacityOf(tx).toString()).toEqual("2000");
   });
   it("should deposit 2000 ckb fail when user balance is 1999", async () => {
-    const mockCell = generateCellInput(1999);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV1.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v1", capacity: 1999, amount: 0 });
     let errMsg = "";
     try {
       await lightGodwokenV1.generateDepositTx({ capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString() });
@@ -56,10 +109,7 @@ describe("test light godwoken v1 deposit", () => {
     expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 199900000000");
   });
   it("should deposit 2000 ckb fail when user balance is 2001", async () => {
-    const mockCell = generateCellInput(2001);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV1.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v1", capacity: 2001, amount: 0 });
     let errMsg = "";
     try {
       await lightGodwokenV1.generateDepositTx({ capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString() });
@@ -70,30 +120,8 @@ describe("test light godwoken v1 deposit", () => {
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 2000", async () => {
-    const sudtType = randomScript(32);
-    const mockCkbCell = generateCellInput(2000);
-    const mockSudtCell = generateCellInput(144, sudtType, 2000);
-
-    const mockCollector = {
-      collect: sinon.stub().returns([mockCkbCell]),
-    };
-    const mockSudtCollector = {
-      collect: sinon.stub().returns([mockSudtCell]),
-    };
-
-    sinon
-      .stub(lightGodwokenProviderV1.ckbIndexer, "collector")
-      .withArgs({
-        lock: lightGodwokenV1.provider.getLayer1Lock(),
-        type: "empty",
-        outputDataLenRange: ["0x0", "0x1"],
-      })
-      .returns(mockCollector)
-      .withArgs({
-        lock: lightGodwokenV1.provider.getLayer1Lock(),
-        type: sudtType,
-      })
-      .returns(mockSudtCollector);
+    const sudtType = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    stubCellCollector({ version: "v1", capacity: 2000, amount: 2000, type: sudtType });
 
     const tx = await lightGodwokenV1.generateDepositTx({
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
@@ -106,30 +134,8 @@ describe("test light godwoken v1 deposit", () => {
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 1999", async () => {
-    const sudtType = randomScript(32);
-    const mockCkbCell = generateCellInput(2000);
-    const mockSudtCell = generateCellInput(144, sudtType, 1999);
-
-    const mockCollector = {
-      collect: sinon.stub().returns([mockCkbCell]),
-    };
-    const mockSudtCollector = {
-      collect: sinon.stub().returns([mockSudtCell]),
-    };
-
-    sinon
-      .stub(lightGodwokenProviderV1.ckbIndexer, "collector")
-      .withArgs({
-        lock: lightGodwokenV1.provider.getLayer1Lock(),
-        type: "empty",
-        outputDataLenRange: ["0x0", "0x1"],
-      })
-      .returns(mockCollector)
-      .withArgs({
-        lock: lightGodwokenV1.provider.getLayer1Lock(),
-        type: sudtType,
-      })
-      .returns(mockSudtCollector);
+    const sudtType = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    stubCellCollector({ version: "v1", capacity: 2000, amount: 1999, type: sudtType });
 
     let errMsg = "";
     try {
@@ -147,10 +153,7 @@ describe("test light godwoken v1 deposit", () => {
 
 describe("test light godwoken v0 deposit", () => {
   it("should deposit 2000 ckb ok when user balance is 2000", async () => {
-    const mockCell = generateCellInput(2000);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV0.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v0", capacity: 2000, amount: 0 });
     const tx = await lightGodwokenV0.generateDepositTx({
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
     });
@@ -159,10 +162,7 @@ describe("test light godwoken v0 deposit", () => {
     expect(outputCapacityOf(tx).toString()).toEqual("2000");
   });
   it("should deposit 2000 ckb fail when user balance is 1999", async () => {
-    const mockCell = generateCellInput(1999);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV0.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v0", capacity: 1999, amount: 0 });
     let errMsg = "";
     try {
       await lightGodwokenV0.generateDepositTx({ capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString() });
@@ -172,10 +172,7 @@ describe("test light godwoken v0 deposit", () => {
     expect(errMsg).toEqual("Not enough CKB:expected: 206400000000, actual: 199900000000");
   });
   it("should deposit 2000 ckb fail when user balance is 2001", async () => {
-    const mockCell = generateCellInput(2001);
-
-    const mockCollector = { collect: sinon.stub().returns([mockCell]) };
-    sinon.stub(lightGodwokenProviderV0.ckbIndexer, "collector").returns(mockCollector);
+    stubCellCollector({ version: "v0", capacity: 2001, amount: 0 });
     let errMsg = "";
     try {
       await lightGodwokenV0.generateDepositTx({ capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString() });
@@ -186,30 +183,8 @@ describe("test light godwoken v0 deposit", () => {
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 2000", async () => {
-    const sudtType = randomScript(32);
-    const mockCkbCell = generateCellInput(2000);
-    const mockSudtCell = generateCellInput(144, sudtType, 2000);
-
-    const mockCollector = {
-      collect: sinon.stub().returns([mockCkbCell]),
-    };
-    const mockSudtCollector = {
-      collect: sinon.stub().returns([mockSudtCell]),
-    };
-
-    sinon
-      .stub(lightGodwokenProviderV0.ckbIndexer, "collector")
-      .withArgs({
-        lock: lightGodwokenV0.provider.getLayer1Lock(),
-        type: "empty",
-        outputDataLenRange: ["0x0", "0x1"],
-      })
-      .returns(mockCollector)
-      .withArgs({
-        lock: lightGodwokenV0.provider.getLayer1Lock(),
-        type: sudtType,
-      })
-      .returns(mockSudtCollector);
+    const sudtType = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    stubCellCollector({ version: "v0", capacity: 2000, amount: 2000, type: sudtType });
 
     const tx = await lightGodwokenV0.generateDepositTx({
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
@@ -222,30 +197,8 @@ describe("test light godwoken v0 deposit", () => {
   });
 
   it("should deposit 2000 ckb and 2000 sudt ok when user ckb balance is 2000 and sudt balance 1999", async () => {
-    const sudtType = randomScript(32);
-    const mockCkbCell = generateCellInput(2000);
-    const mockSudtCell = generateCellInput(144, sudtType, 1999);
-
-    const mockCollector = {
-      collect: sinon.stub().returns([mockCkbCell]),
-    };
-    const mockSudtCollector = {
-      collect: sinon.stub().returns([mockSudtCell]),
-    };
-
-    sinon
-      .stub(lightGodwokenProviderV0.ckbIndexer, "collector")
-      .withArgs({
-        lock: lightGodwokenV0.provider.getLayer1Lock(),
-        type: "empty",
-        outputDataLenRange: ["0x0", "0x1"],
-      })
-      .returns(mockCollector)
-      .withArgs({
-        lock: lightGodwokenV0.provider.getLayer1Lock(),
-        type: sudtType,
-      })
-      .returns(mockSudtCollector);
+    const sudtType = randomSudtTypeScript(lightGodwokenV1.getConfig());
+    stubCellCollector({ version: "v0", capacity: 2000, amount: 1999, type: sudtType });
 
     let errMsg = "";
     try {
