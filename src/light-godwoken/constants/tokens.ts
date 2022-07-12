@@ -175,6 +175,7 @@ const networkMap: Record<string, string> = {
   gw: "Godwoken",
   ckb: "CKB",
   eth: "Ethereum",
+  bsc: "BSC",
 };
 const bridgeMap: Record<string, string> = {
   fb: "Force Bridge",
