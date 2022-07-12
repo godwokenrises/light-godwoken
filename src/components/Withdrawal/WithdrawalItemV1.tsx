@@ -13,6 +13,7 @@ import { COLOR } from "../../style/variables";
 import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
 import { useClock } from "../../hooks/useClock";
+import { TokenInfoWithAmount } from "./TokenInfoWithAmount";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -134,15 +135,6 @@ const WithdrawalRequestCard = ({
     return [`${getDisplayAmount(capacityBI, 8)} CKB`];
   }, [capacity]);
 
-  const [sudtAmount] = useMemo(() => {
-    if (amount === "" || !erc20) {
-      return ["", ""];
-    }
-    const amountBI = BI.from(amount);
-
-    return [`${getDisplayAmount(amountBI, erc20.decimals)} ${erc20.symbol}`];
-  }, [amount, erc20]);
-
   const handleToggleShowMore = useCallback(() => {
     if (isMature) return;
     setShouldShowMore((value) => !value);
@@ -152,12 +144,7 @@ const WithdrawalRequestCard = ({
     <StyleWrapper onClick={handleToggleShowMore}>
       <div className="main-row">
         <div className="amount">
-          {sudtAmount && (
-            <div className="sudt-amount">
-              {erc20?.tokenURI ? <img src={erc20?.tokenURI} alt="" /> : ""}
-              <MainText>{sudtAmount}</MainText>
-            </div>
-          )}
+          {erc20 && <TokenInfoWithAmount amount={amount} {...erc20} />}
           <div className="ckb-amount">
             <div className="ckb-icon">
               <CKBIcon></CKBIcon>
