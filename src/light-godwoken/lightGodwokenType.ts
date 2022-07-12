@@ -43,6 +43,10 @@ export interface GetSudtBalances {
   types: Script[];
 }
 
+export interface GetSudtBalance {
+  type: Script;
+}
+
 export interface GodwokenNetworkConfig {
   testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
 }
@@ -129,6 +133,8 @@ export interface PendingDepositTransaction {
 type Promisable<T> = Promise<T> | T;
 
 export const CKB_SUDT_ID = 1;
+
+export const SUDT_CELL_CAPACITY = 144_00000000;
 
 export interface LightGodwokenProvider {
   claimUSDC(): Promise<HexString>;

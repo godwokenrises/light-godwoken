@@ -31,6 +31,8 @@ import {
   DepositRequest,
   DepositEventEmitter,
   PendingDepositTransaction,
+  SUDT_CELL_CAPACITY,
+  GetSudtBalance,
 } from "./lightGodwokenType";
 import { debug } from "./debug";
 import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
@@ -48,6 +50,7 @@ import {
 } from "./constants/error";
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
+import isEqual from "lodash.isequal";
 import { isSpecialWallet } from "./utils";
 import { getAdvancedSettings } from "./constants/configManager";
 
@@ -312,9 +315,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     eventEmiter?: EventEmitter,
   ): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
-    if (!BI.from(payload.capacity).eq(await this.provider.getL1CkbBalance())) {
+    if (!BI.from(payload.capacity).eq(await this.getL1CkbBalance())) {
       // if user don't deposit all ckb, we will need to collect 64 more ckb for exchange
-      neededCapacity = neededCapacity.add(BI.from(6400000000));
+      neededCapacity = neededCapacity.add(BI.from(64_00000000));
     }
     const neededSudtAmount = payload.amount ? BI.from(payload.amount) : BI.from(0);
     let collectedCapatity = BI.from(0);
@@ -331,6 +334,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       if (collectedCapatity.gte(neededCapacity)) break;
     }
     if (!!payload.sudtType && neededSudtAmount.gt(BI.from(0))) {
+      const userSudtBalance = await this.getSudtBalance({ type: payload.sudtType });
+      if (BI.from(userSudtBalance).gt(neededSudtAmount)) {
+        // if user don't deposit all sudt, we need to collect more capacity to exchange for sudt
+        neededCapacity = neededCapacity.add(BI.from(SUDT_CELL_CAPACITY));
+      }
       const sudtCollector = this.provider.ckbIndexer.collector({
         lock: helpers.parseAddress(this.provider.l1Address),
         type: payload.sudtType,
@@ -340,6 +348,38 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
         collectedCells.push(cell);
         if (collectedSudtAmount.gte(neededSudtAmount)) break;
+      }
+    }
+    // if ckb is not enough, try find some free capacity from sudt cell
+    const freeCapacityProviderCells: Cell[] = [];
+    if (collectedCapatity.lt(neededCapacity)) {
+      const freeCkbCollector = this.provider.ckbIndexer.collector({
+        lock: helpers.parseAddress(this.provider.l1Address),
+        type: {
+          code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
+          hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
+          args: "0x",
+        },
+      });
+      for await (const cell of freeCkbCollector.collect()) {
+        const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cell_output.capacity);
+        const alreadyCollected = collectedCells.some((collectedCell) => {
+          if (
+            isEqual(collectedCell.out_point?.tx_hash, cell.out_point?.tx_hash) &&
+            isEqual(collectedCell.out_point?.index, cell.out_point?.index)
+          ) {
+            return true;
+          }
+          return false;
+        });
+        // envolve SUDT cells that has more capacity than SUDT_CELL_CAPACITY
+        if (haveFreeCapacity && !alreadyCollected) {
+          freeCapacityProviderCells.push(cell);
+          collectedCapatity = collectedCapatity.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+        }
+        if (collectedCapatity.gte(neededCapacity)) {
+          break;
+        }
       }
     }
     if (collectedCapatity.lt(neededCapacity)) {
@@ -359,7 +399,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw error;
     }
 
-    const outputCell = this.generateDepositOutputCell(collectedCells, payload);
+    const outputCell = this.generateDepositOutputCell(collectedCells, freeCapacityProviderCells, payload);
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
 
     const { layer1Config } = this.provider.getLightGodwokenConfig();
@@ -614,9 +654,34 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return size;
   }
 
-  generateDepositOutputCell(collectedCells: Cell[], payload: DepositPayload): Cell[] {
+  /**
+   *
+   * @param collectedCells CKB cells and SUDT cells that needs to be deposited
+   * @param freeCapacityProviderCells other SUDT cells which have more than 142 CKB, so they provide free capacity
+   * @param payload deposit payload
+   * @returns output cells of this deposit tx
+   */
+  generateDepositOutputCell(
+    collectedCells: Cell[],
+    freeCapacityProviderCells: Cell[],
+    payload: DepositPayload,
+  ): Cell[] {
     const depositLock = this.generateDepositLock();
-    const sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    let sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    // start freeCapacityProviderCells: extract free capacity and return SUDT cell from freeCapacityProviderCells
+    const freeCapacity = freeCapacityProviderCells.reduce(
+      (acc, cell) => acc.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY),
+      BI.from(0),
+    );
+    sumCapacity = sumCapacity.add(freeCapacity);
+    const returnFreeCapacityCells = freeCapacityProviderCells.map((cell) => ({
+      ...cell,
+      // we don't need block number and out_point in tx output cells
+      block_number: undefined,
+      out_point: undefined,
+      cell_output: { ...cell.cell_output, capacity: BI.from(SUDT_CELL_CAPACITY).toHexString() },
+    }));
+    // end freeCapacityProviderCells
     const sumSudtAmount = collectedCells.reduce((acc, cell) => {
       if (cell.cell_output.type) {
         return acc.add(utils.readBigUInt128LE(cell.data));
@@ -624,7 +689,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         return acc;
       }
     }, BI.from(0));
-    const outputCell: Cell = {
+    const depositCell: Cell = {
       cell_output: {
         capacity: BI.from(payload.capacity).toHexString(),
         lock: depositLock,
@@ -642,9 +707,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     };
 
     if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
-      outputCell.cell_output.type = payload.sudtType;
-      outputCell.data = utils.toBigUInt128LE(payload.amount);
-      let outputCells = [outputCell];
+      depositCell.cell_output.type = payload.sudtType;
+      depositCell.data = utils.toBigUInt128LE(payload.amount);
+      let outputCells = [...returnFreeCapacityCells, depositCell];
 
       // contruct sudt exchange cell
       const sudtAmount = utils.toBigUInt128LE(sumSudtAmount.sub(payload.amount));
@@ -673,7 +738,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       return outputCells;
     } else {
-      let outputCells = [outputCell];
+      let outputCells = [...returnFreeCapacityCells, depositCell];
       if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
         outputCells = outputCells.concat(exchangeCell);
       }
@@ -776,14 +841,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<HexNumber> {
-    const collector = this.provider.ckbIndexer.collector({ lock: helpers.parseAddress(this.provider.l1Address) });
-    let collectedSum = BI.from(0);
-    for await (const cell of collector.collect()) {
-      if (!cell.cell_output.type && (!cell.data || cell.data === "0x" || cell.data === "0x0")) {
-        collectedSum = collectedSum.add(cell.cell_output.capacity);
-      }
-    }
-    return "0x" + collectedSum.toString(16);
+    return (await this.provider.getL1CkbBalance(payload)).toHexString();
+  }
+
+  async getSudtBalance(payload: GetSudtBalance): Promise<HexNumber> {
+    const result = await this.getSudtBalances({ types: [payload.type] });
+    return result.balances[0];
   }
 
   async getSudtBalances(payload: GetSudtBalances): Promise<GetSudtBalancesResult> {

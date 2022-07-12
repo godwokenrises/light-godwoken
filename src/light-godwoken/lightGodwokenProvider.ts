@@ -19,7 +19,7 @@ import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
-import { LightGodwokenProvider } from "./lightGodwokenType";
+import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } from "./lightGodwokenType";
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./constants/configTypes";
@@ -88,15 +88,27 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return this.l1Address;
   }
 
-  async getL1CkbBalance(): Promise<BI> {
-    const ckbCollector = this.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.l1Address),
+  async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<BI> {
+    const queryAddress = !!payload && !!payload.l1Address ? payload.l1Address : this.l1Address;
+    let ckbBalance = BI.from(0);
+    const pureCkbCollector = this.ckbIndexer.collector({
+      lock: helpers.parseAddress(queryAddress),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
     });
-    let ckbBalance = BI.from(0);
-    for await (const cell of ckbCollector.collect()) {
+    for await (const cell of pureCkbCollector.collect()) {
       ckbBalance = ckbBalance.add(cell.cell_output.capacity);
+    }
+    const freeCkbCollector = this.ckbIndexer.collector({
+      lock: helpers.parseAddress(queryAddress),
+      type: {
+        code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
+        hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
+        args: "0x",
+      },
+    });
+    for await (const cell of freeCkbCollector.collect()) {
+      ckbBalance = ckbBalance.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
     }
     return ckbBalance;
   }

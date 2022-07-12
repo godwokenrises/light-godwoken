@@ -1,4 +1,5 @@
 import { Cell, HexString, Script, HashType, BI, helpers, utils } from "@ckb-lumos/lumos";
+import { LightGodwokenConfig } from "../constants/configTypes";
 import { RawWithdrwal } from "../schemas/codecV0";
 import { RawWithdrawalRequestV1 } from "../schemas/codecV1";
 
@@ -18,6 +19,22 @@ export const randomScript = (byteLength: number): Script => {
     code_hash: randomHexString(32),
     hash_type: "type" as HashType,
     args: randomHexString(byteLength),
+  };
+};
+
+export const randomSudtTypeScriptWithoutArgs = (config: LightGodwokenConfig): Script => {
+  return {
+    code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
+    hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+    args: "0x",
+  };
+};
+
+export const randomSudtTypeScript = (config: LightGodwokenConfig): Script => {
+  return {
+    code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
+    hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+    args: randomHexString(32),
   };
 };
 
