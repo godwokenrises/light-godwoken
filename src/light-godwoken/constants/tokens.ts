@@ -146,17 +146,55 @@ export const getTokenList = () => {
   };
 };
 
-export function toHumanReadable(uan: string | undefined): string {
+type UanSymbolPart = [tokenSymbol: string, nerwork?: string];
+type UanTrackPart = [bridge: string, nerwork: string];
+type UanType = [firstElement: UanSymbolPart, ...rest: UanTrackPart[]];
+
+export function toUanType(uan: string | undefined): UanType | undefined {
   if (!uan) {
+    return undefined;
+  }
+  const partsStringArr = uan.split("|");
+  // TODO assert partsString length is 1 or more
+  const symbolStrings = partsStringArr[0].split(".");
+  // TODO assert symbolStrings length is 1 or more
+  const symbolPart: UanSymbolPart = [symbolStrings[0], symbolStrings[1]];
+  const result: UanType = [symbolPart];
+  if (partsStringArr.length > 1) {
+    for (let index = 1; index < partsStringArr.length; index++) {
+      const trackPartString = partsStringArr[index];
+      const trackStrings = trackPartString.split(".");
+      // TODO assert trackStrings length is 2
+      const trackPart: UanTrackPart = [trackStrings[0], trackStrings[1]];
+      result.push(trackPart);
+    }
+  }
+  return result;
+}
+const networkMap: Record<string, string> = {
+  gw: "Godwoken",
+  ckb: "CKB",
+  eth: "Ethereum",
+};
+const bridgeMap: Record<string, string> = {
+  fb: "Force Bridge",
+  gb: "Godwoken Bridge",
+};
+export function toHumanReadable(uan: string | undefined): string {
+  const uanType = toUanType(uan);
+  if (!uanType) {
     return "";
   }
-  const dotRegex = new RegExp(/\./g);
-  const splitRegex = new RegExp(/\|/g);
-  const fbRegex = new RegExp(/fb/g);
-  const gbRegex = new RegExp(/gb/g);
-  return uan
-    .replace(dotRegex, " on ")
-    .replace(splitRegex, " from ")
-    .replace(fbRegex, "Force Bridge")
-    .replace(gbRegex, "Godwoken Bridge");
+  const [[symbol, network], ...trackParts] = uanType;
+  let result = symbol;
+  if (!!network) {
+    result += ` on ${networkMap[network] || network}`;
+  }
+  for (let index = 0; index < trackParts.length; index++) {
+    const [bridgeShortName, networkShortName] = trackParts[index];
+    const bridgeName = bridgeMap[bridgeShortName] || bridgeShortName;
+    const network = networkMap[networkShortName] || bridgeShortName;
+    result += ` from ${bridgeName} on ${network}`;
+  }
+  return result;
 }
