@@ -112,7 +112,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       map.push({
         name: token.layer2DisplayName || token.name,
         symbol: token.symbol,
-        hover: token.layer2UAN || token.symbol,
+        hover: token.layer2UAN,
         decimals: token.decimals,
         address: token.address,
         tokenURI: token.tokenURI,
@@ -145,7 +145,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       map.push({
         type: tokenL1Script,
         name: token.layer1DisplayName || token.name,
-        hover: token.layer1DisplayName || token.name,
+        hover: token.layer1UAN,
         symbol: token.symbol,
         decimals: token.decimals,
         tokenURI: token.tokenURI,
