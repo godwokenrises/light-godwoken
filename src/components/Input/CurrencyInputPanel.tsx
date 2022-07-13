@@ -10,7 +10,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { toHumanReadable } from "../../light-godwoken/constants/tokens";
+import { translate } from "../../light-godwoken/constants/tokens";
 
 const TokenList = styled.div`
   height: 390px;
@@ -218,7 +218,7 @@ export default function CurrencyInputPanel({
                     ) : (
                       <QuestionCircleOutlined style={{ width: 24, height: 24, marginRight: 10 }} />
                     )}
-                    <Tooltip title={toHumanReadable(tokenWithBalance.hover)}>
+                    <Tooltip title={!!tokenWithBalance.hover && translate(tokenWithBalance.hover)}>
                       <div className="symbol-name">
                         <Text className="symbol">{tokenWithBalance.symbol}</Text>
                         <Text className="name">{tokenWithBalance.name}</Text>

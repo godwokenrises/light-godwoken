@@ -1,20 +1,25 @@
-import { toHumanReadable, toUanType } from "../constants/tokens";
+import { parse, translate } from "../constants/tokens";
 
 describe("test tokens.ts", () => {
   it("should transfer TTKN to UanType", async () => {
-    const sampleUan = "TTKN";
-    expect(toUanType(sampleUan)).toEqual([["TTKN", undefined]]);
-    expect(toHumanReadable(sampleUan)).toEqual("TTKN");
+    let errMsg = "";
+    try {
+      parse("TTKN");
+    } catch (error) {
+      errMsg = (error as any).message;
+    }
+    expect(errMsg).toEqual("Invalid UAN: TTKN");
+    expect(parse("TTKN.ckb")).toEqual({ asset: { assetSymbol: "TTKN", chainSymbol: "ckb" }, route: [] });
   });
   it("should transfer uan to UanType", async () => {
     const sampleUan = "USDC.gw|gb.ckb|fb.eth";
-    expect(toUanType(sampleUan)).toEqual([
-      ["USDC", "gw"],
-      ["gb", "ckb"],
-      ["fb", "eth"],
-    ]);
-    expect(toHumanReadable(sampleUan)).toEqual(
-      "USDC on Godwoken from Godwoken Bridge on CKB from Force Bridge on Ethereum",
-    );
+    expect(parse(sampleUan)).toEqual({
+      asset: { assetSymbol: "USDC", chainSymbol: "gw" },
+      route: [
+        { bridgeSymbol: "gb", chainSymbol: "ckb" },
+        { bridgeSymbol: "fb", chainSymbol: "eth" },
+      ],
+    });
+    expect(translate(sampleUan)).toEqual("USDC(via Force Bridge from Ethereum)");
   });
 });

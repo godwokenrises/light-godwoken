@@ -14,6 +14,8 @@ export const TOKEN_LIST_V0: LightGodwokenTokenType[] = [
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
     address: "0xca6FcAAA5129aD9e5219397527A17c26E5AD6a6a",
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
+    layer1UAN: "TTKN.ckb",
+    layer2UAN: "TTKN.gw|gb.ckb",
   },
   {
     id: 35,
@@ -78,6 +80,8 @@ export const TOKEN_LIST_V1: LightGodwokenTokenType[] = [
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
     address: "0x3c41edd22658b2d6cf0eb26da941d74fe45bea52",
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
+    layer1UAN: "TTKN.ckb",
+    layer2UAN: "TTKN.gw|gb.ckb",
   },
   {
     id: 29378,
@@ -146,56 +150,64 @@ export const getTokenList = () => {
   };
 };
 
-type UanSymbolPart = [tokenSymbol: string, nerwork?: string];
-type UanTrackPart = [bridge: string, nerwork: string];
-type UanType = [firstElement: UanSymbolPart, ...rest: UanTrackPart[]];
+type UAN = {
+  asset: { assetSymbol: string; chainSymbol: string };
+  route: Array<{ bridgeSymbol: string; chainSymbol: string }>;
+};
 
-export function toUanType(uan: string | undefined): UanType | undefined {
-  if (!uan) {
-    return undefined;
-  }
-  const partsStringArr = uan.split("|");
-  // TODO assert partsString length is 1 or more
-  const symbolStrings = partsStringArr[0].split(".");
-  // TODO assert symbolStrings length is 1 or more
-  const symbolPart: UanSymbolPart = [symbolStrings[0], symbolStrings[1]];
-  const result: UanType = [symbolPart];
-  if (partsStringArr.length > 1) {
-    for (let index = 1; index < partsStringArr.length; index++) {
-      const trackPartString = partsStringArr[index];
-      const trackStrings = trackPartString.split(".");
-      // TODO assert trackStrings length is 2
-      const trackPart: UanTrackPart = [trackStrings[0], trackStrings[1]];
-      result.push(trackPart);
-    }
-  }
-  return result;
-}
-const networkMap: Record<string, string> = {
-  gw: "Godwoken",
+const defaultChains: Record<string, string> = {
+  // gw: "Godwoken",
   ckb: "CKB",
   eth: "Ethereum",
   bsc: "BSC",
 };
-const bridgeMap: Record<string, string> = {
+const defaultBridges: Record<string, string> = {
+  // gb: "Godwoken Bridge",
   fb: "Force Bridge",
-  gb: "Godwoken Bridge",
 };
-export function toHumanReadable(uan: string | undefined): string {
-  const uanType = toUanType(uan);
-  if (!uanType) {
-    return "";
-  }
-  const [[symbol, network], ...trackParts] = uanType;
-  let result = symbol;
-  if (!!network) {
-    result += ` on ${networkMap[network] || network}`;
-  }
-  for (let index = 0; index < trackParts.length; index++) {
-    const [bridgeShortName, networkShortName] = trackParts[index];
-    const bridgeName = bridgeMap[bridgeShortName] || bridgeShortName;
-    const network = networkMap[networkShortName] || bridgeShortName;
-    result += ` from ${bridgeName} on ${network}`;
-  }
-  return result;
+
+const UAN_REGEX = /^(\w+\.\w+)(\|\w+\.\w+)*$/;
+
+export function parse(uan: string): UAN {
+  if (!UAN_REGEX.test(uan)) throw new Error("Invalid UAN: " + uan);
+
+  const [assetPart, ...pathsPart] = uan.split("|");
+  const [assetSymbol, assetChainSymbol] = assetPart.split(".");
+
+  const route = pathsPart.map((path) => {
+    const [bridgeSymbol, chainSymbol] = path.split(".");
+    return { bridgeSymbol, chainSymbol };
+  });
+
+  return {
+    asset: { assetSymbol, chainSymbol: assetChainSymbol },
+    route: route,
+  };
+}
+
+/**
+ *
+ * @param uan UAN or UAN string
+ * @param mapping bridges and chains to translate, by default use {defaultBridges} and {defaultChains}
+ * @returns human-readable uan
+ */
+export function translate(
+  uan: string | UAN,
+  mapping: { bridges: Record<string, string>; chains: Record<string, string> } = {
+    bridges: defaultBridges,
+    chains: defaultChains,
+  },
+): string {
+  const { asset, route } = typeof uan === "string" ? parse(uan) : uan;
+  const { bridges, chains } = mapping;
+
+  const filteredRoutes = route.filter(({ chainSymbol, bridgeSymbol }) => bridges[bridgeSymbol] && chains[chainSymbol]);
+
+  let routeDisplayName = filteredRoutes
+    .map(({ chainSymbol, bridgeSymbol }) => `${bridges[bridgeSymbol]} from ${chains[chainSymbol]}`)
+    .join(" and ");
+
+  routeDisplayName = routeDisplayName ? `(via ${routeDisplayName})` : "";
+
+  return `${asset.assetSymbol}${routeDisplayName}`;
 }

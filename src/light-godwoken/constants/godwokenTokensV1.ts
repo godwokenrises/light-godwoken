@@ -11,6 +11,8 @@ export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
     address: "0x893474456C475E738b13DdA824979bF7a355DE39",
     l1LockArgs: "0xe5451c05231e1df43e4b199b5d12dbed820dfbea2769943bb593f874526eeb55",
+    layer1UAN: "YOK.ckb",
+    layer2UAN: "YOK.gw|gb.ckb",
   },
   {
     id: 0,
@@ -20,6 +22,8 @@ export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
     tokenURI: "",
     address: "0x291c64443c15E0632B2c4C742CB2b4b49CA36993",
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
+    layer1UAN: "TAI.ckb",
+    layer2UAN: "TAI.gw|gb.ckb",
   },
   {
     id: 0,
@@ -575,6 +579,8 @@ export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
     tokenURI: "",
     address: "0x885fb612947ccF1C7611894Bd828D388b046fc24",
     l1LockArgs: "0x656edac5463ef828a1a95f214b56adfe8f37da148fbc7ff424905e5264297c70",
+    layer1UAN: "YOK.ckb",
+    layer2UAN: "YOK.gw|gb.ckb",
   },
   {
     id: 0,
@@ -584,5 +590,7 @@ export const TOKEN_LIST_V1_MAINNET: LightGodwokenTokenType[] = [
     tokenURI: "",
     address: "0x8D5DcCcdE88E2E48e1b91dC58B21AC3248B4E000",
     l1LockArgs: "0x928123cdb74b08e0f058cc1aaa67b5e8fc9c17612061b433716a61e499f7c5f7",
+    layer1UAN: "COOP.ckb",
+    layer2UAN: "COOP.gw|gb.ckb",
   },
 ];
