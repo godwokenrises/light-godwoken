@@ -65,6 +65,10 @@ export const outputCapacityOf = (tx: helpers.TransactionSkeletonType): BI => {
   const outputs = tx.outputs.toArray();
   return outputs.reduce((sum, current) => sum.add(current.cell_output.capacity), BI.from(0)).div(100000000);
 };
+export const inputCapacityOf = (tx: helpers.TransactionSkeletonType): BI => {
+  const inputs = tx.inputs.toArray();
+  return inputs.reduce((sum, current) => sum.add(current.cell_output.capacity), BI.from(0)).div(100000000);
+};
 export const outputSudtAmountOf = (tx: helpers.TransactionSkeletonType): BI => {
   const outputs = tx.outputs.toArray();
   return outputs
