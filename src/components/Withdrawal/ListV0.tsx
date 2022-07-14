@@ -33,16 +33,21 @@ export const WithdrawalList: React.FC = () => {
   const withdrawalListQuery = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
-      return (lightGodwoken as LightGodwokenV0).listWithdrawWithScannerApi();
+      const normalWithdrawalList = (lightGodwoken as LightGodwokenV0).listWithdrawWithScannerApi();
+      const fastWithdrawalList = (lightGodwoken as LightGodwokenV0).listFastWithdrawWithScannerApi();
+      return Promise.all([normalWithdrawalList, fastWithdrawalList]);
     },
     {
       enabled: !!lightGodwoken,
     },
   );
   const { data: withdrawalList, isLoading } = withdrawalListQuery;
-  const formattedWithdrawalList = withdrawalList || [];
-  const pendingList = formattedWithdrawalList.filter((history) => history.status === "pending");
-  const completedList = formattedWithdrawalList.filter(
+  const formattedWithdrawalList = withdrawalList ? [...withdrawalList[0], ...withdrawalList[1]] : [];
+  const sortedWithdrawalList = formattedWithdrawalList.sort(
+    (a, b) => b.withdrawalBlockNumber - a.withdrawalBlockNumber,
+  );
+  const pendingList = sortedWithdrawalList.filter((history) => history.status === "pending");
+  const completedList = sortedWithdrawalList.filter(
     (history) => history.status === "success" || history.status === "failed",
   );
   if (!lightGodwoken) {

@@ -228,6 +228,15 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
+    return await this.listWithdrawByOwnerLockHash(ownerLockHash);
+  }
+
+  async listFastWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
+    const v1DepositLock = this.getV1DepositLock();
+    return await this.listWithdrawByOwnerLockHash(utils.computeScriptHash(v1DepositLock));
+  }
+
+  async listWithdrawByOwnerLockHash(ownerLockHash: Hash): Promise<WithdrawResultV0[]> {
     const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash);
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
     const collectedWithdrawals: WithdrawResultV0[] = histories.map((item) => {
