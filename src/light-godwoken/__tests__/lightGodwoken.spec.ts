@@ -1,7 +1,13 @@
 import sinon from "sinon";
 import LightGodwokenV1 from "../LightGodwokenV1";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
-import { generateCellInput, outputCapacityOf, randomSudtTypeScript, randomSudtTypeScriptWithoutArgs } from "./utils";
+import {
+  generateCellInput,
+  inputCapacityOf,
+  outputCapacityOf,
+  randomSudtTypeScript,
+  randomSudtTypeScriptWithoutArgs,
+} from "./utils";
 import { testConfig } from "./lightGodwokenConfig";
 import { BI, Cell, Script } from "@ckb-lumos/lumos";
 
@@ -98,5 +104,7 @@ describe("test light godwoken generateDepositOutputCell", () => {
     });
 
     expect(outputCapacityOf(tx).toString()).toEqual(String(250 + 144 + 50 + 144 + 100));
+    expect(inputCapacityOf(tx).toString()).toEqual(String(250 + 144 + 50 + 144 + 100));
+    expect(tx.cellDeps.toArray().length).toEqual(3);
   });
 });

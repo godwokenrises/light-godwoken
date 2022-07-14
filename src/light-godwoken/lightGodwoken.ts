@@ -405,7 +405,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const { layer1Config } = this.provider.getLightGodwokenConfig();
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
-        return inputs.push(...collectedCells);
+        return inputs.push(...collectedCells, ...freeCapacityProviderCells);
       })
       .update("outputs", (outputs) => {
         return outputs.push(...outputCell);
@@ -417,7 +417,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
       });
 
-    if (payload.sudtType) {
+    if (payload.sudtType || freeCapacityProviderCells.length > 0) {
       txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
         return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
