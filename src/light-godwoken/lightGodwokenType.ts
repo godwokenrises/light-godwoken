@@ -16,7 +16,11 @@ export interface Token {
   tokenURI: string;
 }
 export interface TokenExtra extends Token {
-  hover?: string;
+  /**
+   * Universal Asset Notation
+   * @see https://github.com/nervosnetwork/rfcs/blob/a092218b8f3ba9b6616ff41bd56a5a75d42efaf7/rfcs/0000-universal-asset-notation/0000-universal-asset-notation.md
+   **/
+  uan?: string;
 }
 
 interface ERC20 extends TokenExtra {
