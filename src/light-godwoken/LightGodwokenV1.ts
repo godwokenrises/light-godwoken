@@ -11,7 +11,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
-  TokenExtra,
+  UniversalToken,
   WithdrawResultV1,
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
@@ -76,7 +76,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return "v1";
   }
 
-  getNativeAsset(): TokenExtra {
+  getNativeAsset(): UniversalToken {
     return {
       name: "Common Knowledge Base",
       symbol: "CKB",

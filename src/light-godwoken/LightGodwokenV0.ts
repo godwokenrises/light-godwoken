@@ -11,7 +11,7 @@ import {
   LightGodwokenV0,
   ProxyERC20,
   SUDT,
-  TokenExtra,
+  UniversalToken,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawResultV0,
@@ -85,7 +85,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return "v0";
   }
 
-  getNativeAsset(): TokenExtra {
+  getNativeAsset(): UniversalToken {
     return {
       name: "Common Knowledge Base",
       symbol: "CKB",
