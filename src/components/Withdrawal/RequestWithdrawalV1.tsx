@@ -4,8 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { UniversalToken, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
-import { L1MappedErc20 } from "../../types/type";
+import { ProxyERC20, UniversalToken, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { isInstanceOfLightGodwokenV1 } from "../../utils/typeAssert";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
@@ -27,7 +26,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
   const [loading, setLoading] = useState(false);
   const [isCKBValueValidate, setIsCKBValueValidate] = useState(true);
   const [isSudtValueValidate, setIsSudtValueValidate] = useState(true);
-  const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
+  const [selectedSudt, setSelectedSudt] = useState<ProxyERC20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const l2CKBBalanceQuery = useL2CKBBalance();
@@ -36,7 +35,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
   const withdrawalWaitBlock = lightGodwoken?.getWithdrawalWaitBlock() || 0;
   const blockProduceTime = lightGodwoken?.getBlockProduceTime() || 0;
 
-  const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
+  const tokenList: ProxyERC20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   useEffect(() => {
     if (!CKBBalance) {
       setIsCKBValueValidate(false);
@@ -91,7 +90,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
     });
   };
   const handleSelectedChange = (value: UniversalToken, balance: string) => {
-    setSelectedSudt(value as L1MappedErc20);
+    setSelectedSudt(value as ProxyERC20);
     setSudtBalance(balance);
   };
 
