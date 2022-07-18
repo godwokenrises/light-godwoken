@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { writeStorage } from "@rehooks/local-storage";
-import { TokenExtra } from "../light-godwoken/lightGodwokenType";
+import { UniversalToken } from "../light-godwoken/lightGodwokenType";
 import { format } from "date-fns";
 
 type L1TxType = "deposit" | "withdrawal";
@@ -10,7 +10,7 @@ export interface BaseL1TxHistoryInterface {
   txHash: string;
   capacity: string;
   amount: string;
-  token?: TokenExtra;
+  token?: UniversalToken;
   status?: string;
   symbol?: string;
   decimals?: number;

@@ -27,7 +27,7 @@ import {
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   LightGodwokenBase,
-  TokenExtra,
+  UniversalToken,
   DepositRequest,
   DepositEventEmitter,
   PendingDepositTransaction,
@@ -61,7 +61,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getMinimalDepositCapacity(): BI;
   abstract getMinimalWithdrawalCapacity(): BI;
   abstract generateDepositLock(cancelTimeout?: number): Script;
-  abstract getNativeAsset(): TokenExtra;
+  abstract getNativeAsset(): UniversalToken;
   abstract getChainId(): string | Promise<string>;
   abstract getL2CkbBalance(payload?: GetL2CkbBalancePayload | undefined): Promise<string>;
   abstract getErc20Balances(payload: GetErc20Balances): Promise<GetErc20BalancesResult>;

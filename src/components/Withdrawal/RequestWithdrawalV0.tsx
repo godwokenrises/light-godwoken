@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { LightGodwokenV0, TokenExtra, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
+import { LightGodwokenV0, UniversalToken, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
 import { L1MappedErc20 } from "../../types/type";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
@@ -88,7 +88,7 @@ const RequestWithdrawalV0: React.FC = () => {
     });
   };
 
-  const handleSelectedChange = (value: TokenExtra, balance: string) => {
+  const handleSelectedChange = (value: UniversalToken, balance: string) => {
     setSelectedSudt(value as L1MappedErc20);
     setSudtBalance(balance);
   };

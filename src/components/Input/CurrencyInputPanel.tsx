@@ -5,7 +5,7 @@ import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import React, { useEffect, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
-import { TokenExtra } from "../../light-godwoken/lightGodwokenType";
+import { UniversalToken } from "../../light-godwoken/lightGodwokenType";
 import { BI } from "@ckb-lumos/lumos";
 import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
 import { formatToThousands } from "../../utils/numberFormat";
@@ -72,9 +72,9 @@ interface CurrencyInputPanelProps {
   label?: string;
   autoFocus?: boolean;
   balancesList: string[] | undefined;
-  tokenList: TokenExtra[] | undefined;
+  tokenList: UniversalToken[] | undefined;
   dataLoading: boolean;
-  onSelectedChange: (value: TokenExtra, balance: string) => void;
+  onSelectedChange: (value: UniversalToken, balance: string) => void;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -88,12 +88,12 @@ export default function CurrencyInputPanel({
 }: CurrencyInputPanelProps) {
   const lightGodwoken = useLightGodwoken();
   const [selectedCurrencyBalance, setCurrencyBalance] = useState<string>();
-  const [selectedCurrency, setSelectedCurrency] = useState<TokenExtra>();
+  const [selectedCurrency, setSelectedCurrency] = useState<UniversalToken>();
   const [disableInput, setDisableInput] = useState<boolean>(true);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const tokenListWithBalance: Array<TokenExtra & { balance: string }> = (tokenList || []).map((token, index) => {
+  const tokenListWithBalance: Array<UniversalToken & { balance: string }> = (tokenList || []).map((token, index) => {
     return {
       ...token,
       balance: (balancesList || [])[index],
@@ -133,7 +133,7 @@ export default function CurrencyInputPanel({
   const handleCancel = () => {
     setIsModalVisible(false);
   };
-  const handleErc20Selected = (index: number, erc20: TokenExtra) => {
+  const handleErc20Selected = (index: number, erc20: UniversalToken) => {
     setDisableInput(false);
     setSelectedCurrency(erc20);
     setIsModalVisible(false);
