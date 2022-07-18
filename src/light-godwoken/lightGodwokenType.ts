@@ -15,15 +15,22 @@ export interface Token {
   decimals: number;
   tokenURI: string;
 }
+export interface UniversalToken extends Token {
+  /**
+   * Universal Asset Notation
+   * @see https://github.com/nervosnetwork/rfcs/blob/a092218b8f3ba9b6616ff41bd56a5a75d42efaf7/rfcs/0000-universal-asset-notation/0000-universal-asset-notation.md
+   **/
+  uan: string;
+}
 
-interface ERC20 extends Token {
+interface ERC20 extends UniversalToken {
   address: string;
 }
 export interface ProxyERC20 extends ERC20 {
   sudt_script_hash: Hash;
   id?: number;
 }
-export interface SUDT extends Token {
+export interface SUDT extends UniversalToken {
   type: Script;
 }
 
@@ -185,7 +192,7 @@ export interface LightGodwokenBase {
 
   getVersion: () => GodwokenVersion;
 
-  getNativeAsset: () => Token;
+  getNativeAsset: () => UniversalToken;
 
   getChainId: () => Promise<HexNumber> | HexNumber;
 

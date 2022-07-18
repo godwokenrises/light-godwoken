@@ -11,7 +11,7 @@ import {
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
-  Token,
+  UniversalToken,
   WithdrawResultV1,
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
@@ -76,12 +76,13 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return "v1";
   }
 
-  getNativeAsset(): Token {
+  getNativeAsset(): UniversalToken {
     return {
       name: "Common Knowledge Base",
       symbol: "CKB",
       decimals: 18,
       tokenURI: "",
+      uan: "CKB.ckb",
     };
   }
 
@@ -119,8 +120,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       };
       sudtList.push({
         type: tokenL1Script,
-        name: token.name,
+        name: token.layer1DisplayName || token.name,
         symbol: token.symbol,
+        uan: token.layer1UAN,
         decimals: token.decimals,
         tokenURI: token.tokenURI,
       });
@@ -139,8 +141,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
       map.push({
         id: token.id,
-        name: token.name,
+        name: token.layer2DisplayName || token.name,
         symbol: token.symbol,
+        uan: token.layer2UAN,
         decimals: token.decimals,
         address: token.address,
         tokenURI: token.tokenURI,
