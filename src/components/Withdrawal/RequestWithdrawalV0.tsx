@@ -4,8 +4,12 @@ import React, { useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { LightGodwokenV0, UniversalToken, WithdrawalEventEmitter } from "../../light-godwoken/lightGodwokenType";
-import { L1MappedErc20 } from "../../types/type";
+import {
+  LightGodwokenV0,
+  ProxyERC20,
+  UniversalToken,
+  WithdrawalEventEmitter,
+} from "../../light-godwoken/lightGodwokenType";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import WithdrawalTarget from "./WithdrawalTarget";
@@ -24,13 +28,13 @@ const RequestWithdrawalV0: React.FC = () => {
   const [sudtValue, setSudtValue] = useState("");
   const [targetValue, setWithdrawalTarget] = useState(CKB_L1);
   const [loading, setLoading] = useState(false);
-  const [selectedSudt, setSelectedSudt] = useState<L1MappedErc20>();
+  const [selectedSudt, setSelectedSudt] = useState<ProxyERC20>();
   const [sudtBalance, setSudtBalance] = useState<string>();
   const lightGodwoken = useLightGodwoken();
   const l2CKBBalanceQuery = useL2CKBBalance();
   const CKBBalance = l2CKBBalanceQuery.data;
   const erc20BalanceQuery = useERC20Balance();
-  const tokenList: L1MappedErc20[] | undefined = lightGodwoken?.getBuiltinErc20List();
+  const tokenList: ProxyERC20[] | undefined = lightGodwoken?.getBuiltinErc20List();
   const withdrawalWaitBlock = lightGodwoken?.getWithdrawalWaitBlock() || 0;
   const blockProduceTime = lightGodwoken?.getBlockProduceTime() || 0;
 
@@ -89,7 +93,7 @@ const RequestWithdrawalV0: React.FC = () => {
   };
 
   const handleSelectedChange = (value: UniversalToken, balance: string) => {
-    setSelectedSudt(value as L1MappedErc20);
+    setSelectedSudt(value as ProxyERC20);
     setSudtBalance(balance);
   };
 

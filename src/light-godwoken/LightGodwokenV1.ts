@@ -82,6 +82,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       symbol: "CKB",
       decimals: 18,
       tokenURI: "",
+      uan: "CKB.ckb",
     };
   }
 

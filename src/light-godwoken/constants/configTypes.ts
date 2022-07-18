@@ -67,8 +67,8 @@ export type LightGodwokenTokenType = {
   tokenURI: string;
   address: string;
   l1LockArgs: string;
-  layer1UAN?: string;
-  layer2UAN?: string;
+  layer1UAN: string;
+  layer2UAN: string;
   layer1DisplayName?: string;
   layer2DisplayName?: string;
 };
