@@ -87,11 +87,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getNativeAsset(): UniversalToken {
     return {
-      name: "Common Knowledge Base",
-      symbol: "CKB",
+      name: "pCKB",
+      symbol: "pCKB",
       decimals: 8,
       tokenURI: "",
-      uan: "CKB.ckb",
+      uan: "pCKB.gw|gb.ckb",
     };
   }
 
