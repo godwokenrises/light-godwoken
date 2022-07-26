@@ -40,8 +40,13 @@ const StyleWrapper = styled.div`
       height: 22px;
       margin-right: 5px;
     }
+    .ckb-icon {
+      display: flex;
+      align-items: center;
+    }
     .ckb-amount {
       display: flex;
+      align-items: center;
     }
     .sudt-amount + .ckb-amount {
       margin-top: 10px;
@@ -53,6 +58,7 @@ const StyleWrapper = styled.div`
     align-self: center;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
   }
   .time {
     font-size: 12px;
@@ -121,7 +127,7 @@ const WithdrawalRequestCard = ({
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
 
-  const { minutes: minutesLeft, seconds: secondsLeft } = useMemo(
+  const { days: daysLeft, hours: hoursLeft, minutes: minutesLeft, seconds: secondsLeft } = useMemo(
     () => getTimePeriods(estimatedSecondsLeft / 1000),
     [estimatedSecondsLeft],
   );
@@ -161,7 +167,10 @@ const WithdrawalRequestCard = ({
             ) : (
               <div className="time">
                 <MainText title="Estimated time left">
-                  {`${minutesLeft.toString().padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
+                  {daysLeft && `${daysLeft} day${daysLeft > 1 && "s"}, `}
+                  {hoursLeft && `${hoursLeft.toString().padStart(2, "0")}:`}
+                  {`${minutesLeft.toString().padStart(2, "0")}:`}
+                  {`${secondsLeft.toString().padStart(2, "0")}`}
                 </MainText>
                 <ArrowDownIcon />
               </div>
@@ -205,12 +214,15 @@ const WithdrawalRequestCard = ({
           <FixedHeightRow>
             <MainText>Estimated time left:</MainText>
             <MainText>
-              {`${minutesLeft.toString().padStart(2, "0")}:${secondsLeft.toString().padStart(2, "0")}`}
+              {daysLeft && `${daysLeft} day${daysLeft > 0 && "s"}, `}
+              {hoursLeft && `${hoursLeft.toString().padStart(2, "0")}:`}
+              {`${minutesLeft.toString().padStart(2, "0")}:`}
+              {`${secondsLeft.toString().padStart(2, "0")}`}
             </MainText>
           </FixedHeightRow>
           <FixedHeightRow>
+            <MainText>Layer 1 Tx:</MainText>
             <MainText>
-              Layer 1 Tx:
               <a target="blank" href={`${l1ScannerUrl}/transaction/${layer1TxHash}`}>
                 Open In Explorer
               </a>
