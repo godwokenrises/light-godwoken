@@ -127,10 +127,12 @@ const WithdrawalRequestCard = ({
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
 
-  const { days: daysLeft, hours: hoursLeft, minutes: minutesLeft, seconds: secondsLeft } = useMemo(
-    () => getTimePeriods(estimatedSecondsLeft / 1000),
-    [estimatedSecondsLeft],
-  );
+  const {
+    days: daysLeft,
+    hours: hoursLeft,
+    minutes: minutesLeft,
+    seconds: secondsLeft,
+  } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
 
   const [CKBAmount] = useMemo(() => {
     if (capacity === "0") {
@@ -167,8 +169,8 @@ const WithdrawalRequestCard = ({
             ) : (
               <div className="time">
                 <MainText title="Estimated time left">
-                  {daysLeft && `${daysLeft} day${daysLeft > 1 && "s"}, `}
-                  {hoursLeft && `${hoursLeft.toString().padStart(2, "0")}:`}
+                  {daysLeft ? `${daysLeft} day${daysLeft > 1 ? "s" : ""}, ` : ""}
+                  {hoursLeft ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}
                   {`${minutesLeft.toString().padStart(2, "0")}:`}
                   {`${secondsLeft.toString().padStart(2, "0")}`}
                 </MainText>
@@ -214,8 +216,8 @@ const WithdrawalRequestCard = ({
           <FixedHeightRow>
             <MainText>Estimated time left:</MainText>
             <MainText>
-              {daysLeft && `${daysLeft} day${daysLeft > 0 && "s"}, `}
-              {hoursLeft && `${hoursLeft.toString().padStart(2, "0")}:`}
+              {daysLeft ? `${daysLeft} day${daysLeft > 1 ? "s" : ""}, ` : ""}
+              {hoursLeft ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}
               {`${minutesLeft.toString().padStart(2, "0")}:`}
               {`${secondsLeft.toString().padStart(2, "0")}`}
             </MainText>
