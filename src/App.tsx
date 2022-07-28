@@ -18,17 +18,18 @@ function App() {
       <Router>
         <LightGodwokenProvider>
           <Routes>
-            <Route path="/" element={<Navigate to="/v1" />}></Route>
-            <Route
-              path=":version/"
-              element={
-                <Page>
-                  <PageHeader onViewChange={handleViewChange}></PageHeader>
-                  <LightGodwokenApp activeView={activeView} />
-                  <PageFooter></PageFooter>
-                </Page>
-              }
-            ></Route>
+            <Route path="/" element={<Navigate to="v1" />} />
+            <Route path=":version/*" element={<GodwokenBridge />}>
+              <Route index element={<Navigate to="deposit" />} />
+              <Route path="deposit">
+                <Route index element={<Navigate to="pending" />} />
+                <Route path=":status" element={<Deposit />} />
+              </Route>
+              <Route path="withdrawal">
+                <Route index element={<Navigate to="pending" />} />
+                <Route path=":status" element={<Withdrawal />} />
+              </Route>
+            </Route>
           </Routes>
         </LightGodwokenProvider>
       </Router>
