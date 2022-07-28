@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 import { ReactComponent as Logo } from "../../assets/logo.svg";
 import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
 
@@ -7,7 +7,7 @@ import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
 import { isMainnet } from "../../light-godwoken/env";
-import { matchPath, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { matchPath, useLocation, useNavigate, useParams } from "react-router-dom";
 const StyledPage = styled.div`
   display: flex;
   align-items: center;

@@ -18,11 +18,11 @@ export const Provider: React.FC = (props) => {
           if (!accounts || !accounts[0]) return;
 
           if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
-            console.log('setting godwoken to v0');
+            console.log("setting godwoken to v0");
             const lightGodwokenV0 = new LightGodwokenV0(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v0"));
             setLightGodwoken(lightGodwokenV0);
           } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== "v1") {
-            console.log('setting godwoken to v1');
+            console.log("setting godwoken to v1");
             const lightGodwokenV1 = new LightGodwokenV1(new DefaultLightGodwokenProvider(accounts[0], ethereum, "v1"));
             setLightGodwoken(lightGodwokenV1);
           }

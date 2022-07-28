@@ -3,8 +3,8 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { HashRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
 import GodwokenBridge from "./views/GodwokenBridge";
-import Deposit from './views/Deposit';
-import Withdrawal from './views/withdrawal/Withdrawal';
+import Deposit from "./views/Deposit";
+import Withdrawal from "./views/withdrawal/Withdrawal";
 
 function App() {
   const queryClient = new QueryClient();

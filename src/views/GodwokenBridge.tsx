@@ -1,9 +1,9 @@
 import "antd/dist/antd.css";
 import React from "react";
-import { Navigate, Outlet, useParams } from 'react-router-dom';
-import Page from '../components/Layout/Page';
-import PageHeader from '../components/Layout/PageHeader';
-import PageFooter from '../components/Layout/PageFooter';
+import { Navigate, Outlet, useParams } from "react-router-dom";
+import Page from "../components/Layout/Page";
+import PageHeader from "../components/Layout/PageHeader";
+import PageFooter from "../components/Layout/PageFooter";
 import { addNetwork } from "../utils/addNetwork";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { LightGodwokenV1 } from "../light-godwoken";

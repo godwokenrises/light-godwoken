@@ -4,7 +4,7 @@ import Tooltip from "antd/lib/tooltip";
 import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
 import { LinkList, Tab } from "../../style/common";
 import { useQuery } from "react-query";
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Placeholder } from "../Placeholder";
 import WithdrawalRequestCard from "./WithdrawalItemV1";

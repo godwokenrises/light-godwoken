@@ -9,7 +9,7 @@ import { useQuery } from "react-query";
 import { Placeholder } from "../Placeholder";
 import { LightGodwokenV0 } from "../../light-godwoken";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;

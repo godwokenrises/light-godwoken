@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import styled from "styled-components";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";

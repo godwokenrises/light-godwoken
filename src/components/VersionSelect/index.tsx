@@ -11,7 +11,11 @@ export const VersionSelect: React.FC = () => {
   }
 
   return (
-    <Select style={{ width: 160, marginLeft: "10px", marginRight: "10px" }} value={params.version} onChange={handleChange}>
+    <Select
+      style={{ width: 160, marginLeft: "10px", marginRight: "10px" }}
+      value={params.version}
+      onChange={handleChange}
+    >
       <Option value="v0">Godwoken V0</Option>
       <Option value="v1">Godwoken V1</Option>
     </Select>
