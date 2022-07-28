@@ -1,18 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { HashRouter as Router, Route, Routes, Navigate } from "react-router-dom";
-import Page from "./components/Layout/Page";
-import PageFooter from "./components/Layout/PageFooter";
-import PageHeader from "./components/Layout/PageHeader";
 import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenContext";
-import LightGodwokenApp from "./views/LightGodwokenApp";
+import GodwokenBridge from "./views/GodwokenBridge";
+import Deposit from './views/Deposit';
+import Withdrawal from './views/withdrawal/Withdrawal';
 
 function App() {
   const queryClient = new QueryClient();
-  const [activeView, setActiveView] = useState<string>("deposit");
-  const handleViewChange = (view: string) => {
-    setActiveView(view);
-  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
