@@ -17,7 +17,7 @@ const WithdrawalV1: React.FC = () => {
   return (
     <PageContent>
       <Card className="content">
-        <WalletConnect></WalletConnect>
+        <WalletConnect />
         <div style={{ opacity: lightGodwoken ? "1" : "0.5" }}>
           <CardHeader>
             <Text className="title">
@@ -25,13 +25,13 @@ const WithdrawalV1: React.FC = () => {
             </Text>
           </CardHeader>
           <div className="request-withdrawal">
-            <RequestWithdrawalV1 addTxToHistory={addTxToHistory}></RequestWithdrawalV1>
+            <RequestWithdrawalV1 addTxToHistory={addTxToHistory} />
           </div>
         </div>
       </Card>
       {lightGodwoken && (
         <Card className="content">
-          <WithdrawalList txHistory={txHistory} updateTxWithStatus={updateTxWithStatus}></WithdrawalList>
+          <WithdrawalList txHistory={txHistory} updateTxWithStatus={updateTxWithStatus} />
         </Card>
       )}
     </PageContent>

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
 import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -19,13 +20,17 @@ export const DepositList: React.FC<{ depositHistory: DepositHistoryType[]; isLoa
   depositHistory,
   isLoading,
 }) => {
-  const [active, setActive] = useState("pending");
-  const changeViewToPending = () => {
-    setActive("pending");
-  };
-  const changeViewToCompleted = () => {
-    setActive("completed");
-  };
+  const params = useParams();
+  const navigate = useNavigate();
+  const isPending = params.status === "pending";
+  const isCompleted = params.status === "completed";
+  function navigateStatus(targetStatus: "pending" | "completed") {
+    navigate(`/${params.version}/deposit/${targetStatus}`);
+  }
+
+  if (!isPending && !isCompleted) {
+    return <Navigate to={`/${params.version}/deposit/pending`} />;
+  }
 
   const pendingList = depositHistory.filter((history) => history.status === "pending");
   const completedList = depositHistory.filter((history) => history.status !== "pending");
@@ -33,14 +38,14 @@ export const DepositList: React.FC<{ depositHistory: DepositHistoryType[]; isLoa
   return (
     <DepositListDiv>
       <LinkList>
-        <Tab onClick={changeViewToPending} className={active === "pending" ? "active" : ""}>
+        <Tab className={isPending ? "active" : ""} onClick={() => navigateStatus("pending")}>
           Pending
         </Tab>
-        <Tab onClick={changeViewToCompleted} className={active === "completed" ? "active" : ""}>
+        <Tab className={isCompleted ? "active" : ""} onClick={() => navigateStatus("completed")}>
           Completed
         </Tab>
       </LinkList>
-      {active === "pending" && (
+      {isPending && (
         <div className="list pending-list">
           {pendingList.length === 0 && "There is no pending deposit request here"}
           {pendingList.map((deposit, index) => (
@@ -48,7 +53,7 @@ export const DepositList: React.FC<{ depositHistory: DepositHistoryType[]; isLoa
           ))}
         </div>
       )}
-      {active === "completed" && (
+      {isCompleted && (
         <div className="list completed-list">
           {completedList.length === 0 && "There is no completed deposit request here"}
           {completedList.map((deposit, index) => (

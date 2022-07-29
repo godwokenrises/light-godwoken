@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
+import styled from "styled-components";
+import Tooltip from "antd/lib/tooltip";
+import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
+import { LinkList, Tab } from "../../style/common";
 import { useClock } from "../../hooks/useClock";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useQuery } from "react-query";
-import styled from "styled-components";
-import WithdrawalRequestCard from "./WithdrawalItemV0";
 import { Placeholder } from "../Placeholder";
-import { LinkList, Tab } from "../../style/common";
 import { LightGodwokenV0 } from "../../light-godwoken";
-import Tooltip from "antd/lib/tooltip";
-import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
+import WithdrawalRequestCard from "./WithdrawalItemV0";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -20,16 +21,17 @@ const WithdrawalListDiv = styled.div`
   }
 `;
 export const WithdrawalList: React.FC = () => {
-  const lightGodwoken = useLightGodwoken();
+  const params = useParams();
+  const navigate = useNavigate();
+  const isPending = params.status === "pending";
+  const isCompleted = params.status === "completed";
+  function navigateStatus(targetStatus: "pending" | "completed") {
+    navigate(`/${params.version}/withdrawal/${targetStatus}`);
+  }
 
+  const lightGodwoken = useLightGodwoken();
   const now = useClock();
-  const [active, setActive] = useState("pending");
-  const changeViewToPending = () => {
-    setActive("pending");
-  };
-  const changeViewToCompleted = () => {
-    setActive("completed");
-  };
+
   const withdrawalListQuery = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
@@ -50,8 +52,12 @@ export const WithdrawalList: React.FC = () => {
   const completedList = sortedWithdrawalList.filter(
     (history) => history.status === "success" || history.status === "failed",
   );
+
   if (!lightGodwoken) {
     return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
+  }
+  if (!isPending && !isCompleted) {
+    return <Navigate to={`/${params.version}/withdrawal/pending`} />;
   }
   if (!withdrawalList) {
     return (
@@ -60,20 +66,21 @@ export const WithdrawalList: React.FC = () => {
       </WithdrawalListDiv>
     );
   }
+
   return (
     <WithdrawalListDiv>
       <LinkList>
-        <Tab onClick={changeViewToPending} className={active === "pending" ? "active" : ""}>
+        <Tab className={isPending ? "active" : ""} onClick={() => navigateStatus("pending")}>
           <Tooltip title="After a successful withdrawal transaction is sent, it usually comes up in the pending list within five minutes.">
             Pending
             <QuestionCircleOutlined style={{ marginLeft: 8, color: "#000000", height: "21px", lineHeight: "21px" }} />
           </Tooltip>
         </Tab>
-        <Tab onClick={changeViewToCompleted} className={active === "completed" ? "active" : ""}>
+        <Tab className={isCompleted ? "active" : ""} onClick={() => navigateStatus("completed")}>
           Completed
         </Tab>
       </LinkList>
-      {active === "pending" && (
+      {isPending && (
         <div className="list pending-list">
           {pendingList.length === 0 && "There is no pending withdrawal request here"}
           {pendingList.map((withdraw, index) => (
@@ -81,7 +88,7 @@ export const WithdrawalList: React.FC = () => {
           ))}
         </div>
       )}
-      {active !== "pending" && (
+      {isCompleted && (
         <div className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw: any, index: number) => (

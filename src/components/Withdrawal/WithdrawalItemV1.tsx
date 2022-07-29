@@ -127,10 +127,12 @@ const WithdrawalRequestCard = ({
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
 
-  const { days: daysLeft, hours: hoursLeft, minutes: minutesLeft, seconds: secondsLeft } = useMemo(
-    () => getTimePeriods(estimatedSecondsLeft / 1000),
-    [estimatedSecondsLeft],
-  );
+  const {
+    days: daysLeft,
+    hours: hoursLeft,
+    minutes: minutesLeft,
+    seconds: secondsLeft,
+  } = useMemo(() => getTimePeriods(estimatedSecondsLeft / 1000), [estimatedSecondsLeft]);
 
   const [CKBAmount] = useMemo(() => {
     if (capacity === "0") {

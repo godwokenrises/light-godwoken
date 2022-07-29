@@ -2,6 +2,37 @@
   "name": "withdraw-demo",
   "version": "0.1.1",
   "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
+    "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
+    "eject": "react-scripts eject",
+    "deploy": "gh-pages -d build",
+    "prepare": "husky install"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all",
+      "not IE >0",
+      "not android >0"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
     "@ckb-lumos/base": "^0.17.0-rc10",
@@ -43,37 +74,6 @@
     "styled-components": "^5.3.3",
     "web-vitals": "^2.1.2",
     "web3": "^1.7.1"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
-    "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
-    "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build",
-    "prepare": "husky install"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all",
-      "not IE >0",
-      "not android >0"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   },
   "devDependencies": {
     "@babel/preset-env": "^7.16.5",
