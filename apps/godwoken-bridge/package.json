@@ -1,0 +1,93 @@
+{
+  "name": "godwoken-bridge",
+  "version": "0.1.1",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
+    "clean": "rm -rf ./dist && rm tsconfig.tsbuildinfo",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
+    "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
+    "eject": "react-scripts eject",
+    "deploy": "gh-pages -d build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all",
+      "not IE >0",
+      "not android >0"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@ant-design/icons": "^4.7.0",
+    "@ckb-lumos/bi": "^0.17.0-rc10",
+    "@ckb-lumos/lumos": "^0.17.0-rc10",
+    "@metamask/detect-provider": "^1.2.0",
+    "@metamask/providers": "^8.1.1",
+    "@rehooks/local-storage": "^2.4.4",
+    "@sentry/react": "^6.19.7",
+    "@sentry/tracing": "^6.19.7",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/react-dom": "^17.0.14",
+    "@types/react-router-dom": "^5.3.2",
+    "@types/styled-components": "^5.1.18",
+    "antd": "^4.17.3",
+    "axios": "^0.27.2",
+    "copy-to-clipboard": "^3.3.1",
+    "date-fns": "^2.28.0",
+    "events": "^3.3.0",
+    "light-godwoken": "0.1.1",
+    "numeral": "^2.0.6",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-query": "^3.34.16",
+    "react-router-dom": "^6.1.1",
+    "react-scripts": "4.0.3",
+    "styled-components": "^5.3.3",
+    "web-vitals": "^2.1.2"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.16.5",
+    "@babel/preset-typescript": "^7.16.7",
+    "@craco/craco": "^6.4.3",
+    "@sentry/webpack-plugin": "^1.18.9",
+    "@types/jest": "^27.4.1",
+    "@types/numeral": "^2.0.2",
+    "@types/sinon": "^10.0.11",
+    "acorn": "^8.6.0",
+    "gh-pages": "^3.2.3",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "patch-package": "^6.4.7",
+    "prettier": "^2.5.1",
+    "sinon": "^13.0.2",
+    "ts-jest": "^27.1.4",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3"
+  },
+  "resolutions": {
+    "acorn": "npm:acorn-with-stage3",
+    "react-error-overlay": "6.0.9"
+  },
+  "engines": {
+    "npm": "please-use-yarn",
+    "yarn": ">= 1.19.1"
+  }
+}

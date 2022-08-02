@@ -20,8 +20,8 @@ yarn start
 
 ## Documentation
 
-- [Introduction](apps/godwoken-bridge/docs/introduction.md)
-- [Claim Testnet Token](apps/godwoken-bridge/docs/test-tokens.md)
+- [Introduction](docs/introduction.md)
+- [Claim Testnet Token](docs/test-tokens.md)
 
-Check out [docs](apps/godwoken-bridge/docs) for more information.
+Check out [docs](docs) for more information.
 
