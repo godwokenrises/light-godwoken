@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky install && lerna bootstrap",
+    "format:check": "prettier --check '{packages,apps}/**/*.{js,jsx,ts,tsx}'",
     "build": "lerna run build --stream",
     "clean:apps": "rimraf apps/*/build && rimraf apps/*/dist",
     "clean:packages": "rimraf packages/*/dist && rimraf packages/*/coverage && rimraf packages/*/tsconfig.tsbuildinfo"
