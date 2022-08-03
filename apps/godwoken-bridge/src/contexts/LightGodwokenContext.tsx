@@ -2,7 +2,8 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  LightGodwokenV1, LightGodwokenV0,
+  LightGodwokenV1,
+  LightGodwokenV0,
   LightGodwoken as DefaultLightGodwoken,
   LightGodwokenProvider as DefaultLightGodwokenProvider,
 } from "light-godwoken";

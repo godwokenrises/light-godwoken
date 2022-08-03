@@ -21,11 +21,11 @@ jobs:
 
       - name: Install project dependencies and run test
         run: |
-          yarn install --ignore-engines --frozen-lockfile
-          yarn workspace light-godwoken test:coverage
+          yarn --ignore-engines --frozen-lockfile
+          yarn run test:coverage
 
       - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./packages/light-godwoken/coverage/clover.xml
+          files: ./coverage/cobertura-coverage.xml
           verbose: true # optional (default = false)

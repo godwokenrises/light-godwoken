@@ -4,12 +4,7 @@ import React, { useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import {
-  LightGodwokenV0,
-  ProxyERC20,
-  UniversalToken,
-  WithdrawalEventEmitter,
-} from "light-godwoken";
+import { LightGodwokenV0, ProxyERC20, UniversalToken, WithdrawalEventEmitter } from "light-godwoken";
 import CKBInputPanel from "../Input/CKBInputPanel";
 import CurrencyInputPanel from "../Input/CurrencyInputPanel";
 import WithdrawalTarget from "./WithdrawalTarget";

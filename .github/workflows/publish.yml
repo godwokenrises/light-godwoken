@@ -1,4 +1,4 @@
-name: publish
+name: Publish packages
 on:
   # When Release Pull Request is merged
   push:

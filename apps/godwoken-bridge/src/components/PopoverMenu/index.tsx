@@ -33,7 +33,12 @@ export const PopoverMenu: React.FC<Props> = ({ handleClick }) => {
       <div className="claim-sudt-container" onClick={handleClick}>
         <ClaimSudt />
       </div>
-      <a href="apps/godwoken-bridge/src/components/PopoverMenu/index" target="_blank" rel="noreferrer" onClick={handleClick}>
+      <a
+        href="apps/godwoken-bridge/src/components/PopoverMenu/index"
+        target="_blank"
+        rel="noreferrer"
+        onClick={handleClick}
+      >
         CKB Testnet Faucet
       </a>
     </StyleWrapper>

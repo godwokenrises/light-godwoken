@@ -6,8 +6,6 @@
     "start": "react-scripts start",
     "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
     "clean": "rm -rf ./dist && rm tsconfig.tsbuildinfo",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
     "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
     "eject": "react-scripts eject",
