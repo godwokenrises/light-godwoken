@@ -1,27 +1,34 @@
-# Godwoken Bridge
+# LightGodwoken Workspaces
 
-An asset bridge for `CKB <=> Godwoken`
+This is the monorepo for LightGodwoken and its official derived dapps.
 
-## Accessing the Godwoken Bridge
+LightGodwoken is an SDK written in TypeScript, it provides bridged functions that allows us to make specific transactions on Godwoken layer 2, but way easier. Based on the SDK, we can build up dapps' UI with higher level abstractions.
 
-- mainnet: https://bridge.godwoken.io
-- testnet: https://testnet.bridge.godwoken.io
+## Workspaces
+
+- [LightGodwoken](packages/light-godwoken) - The base SDK with convenience functions on Godwoken
+- [GodwokenBridge](apps/godwoken-bridge) - Asset bridge UI for transferring `CKB <=> Godwoken`
 
 ## Development
 
-- NodeJS >= 14
-- Yarn >= 1.22
+You can execute the following command to setup the local development environment.
+For more detailed commands about each workspace, please check out `README.md` file of the certain workflow.
 
-```sh
-yarn install
-yarn test
-yarn start
+### Setup development environment
+```bash
+$ yarn install
+$ yarn run prepare
+``` 
+
+### Build apps & packages
+```bash
+$ yarn run build
 ```
 
-## Documentation
+### Clean up environment
+```bash
+$ yarn run clean:pages
+$ yarn run clean:packages
+```
 
-- [Introduction](apps/godwoken-bridge/docs/introduction.md)
-- [Claim Testnet Token](apps/godwoken-bridge/docs/test-tokens.md)
-
-Check out [docs](apps/godwoken-bridge/docs) for more information.
 
