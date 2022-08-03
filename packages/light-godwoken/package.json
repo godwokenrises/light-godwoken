@@ -1,6 +1,7 @@
 {
   "name": "light-godwoken",
   "version": "0.1.1",
+  "license": "MIT",
   "scripts": {
     "build": "tsc -b",
     "test": "jest",
@@ -49,5 +50,16 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": ">= 1.19.1"
+  },
+  "homepage": "https://github.com/nervosnetwork/light-godwoken",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nervosnetwork/light-godwoken.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nervosnetwork/light-godwoken/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

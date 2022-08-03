@@ -1,4 +1,4 @@
-name: run unit test
+name: Run unit tests
 
 on: [ push, pull_request ]
 
@@ -27,5 +27,5 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          files: ./coverage/clover.xml
+          files: ./packages/light-godwoken/coverage/clover.xml
           verbose: true # optional (default = false)
