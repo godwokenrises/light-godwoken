@@ -2,8 +2,10 @@ name: Publish packages
 on:
   # When Release Pull Request is merged
   push:
-    branches:
-      - develop
+    branches-ignore:
+      - '**'
+    #branches:
+    #  - develop
 
 permissions:
   contents: write # for checkout and tag
