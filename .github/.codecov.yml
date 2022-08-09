@@ -27,6 +27,6 @@ comment:
   require_changes: no
 
 ignore:
-  - "src/light-godwoken/godwoken-v1"  # ignore folders and all its contents
-  - "src/light-godwoken/omni-lock"
-  - "src/light-godwoken/schemas/generated"
+  - "packages/light-godwoken/src/godwoken-v1"  # ignore folders and all its contents
+  - "packages/light-godwoken/src/omni-lock"
+  - "packages/light-godwoken/src/schemas/generated"
