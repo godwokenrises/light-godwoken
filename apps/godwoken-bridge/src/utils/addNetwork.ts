@@ -1,6 +1,6 @@
-import { LightGodwokenV1 } from "light-godwoken";
+import { LightGodwokenV1, EthereumProvider } from "light-godwoken";
 
-export const addNetwork = async (ethereum: any, lightGodwokenV1: LightGodwokenV1) => {
+export const addNetwork = async (ethereum: EthereumProvider, lightGodwokenV1: LightGodwokenV1) => {
   const chainId = await lightGodwokenV1.getChainId();
   const layer2Config = lightGodwokenV1.getConfig().layer2Config;
   const nativeToken = lightGodwokenV1.getNativeAsset();
@@ -18,7 +18,10 @@ export const addNetwork = async (ethereum: any, lightGodwokenV1: LightGodwokenV1
       blockExplorerUrls: [layer2Config.SCANNER_URL],
     },
   ];
-  ethereum
-    .request({ method: "wallet_addEthereumChain", params })
-    .catch((error: Error) => console.log("Error", error.message));
+
+  try {
+    await ethereum.send("wallet_addEthereumChain", params);
+  } catch (error: any) {
+    console.log("Error", error.message);
+  }
 };

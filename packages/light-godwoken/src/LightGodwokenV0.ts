@@ -96,6 +96,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
     const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    console.log("getL2CkbBalance", balance);
     return "0x" + Number(balance).toString(16);
   }
 

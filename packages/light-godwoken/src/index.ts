@@ -4,6 +4,9 @@ export { default as LightGodwokenV0 } from "./LightGodwokenV0";
 export { default as LightGodwokenV1 } from "./LightGodwokenV1";
 export { default as LightGodwoken } from "./lightGodwoken";
 
+// Ethereum
+export * from "./ethereumProvider";
+
 // Env
 export * from "./env";
 

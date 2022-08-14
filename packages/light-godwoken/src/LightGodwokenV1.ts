@@ -179,6 +179,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     }
 
     const result: GetErc20BalancesResult = { balances: [] };
+    // TODO: EthereumProvider potential browser-env issue
     if (!window.ethereum) {
       return result;
     }
@@ -202,6 +203,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return result;
   }
   async getErc20Balance(address: string): Promise<string> {
+    // TODO: EthereumProvider potential browser-env issue
     if (!window.ethereum) {
       return "result";
     }
@@ -272,14 +274,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
-    const typedMsg = await this.generateTypedMsg(rawWithdrawalRequest);
+    const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
     debug("typedMsg:", typedMsg);
     let signedMessage;
     try {
-      signedMessage = await this.provider.ethereum.request({
-        method: "eth_signTypedData_v4",
-        params: [this.provider.l2Address, JSON.stringify(typedMsg)],
-      });
+      signedMessage = await this.provider.ethereum.signTypedData(typedMsg.domain, typedMsg.types, typedMsg.message);
     } catch (e: any) {
       eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
     }
@@ -287,7 +286,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     // construct WithdrawalRequestExtra
     const withdrawalReq = {
       raw: rawWithdrawalRequest,
-      signature: signedMessage,
+      signature: signedMessage as string,
     };
     const withdrawalReqExtra = {
       request: withdrawalReq,
@@ -341,11 +340,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       },
       primaryType: "Withdrawal" as const,
       types: {
-        EIP712Domain: [
+        /*EIP712Domain: [
           { name: "name", type: "string" },
           { name: "version", type: "string" },
           { name: "chainId", type: "uint256" },
-        ],
+        ],*/
         Withdrawal: [
           { name: "address", type: "RegistryAddress" },
           { name: "nonce", type: "uint256" },

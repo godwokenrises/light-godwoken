@@ -1,4 +1,3 @@
-import { isSpecialWallet } from "./utils";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
 import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
@@ -6,11 +5,12 @@ import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError } from "./constants/error";
+import { EthereumProvider } from "./ethereumProvider";
 
 const issuerPrivateKey = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 
 export async function claimUSDC(
-  ethereum: any,
+  ethereum: EthereumProvider,
   config: LightGodwokenConfig,
   ethAddress: HexString,
   rpc: RPC,
@@ -161,13 +161,10 @@ function getClaimSUDTCellDeps(config: LightGodwokenConfig): CellDep[] {
 
 export async function userSignTransaction(
   txSkeleton: helpers.TransactionSkeletonType,
-  ethereum: any,
+  ethereum: EthereumProvider,
 ): Promise<HexString> {
   const message = generateUserMessage(txSkeleton);
-  let signedMessage = await ethereum.request({
-    method: "personal_sign",
-    params: isSpecialWallet() ? [message] : [ethereum.selectedAddress, message],
-  });
+  let signedMessage = await ethereum.signMessage(message);
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");

@@ -16,6 +16,7 @@ import {
 } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
+import { providers } from "ethers";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
 import Web3 from "web3";
@@ -23,10 +24,10 @@ import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } fro
 import { debug } from "./debug";
 import { claimUSDC } from "./sudtFaucet";
 import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./constants/configTypes";
-import { EnvNotFoundError, EthereumNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
+import { EnvNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
-import { isSpecialWallet } from "./utils";
 import { initConfig } from "./constants/configManager";
+import { EthereumProvider } from "./ethereumProvider";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address = "";
@@ -36,7 +37,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum;
   web3;
   lightGodwokenConfig;
-  constructor(ethAddress: Address, ethereum: any, env: GodwokenVersion, lightGodwokenConfig?: LightGodwokenConfigMap) {
+
+  constructor(
+    ethAddress: Address,
+    ethereum: EthereumProvider,
+    env: GodwokenVersion,
+    lightGodwokenConfig?: LightGodwokenConfigMap,
+  ) {
     if (lightGodwokenConfig) {
       validateLightGodwokenConfig(lightGodwokenConfig[env]);
     }
@@ -53,7 +60,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       });
       this.web3 = new Web3(polyjuiceProvider as any);
     } else if (env === "v1") {
-      this.web3 = new Web3(ethereum || (window.ethereum as any));
+      // TODO: AdaptProvider and Web3
+      const provider =
+        ethereum.provider instanceof providers.Web3Provider ? ethereum.provider.provider : ethereum.provider;
+      this.web3 = new Web3(provider as any);
     } else {
       throw new EnvNotFoundError(env, "unsupported env");
     }
@@ -61,11 +71,17 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.ethereum = ethereum;
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
-    ethereum.on("accountsChanged", (accounts: any) => {
-      debug("eth accounts changed", accounts);
-      this.l2Address = accounts[0];
-      this.l1Address = this.generateL1Address(this.l2Address);
-    });
+
+    // TODO: AdaptProvider and "accountsChanged" issue
+    // EthereumProvider could be Web3Provider and JsonRpcProvider, and "accountsChanged" only exists
+    // in Web3Provider.provider.on(), we need to take care of this.
+    if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
+      (this.ethereum.provider.provider as any).on("accountsChanged", (accounts: string[]) => {
+        debug("eth accounts changed", accounts);
+        this.l2Address = accounts[0];
+        this.l1Address = this.generateL1Address(this.l2Address);
+      });
+    }
   }
 
   getConfig(): LightGodwokenConfig {
@@ -117,26 +133,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return this.lightGodwokenConfig;
   }
 
-  static async CreateProvider(ethereum: any, version: GodwokenVersion): Promise<LightGodwokenProvider> {
-    if (!ethereum || !ethereum.isMetaMask) {
-      throw new EthereumNotFoundError(ethereum, "please provide metamask ethereum object");
-    }
-    return ethereum
-      .request({ method: "eth_requestAccounts" })
-      .then((accounts: any) => {
-        debug("eth_requestAccounts", accounts);
-        return new DefaultLightGodwokenProvider(accounts[0], ethereum, version);
-      })
-      .catch((error: any) => {
-        if (error.code === 4001) {
-          // EIP-1193 userRejectedRequest error
-          debug("Please connect to MetaMask.");
-        } else {
-          console.error(error);
-        }
-      });
-  }
-
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
       code_hash: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.code_hash,
@@ -148,7 +144,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       //      👇          👇            👇
       args: `0x01${l2Address.substring(2)}00`,
     };
-    return helpers.generateAddress(omniLock);
+    return helpers.encodeToAddress(omniLock);
   }
 
   // // now only supported omni lock, the other lock type will be supported later
@@ -161,11 +157,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     let signedMessage = `0x${"00".repeat(65)}`;
 
     if (!dummySign) {
-      signedMessage = await this.ethereum.request({
-        method: "personal_sign",
-        params: isSpecialWallet() ? [message] : [this.ethereum.selectedAddress, message],
-      });
+      signedMessage = await this.ethereum.signMessage(message);
     }
+
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
@@ -190,8 +184,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const message = this.generateMessageByTxSkeleton(txSkeleton);
     const signedWitness = await this.signMessage(message, dummySign);
     txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(signedWitness));
-    const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
-    return signedTx;
+    return helpers.createTransactionFromSkeleton(txSkeleton);
   }
 
   generateMessageByTxSkeleton(tx: helpers.TransactionSkeletonType): HexString {

@@ -51,7 +51,6 @@ import {
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import isEqual from "lodash.isequal";
-import { isSpecialWallet } from "./utils";
 import { getAdvancedSettings } from "./constants/configManager";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
@@ -747,26 +746,21 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
-    let signedMessage = await this.provider.ethereum.request({
-      method: "personal_sign",
-      params: isSpecialWallet() ? [message] : [this.provider.l2Address, message],
-    });
+    let signedMessage = await this.provider.ethereum.signMessage(message);
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     return signedMessage;
   }
 
-  async signMessageMetamaskEthSign(message: Hash): Promise<HexString> {
-    let signedMessage = await this.provider.ethereum.request({
-      method: "eth_sign",
-      params: [this.provider.l2Address, message],
-    });
+  // TODO: deprecated: https://github.com/ethers-io/ethers.js/issues/2127
+  /*async signMessageMetamaskEthSign(message: Hash): Promise<HexString> {
+    let signedMessage = await this.provider.ethereum.send("eth_sign", [this.provider.l2Address, message]);
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     return signedMessage;
-  }
+  }*/
 
   signMessage(message: Hash, privateKey: HexString): HexString {
     const signObject = secp256k1.ecdsaSign(
@@ -782,14 +776,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     signatureArray.set([v], 64);
 
-    const signature = new toolkit.Reader(signatureBuffer).serializeJson();
-    return signature;
+    return new toolkit.Reader(signatureBuffer).serializeJson();
   }
 
   generateWithdrawalMessageToSign(serializedRawWithdrawalRequest: HexString, rollupTypeHash: Hash): Hash {
     const data = new toolkit.Reader(rollupTypeHash + serializedRawWithdrawalRequest.slice(2)).toArrayBuffer();
-    const message = utils.ckbHash(data).serializeJson();
-    return message;
+    return utils.ckbHash(data).serializeJson();
   }
 
   minimalWithdrawalCapacity(isSudt: boolean): HexNumber {
