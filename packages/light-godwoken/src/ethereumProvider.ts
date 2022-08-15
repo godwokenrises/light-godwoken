@@ -1,4 +1,5 @@
 import { Signer, TypedDataSigner, ExternallyOwnedAccount } from "@ethersproject/abstract-signer";
+import { EthAddress } from "@polyjuice-provider/base";
 import { providers, utils, Wallet } from "ethers";
 
 type ExternalProvider = providers.ExternalProvider;
@@ -35,24 +36,24 @@ export class EthereumProvider implements EthereumProviderBase {
     this.signer = signer;
   }
 
+  // Web3Provider
   static fromWeb3(ethereum: ExternalProvider) {
     const provider = new providers.Web3Provider(ethereum);
     const signer = provider.getSigner();
-    return new EthereumProvider(provider, signer);
-  }
-  static fromPrivateKey(url: FirstJsonRpcProviderParameter, privateKey: FirstWalletParameter) {
-    const provider = new providers.JsonRpcProvider(url);
-    const signer = new Wallet(privateKey, provider);
     return new EthereumProvider(provider, signer);
   }
   static isWeb3Provider(target: unknown): target is providers.Web3Provider {
     return target instanceof providers.Web3Provider;
   }
 
-  async getAddress() {
-    return await this.signer.getAddress();
+  // JsonRpcProvider initiate with private key
+  static fromPrivateKey(url: FirstJsonRpcProviderParameter, privateKey: FirstWalletParameter) {
+    const provider = new providers.JsonRpcProvider(url);
+    const signer = new Wallet(privateKey, provider);
+    return new EthereumProvider(provider, signer);
   }
 
+  // Signer methods
   send(...args: Parameters<AdaptProvider["send"]>) {
     const [method, params] = args;
     return this.provider.send(method, params);
@@ -68,5 +69,15 @@ export class EthereumProvider implements EthereumProviderBase {
   }
   signTypedData(...args: Parameters<AdaptSigner["_signTypedData"]>) {
     return this.signer._signTypedData(...args);
+  }
+
+  // External signer methods
+  async getAddress() {
+    return await this.signer.getAddress();
+  }
+
+  // Provider methods
+  async getBalance(...args: Parameters<AdaptProvider["getBalance"]>) {
+    return await this.provider.getBalance(...args);
   }
 }

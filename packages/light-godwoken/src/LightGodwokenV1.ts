@@ -95,9 +95,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
-    const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
-    // const balance = await this.godwokenClient.getCkbBalance(payload?.l2Address || this.provider.l2Address);
-    return "0x" + Number(balance).toString(16);
+    const balance = await this.provider.ethereum.getBalance(payload?.l2Address || this.provider.l2Address);
+    return balance.toHexString();
   }
 
   getBuiltinSUDTMapByTypeHash(): Record<HexString, SUDT> {
@@ -390,6 +389,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
 
     // const address = layer2AccountScriptHash.slice(0, 42);
+
     const balance = await this.getL2CkbBalance();
     if (BI.from(balance).lt(payload.capacity)) {
       const errMsg = `Godwoken CKB balance ${BI.from(balance).toString()} is less than ${BI.from(
