@@ -13,7 +13,7 @@ describe("test faucet", () => {
       { collector: () => mockCollector },
       "0xb60bf0787fa97c52bb62d41131757954d5bda2f2054fb0c5efa172fa6b945296",
     );
-    expect(helpers.createTransactionFromSkeleton(generatedTx).outputs_data[1]).toEqual(
+    expect(helpers.createTransactionFromSkeleton(generatedTx).outputsData[1]).toEqual(
       utils.toBigUInt128LE(BI.from(1000).mul(BI.from(10).pow(18))),
     );
     const signature = await userSignTransaction(generatedTx, { request: sinon.stub().returns(randomHexString(65)) });

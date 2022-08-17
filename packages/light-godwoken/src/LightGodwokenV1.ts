@@ -114,8 +114,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v1.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       sudtList.push({
@@ -134,8 +134,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v1.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
@@ -228,9 +228,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         );
       }
       return {
-        layer1TxHash: item.layer1_tx_hash,
-        withdrawalBlockNumber: item.block_number,
-        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        layer1TxHash: item.layer1_txHash,
+        withdrawalBlockNumber: item.blockNumber,
+        remainingBlockNumber: Math.max(0, item.blockNumber - lastFinalizedBlockNumber),
         capacity: BI.from(item.capacity).toHexString(),
         amount,
         sudt_script_hash: item.udt_script_hash,
@@ -248,11 +248,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
       script: {
-        code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
-        hash_type: "type" as HashType,
+        codeHash: layer2Config.SCRIPTS.withdrawal_lock.scriptType_hash,
+        hashType: "type" as HashType,
         args: "0x",
       },
-      script_type: "lock",
+      scriptType: "lock",
     };
   }
   async getWithdrawal(txHash: Hash): Promise<unknown> {
@@ -329,8 +329,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         chainId: Number(rawWithdrawalRequest.chain_id),
         fee: 0,
         layer1OwnerLock: {
-          codeHash: ownerLock.code_hash,
-          hashType: ownerLock.hash_type,
+          codeHash: ownerLock.codeHash,
+          hashType: ownerLock.hashType,
           args: ownerLock.args,
         },
         withdraw: {
@@ -384,8 +384,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
-      code_hash: layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
-      hash_type: "type",
+      codeHash: layer2Config.SCRIPTS.eth_account_lock.scriptType_hash,
+      hashType: "type",
       args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + ethAddress.slice(2),
     };
     const layer2AccountScriptHash = utils.computeScriptHash(l2AccountScript);
@@ -464,8 +464,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
 
     const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
-      hash_type: "type",
+      codeHash: SCRIPTS.deposit_lock.scriptType_hash,
+      hashType: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
     return depositLock;

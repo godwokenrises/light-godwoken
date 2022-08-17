@@ -61,11 +61,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getMinimalWithdrawalCapacity(): BI {
     const minimalCapacity =
       8 + // capacity
-      32 + // withdrawal_lock.code_hash
-      1 + // withdrawal_lock.hash_type
+      32 + // withdrawal_lock.codeHash
+      1 + // withdrawal_lock.hashType
       303 + // withdrawal_lock.args TODO: explain why this is 303
-      32 + // sudt_type.code_hash
-      1 + // sudt_type.hash_type
+      32 + // sudt_type.codeHash
+      1 + // sudt_type.hashType
       32 + // sudt_type.args
       16; // sudt_amount
 
@@ -104,8 +104,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
@@ -138,8 +138,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     getTokenList().v0.forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       map.push({
@@ -190,7 +190,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           {
             web3Url: this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
             rollupTypeHash: this.getConfig().layer2Config.ROLLUP_CONFIG.rollup_type_hash,
-            ethAccountLockCodeHash: this.getConfig().layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
+            ethAccountLockCodeHash: this.getConfig().layer2Config.SCRIPTS.eth_account_lock.scriptType_hash,
           },
           this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
         ),
@@ -252,9 +252,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       }
       return {
         isFastWithdrawal: item.is_fast_withdrawal,
-        layer1TxHash: item.layer1_tx_hash,
-        withdrawalBlockNumber: item.block_number,
-        remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
+        layer1TxHash: item.layer1_txHash,
+        withdrawalBlockNumber: item.blockNumber,
+        remainingBlockNumber: Math.max(0, item.blockNumber - lastFinalizedBlockNumber),
         capacity: BI.from(item.capacity).toHexString(),
         amount,
         sudt_script_hash: item.udt_script_hash,
@@ -273,11 +273,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const { layer2Config } = this.provider.getLightGodwokenConfig();
     return {
       script: {
-        code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
-        hash_type: "type" as HashType,
+        codeHash: layer2Config.SCRIPTS.withdrawal_lock.scriptType_hash,
+        hashType: "type" as HashType,
         args: `${layer2Config.ROLLUP_CONFIG.rollup_type_hash}${accountScriptHash.slice(2)}`,
       },
-      script_type: "lock",
+      scriptType: "lock",
     };
   }
 
@@ -480,8 +480,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     ).serializeJson();
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
     const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
-      hash_type: "type",
+      codeHash: SCRIPTS.deposit_lock.scriptType_hash,
+      hashType: "type",
       args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
     return depositLock;

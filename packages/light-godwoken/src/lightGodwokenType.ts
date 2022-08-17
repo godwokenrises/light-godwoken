@@ -134,7 +134,7 @@ export interface DepositPayload {
 }
 
 export interface PendingDepositTransaction {
-  tx_hash: Hash;
+  txHash: Hash;
 }
 
 type Promisable<T> = Promise<T> | T;

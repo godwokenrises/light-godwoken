@@ -20,7 +20,6 @@ module.exports = {
         release: "light-godwoken@" + process.env.npm_package_version + "@" + commitHash,
         include: "./build",
       }),
-
       /* Any webpack configuration options: https://webpack.js.org/configuration */
     ],
     configure: (webpackConfig, { env, paths }) => {

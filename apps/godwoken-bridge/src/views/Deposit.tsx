@@ -87,12 +87,12 @@ export default function Deposit() {
 
   // apend rpc fetched deposit list to local storage
   depositList?.forEach((deposit) => {
-    if (!depositHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
+    if (!depositHistory.find((history) => deposit.rawCell.outPoint?.txHash === history.txHash)) {
       addTxToHistory({
         capacity: deposit.capacity.toHexString(),
         amount: deposit.amount.toHexString(),
         token: deposit.sudt,
-        txHash: deposit.rawCell.out_point?.tx_hash || "",
+        txHash: deposit.rawCell.outPoint?.txHash || "",
         status: "pending",
         date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
         cancelTimeout,
@@ -106,7 +106,7 @@ export default function Deposit() {
 
   useMemo(() => {
     const pendingList = depositHistory.filter((history) => history.status === "pending");
-    const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
+    const subscribePayload = pendingList.map(({ txHash }) => ({ txHash: txHash }));
     const listener = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
     if (listener) {
       listener.on("success", (txHash) => {

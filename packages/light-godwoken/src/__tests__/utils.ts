@@ -16,42 +16,42 @@ export const dummyScriptHash: HexString = `0x${"0".repeat(64)}`;
 
 export const randomScript = (byteLength: number): Script => {
   return {
-    code_hash: randomHexString(32),
-    hash_type: "type" as HashType,
+    codeHash: randomHexString(32),
+    hashType: "type" as HashType,
     args: randomHexString(byteLength),
   };
 };
 
 export const randomSudtTypeScriptWithoutArgs = (config: LightGodwokenConfig): Script => {
   return {
-    code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
-    hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+    codeHash: config.layer1Config.SCRIPTS.sudt.codeHash,
+    hashType: config.layer1Config.SCRIPTS.sudt.hashType,
     args: "0x",
   };
 };
 
 export const randomSudtTypeScript = (config: LightGodwokenConfig): Script => {
   return {
-    code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
-    hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+    codeHash: config.layer1Config.SCRIPTS.sudt.codeHash,
+    hashType: config.layer1Config.SCRIPTS.sudt.hashType,
     args: randomHexString(32),
   };
 };
 
 export const generateCellInput = (capacity: number, type?: Script, sudtData?: number) => {
-  const tx_hash = randomHexString(32);
+  const txHash = randomHexString(32);
   const lock = {
     args: randomHexString(20),
-    code_hash: randomHexString(32),
-    hash_type: "type" as HashType,
+    codeHash: randomHexString(32),
+    hashType: "type" as HashType,
   };
   const cellInput: Cell = {
-    block_number: "0x0",
-    out_point: {
+    blockNumber: "0x0",
+    outPoint: {
       index: "0x0",
-      tx_hash,
+      txHash,
     },
-    cell_output: {
+    cellOutput: {
       capacity: BI.from(capacity).mul(100000000).toHexString(),
       lock,
       type,
@@ -63,17 +63,17 @@ export const generateCellInput = (capacity: number, type?: Script, sudtData?: nu
 
 export const outputCapacityOf = (tx: helpers.TransactionSkeletonType): BI => {
   const outputs = tx.outputs.toArray();
-  return outputs.reduce((sum, current) => sum.add(current.cell_output.capacity), BI.from(0)).div(100000000);
+  return outputs.reduce((sum, current) => sum.add(current.cellOutput.capacity), BI.from(0)).div(100000000);
 };
 export const inputCapacityOf = (tx: helpers.TransactionSkeletonType): BI => {
   const inputs = tx.inputs.toArray();
-  return inputs.reduce((sum, current) => sum.add(current.cell_output.capacity), BI.from(0)).div(100000000);
+  return inputs.reduce((sum, current) => sum.add(current.cellOutput.capacity), BI.from(0)).div(100000000);
 };
 export const outputSudtAmountOf = (tx: helpers.TransactionSkeletonType): BI => {
   const outputs = tx.outputs.toArray();
   return outputs
     .reduce((sum, current) => {
-      if (current.cell_output.type) {
+      if (current.cellOutput.type) {
         return sum.add(utils.readBigUInt128LECompatible(current.data));
       } else {
         return sum;

@@ -107,8 +107,8 @@ export class Godwoken {
     return await this.rpcCall("get_data_hash", data_hash);
   }
 
-  async getTransactionReceipt(l2_tx_hash: Hash) {
-    return await this.rpcCall("get_transaction_receipt", l2_tx_hash);
+  async getTransactionReceipt(l2_txHash: Hash) {
+    return await this.rpcCall("getTransaction_receipt", l2_txHash);
   }
 
   async getAccountIdByScriptHash(scriptHash: Hash): Promise<HexNumber | undefined> {

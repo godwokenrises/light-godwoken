@@ -1,4 +1,5 @@
-import { molecule, number, blockchain } from "@ckb-lumos/codec/";
+import { blockchain } from "@ckb-lumos/base";
+import { molecule, number } from "@ckb-lumos/codec/";
 import { HexString } from "@ckb-lumos/lumos";
 
 const { table, option, vector, array } = molecule;
