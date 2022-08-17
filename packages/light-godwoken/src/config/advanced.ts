@@ -5,7 +5,7 @@ export interface AdvancedSettings {
   MIN_CANCEL_DEPOSIT_TIME: number;
 }
 export type AdvancedSettingsMap = Record<GodwokenVersion, AdvancedSettings>;
-export function getAdvancedSettings(network: GodwokenNetwork, version: GodwokenVersion): AdvancedSettings {
+export function getAdvancedSettings(network: GodwokenNetwork | string, version: GodwokenVersion): AdvancedSettings {
   const stored = getAdvancedSettingsMap();
   if (stored) return stored[version];
 

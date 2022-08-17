@@ -27,12 +27,12 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   config: LightGodwokenConfig;
   configMap: LightGodwokenConfigMap;
 
-  network: GodwokenNetwork;
+  network: GodwokenNetwork | string;
 
   constructor(
     ethAddress: Address,
     ethereum: EthereumProvider,
-    network: GodwokenNetwork,
+    network: GodwokenNetwork | string,
     env: GodwokenVersion,
     configMap?: LightGodwokenConfigMap,
   ) {
@@ -84,7 +84,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   getConfigMap(): LightGodwokenConfigMap {
     return this.configMap;
   }
-  getNetwork(): GodwokenNetwork {
+  getNetwork(): GodwokenNetwork | string {
     return this.network;
   }
   getL2Address(): string {
@@ -231,12 +231,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   getLayer2LockScript(): Script {
-    const layer2Lock: Script = {
+    return {
       code_hash: this.config.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
       hash_type: "type",
       args: this.config.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
     };
-    return layer2Lock;
   }
 
   getLayer2LockScriptHash(): Hash {

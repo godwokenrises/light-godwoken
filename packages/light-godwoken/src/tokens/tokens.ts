@@ -15,9 +15,9 @@ export const tokens: LightGodwokenTokenMap = {
   },
 };
 
-export function getTokenList(network: GodwokenNetwork, version: GodwokenVersion): LightGodwokenToken[] {
-  if (!tokens[network]) throw new TokenListNotFoundError(network, "GodwokenNetwork not found");
-  const listMap = tokens[network];
+export function getTokenList(network: GodwokenNetwork | string, version: GodwokenVersion): LightGodwokenToken[] {
+  if (!(network in tokens)) throw new TokenListNotFoundError(network, "GodwokenNetwork not found");
+  const listMap = tokens[network as GodwokenNetwork];
 
   if (!listMap[version]) throw new TokenListNotFoundError(version, "GodwokenVersion not found");
   return listMap[version];

@@ -3,13 +3,16 @@ import { getAdvancedSettingsMap, setAdvancedSettingsMap } from "./advanced";
 import { LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./types";
 import { LightGodwokenConfigNotFoundError, LightGodwokenConfigNotValidError } from "../constants/error";
 
-export function getPredefinedConfig(network: GodwokenNetwork): LightGodwokenConfigMap {
-  if (!predefinedConfigs[network])
-    throw new LightGodwokenConfigNotFoundError(network, "LightGodwokenConfigMap not found");
-  return predefinedConfigs[network];
+export function getPredefinedConfig(network: GodwokenNetwork | string): LightGodwokenConfigMap {
+  if (!(network in predefinedConfigs)) {
+    throw new LightGodwokenConfigNotFoundError(network, "No predefined LightGodwokenConfigMap for the network");
+  }
+  return predefinedConfigs[network as GodwokenNetwork];
 }
 
-export function initConfigMap(configOrNetwork: LightGodwokenConfigMap | GodwokenNetwork): LightGodwokenConfigMap {
+export function initConfigMap(
+  configOrNetwork: LightGodwokenConfigMap | GodwokenNetwork | string,
+): LightGodwokenConfigMap {
   if (typeof configOrNetwork === "string") {
     return initConfigMap(getPredefinedConfig(configOrNetwork));
   }

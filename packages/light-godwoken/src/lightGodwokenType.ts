@@ -150,7 +150,7 @@ export interface LightGodwokenProvider {
 
   getConfigMap(): LightGodwokenConfigMap;
 
-  getNetwork(): GodwokenNetwork;
+  getNetwork(): GodwokenNetwork | string;
 
   getL1Address(): PromiseOr<string>;
 
