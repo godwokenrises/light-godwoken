@@ -1,55 +1,46 @@
-import {
-  Address,
-  Indexer,
-  RPC,
-  helpers,
-  Transaction,
-  HexString,
-  utils,
-  core,
-  toolkit,
-  Hash,
-  Cell,
-  HashType,
-  Script,
-  BI,
-} from "@ckb-lumos/lumos";
+import Web3 from "web3";
+import { providers } from "ethers";
+import { utils, core, toolkit, helpers } from "@ckb-lumos/lumos";
+import { Address, Indexer, RPC, Transaction, HexString, Hash, Cell, HashType, Script, BI } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
-import { providers } from "ethers";
-import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { AbiItems } from "@polyjuice-provider/base";
-import Web3 from "web3";
-import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } from "./lightGodwokenType";
-import { debug } from "./debug";
-import { claimUSDC } from "./sudtFaucet";
-import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./constants/configTypes";
-import { EnvNotFoundError, LightGodwokenConfigNotValidError } from "./constants/error";
-import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
-import { initConfig } from "./constants/configManager";
 import { EthereumProvider } from "./ethereumProvider";
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
+import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
+import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } from "./lightGodwokenType";
+import { initConfigMap, validateLightGodwokenConfig } from "./config";
+import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./config";
+import { EnvNotFoundError } from "./constants/error";
+import { claimUSDC } from "./sudtFaucet";
+import { debug } from "./debug";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
-  l2Address: Address = "";
-  l1Address: Address = "";
-  ckbIndexer;
-  ckbRpc;
-  ethereum;
-  web3;
-  lightGodwokenConfig;
+  l2Address: Address;
+  l1Address: Address;
+
+  ckbIndexer; // FIXME: cannot define type for Indexer
+  ckbRpc: RPC;
+  web3: Web3; // TODO: check if Web3 class can be replaced by EthereumProvider
+  ethereum: EthereumProvider;
+
+  config: LightGodwokenConfig;
+  configMap: LightGodwokenConfigMap;
+
+  network: GodwokenNetwork;
 
   constructor(
     ethAddress: Address,
     ethereum: EthereumProvider,
+    network: GodwokenNetwork,
     env: GodwokenVersion,
-    lightGodwokenConfig?: LightGodwokenConfigMap,
+    configMap?: LightGodwokenConfigMap,
   ) {
-    if (lightGodwokenConfig) {
-      validateLightGodwokenConfig(lightGodwokenConfig[env]);
-    }
-    this.lightGodwokenConfig = initConfig(env, lightGodwokenConfig);
+    if (configMap) validateLightGodwokenConfig(configMap[env]);
+    this.configMap = initConfigMap(configMap ?? network);
+    this.config = this.configMap[env];
 
-    const { layer1Config, layer2Config } = this.lightGodwokenConfig;
+    const { layer1Config, layer2Config } = this.config;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
 
@@ -61,20 +52,23 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       this.web3 = new Web3(polyjuiceProvider as any);
     } else if (env === "v1") {
       // TODO: AdaptProvider and Web3
-      const provider =
-        ethereum.provider instanceof providers.Web3Provider ? ethereum.provider.provider : ethereum.provider;
-      this.web3 = new Web3(provider as any);
+      if (ethereum.provider instanceof providers.Web3Provider) {
+        this.web3 = new Web3(ethereum.provider.provider as any);
+      } else {
+        this.web3 = new Web3(ethereum.provider as any);
+      }
     } else {
       throw new EnvNotFoundError(env, "unsupported env");
     }
 
+    this.network = network;
     this.ethereum = ethereum;
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
 
     // TODO: AdaptProvider and "accountsChanged" issue
-    // EthereumProvider could be Web3Provider and JsonRpcProvider, and "accountsChanged" only exists
-    // in Web3Provider.provider.on(), we need to take care of this.
+    // EthereumProvider could be Web3Provider and JsonRpcProvider,
+    // and "accountsChanged" only exist in Web3Provider.provider.on()
     if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
       (this.ethereum.provider.provider as any).on("accountsChanged", (accounts: string[]) => {
         debug("eth accounts changed", accounts);
@@ -85,23 +79,28 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   getConfig(): LightGodwokenConfig {
-    return this.lightGodwokenConfig;
+    return this.config;
   }
-
-  async claimUSDC(): Promise<HexString> {
-    return claimUSDC(this.ethereum, this.getLightGodwokenConfig(), this.getL2Address(), this.ckbRpc, this.ckbIndexer);
+  getConfigMap(): LightGodwokenConfigMap {
+    return this.configMap;
   }
-
-  async getMinFeeRate(): Promise<BI> {
-    const feeRate = await this.ckbRpc.tx_pool_info();
-    return BI.from(feeRate.min_fee_rate);
+  getNetwork(): GodwokenNetwork {
+    return this.network;
   }
-
   getL2Address(): string {
     return this.l2Address;
   }
   getL1Address(): string {
     return this.l1Address;
+  }
+
+  async claimUSDC(): Promise<HexString> {
+    return claimUSDC(this.ethereum, this.getConfig(), this.getL2Address(), this.ckbRpc, this.ckbIndexer);
+  }
+
+  async getMinFeeRate(): Promise<BI> {
+    const feeRate = await this.ckbRpc.tx_pool_info();
+    return BI.from(feeRate.min_fee_rate);
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<BI> {
@@ -129,14 +128,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     return ckbBalance;
   }
 
-  getLightGodwokenConfig(): LightGodwokenConfig {
-    return this.lightGodwokenConfig;
-  }
-
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.code_hash,
-      hash_type: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.hash_type as HashType,
+      code_hash: this.config.layer1Config.SCRIPTS.omni_lock.code_hash,
+      hash_type: this.config.layer1Config.SCRIPTS.omni_lock.hash_type as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner
@@ -214,7 +209,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   async getRollupCell(): Promise<Cell | undefined> {
-    const rollupConfig = this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG;
+    const rollupConfig = this.config.layer2Config.ROLLUP_CONFIG;
     const queryOptions = {
       type: {
         code_hash: rollupConfig.rollup_type_script.code_hash,
@@ -237,10 +232,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScript(): Script {
     const layer2Lock: Script = {
-      code_hash: this.lightGodwokenConfig.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
+      code_hash: this.config.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
       hash_type: "type",
-      args:
-        this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+      args: this.config.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
     };
     return layer2Lock;
   }
@@ -280,22 +274,5 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   async asyncSleep(ms = 0) {
     return new Promise((r) => setTimeout(r, ms));
-  }
-}
-function validateLightGodwokenConfig(
-  lightGodwokenConfig: LightGodwokenConfig,
-): asserts lightGodwokenConfig is LightGodwokenConfig {
-  if (
-    !lightGodwokenConfig ||
-    !lightGodwokenConfig.layer2Config ||
-    !lightGodwokenConfig.layer2Config.SCRIPTS ||
-    !lightGodwokenConfig.layer2Config.ROLLUP_CONFIG ||
-    !lightGodwokenConfig.layer2Config.GW_POLYJUICE_RPC_URL ||
-    !lightGodwokenConfig.layer1Config ||
-    !lightGodwokenConfig.layer1Config.SCRIPTS ||
-    !lightGodwokenConfig.layer1Config.CKB_INDEXER_URL ||
-    !lightGodwokenConfig.layer1Config.CKB_RPC_URL
-  ) {
-    throw new LightGodwokenConfigNotValidError(JSON.stringify(lightGodwokenConfig), "lightGodwokenConfig not valid.");
   }
 }

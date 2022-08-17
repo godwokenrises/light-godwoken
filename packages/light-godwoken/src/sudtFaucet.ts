@@ -1,11 +1,11 @@
-import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
-import { ecdsaSign } from "secp256k1";
-import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
-import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
 import { debug } from "./debug";
-import { LightGodwokenConfig } from "./constants/configTypes";
-import { NotEnoughCapacityError } from "./constants/error";
+import { ecdsaSign } from "secp256k1";
+import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
+import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
+import { LightGodwokenConfig } from "./config";
 import { EthereumProvider } from "./ethereumProvider";
+import { NotEnoughCapacityError } from "./constants/error";
+import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 
 const issuerPrivateKey = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 

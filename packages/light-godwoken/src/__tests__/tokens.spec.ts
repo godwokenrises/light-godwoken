@@ -1,4 +1,4 @@
-import { parse, translate } from "../constants/tokens";
+import { parse, translate } from "../tokens/tokens";
 
 describe("test tokens.ts", () => {
   it("should transfer TTKN to UanType", async () => {

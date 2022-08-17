@@ -1,6 +1,6 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
+import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./config";
 import EventEmitter from "events";
-import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -137,18 +137,22 @@ export interface PendingDepositTransaction {
   tx_hash: Hash;
 }
 
-type Promisable<T> = Promise<T> | T;
+type PromiseOr<T> = Promise<T> | T;
 
 export const SUDT_CELL_CAPACITY = 144_00000000;
 
 export interface LightGodwokenProvider {
   claimUSDC(): Promise<HexString>;
 
-  getL2Address(): Promisable<string>;
+  getL2Address(): PromiseOr<string>;
 
   getConfig(): LightGodwokenConfig;
 
-  getL1Address(): Promisable<string>;
+  getConfigMap(): LightGodwokenConfigMap;
+
+  getNetwork(): GodwokenNetwork;
+
+  getL1Address(): PromiseOr<string>;
 
   getMinFeeRate(): Promise<BI>;
 
@@ -178,7 +182,7 @@ export interface LightGodwokenBase {
 
   cancelDeposit(depositTxHash: string, cancelTimeout: number): Promise<HexString>;
 
-  getCkbBlockProduceTime(): Promisable<number>;
+  getCkbBlockProduceTime(): PromiseOr<number>;
 
   getDepositList(): Promise<DepositRequest[]>;
 

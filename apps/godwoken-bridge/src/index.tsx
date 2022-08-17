@@ -9,7 +9,8 @@ import { config } from "@ckb-lumos/lumos";
 
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
-import { isMainnet, LightGodwokenError } from "light-godwoken";
+import { LightGodwokenError } from "light-godwoken";
+import { isMainnet } from "./utils/environment";
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({

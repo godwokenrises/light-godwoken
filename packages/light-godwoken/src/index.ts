@@ -1,19 +1,16 @@
-// Basic
+// LightGodwokenProvider / LightGodwoken
 export { default as LightGodwokenProvider } from "./lightGodwokenProvider";
 export { default as LightGodwokenV0 } from "./LightGodwokenV0";
 export { default as LightGodwokenV1 } from "./LightGodwokenV1";
 export { default as LightGodwoken } from "./lightGodwoken";
 
-// Ethereum
+// EthereumProvider
 export * from "./ethereumProvider";
 
-// Env
-export * from "./env";
+// Modules
+export * from "./config";
+export * from "./tokens";
 
-// Types
+// Constants / Types
 export * from "./lightGodwokenType";
-
-// Constants
 export * from "./constants/error";
-export * from "./constants/tokens";
-export * from "./constants/configTypes";

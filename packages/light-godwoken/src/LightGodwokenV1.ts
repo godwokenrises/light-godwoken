@@ -16,7 +16,7 @@ import {
   WithdrawResultWithCell,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
-import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
+import { CKB_SUDT_ID } from "./tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
@@ -30,10 +30,10 @@ import {
   TransactionSignError,
   V1WithdrawTokenNotEnoughError,
 } from "./constants/error";
-import { getAdvancedSettings } from "./constants/configManager";
-import { GodwokenVersion } from "./constants/configTypes";
+import { GodwokenVersion } from "./config";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
 import { BigNumber, providers } from "ethers";
+
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
     throw new Error("Method not implemented.");
@@ -49,8 +49,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   constructor(provider: LightGodwokenProvider) {
     super(provider);
-    this.godwokenClient = new GodwokenV1(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
+    this.godwokenClient = new GodwokenV1(provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getConfig().layer2Config.SCANNER_API);
   }
 
   async getMulticallProvider(): Promise<MulticallProvider | null> {
@@ -111,7 +111,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getBuiltinSUDTList(): SUDT[] {
     const sudtList: SUDT[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v1.forEach((token) => {
+    this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -131,7 +131,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v1.forEach((token) => {
+    this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -183,7 +183,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return result;
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    Contract.setProvider(this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
 
     let promises = [];
     for (let index = 0; index < payload.addresses.length; index++) {
@@ -207,7 +207,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return "result";
     }
     const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    Contract.setProvider(this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     const contract = new Contract(ERC20.abi, address);
     const balance = contract.methods
       .balanceOf(this.provider.l2Address)
@@ -246,7 +246,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (ethAddress.length !== 42 || !ethAddress.startsWith("0x")) {
       throw new EthAddressFormatError({ address: ethAddress }, "eth address format error!");
     }
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const { layer2Config } = this.provider.getConfig();
     return {
       script: {
         code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
@@ -375,7 +375,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
   ): Promise<RawWithdrawalRequestV1> {
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const { layer2Config } = this.provider.getConfig();
     const chainId = await this.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
     const ownerLock = helpers.parseAddress(ownerCkbAddress);
@@ -444,7 +444,8 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   generateDepositLock(_cancelTimeout?: number): Script {
-    const cancelTimeOut = _cancelTimeout || getAdvancedSettings("v1").MIN_CANCEL_DEPOSIT_TIME;
+    const advancedSettings = this.getAdvancedSettings();
+    const cancelTimeOut = _cancelTimeout || advancedSettings.cancelTimeOut;
     const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
@@ -460,7 +461,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       V1DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
 
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getConfig().layer2Config;
 
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,

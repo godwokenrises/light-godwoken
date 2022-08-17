@@ -1,4 +1,4 @@
-import { Layer1Config, LightGodwokenConfigMap } from "../constants/configTypes";
+import { Layer1Config, LightGodwokenConfigMap } from "../config/types";
 
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {

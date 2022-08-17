@@ -1,5 +1,4 @@
 import { Signer, TypedDataSigner, ExternallyOwnedAccount } from "@ethersproject/abstract-signer";
-import { EthAddress } from "@polyjuice-provider/base";
 import { providers, utils, Wallet } from "ethers";
 
 type ExternalProvider = providers.ExternalProvider;

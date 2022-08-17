@@ -1,35 +1,39 @@
+import { isMainnet } from "../utils/environment";
+import { providers } from "ethers";
+import { useLocation } from "react-router-dom";
 import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import {
+  GodwokenNetwork,
   EthereumProvider,
   LightGodwokenV1,
   LightGodwokenV0,
-  LightGodwoken as DefaultLightGodwoken,
-  LightGodwokenProvider as DefaultLightGodwokenProvider,
+  LightGodwoken,
+  LightGodwokenProvider,
 } from "light-godwoken";
-import { providers } from "ethers";
 
-export const LightGodwokenContext = createContext<DefaultLightGodwoken | undefined>(undefined);
+export const LightGodwokenContext = createContext<LightGodwoken | undefined>(undefined);
 LightGodwokenContext.displayName = "LightGodwokenContext";
 
 export const Provider: React.FC = (props) => {
-  const [lightGodwoken, setLightGodwoken] = useState<DefaultLightGodwoken>();
+  const [lightGodwoken, setLightGodwoken] = useState<LightGodwoken>();
   const location = useLocation();
 
-  function createEthereumProvider(ethereum: providers.ExternalProvider) {
-    return EthereumProvider.fromWeb3(ethereum);
-  }
-  function createLightGodwokenV0(account: string, ethereum: providers.ExternalProvider) {
-    const ethereumProvider = createEthereumProvider(ethereum);
-    return new LightGodwokenV0(new DefaultLightGodwokenProvider(account, ethereumProvider, "v0"));
-  }
-  function createLightGodwokenV1(account: string, ethereum: providers.ExternalProvider) {
-    const ethereumProvider = createEthereumProvider(ethereum);
-    return new LightGodwokenV1(new DefaultLightGodwokenProvider(account, ethereumProvider, "v1"));
-  }
+  const network = isMainnet ? GodwokenNetwork.Mainnet : GodwokenNetwork.Testnet;
 
   useEffect(() => {
+    function createEthereumProvider(ethereum: providers.ExternalProvider) {
+      return EthereumProvider.fromWeb3(ethereum);
+    }
+    function createLightGodwokenV0(account: string, ethereum: providers.ExternalProvider) {
+      const ethereumProvider = createEthereumProvider(ethereum);
+      return new LightGodwokenV0(new LightGodwokenProvider(account, ethereumProvider, network, "v0"));
+    }
+    function createLightGodwokenV1(account: string, ethereum: providers.ExternalProvider) {
+      const ethereumProvider = createEthereumProvider(ethereum);
+      return new LightGodwokenV1(new LightGodwokenProvider(account, ethereumProvider, network, "v1"));
+    }
+
     detectEthereumProvider().then((ethereum: any) => {
       if (ethereum) {
         ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
@@ -45,7 +49,7 @@ export const Provider: React.FC = (props) => {
         ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
           if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
 
-          let instance: DefaultLightGodwoken;
+          let instance: LightGodwoken;
           if (location.pathname.startsWith("/v0")) {
             instance = createLightGodwokenV0(accounts[0], ethereum);
           } else {
@@ -58,7 +62,7 @@ export const Provider: React.FC = (props) => {
         alert("Please install MetaMask to use Godwoken Bridge!");
       }
     });
-  }, [lightGodwoken, location.pathname]);
+  }, [lightGodwoken, location.pathname, network]);
 
   return (
     <LightGodwokenContext.Provider value={lightGodwoken || undefined}>{props.children}</LightGodwokenContext.Provider>

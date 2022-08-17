@@ -1,5 +1,5 @@
 import { CellDep } from "@ckb-lumos/lumos";
-import { ScriptType } from "./configTypes";
+import { ScriptType } from "./types";
 
 export const getCellDep = (script: ScriptType): CellDep => {
   return {

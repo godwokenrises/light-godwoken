@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
-import { isMainnet } from "light-godwoken";
+import { isMainnet } from "../../utils/environment";
 const StyledPage = styled.div`
   position: fixed;
   bottom: 0;
