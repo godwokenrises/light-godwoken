@@ -1,5 +1,6 @@
 import { GodwokenVersion, GodwokenNetwork } from "./types";
 import { getPredefinedConfig } from "./config";
+import { isBrowser } from "./utils";
 
 export interface AdvancedSettings {
   MIN_CANCEL_DEPOSIT_TIME: number;
@@ -22,16 +23,18 @@ export const advanced: StoredAdvanceSettings = {
   value: void 0,
 };
 export function setAdvancedSettingsMap(settings: AdvancedSettingsMap) {
-  if (window.localStorage) {
-    window.localStorage.setItem("advanced-settings", JSON.stringify(settings));
+  if (isBrowser()) {
+    const storage = Reflect.get(window, "localStorage");
+    storage.setItem("advanced-settings", JSON.stringify(settings));
   } else {
     advanced.value = settings;
   }
 }
 export function getAdvancedSettingsMap() {
-  if (window.localStorage) {
+  if (isBrowser()) {
     try {
-      const stored = window.localStorage.getItem("advanced-settings");
+      const storage = Reflect.get(window, "localStorage");
+      const stored = storage.getItem("advanced-settings");
       if (stored) return JSON.parse(stored);
     } catch (e) {
       console.warn("[getAdvancedSettingsMap] Local advanced-settings is empty");
