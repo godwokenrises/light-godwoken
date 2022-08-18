@@ -4,8 +4,8 @@ import axios from "axios";
 type WithdrawalHistory = {
   amount: string;
   capacity: string;
-  block_hash: Hash;
-  block_number: number;
+  blockHash: Hash;
+  blockNumber: number;
   l2_script_hash: Hash;
   layer1_block_number: number;
   layer1_output_index: number;

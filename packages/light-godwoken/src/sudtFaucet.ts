@@ -1,11 +1,13 @@
 import { isSpecialWallet } from "./utils";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { ecdsaSign } from "secp256k1";
-import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
+import { Cell, CellDep, hd, HexString, toolkit } from "@ckb-lumos/lumos";
 import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
 import { debug } from "./debug";
 import { LightGodwokenConfig } from "./constants/configTypes";
 import { NotEnoughCapacityError } from "./constants/error";
+import { blockchain } from "@ckb-lumos/base";
+import { bytes } from "@ckb-lumos/codec";
 
 const issuerPrivateKey = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 
@@ -22,7 +24,7 @@ export async function claimUSDC(
   txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(userSignature, issuerSignature));
   const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
 
-  const txHash = await rpc.send_transaction(signedTx, "passthrough");
+  const txHash = await rpc.sendTransaction(signedTx, "passthrough");
   debug("claim sudt txHash is:", txHash);
   return txHash;
 }
@@ -38,19 +40,19 @@ export async function generateClaimUSDCTxSkeleton(
   const issuerPubKey = hd.key.privateToPublic(issuerPrivKey || issuerPrivateKey);
   const issuerArgs = hd.key.publicKeyToBlake160(issuerPubKey);
   const issuerLock: Script = {
-    code_hash: secp256k1.code_hash,
-    hash_type: secp256k1.hash_type,
+    codeHash: secp256k1.codeHash,
+    hashType: secp256k1.hashType,
     args: issuerArgs,
   };
   const sudtType: Script = {
-    code_hash: sudt.code_hash,
-    hash_type: sudt.hash_type,
+    codeHash: sudt.codeHash,
+    hashType: sudt.hashType,
     args: utils.computeScriptHash(issuerLock),
   };
 
   const userOmniLock: Script = {
-    code_hash: omniLock.code_hash,
-    hash_type: "type" as HashType,
+    codeHash: omniLock.codeHash,
+    hashType: "type" as HashType,
     args: `0x01${ethAddress.substring(2)}00`,
   };
 
@@ -68,7 +70,7 @@ export async function generateClaimUSDCTxSkeleton(
   let collectedSum = BI.from(0);
   const collectedCells: Cell[] = [];
   for await (const cell of userCellCollector.collect()) {
-    collectedSum = collectedSum.add(cell.cell_output.capacity);
+    collectedSum = collectedSum.add(cell.cellOutput.capacity);
     collectedCells.push(cell);
     if (collectedSum.gte(needCkb)) {
       break;
@@ -90,7 +92,7 @@ export async function generateClaimUSDCTxSkeleton(
   });
   let issuerCellCapacity = BI.from(0);
   for await (const cell of issuerCellCollector.collect()) {
-    issuerCellCapacity = issuerCellCapacity.add(cell.cell_output.capacity);
+    issuerCellCapacity = issuerCellCapacity.add(cell.cellOutput.capacity);
     collectedCells.push(cell);
     break;
   }
@@ -99,7 +101,7 @@ export async function generateClaimUSDCTxSkeleton(
     return inputs.push(...collectedCells);
   });
   const sudtCell: Cell = {
-    cell_output: {
+    cellOutput: {
       capacity: sudtCellCapacity.toHexString(),
       lock: userOmniLock,
       type: sudtType,
@@ -107,14 +109,14 @@ export async function generateClaimUSDCTxSkeleton(
     data: utils.toBigUInt128LE(BI.from(1000).mul(BI.from(10).pow(18))), // 1000 sudt in uint128
   };
   const exchangeCell: Cell = {
-    cell_output: {
+    cellOutput: {
       capacity: collectedSum.sub(sudtCellCapacity).sub(txFee).toHexString(),
       lock: userOmniLock,
     },
     data: "0x",
   };
   const issuerExchangeCell: Cell = {
-    cell_output: {
+    cellOutput: {
       capacity: issuerCellCapacity.toHexString(),
       lock: issuerLock,
     },
@@ -136,25 +138,25 @@ function getClaimSUDTCellDeps(config: LightGodwokenConfig): CellDep[] {
 
   return [
     {
-      out_point: {
-        tx_hash: omniLock.tx_hash,
+      outPoint: {
+        txHash: omniLock.txHash,
         index: omniLock.index,
       },
-      dep_type: "code",
+      depType: "code",
     },
     {
-      out_point: {
-        tx_hash: secp256k1.tx_hash,
+      outPoint: {
+        txHash: secp256k1.txHash,
         index: secp256k1.index,
       },
-      dep_type: secp256k1.dep_type,
+      depType: secp256k1.depType,
     },
     {
-      out_point: {
-        tx_hash: sudt.tx_hash,
+      outPoint: {
+        txHash: sudt.txHash,
         index: sudt.index,
       },
-      dep_type: sudt.dep_type,
+      depType: sudt.depType,
     },
   ];
 }
@@ -171,11 +173,11 @@ export async function userSignTransaction(
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
-  const signedWitness = new toolkit.Reader(
-    core.SerializeWitnessArgs({
+  const signedWitness = bytes.hexify(
+    blockchain.WitnessArgs.pack({
       lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
     }),
-  ).serializeJson();
+  );
   return signedWitness;
 }
 
@@ -185,24 +187,14 @@ async function issuerSignTransaction(txSkeleton: helpers.TransactionSkeletonType
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
-  const signedWitness = new toolkit.Reader(
-    core.SerializeWitnessArgs({
-      lock: new toolkit.Reader(signedMessage),
-    }),
-  ).serializeJson();
+  const signedWitness = bytes.hexify(blockchain.WitnessArgs.pack({ lock: signedMessage }));
   return signedWitness;
 }
 
 function generateUserMessage(tx: helpers.TransactionSkeletonType): HexString {
   const hasher = new utils.CKBHasher();
-  const rawTxHash = utils.ckbHash(
-    core.SerializeRawTransaction(
-      toolkit.normalizers.NormalizeRawTransaction(helpers.createTransactionFromSkeleton(tx)),
-    ),
-  );
-  const serializedWitness = core.SerializeWitnessArgs({
-    lock: new toolkit.Reader("0x" + "00".repeat(85)),
-  });
+  const rawTxHash = utils.ckbHash(blockchain.RawTransaction.pack(helpers.createTransactionFromSkeleton(tx)));
+  const serializedWitness = blockchain.WitnessArgs.pack({ lock: new Uint8Array(85) });
   hasher.update(rawTxHash);
   hashWitness(hasher, serializedWitness);
   return hasher.digestHex();
@@ -210,15 +202,9 @@ function generateUserMessage(tx: helpers.TransactionSkeletonType): HexString {
 
 function generateIssuerMessage(tx: helpers.TransactionSkeletonType): HexString {
   const hasher = new utils.CKBHasher();
-  const rawTxHash = utils.ckbHash(
-    core.SerializeRawTransaction(
-      toolkit.normalizers.NormalizeRawTransaction(helpers.createTransactionFromSkeleton(tx)),
-    ),
-  );
+  const rawTxHash = utils.ckbHash(blockchain.RawTransaction.pack(helpers.createTransactionFromSkeleton(tx)));
   hasher.update(rawTxHash);
-  const serializedSudtWitness = core.SerializeWitnessArgs({
-    lock: new toolkit.Reader(`0x${"00".repeat(65)}`),
-  });
+  const serializedSudtWitness = blockchain.WitnessArgs.pack({ lock: new Uint8Array(65) });
   hashWitness(hasher, serializedSudtWitness);
   return hasher.digestHex();
 }

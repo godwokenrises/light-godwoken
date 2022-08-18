@@ -29,11 +29,11 @@ export type Layer2Config = {
 };
 
 export type ScriptType = {
-  code_hash: Hash;
-  hash_type: HashType;
-  tx_hash: Hash;
+  codeHash: Hash;
+  hashType: HashType;
+  txHash: Hash;
   index: Hexadecimal;
-  dep_type: DepType;
+  depType: DepType;
 };
 
 export type Layer1Config = {

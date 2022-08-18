@@ -1,3 +1,5 @@
+import { bytes } from "@ckb-lumos/codec";
+import { blockchain } from "@ckb-lumos/base";
 import {
   Address,
   Indexer,
@@ -6,7 +8,6 @@ import {
   Transaction,
   HexString,
   utils,
-  core,
   toolkit,
   Hash,
   Cell,
@@ -77,8 +78,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   async getMinFeeRate(): Promise<BI> {
-    const feeRate = await this.ckbRpc.tx_pool_info();
-    return BI.from(feeRate.min_fee_rate);
+    const feeRate = await this.ckbRpc.txPoolInfo();
+    return BI.from(feeRate.minFeeRate);
   }
 
   getL2Address(): string {
@@ -97,18 +98,18 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of pureCkbCollector.collect()) {
-      ckbBalance = ckbBalance.add(cell.cell_output.capacity);
+      ckbBalance = ckbBalance.add(cell.cellOutput.capacity);
     }
     const freeCkbCollector = this.ckbIndexer.collector({
       lock: helpers.parseAddress(queryAddress),
       type: {
-        code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-        hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
+        codeHash: this.getConfig().layer1Config.SCRIPTS.sudt.codeHash,
+        hashType: this.getConfig().layer1Config.SCRIPTS.sudt.hashType,
         args: "0x",
       },
     });
     for await (const cell of freeCkbCollector.collect()) {
-      ckbBalance = ckbBalance.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+      ckbBalance = ckbBalance.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY);
     }
     return ckbBalance;
   }
@@ -139,8 +140,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.code_hash,
-      hash_type: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.hash_type as HashType,
+      codeHash: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.codeHash,
+      hashType: this.lightGodwokenConfig.layer1Config.SCRIPTS.omni_lock.hashType as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner
@@ -153,7 +154,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   // // now only supported omni lock, the other lock type will be supported later
   async sendL1Transaction(tx: Transaction): Promise<Hash> {
-    return await this.ckbRpc.send_transaction(tx, "passthrough");
+    return await this.ckbRpc.sendTransaction(tx, "passthrough");
   }
 
   async signMessage(message: string, dummySign = false): Promise<string> {
@@ -170,11 +171,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     debug("message after sign", signedMessage);
-    const signedWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs({
+    const signedWitness = bytes.hexify(
+      blockchain.WitnessArgs.pack({
         lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
       }),
-    ).serializeJson();
+    );
     debug("signedWitness", signedWitness);
     return signedWitness;
   }
@@ -201,12 +202,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateMessageByTransaction(transaction: Transaction): HexString {
     const hasher = new utils.CKBHasher();
-    const rawTxHash = utils.ckbHash(
-      core.SerializeRawTransaction(toolkit.normalizers.NormalizeRawTransaction(transaction)),
-    );
-    const serializedWitness = core.SerializeWitnessArgs({
-      lock: new toolkit.Reader("0x" + "00".repeat(85)),
-    });
+    const rawTxHash = utils.ckbHash(blockchain.RawTransaction.pack(transaction));
+    const serializedWitness = blockchain.WitnessArgs.pack({ lock: new Uint8Array(85) });
     hasher.update(rawTxHash);
     this.hashWitness(hasher, serializedWitness);
     return hasher.digestHex();
@@ -224,8 +221,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const rollupConfig = this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG;
     const queryOptions = {
       type: {
-        code_hash: rollupConfig.rollup_type_script.code_hash,
-        hash_type: rollupConfig.rollup_type_script.hash_type,
+        codeHash: rollupConfig.rollup_type_script.codeHash,
+        hashType: rollupConfig.rollup_type_script.hashType,
         args: rollupConfig.rollup_type_script.args,
       },
     };
@@ -244,8 +241,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScript(): Script {
     const layer2Lock: Script = {
-      code_hash: this.lightGodwokenConfig.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
-      hash_type: "type",
+      codeHash: this.lightGodwokenConfig.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
+      hashType: "type",
       args:
         this.lightGodwokenConfig.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
     };
@@ -265,9 +262,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   getLayer1LockScriptHash(): Hash {
     const ownerCKBLock = helpers.parseAddress(this.l1Address);
     const ownerLock: Script = {
-      code_hash: ownerCKBLock.code_hash,
+      codeHash: ownerCKBLock.codeHash,
       args: ownerCKBLock.args,
-      hash_type: ownerCKBLock.hash_type as HashType,
+      hashType: ownerCKBLock.hashType as HashType,
     };
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     debug("ownerLockHash", ownerLockHash);

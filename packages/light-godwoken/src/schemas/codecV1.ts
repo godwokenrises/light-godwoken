@@ -1,6 +1,7 @@
 import { BI, HexString } from "@ckb-lumos/lumos";
-import { molecule, number, blockchain, createObjectCodec, enhancePack } from "@ckb-lumos/codec/";
+import { molecule, number, createObjectCodec, enhancePack } from "@ckb-lumos/codec/";
 import { hashTypeCodec } from "./baseCodec";
+import { blockchain } from "@ckb-lumos/base";
 
 const { table, struct } = molecule;
 const { Bytes, Byte32 } = blockchain;
@@ -72,11 +73,11 @@ export const WithdrawalRequestExtraCodec = table(
     ),
     owner_lock: table(
       {
-        code_hash: Byte32,
-        hash_type: hashTypeCodec,
+        codeHash: Byte32,
+        hashType: hashTypeCodec,
         args: Bytes,
       },
-      ["code_hash", "hash_type", "args"],
+      ["codeHash", "hashType", "args"],
     ),
   },
   ["request", "owner_lock"],
@@ -94,11 +95,11 @@ export const V1DepositLockArgs = table(
     owner_lock_hash: Byte32,
     layer2_lock: table(
       {
-        code_hash: Byte32,
-        hash_type: hashTypeCodec,
+        codeHash: Byte32,
+        hashType: hashTypeCodec,
         args: Bytes,
       },
-      ["code_hash", "hash_type", "args"],
+      ["codeHash", "hashType", "args"],
     ),
     cancel_timeout: Uint64,
     registry_id: Uint32,
