@@ -7,7 +7,7 @@ import { EthereumProvider } from "./ethereumProvider";
 import { NotEnoughCapacityError } from "./constants/error";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 
-const issuerPrivateKey = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
+const DEFAULT_ISSUER_PRIVATE_KEY = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 
 export async function claimUSDC(
   ethereum: EthereumProvider,
@@ -31,11 +31,11 @@ export async function generateClaimUSDCTxSkeleton(
   config: LightGodwokenConfig,
   ethAddress: HexString,
   indexer: any,
-  issuerPrivKey?: HexString,
+  issuerPrivateKey?: HexString,
 ): Promise<helpers.TransactionSkeletonType> {
   const { omni_lock: omniLock, sudt, secp256k1_blake160: secp256k1 } = config.layer1Config.SCRIPTS;
 
-  const issuerPubKey = hd.key.privateToPublic(issuerPrivKey || issuerPrivateKey);
+  const issuerPubKey = hd.key.privateToPublic(issuerPrivateKey || DEFAULT_ISSUER_PRIVATE_KEY);
   const issuerArgs = hd.key.publicKeyToBlake160(issuerPubKey);
   const issuerLock: Script = {
     code_hash: secp256k1.code_hash,
@@ -178,7 +178,7 @@ export async function userSignTransaction(
 
 async function issuerSignTransaction(txSkeleton: helpers.TransactionSkeletonType): Promise<HexString> {
   const message = generateIssuerMessage(txSkeleton);
-  let signedMessage = await signMessageWithPrivateKey(message, issuerPrivateKey);
+  let signedMessage = await signMessageWithPrivateKey(message, DEFAULT_ISSUER_PRIVATE_KEY);
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");

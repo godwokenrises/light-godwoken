@@ -32,7 +32,7 @@ import {
 } from "./constants/error";
 import { GodwokenVersion } from "./config";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
-import { BigNumber, providers } from "ethers";
+import { BigNumber, providers, Contract } from "ethers";
 
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
@@ -177,42 +177,29 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       return this.getErc20BalancesViaMulticall(payload);
     }
 
-    const result: GetErc20BalancesResult = { balances: [] };
-    // TODO: EthereumProvider potential browser-env issue
-    if (!window.ethereum) {
-      return result;
-    }
-    const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    const rpc = this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL;
+    const provider = new providers.JsonRpcProvider(rpc);
 
-    let promises = [];
-    for (let index = 0; index < payload.addresses.length; index++) {
-      const address = payload.addresses[index];
-      const contract = new Contract(ERC20.abi, address);
-      const balance = contract.methods
-        .balanceOf(this.provider.l2Address)
-        .call({ from: this.provider.l2Address, gasPrice: "0" });
-      promises.push(balance);
-    }
-    await Promise.all(promises).then((values) => {
-      values.forEach((value) => {
-        result.balances.push("0x" + Number(value).toString(16));
-      });
-    });
-    return result;
+    const balances = await Promise.all(
+      payload.addresses.map(async (address) => {
+        const contract = new Contract(address, ERC20.abi, provider);
+        const balance: BigNumber = await contract.callStatic.balanceOf(this.provider.l2Address);
+        return balance.toHexString();
+      }),
+    );
+
+    return {
+      balances,
+    };
   }
   async getErc20Balance(address: string): Promise<string> {
-    // TODO: EthereumProvider potential browser-env issue
-    if (!window.ethereum) {
-      return "result";
-    }
-    const Contract = require("web3-eth-contract");
-    Contract.setProvider(this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    const contract = new Contract(ERC20.abi, address);
-    const balance = contract.methods
-      .balanceOf(this.provider.l2Address)
-      .call({ from: this.provider.l2Address, gasPrice: "0" });
-    return balance;
+    const rpc = this.provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL;
+    const provider = new providers.JsonRpcProvider(rpc);
+
+    const contract = new Contract(address, ERC20.abi, provider);
+    const value: BigNumber = await contract.callStatic.balanceOf(this.provider.l2Address);
+
+    return value.toHexString();
   }
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
