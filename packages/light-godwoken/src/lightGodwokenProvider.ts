@@ -1,5 +1,6 @@
 import Web3 from "web3";
 import { providers } from "ethers";
+import { initializeConfig } from "@ckb-lumos/config-manager";
 import { utils, core, toolkit, helpers } from "@ckb-lumos/lumos";
 import { Address, Indexer, RPC, Transaction, HexString, Hash, Cell, HashType, Script, BI } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
@@ -40,9 +41,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.configMap = initConfigMap(configMap ?? network);
     this.config = this.configMap[env];
 
-    const { layer1Config, layer2Config } = this.config;
+    const { layer1Config, layer2Config, lumosConfig } = this.config;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
+
+    initializeConfig(lumosConfig);
 
     if (env === "v0") {
       const polyjuiceProvider = new PolyjuiceHttpProvider(layer2Config.GW_POLYJUICE_RPC_URL, {

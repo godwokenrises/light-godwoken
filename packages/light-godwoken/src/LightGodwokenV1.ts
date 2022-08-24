@@ -261,12 +261,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
-    debug("typedMsg:", typedMsg);
+
     let signedMessage;
     try {
-      signedMessage = await this.provider.ethereum.signTypedData(typedMsg.domain, typedMsg.types, typedMsg.message);
+      signedMessage = await this.provider.ethereum.signTypedData(
+        typedMsg.domain,
+        typedMsg.types,
+        typedMsg.message
+      );
     } catch (e: any) {
       eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
+      throw e;
     }
 
     // construct WithdrawalRequestExtra
@@ -299,7 +304,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
   generateTypedMsg(rawWithdrawalRequest: RawWithdrawalRequestV1) {
     const ownerLock = this.provider.getLayer1Lock();
-    const typedMsg = {
+    return {
       domain: {
         name: "Godwoken",
         version: "1",
@@ -355,7 +360,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         ],
       },
     };
-    return typedMsg;
   }
 
   async generateRawWithdrawalRequest(
