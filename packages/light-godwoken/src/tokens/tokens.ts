@@ -1,10 +1,9 @@
 import { TOKEN_LIST_MAINNET_V0, TOKEN_LIST_MAINNET_V1 } from "./tokens/mainnet";
 import { TOKEN_LIST_TESTNET_V0, TOKEN_LIST_TESTNET_V1 } from "./tokens/testnet";
-import { TokenListNotFoundError } from "../constants/error";
-import { GodwokenNetwork, GodwokenVersion } from "../config";
 import { LightGodwokenTokenMap, LightGodwokenToken } from "./constants";
+import { GodwokenNetwork, GodwokenVersion } from "../config";
 
-export const tokens: LightGodwokenTokenMap = {
+export const predefinedTokens: LightGodwokenTokenMap = {
   [GodwokenNetwork.Mainnet]: {
     v0: TOKEN_LIST_MAINNET_V0,
     v1: TOKEN_LIST_MAINNET_V1,
@@ -16,9 +15,8 @@ export const tokens: LightGodwokenTokenMap = {
 };
 
 export function getTokenList(network: GodwokenNetwork | string, version: GodwokenVersion): LightGodwokenToken[] {
-  if (!(network in tokens)) throw new TokenListNotFoundError(network, "GodwokenNetwork not found");
-  const listMap = tokens[network as GodwokenNetwork];
+  if (!(network in predefinedTokens)) return [];
 
-  if (!listMap[version]) throw new TokenListNotFoundError(version, "GodwokenVersion not found");
-  return listMap[version];
+  const listMap = predefinedTokens[network as GodwokenNetwork];
+  return listMap?.[version] ?? [];
 }
