@@ -29,8 +29,8 @@ if (process.env.NODE_ENV === "production") {
       /https?:\/\/bridge\.godwoken\.io/,
       /https?:\/\/mainnet\.bridge\.godwoken\.io/,
       /https?:\/\/testnet\.bridge\.godwoken\.io/,
-      /https?:\/\/light-godwoken\.vercel\.app/,
-      /https?:\/\/light-godwoken-mainnet\.vercel\.app/,
+      /https?:\/\/godwoken-bridge\.vercel\.app/,
+      /https?:\/\/godwoken-bridge-mainnet\.vercel\.app/,
     ],
     beforeSend: function (event, hint) {
       const exception = hint?.originalException;

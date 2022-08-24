@@ -264,11 +264,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
 
     let signedMessage;
     try {
-      signedMessage = await this.provider.ethereum.signTypedData(
-        typedMsg.domain,
-        typedMsg.types,
-        typedMsg.message
-      );
+      signedMessage = await this.provider.ethereum.signTypedData(typedMsg.domain, typedMsg.types, typedMsg.message);
     } catch (e: any) {
       eventEmitter.emit("fail", new TransactionSignError(JSON.stringify(typedMsg), e.message));
       throw e;
