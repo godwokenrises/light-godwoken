@@ -35,7 +35,7 @@ export class EthereumProvider implements EthereumProviderBase {
     this.signer = signer;
   }
 
-  // Web3Provider
+  // Connect via external provider, like MetaMask
   static fromWeb3(ethereum: ExternalProvider) {
     const provider = new providers.Web3Provider(ethereum);
     const signer = provider.getSigner();

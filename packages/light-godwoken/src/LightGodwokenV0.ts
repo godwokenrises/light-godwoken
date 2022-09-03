@@ -4,6 +4,7 @@ import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
   BaseWithdrawalEventEmitterPayload,
+  DepositResult,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
@@ -39,7 +40,7 @@ import { Contract as MulticallContract } from "ethers-multicall/dist/contract";
 import { Provider as MulticallProvider } from "ethers-multicall/dist/provider";
 import { PolyjuiceJsonRpcProvider } from "@polyjuice-provider/ethers";
 import { GodwokenVersion } from "./config";
-import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
+import { GodwokenScanner } from "./godwokenScanner";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
@@ -226,6 +227,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async getErc20Balance(address: HexString): Promise<Hexadecimal> {
     const contract = new this.provider.web3.eth.Contract(SUDT_ERC20_PROXY_ABI as AbiItems, address);
     return await contract.methods.balanceOf(this.provider.l2Address).call();
+  }
+
+  async getDepositHistories(page?: number): Promise<DepositResult[]> {
+    // TODO: doing nothing here
+    return [];
   }
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {

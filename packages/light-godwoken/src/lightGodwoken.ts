@@ -26,6 +26,7 @@ import {
   PendingDepositTransaction,
   SUDT_CELL_CAPACITY,
   GetSudtBalance,
+  DepositResult,
 } from "./lightGodwokenType";
 import {
   DepositCanceledError,
@@ -58,6 +59,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
+  abstract getDepositHistories(page?: number): Promise<DepositResult[]>;
   // abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
@@ -109,6 +111,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   async getDepositList(): Promise<DepositRequest[]> {
     const depositLock = this.generateDepositLock();
+    debug("depositLock", depositLock);
     const ckbCollector = this.provider.ckbIndexer.collector({
       lock: depositLock,
     });

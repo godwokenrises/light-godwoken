@@ -1,5 +1,5 @@
-import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString } from "@ckb-lumos/lumos";
+import { GodwokenScanner } from "./godwokenScanner";
+import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, Cell } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
@@ -14,6 +14,7 @@ import {
   UniversalToken,
   WithdrawResultV1,
   WithdrawResultWithCell,
+  DepositResult,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { CKB_SUDT_ID } from "./tokens";
@@ -202,11 +203,43 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return value.toHexString();
   }
 
+  async getDepositHistories(page?: number): Promise<DepositResult[]> {
+    const ethAddress = this.provider.getL2Address();
+    const histories = await this.godwokenScannerClient.getDepositHistories(ethAddress, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
+    return await Promise.all(
+      histories.data.map(async (data) => {
+        const history = data.attributes;
+        const cell = (await this.provider.getLayer1Cell({
+          tx_hash: history.layer1_tx_hash,
+          index: BI.from(history.layer1_output_index).toHexString(),
+        })) as Cell;
+
+        let sudt: SUDT | undefined;
+        if (cell?.cell_output.type) {
+          const typeHash = utils.computeScriptHash(cell.cell_output.type);
+          const typeHashMap = this.getBuiltinSUDTMapByTypeHash();
+          sudt = typeHashMap[typeHash];
+        }
+
+        return {
+          history,
+          cell,
+          sudt,
+          status: "success",
+        };
+      }),
+    );
+  }
+
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
     const histories = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    const collectedWithdrawals: WithdrawResultV1[] = histories.map((item) => {
+    return histories.map((item) => {
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
@@ -226,7 +259,6 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         status: item.state === "succeed" ? "success" : item.state,
       };
     });
-    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -244,8 +276,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     };
   }
   async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const result = this.godwokenClient.getWithdrawal(txHash);
-    return result;
+    return this.godwokenClient.getWithdrawal(txHash);
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {

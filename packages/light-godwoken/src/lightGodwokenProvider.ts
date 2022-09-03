@@ -15,6 +15,7 @@ import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap, GodwokenN
 import { EnvNotFoundError } from "./constants/error";
 import { claimUSDC } from "./sudtFaucet";
 import { debug } from "./debug";
+import { OutPoint } from "@ckb-lumos/base";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address;
@@ -261,6 +262,27 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     debug("ownerLockHash", ownerLockHash);
     return ownerLockHash;
+  }
+
+  async getLayer1Cell(outPoint: OutPoint): Promise<Cell | null> {
+    const queried = await this.ckbRpc.get_transaction(outPoint.tx_hash);
+    if (!queried) return null;
+
+    const tx = queried.transaction;
+    const status = queried.tx_status;
+    const block = status.block_hash ? await this.ckbRpc.get_block(status.block_hash) : null;
+
+    debug("getLayer1Cell-status", status);
+
+    const index = BI.from(outPoint.index).toNumber();
+    const output = tx.outputs[index];
+    return {
+      cell_output: output,
+      out_point: outPoint,
+      data: tx.outputs_data[index],
+      block_hash: status.block_hash,
+      block_number: block?.header.number,
+    };
   }
 
   async getLastFinalizedBlockNumber(): Promise<number> {

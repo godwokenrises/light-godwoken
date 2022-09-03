@@ -36,7 +36,7 @@ export type PolyConfig = {
   };
 };
 export class Godwoken {
-  private rpc: RPC;
+  private readonly rpc: RPC;
 
   constructor(url: string) {
     this.rpc = new RPC(url);
@@ -67,8 +67,7 @@ export class Godwoken {
 
   private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
     const name = "gw_" + method_name;
-    const result = await this.rpc[name](...args);
-    return result;
+    return this.rpc[name](...args);
   }
 
   async submitWithdrawalRequest(data: HexString): Promise<Hash> {
@@ -78,18 +77,9 @@ export class Godwoken {
   async getLastSubmittedInfo(): Promise<LastL2BlockCommittedInfo> {
     return await this.rpcCall("get_last_submitted_info");
   }
-  // TODO
-  // async function getWithdrawal(withdrawalHash: Hash) {
-  //   withdrawal_hash
-  // }
-  /**
-   *
-   * @param txHash Hash
-   * @returns uint32
-   */
+
   async getWithdrawal(txHash: Hash): Promise<Hash | undefined> {
-    const withdrawal = await this.rpcCall("get_withdrawal", txHash);
-    return withdrawal;
+    return await this.rpcCall("get_withdrawal", txHash);
   }
   async getScriptHashByShortAddress(address: HexString): Promise<Hash> {
     return await this.rpcCall("get_script_hash_by_short_address", address);
@@ -112,12 +102,10 @@ export class Godwoken {
   }
 
   async getAccountIdByScriptHash(scriptHash: Hash): Promise<HexNumber | undefined> {
-    const id = await this.rpcCall("get_account_id_by_script_hash", scriptHash);
-    return id;
+    return await this.rpcCall("get_account_id_by_script_hash", scriptHash);
   }
 
   async getNonce(accountId: HexNumber): Promise<HexNumber> {
-    const nonce = await this.rpcCall("get_nonce", accountId);
-    return nonce;
+    return await this.rpcCall("get_nonce", accountId);
   }
 }

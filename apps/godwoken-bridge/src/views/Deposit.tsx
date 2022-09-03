@@ -73,21 +73,30 @@ export default function Deposit() {
   const godwokenVersion = useGodwokenVersion();
 
   const { txHistory: depositHistory, addTxToHistory, updateTxWithStatus } = useDepositHistory();
+  const depositHistoryTxHashes = depositHistory.map((history) => history.txHash);
 
   const [depositListListener, setDepositListListener] = useState(new EventEmitter() as DepositEventEmitter);
 
   const depositListQuery = useQuery(
-    ["queryDepositList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
+    [
+      "queryDepositList",
+      {
+        version: lightGodwoken?.getVersion(),
+        l2Address: lightGodwoken?.provider.getL2Address(),
+      },
+    ],
     () => {
       return lightGodwoken?.getDepositList();
     },
+    {
+      enabled: !!lightGodwoken,
+    },
   );
 
+  // append rpc fetched deposit list to local storage
   const { data: depositList, isLoading: depositListLoading } = depositListQuery;
-
-  // apend rpc fetched deposit list to local storage
   depositList?.forEach((deposit) => {
-    if (!depositHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
+    if (!depositHistoryTxHashes.includes(deposit.rawCell.out_point?.tx_hash || "")) {
       addTxToHistory({
         capacity: deposit.capacity.toHexString(),
         amount: deposit.amount.toHexString(),

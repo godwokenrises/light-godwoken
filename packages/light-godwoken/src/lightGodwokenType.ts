@@ -1,5 +1,6 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
 import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./config";
+import { GodwokenScannerDataTypes } from "./godwokenScanner";
 import EventEmitter from "events";
 
 export interface GetL2CkbBalancePayload {
@@ -52,10 +53,6 @@ export interface GetSudtBalances {
 
 export interface GetSudtBalance {
   type: Script;
-}
-
-export interface GodwokenNetworkConfig {
-  testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
 }
 
 interface WithdrawListener {
@@ -173,6 +170,13 @@ export type DepositRequest = {
   rawCell: Cell;
 };
 
+export type DepositResult = {
+  history: GodwokenScannerDataTypes.DepositHistory;
+  cell: Cell;
+  sudt?: SUDT;
+  status: "pending" | "success" | "failed";
+};
+
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
@@ -185,6 +189,8 @@ export interface LightGodwokenBase {
   getCkbBlockProduceTime(): PromiseOr<number>;
 
   getDepositList(): Promise<DepositRequest[]>;
+
+  getDepositHistories(page?: number): Promise<DepositResult[]>;
 
   getCkbCurrentBlockNumber(): Promise<BI>;
 
