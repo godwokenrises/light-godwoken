@@ -13,7 +13,6 @@ import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } fro
 import { initConfigMap, validateLightGodwokenConfig } from "./config";
 import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./config";
 import { EnvNotFoundError } from "./constants/error";
-import { claimUSDC } from "./sudtFaucet";
 import { debug } from "./debug";
 import { OutPoint } from "@ckb-lumos/base";
 
@@ -96,10 +95,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
   getL1Address(): string {
     return this.l1Address;
-  }
-
-  async claimUSDC(): Promise<HexString> {
-    return claimUSDC(this.ethereum, this.getConfig(), this.getL2Address(), this.ckbRpc, this.ckbIndexer);
   }
 
   async getMinFeeRate(): Promise<BI> {

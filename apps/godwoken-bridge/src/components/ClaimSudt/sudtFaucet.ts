@@ -1,36 +1,40 @@
-import { debug } from "./debug";
 import { ecdsaSign } from "secp256k1";
-import { helpers, RPC, utils, Script, HashType, BI } from "@ckb-lumos/lumos";
-import { Cell, CellDep, core, hd, HexString, toolkit } from "@ckb-lumos/lumos";
-import { LightGodwokenConfig } from "./config";
-import { EthereumProvider } from "./ethereumProvider";
-import { NotEnoughCapacityError } from "./constants/error";
-import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
+import { CkbIndexer } from "@ckb-lumos/ckb-indexer/lib/indexer";
+import { hd, helpers, utils, core, toolkit } from "@ckb-lumos/lumos";
+import { RPC, Script, HashType, BI, Cell, CellDep, HexString } from "@ckb-lumos/lumos";
+import { LightGodwokenConfig, EthereumProvider, NotEnoughCapacityError, CodecLayer1 } from "light-godwoken";
 
+// The private key for transferring SUDT
 const DEFAULT_ISSUER_PRIVATE_KEY = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
 
-export async function claimUSDC(
-  ethereum: EthereumProvider,
-  config: LightGodwokenConfig,
-  ethAddress: HexString,
-  rpc: RPC,
-  indexer: any,
-): Promise<HexString> {
-  let txSkeleton = await generateClaimUSDCTxSkeleton(config, ethAddress, indexer);
-  const userSignature = await userSignTransaction(txSkeleton, ethereum);
-  const issuerSignature = await issuerSignTransaction(txSkeleton);
+export async function claimUSDC(params: {
+  ethereum: EthereumProvider;
+  config: LightGodwokenConfig;
+  ethAddress: HexString;
+  rpc: RPC;
+  indexer: CkbIndexer;
+  issuerPrivateKey?: HexString;
+}): Promise<HexString> {
+  let txSkeleton = await generateClaimUSDCTxSkeleton(
+    params.config,
+    params.ethAddress,
+    params.indexer,
+    params.issuerPrivateKey,
+  );
+  const userSignature = await userSignTransaction(txSkeleton, params.ethereum);
+  const issuerSignature = await issuerSignTransaction(txSkeleton, params.issuerPrivateKey);
   txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(userSignature, issuerSignature));
   const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
 
-  const txHash = await rpc.send_transaction(signedTx, "passthrough");
-  debug("claim sudt txHash is:", txHash);
+  const txHash = await params.rpc.send_transaction(signedTx, "passthrough");
+  console.debug("claim sudt txHash is:", txHash);
   return txHash;
 }
 
 export async function generateClaimUSDCTxSkeleton(
   config: LightGodwokenConfig,
   ethAddress: HexString,
-  indexer: any,
+  indexer: CkbIndexer,
   issuerPrivateKey?: HexString,
 ): Promise<helpers.TransactionSkeletonType> {
   const { omni_lock: omniLock, sudt, secp256k1_blake160: secp256k1 } = config.layer1Config.SCRIPTS;
@@ -170,15 +174,18 @@ export async function userSignTransaction(
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
   const signedWitness = new toolkit.Reader(
     core.SerializeWitnessArgs({
-      lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
+      lock: CodecLayer1.OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
     }),
   ).serializeJson();
   return signedWitness;
 }
 
-async function issuerSignTransaction(txSkeleton: helpers.TransactionSkeletonType): Promise<HexString> {
+async function issuerSignTransaction(
+  txSkeleton: helpers.TransactionSkeletonType,
+  issuerPrivateKey?: HexString,
+): Promise<HexString> {
   const message = generateIssuerMessage(txSkeleton);
-  let signedMessage = await signMessageWithPrivateKey(message, DEFAULT_ISSUER_PRIVATE_KEY);
+  let signedMessage = await signMessageWithPrivateKey(message, issuerPrivateKey ?? DEFAULT_ISSUER_PRIVATE_KEY);
   let v = Number.parseInt(signedMessage.slice(-2), 16);
   if (v >= 27) v -= 27;
   signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");

@@ -139,8 +139,6 @@ type PromiseOr<T> = Promise<T> | T;
 export const SUDT_CELL_CAPACITY = 144_00000000;
 
 export interface LightGodwokenProvider {
-  claimUSDC(): Promise<HexString>;
-
   getL2Address(): PromiseOr<string>;
 
   getConfig(): LightGodwokenConfig;
@@ -195,8 +193,6 @@ export interface LightGodwokenBase {
   getCkbCurrentBlockNumber(): Promise<BI>;
 
   getConfig(): LightGodwokenConfig;
-
-  claimUSDC(): Promise<HexString>;
 
   getVersion: () => GodwokenVersion;
 

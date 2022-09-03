@@ -304,10 +304,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return this.provider.getConfig();
   }
 
-  async claimUSDC(): Promise<HexString> {
-    return this.provider.claimUSDC();
-  }
-
   async generateDepositTx(
     payload: DepositPayload,
     eventEmiter?: EventEmitter,
