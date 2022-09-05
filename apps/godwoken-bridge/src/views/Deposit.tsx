@@ -294,9 +294,11 @@ export default function Deposit() {
           </PrimaryButton>
         </div>
       </Card>
-      <Card>
-        <DepositList depositHistory={depositHistoryFilteredByCancelTimeout} isLoading={depositListLoading} />
-      </Card>
+      {lightGodwoken && (
+        <Card>
+          <DepositList depositList={depositHistoryFilteredByCancelTimeout} isLoading={depositListLoading} />
+        </Card>
+      )}
       <ConfirmModal
         title="Confirm Transaction"
         visible={isModalVisible}

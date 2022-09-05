@@ -1,14 +1,14 @@
-import React, { useState } from "react";
 import styled from "styled-components";
+import React, { useEffect, useRef } from "react";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useInfiniteScroll } from "ahooks";
+import { utils } from "@ckb-lumos/lumos";
+import { format } from "date-fns";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
-import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "react-query";
-import { format } from "date-fns";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { utils } from "@ckb-lumos/lumos";
+import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
 
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -21,26 +21,20 @@ const DepositListDiv = styled.div`
 `;
 
 export interface DepositListParams {
-  depositHistory: DepositHistoryType[];
+  depositList: DepositHistoryType[];
   isLoading: boolean;
 }
 
-export const DepositList: React.FC<DepositListParams> = ({ depositHistory, isLoading }) => {
+export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoading }) => {
   const lightGodwoken = useLightGodwoken();
   const cancelTimeout = lightGodwoken?.getCancelTimeout() || 0;
 
-  const [page] = useState(1);
-  const depositHistoryQuery = useQuery(
-    [
-      "queryDepositHistoryList",
-      {
-        version: lightGodwoken?.getVersion(),
-        l2Address: lightGodwoken?.provider.getL2Address(),
-      },
-    ],
-    async () => {
-      const list = await lightGodwoken!.getDepositHistories(page);
-      return list.map((deposit): DepositHistoryType => {
+  const listRef = useRef<HTMLDivElement>(null);
+  const depositHistory = useInfiniteScroll(
+    async (data) => {
+      const page = data?.page ? data.page + 1 : 1;
+      const history = await lightGodwoken!.getDepositHistories(page);
+      const list = history.map((deposit): DepositHistoryType => {
         const date = format(new Date(deposit.history.timestamp), "yyyy-MM-dd HH:mm:ss");
         const sudtAmount = deposit.sudt ? utils.readBigUInt128LECompatible(deposit.cell.data).toHexString() : "0x0";
 
@@ -54,16 +48,31 @@ export const DepositList: React.FC<DepositListParams> = ({ depositHistory, isLoa
           date,
         };
       });
+
+      return {
+        list,
+        page,
+        initialized: true,
+        hasMore: history.length > 0,
+      };
     },
     {
-      keepPreviousData: true,
-      enabled: !!lightGodwoken,
+      manual: true,
+      target: listRef,
+      isNoMore: (data) => data?.hasMore === false,
     },
   );
 
-  const { data: depositScanHistory, isLoading: isDepositScanHistoryLoading } = depositHistoryQuery;
-  const depositScanHistoryTxHashes = depositScanHistory?.map((history) => history.txHash) ?? [];
-  const isListLoading = isLoading || isDepositScanHistoryLoading;
+  useEffect(() => {
+    if (lightGodwoken && !depositHistory.loading) {
+      depositHistory.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken]);
+
+  const depositHistoryList = depositHistory.data?.list ?? [];
+  const depositHistoryTxHashes = depositHistoryList.map((history) => history.txHash);
+  const isListLoading = isLoading || depositHistory.loading || depositHistory.loadingMore;
 
   const params = useParams();
   const navigate = useNavigate();
@@ -73,15 +82,15 @@ export const DepositList: React.FC<DepositListParams> = ({ depositHistory, isLoa
     return <Navigate to={`/${params.version}/deposit/pending`} />;
   }
 
-  const pendingList = depositHistory.filter((history) => history.status === "pending");
-  const completedList = depositHistory.filter((history) => {
-    return history.status !== "pending" && !depositScanHistoryTxHashes.includes(history.txHash);
+  const pendingList = depositList.filter((history) => history.status === "pending");
+  const completedList = depositList.filter((history) => {
+    return history.status !== "pending" && !depositHistoryTxHashes.includes(history.txHash);
   });
   function navigateStatus(targetStatus: "pending" | "completed") {
     navigate(`/${params.version}/deposit/${targetStatus}`);
   }
 
-  if (!completedList.length && !depositScanHistory?.length) {
+  if (!lightGodwoken || !depositHistory.data?.initialized) {
     return (
       <DepositListDiv>
         <Placeholder />
@@ -108,12 +117,12 @@ export const DepositList: React.FC<DepositListParams> = ({ depositHistory, isLoa
         </div>
       )}
       {isCompleted && (
-        <div className="list completed-list">
-          {!completedList.length && !depositScanHistory?.length && "There is no completed deposit request here"}
+        <div ref={listRef} className="list completed-list">
+          {!completedList.length && !depositHistoryList.length && "There is no completed deposit request here"}
           {completedList.map((deposit, index) => (
             <DepositItem {...deposit} key={index}></DepositItem>
           ))}
-          {depositScanHistory?.map((deposit, index) => (
+          {depositHistoryList.map((deposit, index) => (
             <DepositItem {...deposit} key={index}></DepositItem>
           ))}
         </div>

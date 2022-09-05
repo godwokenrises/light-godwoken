@@ -266,9 +266,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const tx = queried.transaction;
     const status = queried.tx_status;
     const block = status.block_hash ? await this.ckbRpc.get_block(status.block_hash) : null;
-
-    debug("getLayer1Cell-status", status);
-
     const index = BI.from(outPoint.index).toNumber();
     const output = tx.outputs[index];
     return {
