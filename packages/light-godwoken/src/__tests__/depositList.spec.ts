@@ -13,14 +13,14 @@ beforeEach(() => {
 });
 
 describe("test light godwoken v0 deposit list", () => {
-  // v0 test cases are hidden due to deprecation of testnet_v0
-  /*it("should generateDepositLock works fine", async () => {
-    const mockCells = [generateCellInput(501), generateCellInput(403)];
+  it("should generateDepositLock works fine", async () => {
+    // v0 test cases are hidden due to deprecation of testnet_v0
+    /*const mockCells = [generateCellInput(501), generateCellInput(403)];
     const mockCollector = { collect: sinon.stub().returns(mockCells) };
     sinon.stub(lightGodwokenProviderV0.ckbIndexer, "collector").returns(mockCollector);
     const depositList = await lightGodwokenV0.getDepositList();
     expect(depositList.length).toBe(2);
     expect(depositList[0].capacity.toString()).toBe("50100000000");
-    expect(depositList[1].capacity.toString()).toBe("40300000000");
-  });*/
+    expect(depositList[1].capacity.toString()).toBe("40300000000");*/
+  });
 });
