@@ -8,18 +8,15 @@ import {
   randomSudtTypeScript,
   randomSudtTypeScriptWithoutArgs,
 } from "./utils";
-import { testConfig } from "./lightGodwokenConfig";
 import { BI, Cell, Script } from "@ckb-lumos/lumos";
+import { createLightGodwoken } from "./client";
 
 let lightGodwokenV1: LightGodwokenV1;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
-  const dummyEthereum = {
-    on: () => {},
-  };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig);
-  lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
+  lightGodwokenV1 = createLightGodwoken(ethAddress, "testnet", "v1");
+  lightGodwokenProviderV1 = lightGodwokenV1.provider;
 });
 
 describe("test light godwoken generateDepositOutputCell", () => {

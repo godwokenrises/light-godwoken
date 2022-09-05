@@ -1,4 +1,5 @@
-import { Layer1Config, LightGodwokenConfigMap } from "../config/types";
+import { Layer1Config, LightGodwokenConfigMap } from "../config";
+import { predefined } from "@ckb-lumos/config-manager";
 
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {
@@ -31,6 +32,7 @@ const layer1ConfigAggron: Layer1Config = {
 
 export const testConfig: LightGodwokenConfigMap = {
   v0: {
+    lumosConfig: predefined.AGGRON4,
     layer1Config: layer1ConfigAggron,
     layer2Config: {
       SCRIPTS: {
@@ -76,6 +78,7 @@ export const testConfig: LightGodwokenConfigMap = {
     },
   },
   v1: {
+    lumosConfig: predefined.AGGRON4,
     layer1Config: layer1ConfigAggron,
     layer2Config: {
       SCRIPTS: {

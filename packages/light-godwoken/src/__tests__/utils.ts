@@ -1,5 +1,5 @@
 import { Cell, HexString, Script, HashType, BI, helpers, utils } from "@ckb-lumos/lumos";
-import { LightGodwokenConfig } from "../config/types";
+import { LightGodwokenConfig } from "../config";
 import { RawWithdrwal } from "../schemas/codecV0";
 import { RawWithdrawalRequestV1 } from "../schemas/codecV1";
 
