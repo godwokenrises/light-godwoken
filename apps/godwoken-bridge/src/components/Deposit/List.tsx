@@ -146,8 +146,8 @@ async function getDepositHistories(lightGodwoken: LightGodwoken, page: number) {
       // 404 usually means we didn't find records of the account
       if (status && Number(status) === 404) {
         console.debug(
-          '/api/deposit_histories 404: cannot find deposit history for',
-          lightGodwoken.provider.getL2Address()
+          "/api/deposit_histories 404: cannot find deposit history for",
+          lightGodwoken.provider.getL2Address(),
         );
         return [];
       }
