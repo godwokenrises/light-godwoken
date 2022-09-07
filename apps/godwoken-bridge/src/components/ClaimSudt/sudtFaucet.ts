@@ -1,5 +1,6 @@
 import { ecdsaSign } from "secp256k1";
 import { CkbIndexer } from "@ckb-lumos/ckb-indexer/lib/indexer";
+import { number } from "@ckb-lumos/codec";
 import { hd, helpers, utils, core, toolkit } from "@ckb-lumos/lumos";
 import { RPC, Script, HashType, BI, Cell, CellDep, HexString } from "@ckb-lumos/lumos";
 import { LightGodwokenConfig, EthereumProvider, NotEnoughCapacityError, CodecLayer1 } from "light-godwoken";
@@ -228,10 +229,8 @@ function generateIssuerMessage(tx: helpers.TransactionSkeletonType): HexString {
 }
 
 function hashWitness(hasher: utils.CKBHasher, witness: ArrayBuffer): void {
-  const lengthBuffer = new ArrayBuffer(8);
-  const view = new DataView(lengthBuffer);
-  view.setBigUint64(0, BigInt(new toolkit.Reader(witness).length()), true);
-  hasher.update(lengthBuffer);
+  const packedLength = number.Uint64LE.pack(witness.byteLength);
+  hasher.update(packedLength.buffer);
   hasher.update(witness);
 }
 
