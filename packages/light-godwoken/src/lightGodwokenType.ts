@@ -211,6 +211,8 @@ export interface LightGodwokenBase {
 
   generateDepositLock: () => Script;
 
+  generateDepositAddress: (cancelTimeout?: number) => Address;
+
   deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
 
   depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;

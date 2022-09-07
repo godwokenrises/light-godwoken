@@ -109,6 +109,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return BI.from((await this.provider.ckbIndexer.tip()).block_number);
   }
 
+  generateDepositAddress(cancelTimeout?: number) {
+    const depositLock = this.generateDepositLock(cancelTimeout);
+    return helpers.encodeToAddress(depositLock);
+  }
+
   async getDepositList(): Promise<DepositRequest[]> {
     const depositLock = this.generateDepositLock();
     debug("depositLock", depositLock);
