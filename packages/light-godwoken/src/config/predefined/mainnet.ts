@@ -121,9 +121,9 @@ const layer2ConfigV1: LightGodwokenConfig = {
     GW_POLYJUICE_RPC_URL: "https://v1.mainnet.godwoken.io/rpc",
     SCANNER_URL: "https://v1.gwscan.com/",
     SCANNER_API: "https://api.v1.gwscan.com/api/",
-    CHAIN_NAME: "Godwoken Mainet v1",
+    CHAIN_NAME: "Godwoken Mainnet v1",
     FINALITY_BLOCKS: 16800,
-    // Assuming layer 1 block produce time is 12 secondes, layer 2 produces 1 block every 3 layer 1 blocks
+    // Assuming layer 1 block produce time is 12 seconds, layer 2 produces 1 block every 3 layer 1 blocks
     BLOCK_PRODUCE_TIME: 12 * 3,
     MIN_CANCEL_DEPOSIT_TIME: 604800,
 
