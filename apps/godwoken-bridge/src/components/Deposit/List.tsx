@@ -65,6 +65,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
 
   useEffect(() => {
     if (lightGodwoken && !depositHistory.loading) {
+      depositHistory.mutate(void 0);
       depositHistory.reload();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
