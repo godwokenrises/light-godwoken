@@ -11,6 +11,7 @@ export * from "./ethereumProvider";
 export * from "./schemas";
 export * from "./config";
 export * from "./tokens";
+export * from "./godwokenScanner";
 
 // Constants / Types
 export * from "./lightGodwokenType";

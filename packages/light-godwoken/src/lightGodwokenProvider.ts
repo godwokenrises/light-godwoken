@@ -70,16 +70,18 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
 
-    // TODO: AdaptProvider and "accountsChanged" issue
+    // FIXME: AdaptProvider and "accountsChanged" issue
     // EthereumProvider could be Web3Provider and JsonRpcProvider,
     // and "accountsChanged" only exist in Web3Provider.provider.on()
-    if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
+    // ---
+    // Also, the following codes cannot handle empty account list (accounts = [])
+    /*if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
       (this.ethereum.provider.provider as any).on("accountsChanged", (accounts: string[]) => {
         debug("eth accounts changed", accounts);
         this.l2Address = accounts[0];
         this.l1Address = this.generateL1Address(this.l2Address);
       });
-    }
+    }*/
   }
 
   getConfig(): LightGodwokenConfig {

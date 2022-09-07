@@ -1,4 +1,4 @@
-import { BI, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
@@ -230,8 +230,35 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   async getDepositHistories(page?: number): Promise<DepositResult[]> {
-    // TODO: doing nothing here
-    return [];
+    const ethAddress = this.provider.getL2Address();
+    const histories = await this.godwokenScannerClient.getDepositHistories(ethAddress, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
+    return await Promise.all(
+      histories.data.map(async (data) => {
+        const history = data.attributes;
+        const cell = (await this.provider.getLayer1Cell({
+          tx_hash: history.layer1_tx_hash,
+          index: BI.from(history.layer1_output_index).toHexString(),
+        })) as Cell;
+
+        let sudt: SUDT | undefined;
+        if (cell?.cell_output.type) {
+          const typeHash = utils.computeScriptHash(cell.cell_output.type);
+          const typeHashMap = this.getBuiltinSUDTMapByTypeHash();
+          sudt = typeHashMap[typeHash];
+        }
+
+        return {
+          history,
+          cell,
+          sudt,
+          status: "success",
+        };
+      }),
+    );
   }
 
   async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
