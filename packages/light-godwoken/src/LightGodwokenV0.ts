@@ -244,6 +244,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
           index: BI.from(history.layer1_output_index).toHexString(),
         })) as Cell;
 
+        // if GwScan-api (v0) didn't provide `capacity` field,
+        // then we need to get it from the target cell
+        if (history.capacity === void 0) {
+          history.capacity = cell.cell_output.capacity;
+        }
+
         let sudt: SUDT | undefined;
         if (cell?.cell_output.type) {
           const typeHash = utils.computeScriptHash(cell.cell_output.type);

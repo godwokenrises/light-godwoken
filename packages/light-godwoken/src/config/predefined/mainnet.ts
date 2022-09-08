@@ -71,7 +71,7 @@ const layer2ConfigV0: LightGodwokenConfig = {
     GW_POLYJUICE_RPC_URL: "https://mainnet.godwoken.io/rpc",
     SCANNER_URL: "https://v0.gwscan.com",
     SCANNER_API: "https://api.gwscan.com/api/",
-    CHAIN_NAME: "Godwoken v0 mainnet",
+    CHAIN_NAME: "Godwoken mainnet v0",
     FINALITY_BLOCKS: 3600,
     BLOCK_PRODUCE_TIME: 45,
     MIN_CANCEL_DEPOSIT_TIME: 172800, // two days
