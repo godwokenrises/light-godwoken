@@ -44,6 +44,6 @@ export function validateLightGodwokenConfig(config: LightGodwokenConfig): assert
     !config.layer1Config.CKB_INDEXER_URL ||
     !config.layer1Config.CKB_RPC_URL
   ) {
-    throw new LightGodwokenConfigNotValidError(JSON.stringify(config), "config not valid.");
+    throw new LightGodwokenConfigNotValidError(JSON.stringify(config), "Invalid config");
   }
 }

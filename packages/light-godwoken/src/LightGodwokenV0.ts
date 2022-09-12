@@ -313,7 +313,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       this.provider.l2Address,
       this.provider.ethereum,
       this.getNetwork(),
-      this.getVersion(),
+      "v1",
       this.provider.getConfigMap(),
     );
     const lightGodwokenV1 = new DefaultLightGodwokenV1(provider);

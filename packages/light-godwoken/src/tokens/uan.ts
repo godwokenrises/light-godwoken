@@ -1,3 +1,7 @@
+/**
+ * Proposal RFC: Universal Asset Notation
+ * https://github.com/nervosnetwork/rfcs/blob/c47994f/rfcs/0000-universal-asset-notation/0000-universal-asset-notation.md
+ */
 type UAN = {
   asset: { assetSymbol: string; chainSymbol: string };
   route: Array<{ bridgeSymbol: string; chainSymbol: string }>;
