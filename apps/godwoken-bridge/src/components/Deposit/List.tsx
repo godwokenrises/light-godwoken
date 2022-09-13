@@ -4,6 +4,8 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useInfiniteScroll } from "ahooks";
 import { utils } from "@ckb-lumos/lumos";
 import { format } from "date-fns";
+import { AxiosError } from "axios";
+import { LightGodwoken } from "light-godwoken";
 import DepositItem from "./DepositItem";
 import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
@@ -33,7 +35,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
   const depositHistory = useInfiniteScroll(
     async (data) => {
       const page = data?.page ? data.page + 1 : 1;
-      const history = await lightGodwoken!.getDepositHistories(page);
+      const history = await getDepositHistories(lightGodwoken!, page);
       const list = history.map((deposit): DepositHistoryType => {
         const date = format(new Date(deposit.history.timestamp), "yyyy-MM-dd HH:mm:ss");
         const sudtAmount = deposit.sudt ? utils.readBigUInt128LECompatible(deposit.cell.data).toHexString() : "0x0";
@@ -65,6 +67,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
 
   useEffect(() => {
     if (lightGodwoken && !depositHistory.loading) {
+      depositHistory.mutate(void 0);
       depositHistory.reload();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,3 +134,25 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
     </DepositListDiv>
   );
 };
+
+async function getDepositHistories(lightGodwoken: LightGodwoken, page: number) {
+  try {
+    return await lightGodwoken.getDepositHistories(page);
+  } catch (e) {
+    if (e instanceof AxiosError) {
+      const data = e.response?.data;
+      const status = data?.errors?.status || data?.error_code;
+
+      // 404 usually means we didn't find records of the account
+      if (status && Number(status) === 404) {
+        console.debug(
+          "/api/deposit_histories 404: cannot find deposit history for",
+          lightGodwoken.provider.getL2Address(),
+        );
+        return [];
+      }
+    }
+
+    throw e;
+  }
+}

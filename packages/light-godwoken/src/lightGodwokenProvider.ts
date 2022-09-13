@@ -1,5 +1,7 @@
 import Web3 from "web3";
 import { providers } from "ethers";
+import { number } from "@ckb-lumos/codec";
+import { OutPoint } from "@ckb-lumos/base";
 import { initializeConfig } from "@ckb-lumos/config-manager";
 import { utils, core, toolkit, helpers } from "@ckb-lumos/lumos";
 import { Address, Indexer, RPC, Transaction, HexString, Hash, Cell, HashType, Script, BI } from "@ckb-lumos/lumos";
@@ -14,7 +16,6 @@ import { initConfigMap, validateLightGodwokenConfig } from "./config";
 import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./config";
 import { EnvNotFoundError } from "./constants/error";
 import { debug } from "./debug";
-import { OutPoint } from "@ckb-lumos/base";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address;
@@ -69,16 +70,18 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.l2Address = ethAddress;
     this.l1Address = this.generateL1Address(this.l2Address);
 
-    // TODO: AdaptProvider and "accountsChanged" issue
+    // FIXME: AdaptProvider and "accountsChanged" issue
     // EthereumProvider could be Web3Provider and JsonRpcProvider,
     // and "accountsChanged" only exist in Web3Provider.provider.on()
-    if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
+    // ---
+    // Also, the following codes cannot handle empty account list (accounts = [])
+    /*if (EthereumProvider.isWeb3Provider(this.ethereum.provider)) {
       (this.ethereum.provider.provider as any).on("accountsChanged", (accounts: string[]) => {
         debug("eth accounts changed", accounts);
         this.l2Address = accounts[0];
         this.l1Address = this.generateL1Address(this.l2Address);
       });
-    }
+    }*/
   }
 
   getConfig(): LightGodwokenConfig {
@@ -207,10 +210,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   hashWitness(hasher: utils.CKBHasher, witness: ArrayBuffer): void {
-    const lengthBuffer = new ArrayBuffer(8);
-    const view = new DataView(lengthBuffer);
-    view.setBigUint64(0, BigInt(new toolkit.Reader(witness).length()), true);
-    hasher.update(lengthBuffer);
+    const packedLength = number.Uint64LE.pack(witness.byteLength);
+    hasher.update(packedLength.buffer);
     hasher.update(witness);
   }
 

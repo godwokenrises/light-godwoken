@@ -163,7 +163,11 @@ export default function CurrencyInputPanel({
         <Text className="balance" onClick={selectedCurrency && handelMaxClick}>
           Max:{" "}
           {selectedCurrencyBalance
-            ? formatToThousands(getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals))
+            ? formatToThousands(
+                getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
+                  maxDecimalPlace: selectedCurrency?.decimals,
+                }),
+              )
             : "-"}
         </Text>
       </Row>
@@ -229,7 +233,9 @@ export default function CurrencyInputPanel({
                       <LoadingOutlined />
                     ) : tokenWithBalance.balance && tokenWithBalance.balance !== "0x0" ? (
                       formatToThousands(
-                        getFullDisplayAmount(BI.from(tokenWithBalance.balance), tokenWithBalance.decimals),
+                        getFullDisplayAmount(BI.from(tokenWithBalance.balance), tokenWithBalance.decimals, {
+                          maxDecimalPlace: tokenWithBalance.decimals,
+                        }),
                       )
                     ) : (
                       "-"
