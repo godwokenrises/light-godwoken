@@ -37,7 +37,9 @@ export const Provider: React.FC = (props) => {
     detectEthereumProvider().then((ethereum: any) => {
       if (ethereum) {
         ethereum.request({ method: "eth_accounts" }).then((accounts: string[]) => {
-          if (!accounts || !accounts[0]) return;
+          if (accounts.length === 0) {
+            return setLightGodwoken(void 0);
+          }
 
           if (location.pathname.startsWith("/v0") && lightGodwoken?.getVersion() !== "v0") {
             setLightGodwoken(createLightGodwokenV0(accounts[0], ethereum));
@@ -47,7 +49,9 @@ export const Provider: React.FC = (props) => {
         });
 
         ethereum.on("accountsChanged", (accounts: string[] | undefined) => {
-          if (!accounts || !accounts[0]) return setLightGodwoken(undefined);
+          if (!accounts || accounts.length === 0) {
+            return setLightGodwoken(void 0);
+          }
 
           let instance: LightGodwoken;
           if (location.pathname.startsWith("/v0")) {

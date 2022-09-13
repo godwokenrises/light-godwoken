@@ -70,6 +70,7 @@ export default function Deposit() {
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const ethAddress = lightGodwoken?.provider.getL2Address();
+  const depositAddress = lightGodwoken?.generateDepositAddress();
   const godwokenVersion = useGodwokenVersion();
 
   const { txHistory: depositHistory, addTxToHistory, updateTxWithStatus } = useDepositHistory();
@@ -265,9 +266,10 @@ export default function Deposit() {
           </CardHeader>
           <WalletInfo
             l1Address={l1Address}
+            ethAddress={ethAddress}
+            depositAddress={depositAddress}
             l1Balance={CKBBalance}
             l2Balance={l2CKBBalance}
-            ethAddress={ethAddress}
           ></WalletInfo>
           <CKBInputPanel
             value={CKBInput}
