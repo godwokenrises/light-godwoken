@@ -393,10 +393,12 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
   ): Promise<RawWithdrawalRequestV1> {
-    const { layer2Config } = this.provider.getConfig();
+    const { lumosConfig, layer2Config } = this.provider.getConfig();
     const chainId = await this.getChainId();
     const ownerCkbAddress = payload.withdrawal_address || this.provider.l1Address;
-    const ownerLock = helpers.parseAddress(ownerCkbAddress);
+    const ownerLock = helpers.parseAddress(ownerCkbAddress, {
+      config: lumosConfig,
+    });
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const ethAddress = this.provider.l2Address;
     const l2AccountScript: Script = {
@@ -462,9 +464,14 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   generateDepositLock(_cancelTimeout?: number): Script {
+    const config = this.provider.getConfig();
+    const { lumosConfig, layer2Config } = config;
+
     const advancedSettings = this.getAdvancedSettings();
     const cancelTimeOut = _cancelTimeout || advancedSettings.cancelTimeOut;
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address, {
+      config: lumosConfig
+    });
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
 
@@ -479,13 +486,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
       V1DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
 
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getConfig().layer2Config;
-
-    const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
+    return {
+      code_hash: layer2Config.SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+      args: layer2Config.ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
     };
-    return depositLock;
   }
 }

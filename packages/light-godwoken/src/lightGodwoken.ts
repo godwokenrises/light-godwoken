@@ -318,7 +318,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let collectedSudtAmount = BI.from(0);
     const collectedCells: Cell[] = [];
     const ckbCollector = this.provider.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.provider.l1Address),
+      lock: helpers.parseAddress(this.provider.l1Address, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
     });
@@ -334,7 +336,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         neededCapacity = neededCapacity.add(BI.from(SUDT_CELL_CAPACITY));
       }
       const sudtCollector = this.provider.ckbIndexer.collector({
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
         type: payload.sudtType,
       });
       for await (const cell of sudtCollector.collect()) {
@@ -348,7 +352,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const freeCapacityProviderCells: Cell[] = [];
     if (collectedCapatity.lt(neededCapacity)) {
       const freeCkbCollector = this.provider.ckbIndexer.collector({
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
         type: {
           code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
           hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
@@ -695,7 +701,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const exchangeCell: Cell = {
       cell_output: {
         capacity: "0x" + exchangeCapacity.toString(16),
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
       },
       data: "0x",
     };
@@ -710,7 +718,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const exchangeSudtCell: Cell = {
         cell_output: {
           capacity: "0x0",
-          lock: helpers.parseAddress(this.provider.l1Address),
+          lock: helpers.parseAddress(this.provider.l1Address, {
+            config: this.getConfig().lumosConfig,
+          }),
           type: payload.sudtType,
         },
         data: sudtAmount,
@@ -840,7 +850,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const result: GetSudtBalancesResult = { balances: new Array(payload.types.length).fill("0x0") };
     const sudtTypeScript = payload.types[0]; // any sudt type script
     const collector = this.provider.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.provider.l1Address),
+      lock: helpers.parseAddress(this.provider.l1Address, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: {
         ...sudtTypeScript,
         args: "0x",

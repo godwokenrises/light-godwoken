@@ -106,7 +106,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const queryAddress = !!payload && !!payload.l1Address ? payload.l1Address : this.l1Address;
     let ckbBalance = BI.from(0);
     const pureCkbCollector = this.ckbIndexer.collector({
-      lock: helpers.parseAddress(queryAddress),
+      lock: helpers.parseAddress(queryAddress, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
     });
@@ -114,7 +116,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       ckbBalance = ckbBalance.add(cell.cell_output.capacity);
     }
     const freeCkbCollector = this.ckbIndexer.collector({
-      lock: helpers.parseAddress(queryAddress),
+      lock: helpers.parseAddress(queryAddress, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: {
         code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
         hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
@@ -138,7 +142,10 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       //      👇          👇            👇
       args: `0x01${l2Address.substring(2)}00`,
     };
-    return helpers.encodeToAddress(omniLock);
+
+    return helpers.encodeToAddress(omniLock, {
+      config: this.getConfig().lumosConfig,
+    });
   }
 
   // // now only supported omni lock, the other lock type will be supported later
@@ -244,11 +251,15 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   getLayer1Lock(): Script {
-    return helpers.parseAddress(this.l1Address);
+    return helpers.parseAddress(this.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
   }
 
   getLayer1LockScriptHash(): Hash {
-    const ownerCKBLock = helpers.parseAddress(this.l1Address);
+    const ownerCKBLock = helpers.parseAddress(this.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
     const ownerLock: Script = {
       code_hash: ownerCKBLock.code_hash,
       args: ownerCKBLock.args,

@@ -302,7 +302,12 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const eventEmitter = new EventEmitter();
     this.withdraw(
       eventEmitter,
-      { ...payload, withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock()) },
+      {
+        ...payload,
+        withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock(), {
+          config: this.getConfig().lumosConfig,
+        })
+      },
       true,
     );
     return eventEmitter;
@@ -325,8 +330,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     payload: WithdrawalEventEmitterPayload,
     withdrawToV1 = false,
   ): Promise<void> {
-    const { layer2Config } = this.provider.getConfig();
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    const { lumosConfig, layer2Config } = this.provider.getConfig();
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
+      config: lumosConfig,
+    });
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(
@@ -377,7 +384,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
   ): Promise<RawWithdrwal> {
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
     debug("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const accountScriptHash = this.provider.getLayer2LockScriptHash();
@@ -475,7 +484,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   generateDepositLock(): Script {
     const { cancelTimeOut } = this.getAdvancedSettings();
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
     const depositLockArgs = {
