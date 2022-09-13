@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { writeStorage } from "@rehooks/local-storage";
-import { UniversalToken } from "light-godwoken";
 import { useLightGodwoken } from "./useLightGodwoken";
+import { UniversalToken } from "light-godwoken";
 
 export interface DepositHistoryType {
   txHash: string;

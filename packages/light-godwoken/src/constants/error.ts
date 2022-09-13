@@ -9,6 +9,7 @@ export class LightGodwokenError<T> extends Error {
 }
 
 export class EthereumNotFoundError extends LightGodwokenError<string> {}
+export class LightGodwokenConfigNotFoundError extends LightGodwokenError<string> {}
 export class LightGodwokenConfigNotValidError extends LightGodwokenError<string> {}
 export class LightGodwokenNotFoundError extends LightGodwokenError<string> {}
 export class NotEnoughCapacityError extends LightGodwokenError<{ expected: BI; actual: BI }> {}
@@ -34,3 +35,5 @@ export class DepositTimeoutError extends LightGodwokenError<string> {}
 export class DepositRejectedError extends LightGodwokenError<string> {}
 export class DepositCanceledError extends LightGodwokenError<string> {}
 export class WithdrawalTimeoutError extends LightGodwokenError<string> {}
+
+export class TokenListNotFoundError extends LightGodwokenError<string> {}

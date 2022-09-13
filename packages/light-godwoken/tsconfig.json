@@ -11,9 +11,6 @@
     "src/**/*.json"
   ],
   "exclude": [
-    "dist",
-    "coverage",
-    "node_modules",
-    "src/__tests__"
+    "**/dist"
   ]
 }
