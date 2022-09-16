@@ -1,5 +1,6 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { notification } from "antd";
+import { providers } from "ethers";
 import React, { useMemo, useState } from "react";
 import { useERC20Balance } from "../../hooks/useERC20Balance";
 import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
@@ -17,6 +18,7 @@ import { parseStringToBI } from "../../utils/numberFormat";
 import { handleError } from "./service";
 import { getEstimateWaitTime } from "../../utils/dateUtils";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
+import { createLightGodwokenV1 } from "../../utils/lightGodwoken";
 
 const RequestWithdrawalV0: React.FC = () => {
   const [CKBInput, setCKBInput] = useState("");
@@ -55,10 +57,16 @@ const RequestWithdrawalV0: React.FC = () => {
           sudt_script_hash: sudt_script_hash,
         });
       } else {
+        const lightGodwokenV1 = createLightGodwokenV1(
+          lightGodwokenInstance.provider.getL2Address(),
+          lightGodwokenInstance.provider.getNetwork(),
+          (lightGodwokenInstance.provider.ethereum.provider as providers.Web3Provider).provider,
+        );
         e = lightGodwokenInstance.withdrawToV1WithEvent({
           capacity: capacity,
           amount: amount,
           sudt_script_hash: sudt_script_hash,
+          lightGodwoken: lightGodwokenV1,
         });
       }
     } catch (e) {

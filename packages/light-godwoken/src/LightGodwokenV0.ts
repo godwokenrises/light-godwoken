@@ -14,6 +14,7 @@ import {
   UniversalToken,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
+  WithdrawalToV1EventEmitterPayload,
   WithdrawResultV0,
 } from "./lightGodwokenType";
 import { CKB_SUDT_ID } from "./tokens";
@@ -81,7 +82,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   getVersion(): GodwokenVersion {
-    return "v0";
+    return GodwokenVersion.V0;
   }
 
   getNativeAsset(): UniversalToken {
@@ -272,8 +273,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await this.listWithdrawByOwnerLockHash(ownerLockHash);
   }
 
-  async listFastWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
-    const v1DepositLock = this.getV1DepositLock();
+  async listFastWithdrawWithScannerApi(lightGodwokenV1: DefaultLightGodwokenV1): Promise<WithdrawResultV0[]> {
+    const v1DepositLock = lightGodwokenV1.generateDepositLock();
     return await this.listWithdrawByOwnerLockHash(utils.computeScriptHash(v1DepositLock));
   }
 
@@ -331,31 +332,22 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
-  withdrawToV1WithEvent(payload: BaseWithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+  withdrawToV1WithEvent(payload: WithdrawalToV1EventEmitterPayload): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
+    const v1DepositLock = payload.lightGodwoken.generateDepositLock();
+    const withdrawalAddress = helpers.encodeToAddress(v1DepositLock, {
+      config: this.getConfig().lumosConfig,
+    });
+
     this.withdraw(
       eventEmitter,
       {
         ...payload,
-        withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock(), {
-          config: this.getConfig().lumosConfig,
-        }),
+        withdrawal_address: withdrawalAddress,
       },
       true,
     );
     return eventEmitter;
-  }
-
-  getV1DepositLock(): Script {
-    const provider = new DefaultLightGodwokenProvider(
-      this.provider.l2Address,
-      this.provider.ethereum,
-      this.getNetwork(),
-      "v1",
-      this.provider.getConfigMap(),
-    );
-    const lightGodwokenV1 = new DefaultLightGodwokenV1(provider);
-    return lightGodwokenV1.generateDepositLock();
   }
 
   async withdraw(

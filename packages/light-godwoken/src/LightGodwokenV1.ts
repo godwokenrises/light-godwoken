@@ -1,28 +1,27 @@
 import { GodwokenScanner } from "./godwokenScanner";
-import { helpers, Script, utils, BI, HashType, HexNumber, Hash, toolkit, HexString, Cell } from "@ckb-lumos/lumos";
+import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
 import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
 import {
-  WithdrawalEventEmitter,
-  WithdrawalEventEmitterPayload,
-  LightGodwokenV1,
-  ProxyERC20,
-  SUDT,
+  DepositResult,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
+  LightGodwokenV1,
+  ProxyERC20,
+  SUDT,
   UniversalToken,
+  WithdrawalEventEmitter,
+  WithdrawalEventEmitterPayload,
   WithdrawResultV1,
   WithdrawResultWithCell,
-  DepositResult,
 } from "./lightGodwokenType";
 import DefaultLightGodwoken from "./lightGodwoken";
 import { CKB_SUDT_ID } from "./tokens";
 import ERC20 from "./constants/ERC20.json";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrawalRequestV1, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
+import { RawWithdrawalRequestV1, V1DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV1";
 import { debug } from "./debug";
-import { V1DepositLockArgs } from "./schemas/codecV1";
 import {
   EthAddressFormatError,
   NotEnoughCapacityError,
@@ -33,7 +32,7 @@ import {
 } from "./constants/error";
 import { GodwokenVersion } from "./config";
 import { Contract as MulticallContract, Provider as MulticallProvider, setMulticallAddress } from "ethers-multicall";
-import { BigNumber, providers, Contract } from "ethers";
+import { BigNumber, Contract, providers } from "ethers";
 
 export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken implements LightGodwokenV1 {
   listWithdraw(): Promise<WithdrawResultWithCell[]> {
@@ -74,7 +73,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
   }
 
   getVersion(): GodwokenVersion {
-    return "v1";
+    return GodwokenVersion.V1;
   }
 
   getNativeAsset(): UniversalToken {

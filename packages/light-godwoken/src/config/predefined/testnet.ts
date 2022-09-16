@@ -1,7 +1,7 @@
 import { Layer1Config, LightGodwokenConfig, LightGodwokenConfigMap } from "../types";
 import { predefined } from "@ckb-lumos/config-manager";
 
-const layer1Config: Layer1Config = {
+export const TestnetLayer1Config: Layer1Config = {
   SCRIPTS: {
     omni_lock: {
       code_hash: "0x79f90bb5e892d80dd213439eeab551120eb417678824f282b4ffb5f21bad2e1e",
@@ -31,9 +31,9 @@ const layer1Config: Layer1Config = {
 };
 
 // https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/testnet_v0/config/scripts-deploy-result.json
-const layer2ConfigV0: LightGodwokenConfig = {
+export const TestnetLayer2ConfigV0: LightGodwokenConfig = {
   lumosConfig: predefined.AGGRON4,
-  layer1Config: layer1Config,
+  layer1Config: TestnetLayer1Config,
   layer2Config: {
     SCRIPTS: {
       deposit_lock: {
@@ -80,9 +80,9 @@ const layer2ConfigV0: LightGodwokenConfig = {
 };
 
 // https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/testnet_v1_1/scripts-deploy-result.json
-const layer2ConfigV1: LightGodwokenConfig = {
+export const TestnetLayer2ConfigV1: LightGodwokenConfig = {
   lumosConfig: predefined.AGGRON4,
-  layer1Config: layer1Config,
+  layer1Config: TestnetLayer1Config,
   layer2Config: {
     SCRIPTS: {
       deposit_lock: {
@@ -130,9 +130,7 @@ const layer2ConfigV1: LightGodwokenConfig = {
   },
 };
 
-const config: LightGodwokenConfigMap = {
-  v0: layer2ConfigV0,
-  v1: layer2ConfigV1,
+export const TestnetConfigMap: LightGodwokenConfigMap = {
+  v0: TestnetLayer2ConfigV0,
+  v1: TestnetLayer2ConfigV1,
 };
-
-export default config;

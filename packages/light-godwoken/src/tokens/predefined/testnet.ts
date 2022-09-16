@@ -1,6 +1,6 @@
 import { LightGodwokenToken } from "../constants";
 
-export const TOKEN_LIST_TESTNET_V0: LightGodwokenToken[] = [
+export const TestnetTokenListV0: LightGodwokenToken[] = [
   {
     id: 120,
     symbol: "TTKN",
@@ -66,7 +66,7 @@ export const TOKEN_LIST_TESTNET_V0: LightGodwokenToken[] = [
   },
 ];
 
-export const TOKEN_LIST_TESTNET_V1: LightGodwokenToken[] = [
+export const TestnetTokenListV1: LightGodwokenToken[] = [
   {
     id: 80,
     symbol: "TTKN",

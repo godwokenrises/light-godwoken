@@ -2,7 +2,7 @@ import { LightGodwokenToken } from "../constants";
 
 // https://raw.githubusercontent.com/nervosnetwork/godwoken-info/rfc-uan/mainnet_v0/ERC20TokenList.json
 // UAN: https://raw.githubusercontent.com/nervosnetwork/force-bridge/20f25902d2f86e54585881b53c62a5ec42da5e1a/configs/uan-token-list.json
-export const TOKEN_LIST_MAINNET_V0: LightGodwokenToken[] = [
+export const MainnetTokenListV0: LightGodwokenToken[] = [
   {
     id: 0,
     symbol: "dCKB",
@@ -575,7 +575,7 @@ export const TOKEN_LIST_MAINNET_V0: LightGodwokenToken[] = [
 
 // https://raw.githubusercontent.com/nervosnetwork/godwoken-info/rfc-uan/mainnet_v1/bridged-token-list.json
 // UAN: https://raw.githubusercontent.com/nervosnetwork/force-bridge/20f25902d2f86e54585881b53c62a5ec42da5e1a/configs/uan-token-list.json
-export const TOKEN_LIST_MAINNET_V1: LightGodwokenToken[] = [
+export const MainnetTokenListV1: LightGodwokenToken[] = [
   {
     id: 0,
     symbol: "dCKB",
