@@ -1,5 +1,6 @@
 import { Layer1Config, LightGodwokenConfig, LightGodwokenConfigMap } from "../types";
 import { predefined } from "@ckb-lumos/config-manager";
+import { predefinedTokens } from "../../tokens";
 
 export const MainnetLayer1Config: Layer1Config = {
   SCRIPTS: {
@@ -78,6 +79,7 @@ export const MainnetLayer2ConfigV0: LightGodwokenConfig = {
 
     MULTICALL_ADDRESS: "0x277FD6c744f7C16A997E5D626131eBd81d2D58Aa",
   },
+  tokenList: predefinedTokens.mainnet.v0,
 };
 
 // https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/mainnet_v1/scripts-deploy-result.json
@@ -130,6 +132,7 @@ export const MainnetLayer2ConfigV1: LightGodwokenConfig = {
     // https://github.com/mds1/multicall/commit/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7
     MULTICALL_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
+  tokenList: predefinedTokens.mainnet.v1,
 };
 
 export const MainnetConfigMap: LightGodwokenConfigMap = {

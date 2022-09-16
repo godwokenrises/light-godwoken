@@ -69,7 +69,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   getTokenList() {
-    return getTokenList(this.getNetwork(), this.getVersion());
+    return this.provider.getConfig().tokenList;
   }
 
   // in milliseconds

@@ -1,5 +1,6 @@
 import { CellDep, DepType, Hash, HashType, Hexadecimal, Script } from "@ckb-lumos/lumos";
 import { Config } from "@ckb-lumos/config-manager";
+import { LightGodwokenToken } from "../tokens";
 
 export enum GodwokenVersion {
   V0 = "v0",
@@ -62,6 +63,7 @@ export type LightGodwokenConfig = {
   lumosConfig: Config;
   layer1Config: Layer1Config;
   layer2Config: Layer2Config;
+  tokenList: LightGodwokenToken[];
 };
 
 export type LightGodwokenConfigMap = {
