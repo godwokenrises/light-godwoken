@@ -470,7 +470,7 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     const advancedSettings = this.getAdvancedSettings();
     const cancelTimeOut = _cancelTimeout || advancedSettings.cancelTimeOut;
     const ownerLock: Script = helpers.parseAddress(this.provider.l1Address, {
-      config: lumosConfig
+      config: lumosConfig,
     });
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();

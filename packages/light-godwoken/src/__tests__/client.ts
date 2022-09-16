@@ -13,7 +13,7 @@ export const lightGodwokenVersionMap = {
 
 type LightGodwokenVersionMap = typeof lightGodwokenVersionMap;
 
-export function createLightGodwoken<T extends keyof typeof lightGodwokenVersionMap>(
+export function createLightGodwoken<T extends keyof LightGodwokenVersionMap>(
   ethAddress: string,
   network: string,
   version: T,

@@ -339,7 +339,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         ...payload,
         withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock(), {
           config: this.getConfig().lumosConfig,
-        })
+        }),
       },
       true,
     );
