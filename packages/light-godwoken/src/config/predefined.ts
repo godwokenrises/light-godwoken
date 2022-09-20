@@ -3,6 +3,6 @@ import { MainnetConfigMap } from "./predefined/mainnet";
 import { TestnetConfigMap } from "./predefined/testnet";
 
 export const predefinedConfigs: Record<GodwokenNetwork, LightGodwokenConfigMap> = {
-  testnet: MainnetConfigMap,
-  mainnet: TestnetConfigMap,
+  testnet: TestnetConfigMap,
+  mainnet: MainnetConfigMap,
 };
