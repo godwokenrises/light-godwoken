@@ -76,6 +76,7 @@ export const testConfig: LightGodwokenConfigMap = {
       FINALITY_BLOCKS: 100,
       BLOCK_PRODUCE_TIME: 45,
     },
+    tokenList: [],
   },
   v1: {
     lumosConfig: predefined.AGGRON4,
@@ -122,5 +123,6 @@ export const testConfig: LightGodwokenConfigMap = {
       FINALITY_BLOCKS: 100,
       BLOCK_PRODUCE_TIME: 36,
     },
+    tokenList: [],
   },
 };
