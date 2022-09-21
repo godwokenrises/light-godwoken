@@ -1,8 +1,9 @@
+import { GodwokenVersion } from "light-godwoken";
 import React from "react";
 import WithdrawalV0 from "./WithdrawalV0";
 import WithdrawalV1 from "./WithdrawalV1";
+import { Placeholder } from "../../components/Placeholder";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { GodwokenVersion } from "light-godwoken";
 
 export default function Withdrawal() {
   const lightGodwoken = useLightGodwoken();
@@ -12,6 +13,10 @@ export default function Withdrawal() {
     v1: WithdrawalV1,
   };
 
-  const Page = version ? pages[version] : pages.v1;
+  if (!version || !Object.values(GodwokenVersion).includes(version)) {
+    return <Placeholder/>;
+  }
+
+  const Page = pages[version];
   return <Page />;
 }
