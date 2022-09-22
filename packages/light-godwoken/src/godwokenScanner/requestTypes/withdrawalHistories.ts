@@ -26,3 +26,8 @@ export type WithdrawalHistoryResponse = PagedResponse<
   TypedData<"withdrawal_history", WithdrawalHistory>,
   TypedData<"udt", Udt>
 >;
+
+export type WithdrawalHistoryV0Response = PagedResponse<
+  TypedData<"withdrawal_history", WithdrawalHistoryV0>,
+  TypedData<"udt", Udt>
+  >;
