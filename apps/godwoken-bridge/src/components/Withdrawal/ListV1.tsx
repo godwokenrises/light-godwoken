@@ -1,15 +1,16 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { LightGodwokenV1 } from "light-godwoken";
+import { AxiosError } from "axios";
 import styled from "styled-components";
 import Tooltip from "antd/lib/tooltip";
 import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
 import { LinkList, Tab } from "../../style/common";
-import { useQuery } from "react-query";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useInfiniteScroll } from "ahooks";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Placeholder } from "../Placeholder";
-import WithdrawalRequestCard from "./WithdrawalItemV1";
-import { LightGodwokenV1 } from "light-godwoken";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
+import WithdrawalRequestCard from "./WithdrawalItemV1";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -36,20 +37,42 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
   }
 
   const lightGodwoken = useLightGodwoken();
-  const withdrawalListQuery = useQuery(
-    ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
-    () => {
-      return (lightGodwoken as LightGodwokenV1).listWithdrawWithScannerApi();
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const withdrawalHistory = useInfiniteScroll(
+    async (data) => {
+      const page = data?.page ? data.page + 1 : 1;
+      const list = await getWithdrawalHistories(lightGodwoken as LightGodwokenV1, page);
+
+      return {
+        list,
+        page,
+        initialized: true,
+        hasMore: list.length > 0,
+      };
     },
     {
-      enabled: !!lightGodwoken,
-    },
+      manual: true,
+      target: listRef,
+      isNoMore: (data) => data?.hasMore === false,
+    }
   );
-  const { data: withdrawalList, isLoading } = withdrawalListQuery;
 
+  // When LightGodwoken client rebuild, reset pagination
+  useEffect(() => {
+    if (lightGodwoken && !withdrawalHistory.loading) {
+      withdrawalHistory.mutate(void 0);
+      withdrawalHistory.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken]);
+
+  const isLoading = withdrawalHistory.loading || withdrawalHistory.loadingMore;
+
+  const withdrawalList = withdrawalHistory?.data?.list || [];
   const pendingList = withdrawalList?.filter((history) => history.status === "pending") || [];
   const completedList = withdrawalList?.filter((history) => history.status !== "pending") || [];
-  console.log("withdrawalList v1 in local storage", localTxHistory);
+
   const displayLocalTxHistory = localTxHistory
     .filter((history) => history.status === "l2Pending")
     .map((history) => {
@@ -59,13 +82,10 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       };
     });
 
-  if (!lightGodwoken) {
-    return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
-  }
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;
   }
-  if (!withdrawalList) {
+  if (!lightGodwoken || !withdrawalHistory.data?.initialized) {
     return (
       <WithdrawalListDiv>
         <Placeholder />
@@ -98,7 +118,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
         </div>
       )}
       {isCompleted && (
-        <div className="list pending-list">
+        <div ref={listRef} className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw, index) => (
             <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
@@ -109,3 +129,25 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
     </WithdrawalListDiv>
   );
 };
+
+async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: number) {
+  try {
+    return await lightGodwoken.getWithdrawalHistories(page);
+  } catch (e) {
+    if (e instanceof AxiosError) {
+      const data = e.response?.data;
+      const status = data?.errors?.status || data?.error_code;
+
+      // 404 usually means we didn't find records of the account
+      if (status && Number(status) === 404) {
+        console.debug(
+          "/api/withdrawal_histories 404: cannot find withdrawal history for",
+          lightGodwoken.provider.getL2Address(),
+        );
+        return [];
+      }
+    }
+
+    throw e;
+  }
+}
