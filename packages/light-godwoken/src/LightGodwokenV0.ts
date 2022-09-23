@@ -272,7 +272,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await this.getWithdrawalHistoriesByOwnerLockHash(ownerLockHash, page);
   }
 
-  async getFastWithdrawalHistories(lightGodwokenV1: DefaultLightGodwokenV1, page?: number): Promise<WithdrawResultV0[]> {
+  async getFastWithdrawalHistories(
+    lightGodwokenV1: DefaultLightGodwokenV1,
+    page?: number,
+  ): Promise<WithdrawResultV0[]> {
     const v1DepositLock = lightGodwokenV1.generateDepositLock();
     return await this.getWithdrawalHistoriesByOwnerLockHash(utils.computeScriptHash(v1DepositLock), page);
   }

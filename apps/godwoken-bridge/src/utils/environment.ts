@@ -6,13 +6,9 @@ export const isMainnet = process.env.REACT_APP_NETWORK === GodwokenNetwork.Mainn
 // Available network versions,
 // some versions of the network is deprecated
 export const availableNetworkVersions: Record<GodwokenNetwork, GodwokenVersion[]> = {
-  [GodwokenNetwork.Mainnet]: [
-    GodwokenVersion.V1,
-    GodwokenVersion.V0,
-  ],
-  [GodwokenNetwork.Testnet]: [
-    GodwokenVersion.V1,
-  ],
+  [GodwokenNetwork.Mainnet]: [GodwokenVersion.V1, GodwokenVersion.V0],
+  [GodwokenNetwork.Testnet]: [GodwokenVersion.V1],
 };
 
-export const availableVersions = availableNetworkVersions[isMainnet ? GodwokenNetwork.Mainnet : GodwokenNetwork.Testnet];
+export const availableVersions =
+  availableNetworkVersions[isMainnet ? GodwokenNetwork.Mainnet : GodwokenNetwork.Testnet];
