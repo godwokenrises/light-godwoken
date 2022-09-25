@@ -593,7 +593,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }, 10000);
   }
 
-  subscribPendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
+  subscribePendingDepositTransactions(payload: PendingDepositTransaction[]): DepositEventEmitter {
     const eventEmitter = new EventEmitter();
     for (let index = 0; index < payload.length; index++) {
       const element = payload[index];
@@ -625,14 +625,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }, 10000);
   }
 
-  // subscribPendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
-  //   const eventEmitter = new EventEmitter();
-  //   for (let index = 0; index < txHashList.length; index++) {
-  //     const txHash = txHashList[index];
-  //     this.waitForWithdrawalToComplete(txHash, eventEmitter);
-  //   }
-  //   return eventEmitter;
-  // }
+  subscribePendingWithdrawalTransactions(txHashList: Hash[]): WithdrawalEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let index = 0; index < txHashList.length; index++) {
+      const txHash = txHashList[index];
+      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+    }
+    return eventEmitter;
+  }
 
   async calculateTxFee(tx: Transaction): Promise<BI> {
     const feeRate = await this.provider.getMinFeeRate();

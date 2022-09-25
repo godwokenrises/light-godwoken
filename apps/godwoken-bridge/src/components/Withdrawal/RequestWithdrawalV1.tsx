@@ -74,7 +74,28 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
       return;
     }
 
-    eventEmitter.on("sent", (txHash) => {
+    eventEmitter.on("sent", async (txHash) => {
+      console.log("sent withdrawal", txHash);
+
+      const erc20List = lightGodwoken.getBuiltinErc20List();
+      const erc20 = erc20List.find((e) => e.sudt_script_hash.slice(-64) === sudt_script_hash.slice(-64));
+      addTxToHistory({
+        type: "withdrawal",
+        status: "l2Pending",
+        txHash,
+        capacity,
+        amount,
+        token: erc20,
+        symbol: erc20?.symbol,
+        decimals: erc20?.decimals,
+      });
+
+      setCKBInput("");
+      setSudtValue("");
+      setLoading(false);
+    });
+
+    /*eventEmitter.on("success", (txHash) => {
       notification.success({
         message: `Withdrawal Tx(${txHash}) has been sent,it will take less than 5 minutes before the tx can be tracked and appear in the pending list, please wait...`,
         duration: 0,
@@ -82,7 +103,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
       setCKBInput("");
       setSudtValue("");
       setLoading(false);
-    });
+    });*/
 
     eventEmitter.on("fail", (result: unknown) => {
       setLoading(false);

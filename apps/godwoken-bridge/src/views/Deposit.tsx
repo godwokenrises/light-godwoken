@@ -117,7 +117,7 @@ export default function Deposit() {
   useMemo(() => {
     const pendingList = depositHistory.filter((history) => history.status === "pending");
     const subscribePayload = pendingList.map(({ txHash }) => ({ tx_hash: txHash }));
-    const listener = lightGodwoken?.subscribPendingDepositTransactions(subscribePayload);
+    const listener = lightGodwoken?.subscribePendingDepositTransactions(subscribePayload);
     if (listener) {
       listener.on("success", (txHash) => {
         updateTxWithStatus(txHash, "success");

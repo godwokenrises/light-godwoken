@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import { LightGodwokenV1 } from "light-godwoken";
+import React, { useEffect, useRef, useState } from "react";
+import { LightGodwokenV1, WithdrawalEventEmitter } from "light-godwoken";
 import { AxiosError } from "axios";
 import styled from "styled-components";
 import Tooltip from "antd/lib/tooltip";
@@ -27,7 +27,7 @@ interface Props {
   updateTxWithStatus: (txHash: string, status: string) => void;
 }
 
-export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) => {
+export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, updateTxWithStatus }) => {
   const params = useParams();
   const navigate = useNavigate();
   const isPending = params.status === "pending";
@@ -55,7 +55,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       manual: true,
       target: listRef,
       isNoMore: (data) => data?.hasMore === false,
-    }
+    },
   );
 
   // When LightGodwoken client rebuild, reset pagination
@@ -75,12 +75,30 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
 
   const displayLocalTxHistory = localTxHistory
     .filter((history) => history.status === "l2Pending")
-    .map((history) => {
-      return {
-        ...history,
-        status: "l2Pending",
-      };
-    });
+    .map((history) => ({
+      ...history,
+      status: "l2Pending",
+      token
+    }));
+
+  useEffect(() => {
+    if (lightGodwoken) {
+      const txHashes = displayLocalTxHistory.map((tx) => tx.txHash);
+      const listener = lightGodwoken!.subscribePendingWithdrawalTransactions(txHashes);
+
+      console.log("watch", txHashes);
+
+      listener.on("success", async (txHash) => {
+        const withdrawal = await lightGodwoken!.getWithdrawal(txHash);
+        console.log("success", txHash, withdrawal);
+        updateTxWithStatus(txHash, "pending");
+      });
+      listener.on("fail", (e) => {
+        console.log("error while listening to withdrawals", e);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken, displayLocalTxHistory]);
 
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;

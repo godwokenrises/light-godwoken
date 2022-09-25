@@ -218,9 +218,11 @@ export interface LightGodwokenBase {
 
   depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;
 
-  subscribPendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
+  subscribePendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+
+  subscribePendingWithdrawalTransactions: (payload: Hash[]) => DepositEventEmitter;
 
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 

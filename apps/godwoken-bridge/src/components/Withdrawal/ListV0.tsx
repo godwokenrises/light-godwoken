@@ -5,7 +5,6 @@ import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOu
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { LightGodwokenV0 } from "light-godwoken";
 import { useInfiniteScroll } from "ahooks";
-import { useQuery } from "react-query";
 import { providers } from "ethers";
 import { LinkList, Tab } from "../../style/common";
 import { useClock } from "../../hooks/useClock";
@@ -43,12 +42,8 @@ export const WithdrawalList: React.FC = () => {
   const listRef = useRef<HTMLDivElement>(null);
   const withdrawalHistory = useInfiniteScroll(
     async (data) => {
-      const normalPage = data?.normalpage
-        ? (data?.normalHasMore ? data?.normalpage + 1 : data?.normalPage)
-        : 1;
-      const fastPage = data?.fastPage
-        ? (data?.fastHasMore  ? data?.fastPage + 1 : data?.fastPage)
-        : 1;
+      const normalPage = data?.normalpage ? (data?.normalHasMore ? data?.normalpage + 1 : data?.normalPage) : 1;
+      const fastPage = data?.fastPage ? (data?.fastHasMore ? data?.fastPage + 1 : data?.fastPage) : 1;
 
       const [normalList, fastList] = await Promise.all([
         (() => {
@@ -71,10 +66,7 @@ export const WithdrawalList: React.FC = () => {
 
       return {
         initialized: true,
-        list: [
-          ...normalList,
-          ...fastList,
-        ],
+        list: [...normalList, ...fastList],
         normalPage,
         normalHasMore,
         fastPage,
@@ -86,7 +78,7 @@ export const WithdrawalList: React.FC = () => {
       manual: true,
       target: listRef,
       isNoMore: (data) => data?.hasMore === false,
-    }
+    },
   );
 
   // When LightGodwoken client rebuild, reset pagination
