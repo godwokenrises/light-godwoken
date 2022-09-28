@@ -1,9 +1,23 @@
-import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import {
+  BI,
+  Cell,
+  CellDep,
+  Hash,
+  HashType,
+  helpers,
+  HexNumber,
+  HexString,
+  Script,
+  Transaction,
+  core,
+  toolkit,
+  utils,
+  WitnessArgs,
+} from "@ckb-lumos/lumos";
 import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
-  BaseWithdrawalEventEmitterPayload,
   DepositResult,
   GetErc20Balances,
   GetErc20BalancesResult,
@@ -12,6 +26,7 @@ import {
   ProxyERC20,
   SUDT,
   UniversalToken,
+  UnlockPayload,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
   WithdrawalToV1EventEmitterPayload,
@@ -22,12 +37,13 @@ import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import { RawWithdrwal, RawWithdrwalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
+import { RawWithdrawal, RawWithdrawalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
 import { debug } from "./debug";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
 import {
   Erc20NotFoundError,
   EthAddressFormatError,
+  Layer1RpcError,
   Layer2AccountIdNotFoundError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
@@ -39,7 +55,7 @@ import { setMulticallAddress } from "ethers-multicall";
 import { Contract as MulticallContract } from "ethers-multicall/dist/contract";
 import { Provider as MulticallProvider } from "ethers-multicall/dist/provider";
 import { PolyjuiceJsonRpcProvider } from "@polyjuice-provider/ethers";
-import { GodwokenVersion } from "./config";
+import { getCellDep, GodwokenVersion } from "./config";
 import { GodwokenScanner } from "./godwokenScanner";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
@@ -287,29 +303,41 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     }
 
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    return histories.data.map((data) => {
+    const erc20List = this.getBuiltinErc20List();
+    const erc20Map = erc20List.reduce((map: Record<string, ProxyERC20>, row) => {
+      map[row.sudt_script_hash.slice(-64)] = row;
+      return map;
+    }, {});
+
+    const promises = histories.data.map(async (data) => {
       const item = data.attributes;
+      const cell = await this.provider.getLayer1Cell({
+        tx_hash: item.layer1_tx_hash,
+        index: BI.from(item.layer1_output_index).toHexString(),
+      });
 
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
         amount = BI.from(item.amount).toHexString();
-        erc20 = this.getBuiltinErc20List().find(
-          (e) => e.sudt_script_hash.slice(-64) === item.udt_script_hash.slice(-64),
-        );
+        erc20 = erc20Map[item.udt_script_hash.slice(-64)];
       }
+
       return {
+        cell: cell ?? void 0,
         isFastWithdrawal: item.is_fast_withdrawal,
         layer1TxHash: item.layer1_tx_hash,
         withdrawalBlockNumber: item.block_number,
         remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
         capacity: BI.from(item.capacity).toHexString(),
-        amount,
         sudt_script_hash: item.udt_script_hash,
+        amount,
         erc20,
-        status: item.state === "succeed" ? "success" : item.state,
+        status: item.state,
       };
     });
+
+    return await Promise.all(promises);
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -369,7 +397,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(
-      new toolkit.Reader(RawWithdrwalCodec.pack(rawWithdrawalRequest)).serializeJson(),
+      new toolkit.Reader(RawWithdrawalCodec.pack(rawWithdrawalRequest)).serializeJson(),
       layer2Config.ROLLUP_CONFIG.rollup_type_hash,
     );
     debug("message:", message);
@@ -415,7 +443,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   async generateRawWithdrawalRequest(
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
-  ): Promise<RawWithdrwal> {
+  ): Promise<RawWithdrawal> {
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
       config: this.getConfig().lumosConfig,
     });
@@ -512,6 +540,122 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     });
 
     return rawWithdrawalRequest;
+  }
+
+  async unlock({ cell }: UnlockPayload): Promise<Hash> {
+    const isSudtCell = cell.cell_output.type !== void 0;
+    const l1Address = this.provider.getL1Address();
+    const l1Lock = helpers.parseAddress(l1Address);
+    const outputCells: Cell[] = [];
+
+    if (isSudtCell) {
+      const sudtCapacity = helpers.minimalCellCapacityCompatible({
+        cell_output: {
+          capacity: "0x0",
+          lock: l1Lock,
+          type: cell.cell_output.type,
+        },
+        data: cell.data,
+      });
+      const capacityLeft = BI.from(cell.cell_output.capacity).sub(sudtCapacity);
+
+      debug("unlock sudt cell capacity", sudtCapacity, capacityLeft);
+
+      outputCells.push({
+        cell_output: {
+          capacity: capacityLeft.toHexString(),
+          lock: l1Lock,
+        },
+        data: "0x",
+      });
+      outputCells.push({
+        cell_output: {
+          lock: l1Lock,
+          type: cell.cell_output.type,
+          capacity: `0x${sudtCapacity.toString(16)}`,
+        },
+        data: cell.data,
+      });
+    } else {
+      outputCells.push({
+        cell_output: {
+          lock: l1Lock,
+          type: cell.cell_output.type,
+          capacity: cell.cell_output.capacity,
+        },
+        data: cell.data,
+      });
+    }
+
+    const { layer1Config, layer2Config } = this.provider.getConfig();
+    const rollupCellDep: CellDep = await this.getRollupCellDep();
+    let txSkeleton = helpers.TransactionSkeleton({
+      cellProvider: this.provider.ckbIndexer,
+    });
+
+    const withdrawalLockCellDep = layer2Config.SCRIPTS.withdrawal_lock.cell_dep;
+    const withdrawalLockDep: CellDep = {
+      out_point: {
+        tx_hash: withdrawalLockCellDep.out_point.tx_hash,
+        index: withdrawalLockCellDep.out_point.index,
+      },
+      dep_type: withdrawalLockCellDep.dep_type,
+    };
+
+    const newWitnessArgs: WitnessArgs = {
+      lock: "0x0000000004000000",
+    };
+    const withdrawalWitness = new toolkit.Reader(
+      core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
+    ).serializeJson();
+
+    txSkeleton = txSkeleton
+      .update("inputs", (inputs) => {
+        return inputs.push(cell);
+      })
+      .update("outputs", (outputs) => {
+        return outputs.push(...outputCells);
+      })
+      .update("cellDeps", (cellDeps) => {
+        cellDeps = cellDeps.push(
+          withdrawalLockDep,
+          rollupCellDep,
+          getCellDep(layer1Config.SCRIPTS.omni_lock),
+          getCellDep(layer1Config.SCRIPTS.secp256k1_blake160),
+        );
+        if (isSudtCell) {
+          cellDeps = cellDeps.push(getCellDep(layer1Config.SCRIPTS.sudt));
+        }
+
+        debug("unlock cellDeps", cellDeps);
+        return cellDeps;
+      })
+      .update("witnesses", (witnesses) => {
+        return witnesses.push(withdrawalWitness);
+      });
+
+    // fee paid for this tx should cost no more than 1000 shannon
+    const maxTxFee = BI.from(1000);
+    txSkeleton = await this.appendPureCkbCell(txSkeleton, l1Lock, maxTxFee);
+    txSkeleton = await this.payTxFee(txSkeleton);
+
+    // sign tx
+    let signedTx: Transaction;
+    try {
+      debug("before sign unlock tx", txSkeleton);
+      signedTx = await this.provider.signL1TxSkeleton(txSkeleton);
+    } catch (e) {
+      throw new TransactionSignError(txSkeleton.toString(), "Failed to sign transaction");
+    }
+
+    // send l1 transaction
+    try {
+      debug("sending unlock tx", signedTx);
+      return await this.provider.sendL1Transaction(signedTx);
+    } catch (e) {
+      debug("failed to send unlock tx", e);
+      throw new Layer1RpcError(signedTx.toString(), "Failed to send transaction");
+    }
   }
 
   generateDepositLock(): Script {

@@ -115,12 +115,13 @@ export interface WithdrawResultWithCell extends WithdrawBase {
 }
 export interface WithdrawResultV1 extends WithdrawBase {
   layer1TxHash: HexString;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "available" | "succeed" | "failed";
 }
 export interface WithdrawResultV0 extends WithdrawBase {
+  cell?: Cell;
   layer1TxHash: HexString;
   isFastWithdrawal: boolean;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "available" | "succeed" | "failed";
 }
 
 export interface UnlockPayload {
@@ -237,7 +238,7 @@ export interface LightGodwokenBase {
 
 export interface LightGodwokenV0 extends LightGodwokenBase {
   getMinimalWithdrawalToV1Capacity(): BI;
-  // unlock: (payload: UnlockPayload) => Promise<Hash>;
+  unlock: (payload: UnlockPayload) => Promise<Hash>;
   withdrawToV1WithEvent: (payload: WithdrawalToV1EventEmitterPayload) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {}

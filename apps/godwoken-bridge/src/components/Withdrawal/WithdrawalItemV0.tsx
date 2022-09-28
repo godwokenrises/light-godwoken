@@ -1,18 +1,19 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
-import getTimePeriods from "../../utils/getTimePeriods";
-import { getDisplayAmount } from "../../utils/formatTokenAmount";
+import { Tooltip } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
 import { BI, Cell, HexNumber, HexString } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "light-godwoken";
+import getTimePeriods from "../../utils/getTimePeriods";
+import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { ReactComponent as ArrowDownIcon } from "../../assets/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../assets/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
-import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
-import { Tooltip } from "antd";
 import { TokenInfoWithAmount } from "./TokenInfoWithAmount";
+import Unlock from "./Unlock";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -86,12 +87,12 @@ export interface IWithdrawalRequestCardProps {
   remainingBlockNumber?: number;
   capacity: HexNumber;
   amount: HexNumber;
-  status: string;
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
   layer1TxHash?: HexString;
   isFastWithdrawal: boolean;
+  status: "pending" | "available" | "succeed" | "failed";
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
@@ -99,6 +100,7 @@ const WithdrawalRequestCard = ({
   amount,
   status,
   erc20,
+  cell,
   now = 0,
   layer1TxHash,
   isFastWithdrawal,
@@ -157,7 +159,7 @@ const WithdrawalRequestCard = ({
           {erc20 && <TokenInfoWithAmount amount={amount} {...erc20} />}
           <div className="ckb-amount">
             <div className="ckb-icon">
-              <CKBIcon></CKBIcon>
+              <CKBIcon />
             </div>
             <MainText>{CKBAmount}</MainText>
             {isFastWithdrawal && (
@@ -170,23 +172,22 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" &&
-            (shouldShowMore ? (
-              <div className="time">
-                <ArrowUpIcon />
-              </div>
-            ) : (
-              <div className="time">
-                <MainText title="Estimated time left">{isDue ? "Unlocking, please wait..." : countdownText}</MainText>
-                {isDue ? null : <ArrowDownIcon />}
-              </div>
-            ))}
-          {status === "success" && (
-            <>
-              <Tooltip title={status}>
-                <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
-              </Tooltip>
-            </>
+          {status === "pending" && shouldShowMore && (
+            <div className="time">
+              <ArrowUpIcon />
+            </div>
+          )}
+          {status === "pending" && !shouldShowMore && (
+            <div className="time">
+              <MainText title="Estimated time left">{isDue ? "Unlocking, please wait..." : countdownText}</MainText>
+              {isDue ? null : <ArrowDownIcon />}
+            </div>
+          )}
+          {status === "available" && cell && <Unlock cell={cell} erc20={erc20} />}
+          {status === "succeed" && (
+            <Tooltip title={status}>
+              <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
           )}
           {status === "failed" && (
             <Tooltip title="Withdrawal failed">
@@ -195,7 +196,7 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
-      {status === "success" && (
+      {status === "succeed" && (
         <div className="list-detail">
           <FixedHeightRow>
             <MainText title={layer1TxHash}>

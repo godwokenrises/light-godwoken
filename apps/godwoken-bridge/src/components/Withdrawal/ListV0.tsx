@@ -5,7 +5,6 @@ import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOu
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { LightGodwokenV0 } from "light-godwoken";
 import { useInfiniteScroll } from "ahooks";
-import { useQuery } from "react-query";
 import { providers } from "ethers";
 import { LinkList, Tab } from "../../style/common";
 import { useClock } from "../../hooks/useClock";
@@ -136,7 +135,7 @@ export const WithdrawalList: React.FC = () => {
         <div className="list pending-list">
           {pendingList.length === 0 && "There is no pending withdrawal request here"}
           {pendingList.map((withdraw, index) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}
         </div>
       )}
@@ -144,7 +143,7 @@ export const WithdrawalList: React.FC = () => {
         <div className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw: any, index: number) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}
         </div>
       )}

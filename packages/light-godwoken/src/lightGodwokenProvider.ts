@@ -242,9 +242,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   getLayer2LockScriptHash(): Hash {
-    const accountScriptHash = utils.computeScriptHash(this.getLayer2LockScript());
-    debug("accountScriptHash", accountScriptHash);
-    return accountScriptHash;
+    return utils.computeScriptHash(this.getLayer2LockScript());
   }
 
   getLayer1Lock(): Script {
@@ -262,9 +260,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       args: ownerCKBLock.args,
       hash_type: ownerCKBLock.hash_type as HashType,
     };
-    const ownerLockHash = utils.computeScriptHash(ownerLock);
-    debug("ownerLockHash", ownerLockHash);
-    return ownerLockHash;
+    return utils.computeScriptHash(ownerLock);
   }
 
   async getLayer1Cell(outPoint: OutPoint): Promise<Cell | null> {

@@ -177,7 +177,7 @@ const WithdrawalRequestCard = ({
                 <ArrowDownIcon />
               </div>
             ))}
-          {status === "success" && (
+          {status === "succeed" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
@@ -196,7 +196,7 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
-      {status === "success" && (
+      {status === "succeed" && (
         <div className="list-detail">
           <FixedHeightRow>
             <MainText title={layer1TxHash}>
