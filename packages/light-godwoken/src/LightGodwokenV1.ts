@@ -234,11 +234,17 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     );
   }
 
-  async listWithdrawWithScannerApi(): Promise<WithdrawResultV1[]> {
+  async getWithdrawalHistories(page?: number): Promise<WithdrawResultV1[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
-    const histories = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash);
+    const histories = await this.godwokenScannerClient.getWithdrawalHistories(ownerLockHash, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    return histories.map((item) => {
+    return histories.data.map((data) => {
+      const item = data.attributes;
+
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
