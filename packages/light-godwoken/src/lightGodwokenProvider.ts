@@ -12,8 +12,8 @@ import { EthereumProvider } from "./ethereumProvider";
 import { OmniLockWitnessLockCodec } from "./schemas/codecLayer1";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } from "./lightGodwokenType";
-import { initConfigMap, validateLightGodwokenConfig } from "./config";
-import { GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./config";
+import { initConfig, validateLightGodwokenConfig } from "./config";
+import { GodwokenVersion, LightGodwokenConfig, GodwokenNetwork } from "./config";
 import { EnvNotFoundError } from "./constants/error";
 import { debug } from "./debug";
 
@@ -27,20 +27,19 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   ethereum: EthereumProvider;
 
   config: LightGodwokenConfig;
-  configMap: LightGodwokenConfigMap;
-
   network: GodwokenNetwork | string;
 
-  constructor(
-    ethAddress: Address,
-    ethereum: EthereumProvider,
-    network: GodwokenNetwork | string,
-    env: GodwokenVersion,
-    configMap?: LightGodwokenConfigMap,
-  ) {
-    if (configMap) validateLightGodwokenConfig(configMap[env]);
-    this.configMap = initConfigMap(configMap ?? network);
-    this.config = this.configMap[env];
+  constructor(params: {
+    ethAddress: Address;
+    ethereum: EthereumProvider;
+    network: GodwokenNetwork | string;
+    version: GodwokenVersion;
+    config?: LightGodwokenConfig;
+  }) {
+    const { ethAddress, ethereum, network, version, config } = params;
+
+    if (config) validateLightGodwokenConfig(config);
+    this.config = initConfig(config ?? network, version);
 
     const { layer1Config, layer2Config, lumosConfig } = this.config;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
@@ -48,13 +47,13 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
     initializeConfig(lumosConfig);
 
-    if (env === "v0") {
+    if (version === "v0") {
       const polyjuiceProvider = new PolyjuiceHttpProvider(layer2Config.GW_POLYJUICE_RPC_URL, {
         web3Url: layer2Config.GW_POLYJUICE_RPC_URL,
         abiItems: SUDT_ERC20_PROXY_ABI as AbiItems,
       });
       this.web3 = new Web3(polyjuiceProvider as any);
-    } else if (env === "v1") {
+    } else if (version === "v1") {
       // TODO: AdaptProvider and Web3
       if (ethereum.provider instanceof providers.Web3Provider) {
         this.web3 = new Web3(ethereum.provider.provider as any);
@@ -62,7 +61,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
         this.web3 = new Web3(ethereum.provider as any);
       }
     } else {
-      throw new EnvNotFoundError(env, "unsupported env");
+      throw new EnvNotFoundError(version, "unsupported env");
     }
 
     this.network = network;
@@ -86,9 +85,6 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getConfig(): LightGodwokenConfig {
     return this.config;
-  }
-  getConfigMap(): LightGodwokenConfigMap {
-    return this.configMap;
   }
   getNetwork(): GodwokenNetwork | string {
     return this.network;

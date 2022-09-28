@@ -3,12 +3,13 @@ import LightGodwokenV0 from "../LightGodwokenV0";
 import LightGodwokenProvider from "../lightGodwokenProvider";
 import { generateCellInput } from "./utils";
 import { createLightGodwoken } from "./client";
+import { GodwokenNetwork, GodwokenVersion } from "../config";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenProviderV0: LightGodwokenProvider;
 beforeEach(() => {
   const ethAddress = "0x62A67949836b389ec146B3B2187e949F7fAEF679";
-  lightGodwokenV0 = createLightGodwoken(ethAddress, "testnet", "v0");
+  lightGodwokenV0 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V0);
   lightGodwokenProviderV0 = lightGodwokenV0.provider;
 });
 

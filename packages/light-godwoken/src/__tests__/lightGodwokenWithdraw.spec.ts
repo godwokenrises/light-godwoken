@@ -6,6 +6,7 @@ import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { deBifyRawWithdrawalRequestV0, deBifyRawWithdrawalRequestV1, dummyScriptHash } from "./utils";
 import { BI } from "@ckb-lumos/lumos";
 import { createLightGodwoken } from "./client";
+import { GodwokenNetwork, GodwokenVersion } from "../config";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -13,18 +14,18 @@ let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
-  lightGodwokenV0 = createLightGodwoken(ethAddress, "testnet", "v0");
+  lightGodwokenV0 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V0);
   lightGodwokenProviderV0 = lightGodwokenV0.provider;
-  lightGodwokenV1 = createLightGodwoken(ethAddress, "testnet", "v1");
+  lightGodwokenV1 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V1);
   lightGodwokenProviderV1 = lightGodwokenV1.provider;
 
   sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x9"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve("0x1"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
 
-  sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
+  /*sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
   sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-  sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
+  sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));*/
 });
 
 describe("test light godwoken v1 withdrawal", () => {

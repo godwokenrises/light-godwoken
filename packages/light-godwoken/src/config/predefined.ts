@@ -1,8 +1,8 @@
 import { GodwokenNetwork, LightGodwokenConfigMap } from "./types";
-import testnet from "./predefined/testnet";
-import mainnet from "./predefined/mainnet";
+import { MainnetConfigMap } from "./predefined/mainnet";
+import { TestnetConfigMap } from "./predefined/testnet";
 
 export const predefinedConfigs: Record<GodwokenNetwork, LightGodwokenConfigMap> = {
-  testnet,
-  mainnet,
+  testnet: TestnetConfigMap,
+  mainnet: MainnetConfigMap,
 };

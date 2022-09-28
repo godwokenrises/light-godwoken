@@ -1,6 +1,7 @@
 import { GodwokenNetwork, GodwokenVersion } from "../config";
 
-export const CKB_SUDT_ID = 1; // This is default sudt id for CKB on Godwoken
+// This is default sudt id for CKB on Godwoken
+export const CKB_SUDT_ID = 1;
 
 export interface LightGodwokenToken {
   id: number;

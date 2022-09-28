@@ -2,7 +2,7 @@ import { LightGodwokenToken } from "../constants";
 
 // https://raw.githubusercontent.com/nervosnetwork/godwoken-info/rfc-uan/mainnet_v0/ERC20TokenList.json
 // UAN: https://raw.githubusercontent.com/nervosnetwork/force-bridge/20f25902d2f86e54585881b53c62a5ec42da5e1a/configs/uan-token-list.json
-export const TOKEN_LIST_MAINNET_V0: LightGodwokenToken[] = [
+export const MainnetTokenListV0: LightGodwokenToken[] = [
   {
     id: 0,
     symbol: "dCKB",
@@ -19,7 +19,7 @@ export const TOKEN_LIST_MAINNET_V0: LightGodwokenToken[] = [
     symbol: "TAI",
     name: "TAI",
     decimals: 8,
-    tokenURI: "",
+    tokenURI: "https://tokens.yokaiswap.com/images/0x291c64443c15E0632B2c4C742CB2b4b49CA36993.png",
     address: "0xf4187511D43B90751a28b6811d13AFB49BeF8452",
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
     layer1UAN: "TAI.ckb",
@@ -575,7 +575,7 @@ export const TOKEN_LIST_MAINNET_V0: LightGodwokenToken[] = [
 
 // https://raw.githubusercontent.com/nervosnetwork/godwoken-info/rfc-uan/mainnet_v1/bridged-token-list.json
 // UAN: https://raw.githubusercontent.com/nervosnetwork/force-bridge/20f25902d2f86e54585881b53c62a5ec42da5e1a/configs/uan-token-list.json
-export const TOKEN_LIST_MAINNET_V1: LightGodwokenToken[] = [
+export const MainnetTokenListV1: LightGodwokenToken[] = [
   {
     id: 0,
     symbol: "dCKB",
@@ -592,7 +592,7 @@ export const TOKEN_LIST_MAINNET_V1: LightGodwokenToken[] = [
     symbol: "TAI",
     name: "TAI",
     decimals: 8,
-    tokenURI: "",
+    tokenURI: "https://tokens.yokaiswap.com/images/0x291c64443c15E0632B2c4C742CB2b4b49CA36993.png",
     address: "0x291c64443c15E0632B2c4C742CB2b4b49CA36993",
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
     layer1UAN: "TAI.ckb",
@@ -1149,7 +1149,7 @@ export const TOKEN_LIST_MAINNET_V1: LightGodwokenToken[] = [
     symbol: "YOK",
     name: "YokaiSwap Token",
     decimals: 18,
-    tokenURI: "",
+    tokenURI: "https://tokens.yokaiswap.com/images/0x885fb612947ccF1C7611894Bd828D388b046fc24.png",
     address: "0x885fb612947ccF1C7611894Bd828D388b046fc24",
     l1LockArgs: "0x656edac5463ef828a1a95f214b56adfe8f37da148fbc7ff424905e5264297c70",
     layer1UAN: "YOK.ckb",

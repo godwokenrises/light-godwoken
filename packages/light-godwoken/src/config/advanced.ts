@@ -1,45 +1,50 @@
 import { GodwokenVersion, GodwokenNetwork } from "./types";
 import { getPredefinedConfig } from "./config";
 import { isBrowser } from "./utils";
+import { debug } from "../debug";
 
 export interface AdvancedSettings {
   MIN_CANCEL_DEPOSIT_TIME: number;
 }
-export type AdvancedSettingsMap = Record<GodwokenVersion, AdvancedSettings>;
+export type AdvancedSettingsMap = {
+  [key in GodwokenVersion]?: AdvancedSettings;
+};
 export function getAdvancedSettings(network: GodwokenNetwork | string, version: GodwokenVersion): AdvancedSettings {
-  const stored = getAdvancedSettingsMap();
-  if (stored) return stored[version];
+  const stored = getStoredAdvancedSettings(version);
+  if (stored) return stored;
 
-  const config = getPredefinedConfig(network);
+  const config = getPredefinedConfig(network, version);
   return {
-    MIN_CANCEL_DEPOSIT_TIME: config[version].layer2Config.MIN_CANCEL_DEPOSIT_TIME,
+    MIN_CANCEL_DEPOSIT_TIME: config.layer2Config.MIN_CANCEL_DEPOSIT_TIME,
   };
 }
 
 export interface StoredAdvanceSettings {
-  value?: AdvancedSettingsMap;
+  value: AdvancedSettingsMap;
 }
 export const advanced: StoredAdvanceSettings = {
-  value: void 0,
+  value: {},
 };
-export function setAdvancedSettingsMap(settings: AdvancedSettingsMap) {
+
+export function setAdvancedSettings(version: GodwokenVersion, settings: AdvancedSettings) {
   if (isBrowser()) {
     const storage = Reflect.get(window, "localStorage");
-    storage.setItem("advanced-settings", JSON.stringify(settings));
+    storage.setItem(`advanced-settings-${version}`, JSON.stringify(settings));
   } else {
-    advanced.value = settings;
+    advanced.value[version] = settings;
   }
 }
-export function getAdvancedSettingsMap() {
+export function getStoredAdvancedSettings(version: GodwokenVersion): AdvancedSettings | undefined {
   if (isBrowser()) {
     try {
       const storage = Reflect.get(window, "localStorage");
-      const stored = storage.getItem("advanced-settings");
-      if (stored) return JSON.parse(stored);
+      const stored = storage.getItem(`advanced-settings-${version}`);
+      return stored ? (JSON.parse(stored) as AdvancedSettings) : void 0;
     } catch (e) {
-      console.warn("[getAdvancedSettingsMap] Local advanced-settings is empty");
+      debug("[getStoredAdvancedSettings] Local advanced-settings is empty");
+      return void 0;
     }
   } else {
-    return advanced.value;
+    return advanced.value?.[version];
   }
 }

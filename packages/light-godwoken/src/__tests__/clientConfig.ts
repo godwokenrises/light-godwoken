@@ -1,5 +1,6 @@
 import { Layer1Config, LightGodwokenConfigMap } from "../config";
 import { predefined } from "@ckb-lumos/config-manager";
+import { predefinedTokens } from "../tokens";
 
 const layer1ConfigAggron: Layer1Config = {
   SCRIPTS: {
@@ -76,6 +77,7 @@ export const testConfig: LightGodwokenConfigMap = {
       FINALITY_BLOCKS: 100,
       BLOCK_PRODUCE_TIME: 45,
     },
+    tokenList: predefinedTokens.testnet.v0,
   },
   v1: {
     lumosConfig: predefined.AGGRON4,
@@ -122,5 +124,6 @@ export const testConfig: LightGodwokenConfigMap = {
       FINALITY_BLOCKS: 100,
       BLOCK_PRODUCE_TIME: 36,
     },
+    tokenList: predefinedTokens.testnet.v1,
   },
 };

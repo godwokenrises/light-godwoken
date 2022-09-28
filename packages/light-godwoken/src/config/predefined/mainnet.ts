@@ -1,7 +1,8 @@
 import { Layer1Config, LightGodwokenConfig, LightGodwokenConfigMap } from "../types";
 import { predefined } from "@ckb-lumos/config-manager";
+import { predefinedTokens } from "../../tokens";
 
-const layer1Config: Layer1Config = {
+export const MainnetLayer1Config: Layer1Config = {
   SCRIPTS: {
     omni_lock: {
       code_hash: "0x9f3aeaf2fc439549cbc870c653374943af96a0658bd6b51be8d8983183e6f52f",
@@ -31,9 +32,9 @@ const layer1Config: Layer1Config = {
 };
 
 // https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/mainnet_v0/config/scripts-result.json
-const layer2ConfigV0: LightGodwokenConfig = {
+export const MainnetLayer2ConfigV0: LightGodwokenConfig = {
   lumosConfig: predefined.LINA,
-  layer1Config: layer1Config,
+  layer1Config: MainnetLayer1Config,
   layer2Config: {
     SCRIPTS: {
       deposit_lock: {
@@ -78,12 +79,13 @@ const layer2ConfigV0: LightGodwokenConfig = {
 
     MULTICALL_ADDRESS: "0x277FD6c744f7C16A997E5D626131eBd81d2D58Aa",
   },
+  tokenList: predefinedTokens.mainnet.v0,
 };
 
 // https://github.com/nervosnetwork/godwoken-info/blob/69175dff51fb63665abff7cc9640af5bf3409fea/mainnet_v1/scripts-deploy-result.json
-const layer2ConfigV1: LightGodwokenConfig = {
+export const MainnetLayer2ConfigV1: LightGodwokenConfig = {
   lumosConfig: predefined.LINA,
-  layer1Config: layer1Config,
+  layer1Config: MainnetLayer1Config,
   layer2Config: {
     SCRIPTS: {
       deposit_lock: {
@@ -130,11 +132,10 @@ const layer2ConfigV1: LightGodwokenConfig = {
     // https://github.com/mds1/multicall/commit/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7
     MULTICALL_ADDRESS: "0xcA11bde05977b3631167028862bE2a173976CA11",
   },
+  tokenList: predefinedTokens.mainnet.v1,
 };
 
-const config: LightGodwokenConfigMap = {
-  v0: layer2ConfigV0,
-  v1: layer2ConfigV1,
+export const MainnetConfigMap: LightGodwokenConfigMap = {
+  v0: MainnetLayer2ConfigV0,
+  v1: MainnetLayer2ConfigV1,
 };
-
-export default config;

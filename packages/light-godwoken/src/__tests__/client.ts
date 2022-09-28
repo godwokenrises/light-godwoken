@@ -2,25 +2,31 @@ import LightGodwokenV0 from "../LightGodwokenV0";
 import LightGodwokenV1 from "../LightGodwokenV1";
 import LightGodwokenProvider from "../lightGodwokenProvider";
 import { EthereumProvider } from "../ethereumProvider";
-import { LightGodwokenConfigMap } from "../config";
+import { GodwokenVersion, LightGodwokenConfig } from "../config";
 import { testConfig } from "./clientConfig";
 import { providers } from "ethers";
 
 export const lightGodwokenVersionMap = {
-  v0: LightGodwokenV0,
-  v1: LightGodwokenV1,
+  [GodwokenVersion.V0]: LightGodwokenV0,
+  [GodwokenVersion.V1]: LightGodwokenV1,
 };
 
 type LightGodwokenVersionMap = typeof lightGodwokenVersionMap;
 
-export function createLightGodwoken<T extends keyof typeof lightGodwokenVersionMap>(
+export function createLightGodwoken<T extends keyof LightGodwokenVersionMap>(
   ethAddress: string,
   network: string,
   version: T,
-  configMap?: LightGodwokenConfigMap,
+  config?: LightGodwokenConfig,
 ): InstanceType<LightGodwokenVersionMap[T]> {
   const ethereum = createDummyLightGodwokenProvider();
-  const provider = new LightGodwokenProvider(ethAddress, ethereum, network, version, configMap || testConfig);
+  const provider = new LightGodwokenProvider({
+    ethAddress,
+    ethereum,
+    network,
+    version,
+    config: config || testConfig[version],
+  });
 
   const Callable = lightGodwokenVersionMap[version];
   return new Callable(provider) as InstanceType<LightGodwokenVersionMap[T]>;

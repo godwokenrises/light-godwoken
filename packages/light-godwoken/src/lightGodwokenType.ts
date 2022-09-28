@@ -1,5 +1,5 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
-import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig, LightGodwokenConfigMap } from "./config";
+import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig } from "./config";
 import { GodwokenScannerDataTypes } from "./godwokenScanner";
 import EventEmitter from "events";
 
@@ -97,6 +97,9 @@ export interface WithdrawalEventEmitterPayload extends BaseWithdrawalEventEmitte
    */
   withdrawal_address?: Address;
 }
+export interface WithdrawalToV1EventEmitterPayload extends BaseWithdrawalEventEmitterPayload {
+  lightGodwoken: LightGodwokenBase;
+}
 
 export interface WithdrawBase {
   withdrawalBlockNumber: number;
@@ -142,8 +145,6 @@ export interface LightGodwokenProvider {
   getL2Address(): PromiseOr<string>;
 
   getConfig(): LightGodwokenConfig;
-
-  getConfigMap(): LightGodwokenConfigMap;
 
   getNetwork(): GodwokenNetwork | string;
 
@@ -237,6 +238,6 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   getMinimalWithdrawalToV1Capacity(): BI;
   // unlock: (payload: UnlockPayload) => Promise<Hash>;
-  withdrawToV1WithEvent: (payload: BaseWithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+  withdrawToV1WithEvent: (payload: WithdrawalToV1EventEmitterPayload) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {}

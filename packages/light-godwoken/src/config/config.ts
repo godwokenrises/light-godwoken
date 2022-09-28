@@ -1,31 +1,34 @@
 import { predefinedConfigs } from "./predefined";
-import { getAdvancedSettingsMap, setAdvancedSettingsMap } from "./advanced";
-import { LightGodwokenConfig, LightGodwokenConfigMap, GodwokenNetwork } from "./types";
+import { getStoredAdvancedSettings, setAdvancedSettings } from "./advanced";
+import { LightGodwokenConfig, GodwokenNetwork, GodwokenVersion } from "./types";
 import { LightGodwokenConfigNotFoundError, LightGodwokenConfigNotValidError } from "../constants/error";
 
-export function getPredefinedConfig(network: GodwokenNetwork | string): LightGodwokenConfigMap {
+export function getPredefinedConfig(network: GodwokenNetwork | string, version: GodwokenVersion): LightGodwokenConfig {
   if (!(network in predefinedConfigs)) {
-    throw new LightGodwokenConfigNotFoundError(network, "No predefined LightGodwokenConfigMap for the network");
+    throw new LightGodwokenConfigNotFoundError(network, "No predefined LightGodwokenConfig matches the network");
   }
-  return predefinedConfigs[network as GodwokenNetwork];
+
+  const configMap = predefinedConfigs[network as GodwokenNetwork];
+  if (!(version in configMap)) {
+    throw new LightGodwokenConfigNotFoundError(network, "No predefined LightGodwokenConfig is matches the version");
+  }
+
+  return configMap[version];
 }
 
-export function initConfigMap(
-  configOrNetwork: LightGodwokenConfigMap | GodwokenNetwork | string,
-): LightGodwokenConfigMap {
+export function initConfig(
+  configOrNetwork: LightGodwokenConfig | GodwokenNetwork | string,
+  version: GodwokenVersion,
+): LightGodwokenConfig {
   if (typeof configOrNetwork === "string") {
-    return initConfigMap(getPredefinedConfig(configOrNetwork));
+    const predefinedConfig = getPredefinedConfig(configOrNetwork, version);
+    return initConfig(predefinedConfig, version);
   }
 
-  const config: LightGodwokenConfigMap = configOrNetwork;
-  if (!getAdvancedSettingsMap()) {
-    setAdvancedSettingsMap({
-      v0: {
-        MIN_CANCEL_DEPOSIT_TIME: config.v0.layer2Config.MIN_CANCEL_DEPOSIT_TIME,
-      },
-      v1: {
-        MIN_CANCEL_DEPOSIT_TIME: config.v1.layer2Config.MIN_CANCEL_DEPOSIT_TIME,
-      },
+  const config: LightGodwokenConfig = configOrNetwork;
+  if (!getStoredAdvancedSettings(version)) {
+    setAdvancedSettings(version, {
+      MIN_CANCEL_DEPOSIT_TIME: config.layer2Config.MIN_CANCEL_DEPOSIT_TIME,
     });
   }
 

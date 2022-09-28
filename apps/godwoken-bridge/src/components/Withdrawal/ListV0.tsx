@@ -10,6 +10,8 @@ import { Placeholder } from "../Placeholder";
 import { LightGodwokenV0 } from "light-godwoken";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { createLightGodwokenV1 } from "../../utils/lightGodwoken";
+import { providers } from "ethers";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -35,8 +37,14 @@ export const WithdrawalList: React.FC = () => {
   const withdrawalListQuery = useQuery(
     ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
     () => {
+      const lightGodwokenV1 = createLightGodwokenV1(
+        lightGodwoken!.provider.getL2Address(),
+        lightGodwoken!.provider.getNetwork(),
+        (lightGodwoken!.provider.ethereum.provider as providers.Web3Provider).provider,
+      );
+
       const normalWithdrawalList = (lightGodwoken as LightGodwokenV0).listWithdrawWithScannerApi();
-      const fastWithdrawalList = (lightGodwoken as LightGodwokenV0).listFastWithdrawWithScannerApi();
+      const fastWithdrawalList = (lightGodwoken as LightGodwokenV0).listFastWithdrawWithScannerApi(lightGodwokenV1);
       return Promise.all([normalWithdrawalList, fastWithdrawalList]);
     },
     {
