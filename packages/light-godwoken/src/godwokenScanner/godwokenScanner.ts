@@ -2,10 +2,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { Hash } from "@ckb-lumos/base";
 import { HexString } from "@ckb-lumos/lumos";
 import { DepositHistoryResponse } from "./requestTypes/depositHistories";
-import {
-  WithdrawalHistoryResponse,
-  WithdrawalHistoryV0Response
-} from "./requestTypes/withdrawalHistories";
+import { WithdrawalHistoryResponse, WithdrawalHistoryV0 } from "./requestTypes/withdrawalHistories";
 
 export class GodwokenScanner {
   private readonly axios: AxiosInstance;
@@ -38,19 +35,20 @@ export class GodwokenScanner {
     return data;
   }
 
-  async getWithdrawalHistories(ownerLockHash: Hash, page: number = 1) {
+  async getWithdrawalHistories(ownerLockHash: Hash) {
     const { data } = await this.axios.request<WithdrawalHistoryResponse>({
       url: "/withdrawal_histories",
       params: {
         owner_lock_hash: ownerLockHash,
-        page,
       },
     });
 
-    return data;
+    return data.data.map((item) => item.attributes);
   }
 
-  async getWithdrawalHistoriesV0(ownerLockHash: Hash, page: number = 1) {
-    return await this.getWithdrawalHistories(ownerLockHash, page) as WithdrawalHistoryV0Response;
+  async getWithdrawalHistoriesV0(ownerLockHash: Hash) {
+    const result = await this.getWithdrawalHistories(ownerLockHash);
+    console.debug("getWithdrawalHistories v0:", result);
+    return result as WithdrawalHistoryV0[];
   }
 }

@@ -1,8 +1,6 @@
 import React from "react";
-import { Select } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
-import { availableVersions } from "../../utils/environment";
-
+import { Select } from "antd";
 const { Option } = Select;
 
 export const VersionSelect: React.FC = () => {
@@ -18,11 +16,8 @@ export const VersionSelect: React.FC = () => {
       value={params.version}
       onChange={handleChange}
     >
-      {availableVersions.map((version) => (
-        <Option value={version} key={version}>
-          Godwoken {version.toUpperCase()}
-        </Option>
-      ))}
+      <Option value="v0">Godwoken V0</Option>
+      <Option value="v1">Godwoken V1</Option>
     </Select>
   );
 };

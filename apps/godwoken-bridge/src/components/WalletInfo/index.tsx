@@ -10,7 +10,7 @@ import { Placeholder } from "../Placeholder";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { QrCodeModal } from "../QrCodeModal";
+import { QrCodeModal } from "../QrCode/QrCodeModal";
 
 const StyleWrapper = styled.div`
   display: flex;

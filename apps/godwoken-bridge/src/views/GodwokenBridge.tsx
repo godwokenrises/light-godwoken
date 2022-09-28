@@ -6,8 +6,7 @@ import PageHeader from "../components/Layout/PageHeader";
 import PageFooter from "../components/Layout/PageFooter";
 import { addNetwork } from "../utils/addNetwork";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
-import { GodwokenVersion, LightGodwokenV1 } from "light-godwoken";
-import { availableVersions } from "../utils/environment";
+import { LightGodwokenV1 } from "light-godwoken";
 
 export default function GodwokenBridge() {
   const lightGodwoken = useLightGodwoken();
@@ -16,8 +15,7 @@ export default function GodwokenBridge() {
   }
 
   const params = useParams();
-  const version = params.version;
-  if (!version || !availableVersions.includes(version as GodwokenVersion)) {
+  if (!params.version || !["v0", "v1"].includes(params.version)) {
     return <Navigate to={`/v1/${params["*"]}`} />;
   }
 
