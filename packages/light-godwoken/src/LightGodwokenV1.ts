@@ -1,7 +1,7 @@
 import { GodwokenScanner } from "./godwokenScanner";
 import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
+import { GodwokenV1 } from "./godwoken";
 import {
   DepositResult,
   GetErc20Balances,

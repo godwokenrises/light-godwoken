@@ -4,6 +4,8 @@
  */
 import { RPC } from "ckb-js-toolkit";
 import { Hash, Hexadecimal, HexNumber, HexString, Script } from "@ckb-lumos/base";
+import { debug } from "../debug";
+
 interface LastL2BlockCommittedInfo {
   transaction_hash: Hash;
 }
@@ -35,11 +37,17 @@ export type PolyConfig = {
     };
   };
 };
-export class Godwoken {
+
+export class GodwokenV1 {
   private readonly rpc: RPC;
 
   constructor(url: string) {
     this.rpc = new RPC(url);
+  }
+
+  private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
+    const name = "gw_" + method_name;
+    return this.rpc[name](...args);
   }
 
   /**
@@ -49,25 +57,20 @@ export class Godwoken {
    */
   async getChainId(): Promise<string> {
     const result = await this.rpc["eth_chainId"]();
-    console.debug("chain_id:", result);
+    debug("chain_id:", result);
     return result;
   }
 
   async getConfig(): Promise<PolyConfig> {
     const result = await this.rpc["poly_version"]();
-    console.debug("poly_version:", result);
+    debug("poly_version:", result);
     return result;
   }
 
   async getCkbBalance(address: HexString): Promise<string> {
     const result = await this.rpc["eth_getBalance"](address, "latest");
-    console.debug("eth_getBalance:", result);
+    debug("eth_getBalance:", result);
     return result;
-  }
-
-  private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
-    const name = "gw_" + method_name;
-    return this.rpc[name](...args);
   }
 
   async submitWithdrawalRequest(data: HexString): Promise<Hash> {
@@ -87,6 +90,10 @@ export class Godwoken {
 
   async getScript(script_hash: Hash): Promise<Script> {
     return await this.rpcCall("get_script", script_hash);
+  }
+
+  async getScriptHash(account_id: HexNumber): Promise<Script> {
+    return await this.rpcCall("get_script_hash", account_id);
   }
 
   async getData(data_hash: Hash): Promise<HexString> {

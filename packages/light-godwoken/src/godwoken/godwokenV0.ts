@@ -11,8 +11,8 @@ interface LastL2BlockCommittedInfo {
 /**
  * Godwoken RPC client
  */
-export class GodwokenClient {
-  private rpc: RPC;
+export class GodwokenV0 {
+  private readonly rpc: RPC;
 
   constructor(url: string) {
     this.rpc = new RPC(url);
@@ -20,8 +20,7 @@ export class GodwokenClient {
 
   private async rpcCall(method_name: string, ...args: any[]): Promise<any> {
     const name = "gw_" + method_name;
-    const result = await this.rpc[name](...args);
-    return result;
+    return this.rpc[name](...args);
   }
 
   /**

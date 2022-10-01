@@ -35,7 +35,7 @@ import {
 import { CKB_SUDT_ID } from "./tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
-import { GodwokenClient } from "./godwoken/godwokenV0";
+import { GodwokenV0 } from "./godwoken";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrawal, RawWithdrawalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
 import { debug } from "./debug";
@@ -66,7 +66,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   constructor(provider: LightGodwokenProvider) {
     super(provider);
-    this.godwokenClient = new GodwokenClient(provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenClient = new GodwokenV0(provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
     this.godwokenScannerClient = new GodwokenScanner(provider.getConfig().layer2Config.SCANNER_API);
   }
 
