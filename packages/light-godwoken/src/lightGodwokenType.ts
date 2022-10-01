@@ -236,9 +236,9 @@ export interface LightGodwokenBase {
 
   generateDepositAddress: (cancelTimeout?: number) => Address;
 
-  deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
+  deposit: (payload: DepositPayload, eventEmitter?: EventEmitter, waitForCompletion?: boolean) => Promise<Hash>;
 
-  depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;
+  depositWithEvent: (payload: DepositPayload, waitForCompletion?: boolean) => DepositEventEmitter;
 
   subscribPendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
 

@@ -313,7 +313,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   async generateDepositTx(
     payload: DepositPayload,
-    eventEmiter?: EventEmitter,
+    eventEmitter?: EventEmitter,
   ): Promise<helpers.TransactionSkeletonType> {
     let neededCapacity = BI.from(payload.capacity);
     if (!BI.from(payload.capacity).eq(await this.getL1CkbBalance())) {
@@ -321,7 +321,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       neededCapacity = neededCapacity.add(BI.from(64_00000000));
     }
     const neededSudtAmount = payload.amount ? BI.from(payload.amount) : BI.from(0);
-    let collectedCapatity = BI.from(0);
+    let collectedCapacity = BI.from(0);
     let collectedSudtAmount = BI.from(0);
     const collectedCells: Cell[] = [];
     const ckbCollector = this.provider.ckbIndexer.collector({
@@ -332,9 +332,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of ckbCollector.collect()) {
-      collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
+      collectedCapacity = collectedCapacity.add(BI.from(cell.cell_output.capacity));
       collectedCells.push(cell);
-      if (collectedCapatity.gte(neededCapacity)) break;
+      if (collectedCapacity.gte(neededCapacity)) break;
     }
     if (!!payload.sudtType && neededSudtAmount.gt(BI.from(0))) {
       const userSudtBalance = await this.getSudtBalance({ type: payload.sudtType });
@@ -352,7 +352,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of sudtCollector.collect()) {
-        collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
+        collectedCapacity = collectedCapacity.add(BI.from(cell.cell_output.capacity));
         collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
         collectedCells.push(cell);
         if (collectedSudtAmount.gte(neededSudtAmount)) break;
@@ -360,7 +360,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     // if ckb is not enough, try find some free capacity from sudt cell
     const freeCapacityProviderCells: Cell[] = [];
-    if (collectedCapatity.lt(neededCapacity)) {
+    if (collectedCapacity.lt(neededCapacity)) {
       const freeCkbCollector = this.provider.ckbIndexer.collector({
         lock: helpers.parseAddress(this.provider.l1Address, {
           config: this.getConfig().lumosConfig,
@@ -377,37 +377,34 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       for await (const cell of freeCkbCollector.collect()) {
         const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cell_output.capacity);
         const alreadyCollected = collectedCells.some((collectedCell) => {
-          if (
+          return !!(
             isEqual(collectedCell.out_point?.tx_hash, cell.out_point?.tx_hash) &&
             isEqual(collectedCell.out_point?.index, cell.out_point?.index)
-          ) {
-            return true;
-          }
-          return false;
+          );
         });
         // envolve SUDT cells that has more capacity than SUDT_CELL_CAPACITY
         if (haveFreeCapacity && !alreadyCollected) {
           freeCapacityProviderCells.push(cell);
-          collectedCapatity = collectedCapatity.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+          collectedCapacity = collectedCapacity.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
         }
-        if (collectedCapatity.gte(neededCapacity)) {
+        if (collectedCapacity.gte(neededCapacity)) {
           break;
         }
       }
     }
-    if (collectedCapatity.lt(neededCapacity)) {
-      const errorMsg = `Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapatity}`;
-      const error = new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedCapatity }, errorMsg);
-      if (eventEmiter) {
-        eventEmiter.emit("fail", error);
+    if (collectedCapacity.lt(neededCapacity)) {
+      const errorMsg = `Not enough CKB:expected: ${neededCapacity}, actual: ${collectedCapacity}`;
+      const error = new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedCapacity }, errorMsg);
+      if (eventEmitter) {
+        eventEmitter.emit("fail", error);
       }
       throw error;
     }
     if (collectedSudtAmount.lt(neededSudtAmount)) {
       const errorMsg = `Not enough SUDT:expected: ${neededSudtAmount}, actual: ${collectedSudtAmount}`;
       const error = new NotEnoughSudtError({ expected: neededSudtAmount, actual: collectedSudtAmount }, errorMsg);
-      if (eventEmiter) {
-        eventEmiter.emit("fail", error);
+      if (eventEmitter) {
+        eventEmitter.emit("fail", error);
       }
       throw error;
     }
@@ -442,14 +439,18 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let signedTx = await this.provider.signL1TxSkeleton(txSkeleton, true);
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
-      const exchagneOutput: Cell = outputs.get(outputs.size - 1)!;
-      exchagneOutput.cell_output.capacity = BI.from(exchagneOutput.cell_output.capacity).sub(txFee).toHexString();
+      const exchangeOutput: Cell = outputs.get(outputs.size - 1)!;
+      exchangeOutput.cell_output.capacity = BI.from(exchangeOutput.cell_output.capacity).sub(txFee).toHexString();
       return outputs;
     });
     return txSkeleton;
   }
 
-  async deposit(payload: DepositPayload, eventEmitter?: EventEmitter): Promise<string> {
+  async deposit(
+    payload: DepositPayload,
+    eventEmitter?: EventEmitter,
+    waitForCompletion: boolean = true,
+  ): Promise<string> {
     let txSkeleton = await this.generateDepositTx(payload, eventEmitter);
     txSkeleton = await this.payTxFee(txSkeleton);
     let signedTx: Transaction;
@@ -476,14 +477,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     if (eventEmitter) {
       eventEmitter.emit("sent", txHash);
-      this.waitForDepositToComplete(txHash, eventEmitter);
+      if (waitForCompletion) {
+        this.waitForDepositToComplete(txHash, eventEmitter);
+      }
     }
     return txHash;
   }
 
-  depositWithEvent(payload: DepositPayload): DepositEventEmitter {
+  depositWithEvent(payload: DepositPayload, waitForCompletion?: boolean): DepositEventEmitter {
     const eventEmitter = new EventEmitter();
-    this.deposit(payload, eventEmitter);
+    this.deposit(payload, eventEmitter, waitForCompletion);
     return eventEmitter;
   }
 

@@ -61,6 +61,10 @@ export class GodwokenV1 {
     return result;
   }
 
+  async getBlockNumber(): Promise<HexNumber> {
+    return this.rpc["eth_blockNumber"]();
+  }
+
   async getConfig(): Promise<PolyConfig> {
     const result = await this.rpc["poly_version"]();
     debug("poly_version:", result);
@@ -92,7 +96,7 @@ export class GodwokenV1 {
     return await this.rpcCall("get_script", script_hash);
   }
 
-  async getScriptHash(account_id: HexNumber): Promise<Script> {
+  async getScriptHash(account_id: HexNumber): Promise<Hash> {
     return await this.rpcCall("get_script_hash", account_id);
   }
 
