@@ -51,7 +51,7 @@ export const MainnetLayer2ConfigV0: LightGodwokenConfig = {
         script_type_hash: "0xf1717ee388b181fcb14352055c00b7ea7cd7c27350ffd1a2dd231e059dde2fed",
         cell_dep: {
           out_point: {
-            tx_hash: "0x3d727bd8bb1d87ba79638b63bfbf4c9a4feb9ac5ac5a0b356f3aaf4ccb4d3a1c",
+            tx_hash: "0x342dc7b96e663393fa606f05ae1ad8504fa776436d552677356b1023bb174beb",
             index: "0x0",
           },
           dep_type: "code",

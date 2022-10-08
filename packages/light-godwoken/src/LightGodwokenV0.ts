@@ -602,11 +602,13 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       dep_type: withdrawalLockCellDep.dep_type,
     };
 
-    const newWitnessArgs: WitnessArgs = {
-      lock: "0x0000000004000000",
-    };
+    // https://github.com/classicalliu/gw-demos/blob/main/src/unlock.ts#L48
     const withdrawalWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs(toolkit.normalizers.NormalizeWitnessArgs(newWitnessArgs)),
+      core.SerializeWitnessArgs(
+        toolkit.normalizers.NormalizeWitnessArgs({
+          lock: "0x0000000004000000",
+        }),
+      ),
     ).serializeJson();
 
     txSkeleton = txSkeleton

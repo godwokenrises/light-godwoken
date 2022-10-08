@@ -45,11 +45,15 @@ const StyleWrapper = styled.div`
       height: 22px;
       margin-right: 5px;
     }
+    .ckb-icon {
+      display: flex;
+      align-items: center;
+    }
     .ckb-amount {
       display: flex;
     }
     .sudt-amount + .ckb-amount {
-      margin-top: 10px;
+      margin-top: 6px;
     }
     &:hover {
       cursor: pointer;
@@ -70,6 +74,7 @@ const StyleWrapper = styled.div`
     }
   }
   .list-detail {
+    margin-top: 10px;
     padding-top: 10px;
     width: 100%;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);

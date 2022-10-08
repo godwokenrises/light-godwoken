@@ -1,11 +1,10 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
-import { notification } from "antd";
-import { utils as ethersUtils } from "ethers";
-import { BI, Cell, utils } from "@ckb-lumos/lumos";
+import { notification, Tooltip } from "antd";
+import { BI, Cell, Hash, utils } from "@ckb-lumos/lumos";
 import { captureException } from "@sentry/react";
 import { LoadingOutlined } from "@ant-design/icons";
-import { NotEnoughCapacityError, ProxyERC20, SUDT } from "light-godwoken";
+import { NotEnoughCapacityError, ProxyERC20 } from "light-godwoken";
 import {
   Actions,
   ConfirmModal,
@@ -20,9 +19,9 @@ import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { isInstanceOfLightGodwokenV0 } from "../../utils/typeAssert";
 import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { TokenInfoWithAmount } from "./TokenInfoWithAmount";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
+import { useL1UnlockHistory } from "../../hooks/useL1UnlockHistory";
 
 const ModalContent = styled.div`
   width: 100%;
@@ -30,7 +29,7 @@ const ModalContent = styled.div`
   flex-direction: column;
 
   .amount {
-    padding: 6px 12px 8px 12px;
+    padding: 12px;
     margin-bottom: 12px;
     display: flex;
     flex-direction: column;
@@ -44,11 +43,15 @@ const ModalContent = styled.div`
       height: 22px;
       margin-right: 5px;
     }
+    .ckb-icon {
+      display: flex;
+      align-items: center;
+    }
     .ckb-amount {
       display: flex;
     }
     .sudt-amount + .ckb-amount {
-      margin-top: 10px;
+      margin-top: 4px;
     }
   }
   .title {
@@ -58,15 +61,15 @@ const ModalContent = styled.div`
 `;
 
 export interface UnlockProps {
+  layer1TxHash: Hash;
   erc20?: ProxyERC20;
   cell: Cell;
 }
 
-const Unlock: React.FC<UnlockProps> = ({ erc20, cell }) => {
+const Unlock: React.FC<UnlockProps> = ({ layer1TxHash, erc20, cell }) => {
   // light-godwoken client
   const lightGodwoken = useLightGodwoken();
   const l1Address = useMemo(() => lightGodwoken?.provider.getL1Address(), [lightGodwoken]);
-  const tokenMap = useMemo(() => lightGodwoken?.getBuiltinSUDTMapByTypeHash() || {}, [lightGodwoken]);
 
   // state
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -74,22 +77,17 @@ const Unlock: React.FC<UnlockProps> = ({ erc20, cell }) => {
 
   // tx history
   const godwokenVersion = useGodwokenVersion();
-  const { addTxToHistory } = useL1TxHistory(`${godwokenVersion}/${l1Address}/withdrawal`);
+  const { addUnlockHistoryItem } = useL1UnlockHistory(`${godwokenVersion}/${l1Address}/unlock`);
 
   // ckb capacity
   const ckbCapacity = useMemo(() => {
-    console.log(cell.cell_output.capacity);
-    const capacity = ethersUtils.parseUnits(BI.from(cell.cell_output.capacity).toString(), 8).toHexString();
-    return getDisplayAmount(BI.from(capacity), 8);
+    return getDisplayAmount(BI.from(cell.cell_output.capacity), 8);
   }, [cell.cell_output.capacity]);
 
   // sudt
-  let token: SUDT | undefined;
-  let amount: string | undefined;
-  if (cell.cell_output.type) {
-    token = tokenMap[utils.computeScriptHash(cell.cell_output.type)];
-    amount = utils.readBigUInt128LECompatible(cell.data).toHexString();
-  }
+  const amount = useMemo(() => {
+    return cell.cell_output.type ? utils.readBigUInt128LECompatible(cell.data) : "0x0";
+  }, [cell]);
 
   if (lightGodwoken?.getVersion().toString() !== "v0") {
     return <></>;
@@ -103,13 +101,9 @@ const Unlock: React.FC<UnlockProps> = ({ erc20, cell }) => {
     setIsUnlocking(true);
     try {
       const txHash = await lightGodwoken.unlock({ cell });
-      addTxToHistory({
-        type: "withdrawal",
-        txHash,
-        capacity: cell.cell_output.capacity,
-        amount: amount || "0x0",
-        token: token,
-        status: "succeed",
+      addUnlockHistoryItem({
+        withdrawalTxHash: layer1TxHash,
+        unlockTxHash: txHash,
       });
 
       notification.success({
@@ -156,9 +150,11 @@ const Unlock: React.FC<UnlockProps> = ({ erc20, cell }) => {
 
   return (
     <div onClick={(e) => e.stopPropagation()}>
-      <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
-        Unlock
-      </SecondeButton>
+      <Tooltip title="Unlock withdrawal to your address">
+        <SecondeButton className="withdraw-button" onClick={showCurrencySelectModal}>
+          Unlock
+        </SecondeButton>
+      </Tooltip>
       <ConfirmModal
         title="Unlock Withdrawal"
         visible={isModalVisible}
@@ -169,16 +165,16 @@ const Unlock: React.FC<UnlockProps> = ({ erc20, cell }) => {
       >
         <ModalContent>
           <div className="amount">
-            {erc20 && <TokenInfoWithAmount amount={BI.from(amount || "0x0")} {...erc20} />}
+            {erc20 && <TokenInfoWithAmount amount={amount} {...erc20} />}
             <div className="ckb-amount">
               <div className="ckb-icon">
                 <CKBIcon />
               </div>
-              <MainText>{ckbCapacity}</MainText>
+              <MainText>{ckbCapacity} CKB</MainText>
             </div>
           </div>
 
-          <Text className="title">Unlock target address</Text>
+          <Text className="title">Unlock to address</Text>
           <Text>{l1Address}</Text>
 
           {isUnlocking && (
