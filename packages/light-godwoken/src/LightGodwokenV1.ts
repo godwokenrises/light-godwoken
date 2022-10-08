@@ -284,9 +284,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return this.godwokenClient.getWithdrawal(txHash);
   }
 
-  withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+  withdrawWithEvent(payload: WithdrawalEventEmitterPayload, waitForCompletion?: boolean): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
-    this.withdraw(eventEmitter, payload);
+    this.withdraw(eventEmitter, payload, waitForCompletion);
     return eventEmitter;
   }
 
@@ -294,7 +294,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return this.godwokenClient.getChainId();
   }
 
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+  async withdraw(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+    waitForCompletion = true,
+  ): Promise<void> {
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
 
@@ -330,7 +334,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (txHash) {
       eventEmitter.emit("sent", txHash);
       debug("withdrawal request result:", txHash, eventEmitter);
-      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      if (waitForCompletion) {
+        this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      }
     }
   }
 

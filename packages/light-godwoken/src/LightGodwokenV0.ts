@@ -361,13 +361,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return result;
   }
 
-  withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+  withdrawWithEvent(payload: WithdrawalEventEmitterPayload, waitForCompletion?: boolean): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
-    this.withdraw(eventEmitter, payload);
+    this.withdraw(eventEmitter, payload, false, waitForCompletion);
     return eventEmitter;
   }
 
-  withdrawToV1WithEvent(payload: WithdrawalToV1EventEmitterPayload): WithdrawalEventEmitter {
+  withdrawToV1WithEvent(
+    payload: WithdrawalToV1EventEmitterPayload,
+    waitForCompletion?: boolean,
+  ): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
     const v1DepositLock = payload.lightGodwoken.generateDepositLock();
     const withdrawalAddress = helpers.encodeToAddress(v1DepositLock, {
@@ -381,6 +384,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         withdrawal_address: withdrawalAddress,
       },
       true,
+      waitForCompletion,
     );
     return eventEmitter;
   }
@@ -389,6 +393,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
     withdrawToV1 = false,
+    waitForCompletion = true,
   ): Promise<void> {
     const { lumosConfig, layer2Config } = this.provider.getConfig();
     const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
@@ -436,7 +441,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     if (txHash) {
       eventEmitter.emit("sent", txHash);
       debug("withdrawal request result:", txHash);
-      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      if (waitForCompletion) {
+        this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      }
     }
   }
 
