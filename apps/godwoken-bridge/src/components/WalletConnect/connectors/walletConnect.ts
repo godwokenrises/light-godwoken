@@ -33,4 +33,4 @@ export const [walletConnect, hooks] = initializeConnector<WalletConnect>(
         qrcode: true,
       },
     }),
-);;
+);

@@ -41,18 +41,18 @@ export const WalletConnect: React.FC = () => {
   // log URI when available
   useEffect(() => {
     connectors.walletConnect.instance.events.on(URI_AVAILABLE, (uri: string) => {
-      console.log(`uri: ${uri}`)
-    })
-  }, [])
+      console.log(`uri: ${uri}`);
+    });
+  }, []);
   // attempt to connect eagerly on mount
   useEffect(() => {
     connectors.injectedConnect.instance.connectEagerly().catch(() => {
-      console.debug('Failed to connect eagerly to injectedConnect')
-    })
+      console.debug("Failed to connect eagerly to injectedConnect");
+    });
     connectors.walletConnect.instance.connectEagerly().catch(() => {
-      console.debug('Failed to connect eagerly to walletconnect')
-    })
-  }, [])
+      console.debug("Failed to connect eagerly to walletconnect");
+    });
+  }, []);
 
   const handleChange = (value: string) => {
     setVersion(value);
@@ -76,7 +76,9 @@ export const WalletConnect: React.FC = () => {
           </Option>
         ))}
       </Select>
-      <SecondeButton className="connect-wallet" onClick={connect}>Connect</SecondeButton>
+      <SecondeButton className="connect-wallet" onClick={connect}>
+        Connect
+      </SecondeButton>
       <ConnectorPopover
         connectBtnQuerySelector=".connect-wallet"
         popoverVisible={openWalletSelector}

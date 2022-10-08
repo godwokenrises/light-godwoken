@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import styled from "styled-components";
 import { COLOR } from "../../style/variables";
 import { SecondeButton } from "../../style/common";
-import { URI_AVAILABLE } from '@web3-react/walletconnect'
+import { URI_AVAILABLE } from "@web3-react/walletconnect";
 import { Popover } from "antd";
 import { connectors } from "./connectors";
 
@@ -34,27 +34,27 @@ type SelectMenuProps = {
 };
 export const SelectMenu: React.FC<SelectMenuProps> = ({ handleClick }) => {
   const connectMetamask = () => {
-    connectors.injectedConnect.instance.activate().catch(err => {
-      console.error(err)
-    })
+    connectors.injectedConnect.instance.activate().catch((err) => {
+      console.error(err);
+    });
   };
 
   const connectImToken = () => {
-    connectors.injectedConnect.instance.activate().catch(err => {
-      console.error(err)
-    })
+    connectors.injectedConnect.instance.activate().catch((err) => {
+      console.error(err);
+    });
   };
 
   const connectSafePal = () => {
-    connectors.injectedConnect.instance.activate().catch(err => {
-      console.error(err)
-    })
+    connectors.injectedConnect.instance.activate().catch((err) => {
+      console.error(err);
+    });
   };
 
   const connectWalletConnect = () => {
-    connectors.walletConnect.instance.activate().catch(err => {
-      console.error(err)
-    })
+    connectors.walletConnect.instance.activate().catch((err) => {
+      console.error(err);
+    });
   };
 
   return (
@@ -72,7 +72,11 @@ type ConnectorPopoverProps = {
   popoverVisible: boolean;
   setPopoverVisible: (v: boolean) => void;
 };
-export const ConnectorPopover: React.FC<ConnectorPopoverProps> = ({ connectBtnQuerySelector, popoverVisible, setPopoverVisible }) => {
+export const ConnectorPopover: React.FC<ConnectorPopoverProps> = ({
+  connectBtnQuerySelector,
+  popoverVisible,
+  setPopoverVisible,
+}) => {
   const closeSelectMenu = () => {
     setPopoverVisible(false);
   };
@@ -96,4 +100,3 @@ export const ConnectorPopover: React.FC<ConnectorPopoverProps> = ({ connectBtnQu
     ></Popover>
   );
 };
-

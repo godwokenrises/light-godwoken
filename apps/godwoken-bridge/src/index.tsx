@@ -11,7 +11,7 @@ import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import { LightGodwokenError } from "light-godwoken";
 import { isMainnet } from "./utils/environment";
-import { Web3ReactProvider } from '@web3-react/core'
+import { Web3ReactProvider } from "@web3-react/core";
 import { connectorArray } from "./components/WalletConnect/connectors";
 
 if (process.env.NODE_ENV === "production") {

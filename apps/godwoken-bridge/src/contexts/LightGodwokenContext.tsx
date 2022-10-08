@@ -23,19 +23,19 @@ export const Provider: React.FC = (props) => {
       } else if (location.pathname.startsWith("/v1") && lightGodwoken?.getVersion() !== GodwokenVersion.V1) {
         setLightGodwoken(createLightGodwokenV1(account, network, connector.provider));
       }
-      
+
       connector.provider.on("accountsChanged", (accounts: string[] | undefined) => {
         if (!accounts || accounts.length === 0) {
           return setLightGodwoken(void 0);
         }
-  
+
         let instance: LightGodwoken;
         if (location.pathname.startsWith("/v0")) {
           instance = createLightGodwokenV0(accounts[0], network, connector.provider!);
         } else {
           instance = createLightGodwokenV1(accounts[0], network, connector.provider!);
         }
-  
+
         setLightGodwoken(instance);
       });
     }
