@@ -1,6 +1,7 @@
 import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexString } from "@ckb-lumos/lumos";
+import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig } from "./config";
+import { GodwokenScannerDataTypes } from "./godwokenScanner";
 import EventEmitter from "events";
-import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -54,10 +55,6 @@ export interface GetSudtBalance {
   type: Script;
 }
 
-export interface GodwokenNetworkConfig {
-  testnetV1: "https://godwoken-testnet-web3-v1-rpc.ckbapp.dev";
-}
-
 interface WithdrawListener {
   (event: "sent", listener: (txHash: Hash) => void): void;
   (event: "pending", listener: (txHash: Hash) => void): void;
@@ -100,6 +97,9 @@ export interface WithdrawalEventEmitterPayload extends BaseWithdrawalEventEmitte
    */
   withdrawal_address?: Address;
 }
+export interface WithdrawalToV1EventEmitterPayload extends BaseWithdrawalEventEmitterPayload {
+  lightGodwoken: LightGodwokenBase;
+}
 
 export interface WithdrawBase {
   withdrawalBlockNumber: number;
@@ -137,18 +137,18 @@ export interface PendingDepositTransaction {
   tx_hash: Hash;
 }
 
-type Promisable<T> = Promise<T> | T;
+type PromiseOr<T> = Promise<T> | T;
 
 export const SUDT_CELL_CAPACITY = 144_00000000;
 
 export interface LightGodwokenProvider {
-  claimUSDC(): Promise<HexString>;
-
-  getL2Address(): Promisable<string>;
+  getL2Address(): PromiseOr<string>;
 
   getConfig(): LightGodwokenConfig;
 
-  getL1Address(): Promisable<string>;
+  getNetwork(): GodwokenNetwork | string;
+
+  getL1Address(): PromiseOr<string>;
 
   getMinFeeRate(): Promise<BI>;
 
@@ -169,6 +169,13 @@ export type DepositRequest = {
   rawCell: Cell;
 };
 
+export type DepositResult = {
+  history: GodwokenScannerDataTypes.DepositHistory;
+  cell: Cell;
+  sudt?: SUDT;
+  status: "pending" | "success" | "failed";
+};
+
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
 
@@ -178,15 +185,15 @@ export interface LightGodwokenBase {
 
   cancelDeposit(depositTxHash: string, cancelTimeout: number): Promise<HexString>;
 
-  getCkbBlockProduceTime(): Promisable<number>;
+  getCkbBlockProduceTime(): PromiseOr<number>;
 
   getDepositList(): Promise<DepositRequest[]>;
+
+  getDepositHistories(page?: number): Promise<DepositResult[]>;
 
   getCkbCurrentBlockNumber(): Promise<BI>;
 
   getConfig(): LightGodwokenConfig;
-
-  claimUSDC(): Promise<HexString>;
 
   getVersion: () => GodwokenVersion;
 
@@ -204,6 +211,8 @@ export interface LightGodwokenBase {
   // listWithdraw: () => Promise<WithdrawResultWithCell[]>;
 
   generateDepositLock: () => Script;
+
+  generateDepositAddress: (cancelTimeout?: number) => Address;
 
   deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
 
@@ -229,6 +238,6 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   getMinimalWithdrawalToV1Capacity(): BI;
   // unlock: (payload: UnlockPayload) => Promise<Hash>;
-  withdrawToV1WithEvent: (payload: BaseWithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+  withdrawToV1WithEvent: (payload: WithdrawalToV1EventEmitterPayload) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {}

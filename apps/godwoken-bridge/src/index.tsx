@@ -9,7 +9,8 @@ import { config } from "@ckb-lumos/lumos";
 
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
-import { isMainnet, LightGodwokenError } from "light-godwoken";
+import { LightGodwokenError } from "light-godwoken";
+import { isMainnet } from "./utils/environment";
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
@@ -28,8 +29,8 @@ if (process.env.NODE_ENV === "production") {
       /https?:\/\/bridge\.godwoken\.io/,
       /https?:\/\/mainnet\.bridge\.godwoken\.io/,
       /https?:\/\/testnet\.bridge\.godwoken\.io/,
-      /https?:\/\/light-godwoken\.vercel\.app/,
-      /https?:\/\/light-godwoken-mainnet\.vercel\.app/,
+      /https?:\/\/godwoken-bridge\.vercel\.app/,
+      /https?:\/\/godwoken-bridge-mainnet\.vercel\.app/,
     ],
     beforeSend: function (event, hint) {
       const exception = hint?.originalException;

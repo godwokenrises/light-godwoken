@@ -1,4 +1,16 @@
 import { CellDep, DepType, Hash, HashType, Hexadecimal, Script } from "@ckb-lumos/lumos";
+import { Config } from "@ckb-lumos/config-manager";
+import { LightGodwokenToken } from "../tokens";
+
+export enum GodwokenVersion {
+  V0 = "v0",
+  V1 = "v1",
+}
+
+export enum GodwokenNetwork {
+  Testnet = "testnet",
+  Mainnet = "mainnet",
+}
 
 export type Layer2Config = {
   SCRIPTS: {
@@ -48,27 +60,12 @@ export type Layer1Config = {
 };
 
 export type LightGodwokenConfig = {
+  lumosConfig: Config;
   layer1Config: Layer1Config;
   layer2Config: Layer2Config;
+  tokenList: LightGodwokenToken[];
 };
 
 export type LightGodwokenConfigMap = {
-  v0: LightGodwokenConfig;
-  v1: LightGodwokenConfig;
-};
-
-export type GodwokenVersion = keyof LightGodwokenConfigMap;
-
-export type LightGodwokenTokenType = {
-  id: number;
-  symbol: string;
-  name: string;
-  decimals: number;
-  tokenURI: string;
-  address: string;
-  l1LockArgs: string;
-  layer1UAN: string;
-  layer2UAN: string;
-  layer1DisplayName?: string;
-  layer2DisplayName?: string;
+  [key in GodwokenVersion]: LightGodwokenConfig;
 };

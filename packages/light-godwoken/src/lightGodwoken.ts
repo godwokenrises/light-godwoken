@@ -1,18 +1,11 @@
-import {
-  Cell,
-  Hash,
-  helpers,
-  HexNumber,
-  HexString,
-  Script,
-  toolkit,
-  utils,
-  BI,
-  core,
-  Transaction,
-} from "@ckb-lumos/lumos";
+import EventEmitter from "events";
+import { debug } from "./debug";
+import isEqual from "lodash.isequal";
 import * as secp256k1 from "secp256k1";
-import { getCellDep } from "./constants/configUtils";
+import { toolkit, utils, core } from "@ckb-lumos/lumos";
+import { Cell, Hash, helpers, HexNumber, HexString, Script, BI, Transaction } from "@ckb-lumos/lumos";
+import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
+import { getCellDep, getAdvancedSettings, GodwokenVersion, LightGodwokenConfig } from "./config";
 import LightGodwokenProvider from "./lightGodwokenProvider";
 import {
   DepositPayload,
@@ -33,9 +26,8 @@ import {
   PendingDepositTransaction,
   SUDT_CELL_CAPACITY,
   GetSudtBalance,
+  DepositResult,
 } from "./lightGodwokenType";
-import { debug } from "./debug";
-import { GodwokenVersion, LightGodwokenConfig } from "./constants/configTypes";
 import {
   DepositCanceledError,
   DepositCellNotFoundError,
@@ -48,11 +40,7 @@ import {
   TransactionSignError,
   WithdrawalTimeoutError,
 } from "./constants/error";
-import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
-import EventEmitter from "events";
-import isEqual from "lodash.isequal";
-import { isSpecialWallet } from "./utils";
-import { getAdvancedSettings } from "./constants/configManager";
+import { getTokenList } from "./tokens";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -71,9 +59,18 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   abstract getWithdrawal(txHash: Hash): Promise<unknown>;
   abstract getBuiltinErc20List(): ProxyERC20[];
   abstract getBuiltinSUDTList(): SUDT[];
+  abstract getDepositHistories(page?: number): Promise<DepositResult[]>;
   // abstract listWithdraw(): Promise<WithdrawResultWithCell[]>;
   abstract getVersion(): GodwokenVersion;
   abstract withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter;
+
+  getNetwork() {
+    return this.provider.getNetwork();
+  }
+
+  getTokenList() {
+    return this.provider.getConfig().tokenList;
+  }
 
   // in milliseconds
   getBlockProduceTime(): number {
@@ -85,9 +82,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   getAdvancedSettings() {
-    const cancelTimeOut = getAdvancedSettings(this.getVersion()).MIN_CANCEL_DEPOSIT_TIME;
+    const advancedSettings = getAdvancedSettings(this.getNetwork(), this.getVersion());
     return {
-      cancelTimeOut,
+      cancelTimeOut: advancedSettings.MIN_CANCEL_DEPOSIT_TIME,
     };
   }
 
@@ -112,8 +109,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return BI.from((await this.provider.ckbIndexer.tip()).block_number);
   }
 
+  generateDepositAddress(cancelTimeout?: number) {
+    const depositLock = this.generateDepositLock(cancelTimeout);
+    return helpers.encodeToAddress(depositLock);
+  }
+
   async getDepositList(): Promise<DepositRequest[]> {
     const depositLock = this.generateDepositLock();
+    debug("depositLock", depositLock);
     const ckbCollector = this.provider.ckbIndexer.collector({
       lock: depositLock,
     });
@@ -231,7 +234,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         data: "0x",
       });
     }
-    const { layer2Config, layer1Config } = this.provider.getLightGodwokenConfig();
+    const { layer2Config, layer1Config } = this.provider.getConfig();
     const depositLockDep: CellDep = {
       out_point: {
         tx_hash: layer2Config.SCRIPTS.deposit_lock.cell_dep.out_point.tx_hash,
@@ -270,7 +273,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async getRollupCellDep(): Promise<CellDep> {
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const { layer2Config } = this.provider.getConfig();
     const result = await this.godwokenClient.getLastSubmittedInfo();
     const txHash = result.transaction_hash;
     const tx = await this.getPendingTransaction(txHash);
@@ -306,10 +309,6 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return this.provider.getConfig();
   }
 
-  async claimUSDC(): Promise<HexString> {
-    return this.provider.claimUSDC();
-  }
-
   async generateDepositTx(
     payload: DepositPayload,
     eventEmiter?: EventEmitter,
@@ -324,7 +323,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let collectedSudtAmount = BI.from(0);
     const collectedCells: Cell[] = [];
     const ckbCollector = this.provider.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.provider.l1Address),
+      lock: helpers.parseAddress(this.provider.l1Address, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
     });
@@ -340,7 +341,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         neededCapacity = neededCapacity.add(BI.from(SUDT_CELL_CAPACITY));
       }
       const sudtCollector = this.provider.ckbIndexer.collector({
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
         type: payload.sudtType,
       });
       for await (const cell of sudtCollector.collect()) {
@@ -354,7 +357,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const freeCapacityProviderCells: Cell[] = [];
     if (collectedCapatity.lt(neededCapacity)) {
       const freeCkbCollector = this.provider.ckbIndexer.collector({
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
         type: {
           code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
           hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
@@ -402,7 +407,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const outputCell = this.generateDepositOutputCell(collectedCells, freeCapacityProviderCells, payload);
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
 
-    const { layer1Config } = this.provider.getLightGodwokenConfig();
+    const { layer1Config } = this.provider.getConfig();
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
         return inputs.push(...collectedCells, ...freeCapacityProviderCells);
@@ -701,7 +706,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const exchangeCell: Cell = {
       cell_output: {
         capacity: "0x" + exchangeCapacity.toString(16),
-        lock: helpers.parseAddress(this.provider.l1Address),
+        lock: helpers.parseAddress(this.provider.l1Address, {
+          config: this.getConfig().lumosConfig,
+        }),
       },
       data: "0x",
     };
@@ -716,7 +723,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const exchangeSudtCell: Cell = {
         cell_output: {
           capacity: "0x0",
-          lock: helpers.parseAddress(this.provider.l1Address),
+          lock: helpers.parseAddress(this.provider.l1Address, {
+            config: this.getConfig().lumosConfig,
+          }),
           type: payload.sudtType,
         },
         data: sudtAmount,
@@ -747,26 +756,21 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async signMessageMetamaskPersonalSign(message: Hash): Promise<HexString> {
-    let signedMessage = await this.provider.ethereum.request({
-      method: "personal_sign",
-      params: isSpecialWallet() ? [message] : [this.provider.l2Address, message],
-    });
+    let signedMessage = await this.provider.ethereum.signMessage(message);
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     return signedMessage;
   }
 
-  async signMessageMetamaskEthSign(message: Hash): Promise<HexString> {
-    let signedMessage = await this.provider.ethereum.request({
-      method: "eth_sign",
-      params: [this.provider.l2Address, message],
-    });
+  // TODO: deprecated: https://github.com/ethers-io/ethers.js/issues/2127
+  /*async signMessageMetamaskEthSign(message: Hash): Promise<HexString> {
+    let signedMessage = await this.provider.ethereum.send("eth_sign", [this.provider.l2Address, message]);
     let v = Number.parseInt(signedMessage.slice(-2), 16);
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     return signedMessage;
-  }
+  }*/
 
   signMessage(message: Hash, privateKey: HexString): HexString {
     const signObject = secp256k1.ecdsaSign(
@@ -782,14 +786,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     signatureArray.set([v], 64);
 
-    const signature = new toolkit.Reader(signatureBuffer).serializeJson();
-    return signature;
+    return new toolkit.Reader(signatureBuffer).serializeJson();
   }
 
   generateWithdrawalMessageToSign(serializedRawWithdrawalRequest: HexString, rollupTypeHash: Hash): Hash {
     const data = new toolkit.Reader(rollupTypeHash + serializedRawWithdrawalRequest.slice(2)).toArrayBuffer();
-    const message = utils.ckbHash(data).serializeJson();
-    return message;
+    return utils.ckbHash(data).serializeJson();
   }
 
   minimalWithdrawalCapacity(isSudt: boolean): HexNumber {
@@ -853,7 +855,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const result: GetSudtBalancesResult = { balances: new Array(payload.types.length).fill("0x0") };
     const sudtTypeScript = payload.types[0]; // any sudt type script
     const collector = this.provider.ckbIndexer.collector({
-      lock: helpers.parseAddress(this.provider.l1Address),
+      lock: helpers.parseAddress(this.provider.l1Address, {
+        config: this.getConfig().lumosConfig,
+      }),
       type: {
         ...sudtTypeScript,
         args: "0x",

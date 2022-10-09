@@ -70,24 +70,34 @@ export default function Deposit() {
   const tokenList: SUDT[] | undefined = lightGodwoken?.getBuiltinSUDTList();
   const l1Address = lightGodwoken?.provider.getL1Address();
   const ethAddress = lightGodwoken?.provider.getL2Address();
+  const depositAddress = lightGodwoken?.generateDepositAddress();
   const godwokenVersion = useGodwokenVersion();
 
   const { txHistory: depositHistory, addTxToHistory, updateTxWithStatus } = useDepositHistory();
+  const depositHistoryTxHashes = depositHistory.map((history) => history.txHash);
 
   const [depositListListener, setDepositListListener] = useState(new EventEmitter() as DepositEventEmitter);
 
   const depositListQuery = useQuery(
-    ["queryDepositList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
+    [
+      "queryDepositList",
+      {
+        version: lightGodwoken?.getVersion(),
+        l2Address: lightGodwoken?.provider.getL2Address(),
+      },
+    ],
     () => {
       return lightGodwoken?.getDepositList();
     },
+    {
+      enabled: !!lightGodwoken,
+    },
   );
 
+  // append rpc fetched deposit list to local storage
   const { data: depositList, isLoading: depositListLoading } = depositListQuery;
-
-  // apend rpc fetched deposit list to local storage
   depositList?.forEach((deposit) => {
-    if (!depositHistory.find((history) => deposit.rawCell.out_point?.tx_hash === history.txHash)) {
+    if (!depositHistoryTxHashes.includes(deposit.rawCell.out_point?.tx_hash || "")) {
       addTxToHistory({
         capacity: deposit.capacity.toHexString(),
         amount: deposit.amount.toHexString(),
@@ -256,9 +266,10 @@ export default function Deposit() {
           </CardHeader>
           <WalletInfo
             l1Address={l1Address}
+            ethAddress={ethAddress}
+            depositAddress={depositAddress}
             l1Balance={CKBBalance}
             l2Balance={l2CKBBalance}
-            ethAddress={ethAddress}
           ></WalletInfo>
           <CKBInputPanel
             value={CKBInput}
@@ -285,9 +296,11 @@ export default function Deposit() {
           </PrimaryButton>
         </div>
       </Card>
-      <Card>
-        <DepositList depositHistory={depositHistoryFilteredByCancelTimeout} isLoading={depositListLoading} />
-      </Card>
+      {lightGodwoken && (
+        <Card>
+          <DepositList depositList={depositHistoryFilteredByCancelTimeout} isLoading={depositListLoading} />
+        </Card>
+      )}
       <ConfirmModal
         title="Confirm Transaction"
         visible={isModalVisible}

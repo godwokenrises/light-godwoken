@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
-import { isMainnet } from "light-godwoken";
+import { isMainnet } from "../../utils/environment";
 import { matchPath, useLocation, useNavigate, useParams } from "react-router-dom";
 const StyledPage = styled.div`
   display: flex;

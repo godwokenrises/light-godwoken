@@ -1,9 +1,10 @@
-import { BI, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
+import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
   BaseWithdrawalEventEmitterPayload,
+  DepositResult,
   GetErc20Balances,
   GetErc20BalancesResult,
   GetL2CkbBalancePayload,
@@ -13,14 +14,14 @@ import {
   UniversalToken,
   WithdrawalEventEmitter,
   WithdrawalEventEmitterPayload,
+  WithdrawalToV1EventEmitterPayload,
   WithdrawResultV0,
 } from "./lightGodwokenType";
-import { CKB_SUDT_ID, getTokenList } from "./constants/tokens";
+import { CKB_SUDT_ID } from "./tokens";
 import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
 import { debug } from "./debug";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
@@ -33,14 +34,13 @@ import {
   TransactionSignError,
   V0WithdrawTokenNotEnoughError,
 } from "./constants/error";
-import { GodwokenVersion } from "./constants/configTypes";
-import { getAdvancedSettings } from "./constants/configManager";
-import { GodwokenScanner } from "./godwoken/godwokenScannerV1";
-import { Contract as MulticallContract } from "ethers-multicall/dist/contract";
 import { BigNumber } from "ethers";
 import { setMulticallAddress } from "ethers-multicall";
+import { Contract as MulticallContract } from "ethers-multicall/dist/contract";
 import { Provider as MulticallProvider } from "ethers-multicall/dist/provider";
 import { PolyjuiceJsonRpcProvider } from "@polyjuice-provider/ethers";
+import { GodwokenVersion } from "./config";
+import { GodwokenScanner } from "./godwokenScanner";
 
 export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken implements LightGodwokenV0 {
   godwokenClient;
@@ -50,8 +50,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   constructor(provider: LightGodwokenProvider) {
     super(provider);
-    this.godwokenClient = new GodwokenClient(provider.getLightGodwokenConfig().layer2Config.GW_POLYJUICE_RPC_URL);
-    this.godwokenScannerClient = new GodwokenScanner(provider.getLightGodwokenConfig().layer2Config.SCANNER_API);
+    this.godwokenClient = new GodwokenClient(provider.getConfig().layer2Config.GW_POLYJUICE_RPC_URL);
+    this.godwokenScannerClient = new GodwokenScanner(provider.getConfig().layer2Config.SCANNER_API);
   }
 
   getMinimalDepositCapacity(): BI {
@@ -81,7 +81,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   getVersion(): GodwokenVersion {
-    return "v0";
+    return GodwokenVersion.V0;
   }
 
   getNativeAsset(): UniversalToken {
@@ -96,13 +96,14 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   async getL2CkbBalance(payload?: GetL2CkbBalancePayload): Promise<HexNumber> {
     const balance = await this.provider.web3.eth.getBalance(payload?.l2Address || this.provider.l2Address);
+    console.log("getL2CkbBalance", balance);
     return "0x" + Number(balance).toString(16);
   }
 
   getBuiltinErc20List(): ProxyERC20[] {
     const map: ProxyERC20[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v0.forEach((token) => {
+    this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -136,7 +137,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getBuiltinSUDTList(): SUDT[] {
     const map: SUDT[] = [];
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
-    getTokenList().v0.forEach((token) => {
+    this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
         code_hash: sudtScriptConfig.code_hash,
         hash_type: sudtScriptConfig.hash_type as HashType,
@@ -228,20 +229,67 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return await contract.methods.balanceOf(this.provider.l2Address).call();
   }
 
-  async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
+  async getDepositHistories(page?: number): Promise<DepositResult[]> {
+    const ethAddress = this.provider.getL2Address();
+    const histories = await this.godwokenScannerClient.getDepositHistories(ethAddress, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
+    return await Promise.all(
+      histories.data.map(async (data) => {
+        const history = data.attributes;
+        const cell = (await this.provider.getLayer1Cell({
+          tx_hash: history.layer1_tx_hash,
+          index: BI.from(history.layer1_output_index).toHexString(),
+        })) as Cell;
+
+        // if GwScan-api (v0) didn't provide `capacity` field,
+        // then we need to get it from the target cell
+        if (history.capacity === void 0) {
+          history.capacity = cell.cell_output.capacity;
+        }
+
+        let sudt: SUDT | undefined;
+        if (cell?.cell_output.type) {
+          const typeHash = utils.computeScriptHash(cell.cell_output.type);
+          const typeHashMap = this.getBuiltinSUDTMapByTypeHash();
+          sudt = typeHashMap[typeHash];
+        }
+
+        return {
+          history,
+          cell,
+          sudt,
+          status: "success",
+        };
+      }),
+    );
+  }
+
+  async getWithdrawalHistories(page?: number): Promise<WithdrawResultV0[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
-    return await this.listWithdrawByOwnerLockHash(ownerLockHash);
+    return await this.getWithdrawalHistoriesByOwnerLockHash(ownerLockHash, page);
   }
 
-  async listFastWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
-    const v1DepositLock = this.getV1DepositLock();
-    return await this.listWithdrawByOwnerLockHash(utils.computeScriptHash(v1DepositLock));
+  async getFastWithdrawalHistories(
+    lightGodwokenV1: DefaultLightGodwokenV1,
+    page?: number,
+  ): Promise<WithdrawResultV0[]> {
+    const v1DepositLock = lightGodwokenV1.generateDepositLock();
+    return await this.getWithdrawalHistoriesByOwnerLockHash(utils.computeScriptHash(v1DepositLock), page);
   }
 
-  async listWithdrawByOwnerLockHash(ownerLockHash: Hash): Promise<WithdrawResultV0[]> {
-    const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash);
+  async getWithdrawalHistoriesByOwnerLockHash(ownerLockHash: Hash, page?: number): Promise<WithdrawResultV0[]> {
+    const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    const collectedWithdrawals: WithdrawResultV0[] = histories.map((item) => {
+    return histories.data.map((data) => {
+      const item = data.attributes;
+
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
@@ -262,7 +310,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         status: item.state === "succeed" ? "success" : item.state,
       };
     });
-    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {
@@ -270,7 +317,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       throw new EthAddressFormatError({ address: ethAddress }, "eth address format error!");
     }
     const accountScriptHash = this.provider.getLayer2LockScriptHash();
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
+    const { layer2Config } = this.provider.getConfig();
     return {
       script: {
         code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
@@ -292,22 +339,22 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     return eventEmitter;
   }
 
-  withdrawToV1WithEvent(payload: BaseWithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+  withdrawToV1WithEvent(payload: WithdrawalToV1EventEmitterPayload): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
+    const v1DepositLock = payload.lightGodwoken.generateDepositLock();
+    const withdrawalAddress = helpers.encodeToAddress(v1DepositLock, {
+      config: this.getConfig().lumosConfig,
+    });
+
     this.withdraw(
       eventEmitter,
-      { ...payload, withdrawal_address: helpers.encodeToAddress(this.getV1DepositLock()) },
+      {
+        ...payload,
+        withdrawal_address: withdrawalAddress,
+      },
       true,
     );
     return eventEmitter;
-  }
-
-  getV1DepositLock(): Script {
-    const lightGodwokenV1 = new DefaultLightGodwokenV1(
-      new DefaultLightGodwokenProvider(this.provider.l2Address, this.provider.ethereum, "v1"),
-    );
-    const v1DepositLock = lightGodwokenV1.generateDepositLock();
-    return v1DepositLock;
   }
 
   async withdraw(
@@ -315,8 +362,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     payload: WithdrawalEventEmitterPayload,
     withdrawToV1 = false,
   ): Promise<void> {
-    const { layer2Config } = this.provider.getLightGodwokenConfig();
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    const { lumosConfig, layer2Config } = this.provider.getConfig();
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
+      config: lumosConfig,
+    });
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(
@@ -367,7 +416,9 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     eventEmitter: EventEmitter,
     payload: WithdrawalEventEmitterPayload,
   ): Promise<RawWithdrwal> {
-    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address);
+    const ownerLock = helpers.parseAddress(payload.withdrawal_address || this.provider.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
     debug("withdraw owner lock is:", ownerLock);
     const ownerLockHash = utils.computeScriptHash(ownerLock);
     const accountScriptHash = this.provider.getLayer2LockScriptHash();
@@ -464,8 +515,10 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   generateDepositLock(): Script {
-    const cancelTimeOut = getAdvancedSettings("v0").MIN_CANCEL_DEPOSIT_TIME;
-    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address);
+    const { cancelTimeOut } = this.getAdvancedSettings();
+    const ownerLock: Script = helpers.parseAddress(this.provider.l1Address, {
+      config: this.getConfig().lumosConfig,
+    });
     const ownerLockHash: Hash = utils.computeScriptHash(ownerLock);
     const layer2Lock: Script = this.provider.getLayer2LockScript();
     const depositLockArgs = {
@@ -478,7 +531,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const depositLockArgsHexString: HexString = new toolkit.Reader(
       V0DepositLockArgs.pack(depositLockArgs),
     ).serializeJson();
-    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getLightGodwokenConfig().layer2Config;
+    const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getConfig().layer2Config;
     const depositLock: Script = {
       code_hash: SCRIPTS.deposit_lock.script_type_hash,
       hash_type: "type",

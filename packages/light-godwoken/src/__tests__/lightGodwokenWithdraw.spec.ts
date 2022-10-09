@@ -5,7 +5,8 @@ import LightGodwokenV0 from "../LightGodwokenV0";
 import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import { deBifyRawWithdrawalRequestV0, deBifyRawWithdrawalRequestV1, dummyScriptHash } from "./utils";
 import { BI } from "@ckb-lumos/lumos";
-import { testConfig } from "./lightGodwokenConfig";
+import { createLightGodwoken } from "./client";
+import { GodwokenNetwork, GodwokenVersion } from "../config";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -13,20 +14,18 @@ let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
-  const dummyEthereum = {
-    on: () => {},
-  };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig);
-  lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig);
-  lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
+  lightGodwokenV0 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V0);
+  lightGodwokenProviderV0 = lightGodwokenV0.provider;
+  lightGodwokenV1 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V1);
+  lightGodwokenProviderV1 = lightGodwokenV1.provider;
+
   sinon.stub(lightGodwokenV1.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x9"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getNonce").returns(Promise.resolve("0x1"));
   sinon.stub(lightGodwokenV1.godwokenClient, "getChainId").returns(Promise.resolve("0x11"));
 
-  sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
+  /*sinon.stub(lightGodwokenV0.godwokenClient, "getAccountIdByScriptHash").returns(Promise.resolve("0x10"));
   sinon.stub(lightGodwokenV0.godwokenClient, "getNonce").returns(Promise.resolve("0x02"));
-  sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));
+  sinon.stub(lightGodwokenV0.godwokenClient, "getChainId").returns(Promise.resolve("0x12"));*/
 });
 
 describe("test light godwoken v1 withdrawal", () => {
@@ -114,7 +113,8 @@ describe("test light godwoken v1 withdrawal", () => {
   });
 });
 
-describe("test light godwoken v0 withdrawal", () => {
+// v0 test cases are hidden due to deprecation of testnet_v0
+/*describe("test light godwoken v0 withdrawal", () => {
   it("should generate RawWithdrawalRequest when withdraw 2000 ckb and user balance is 2000", async () => {
     sinon.stub(lightGodwokenV0, "getL2CkbBalance").returns(Promise.resolve(BI.from(200000000000).toHexString()));
 
@@ -202,4 +202,4 @@ describe("test light godwoken v0 withdrawal", () => {
     }
     expect(errMsg).toEqual("Godwoken Erc20 balance 1999000000000000000000 is less than 2000000000000000000000");
   });
-});
+});*/

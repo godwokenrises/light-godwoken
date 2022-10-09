@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "target": "es2015",
     "outDir": "dist",
     "rootDir": "src",
     "composite": true,
@@ -11,9 +12,6 @@
     "src/**/*.json"
   ],
   "exclude": [
-    "dist",
-    "coverage",
-    "node_modules",
-    "src/__tests__"
+    "**/dist"
   ]
 }

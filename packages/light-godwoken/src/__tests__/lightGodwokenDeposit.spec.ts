@@ -5,13 +5,13 @@ import DefaultLightGodwokenProvider from "../lightGodwokenProvider";
 import {
   generateCellInput,
   outputCapacityOf,
-  randomScript,
   outputSudtAmountOf,
   randomSudtTypeScriptWithoutArgs,
   randomSudtTypeScript,
 } from "./utils";
-import { testConfig } from "./lightGodwokenConfig";
 import { BI, Script } from "@ckb-lumos/lumos";
+import { createLightGodwoken } from "./client";
+import { GodwokenNetwork, GodwokenVersion } from "../config";
 
 let lightGodwokenV0: LightGodwokenV0;
 let lightGodwokenV1: LightGodwokenV1;
@@ -19,13 +19,10 @@ let lightGodwokenProviderV0: DefaultLightGodwokenProvider;
 let lightGodwokenProviderV1: DefaultLightGodwokenProvider;
 beforeEach(() => {
   const ethAddress = "0x0C1EfCCa2Bcb65A532274f3eF24c044EF4ab6D73";
-  const dummyEthereum = {
-    on: () => {},
-  };
-  lightGodwokenProviderV1 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v1", testConfig);
-  lightGodwokenV1 = new LightGodwokenV1(lightGodwokenProviderV1);
-  lightGodwokenProviderV0 = new DefaultLightGodwokenProvider(ethAddress, dummyEthereum, "v0", testConfig);
-  lightGodwokenV0 = new LightGodwokenV0(lightGodwokenProviderV0);
+  lightGodwokenV0 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V0);
+  lightGodwokenProviderV0 = lightGodwokenV0.provider;
+  lightGodwokenV1 = createLightGodwoken(ethAddress, GodwokenNetwork.Testnet, GodwokenVersion.V1);
+  lightGodwokenProviderV1 = lightGodwokenV1.provider;
 });
 
 type StubOptions = {
@@ -151,7 +148,8 @@ describe("test light godwoken v1 deposit", () => {
   });
 });
 
-describe("test light godwoken v0 deposit", () => {
+// v0 test cases are hidden due to deprecation of testnet_v0
+/*describe("test light godwoken v0 deposit", () => {
   it("should deposit 2000 ckb ok when user balance is 2000", async () => {
     stubCellCollector({ version: "v0", capacity: 2000, amount: 0 });
     const tx = await lightGodwokenV0.generateDepositTx({
@@ -212,4 +210,4 @@ describe("test light godwoken v0 deposit", () => {
     }
     expect(errMsg).toEqual("Not enough SUDT:expected: 2000000000000000000000, actual: 1999000000000000000000");
   });
-});
+});*/
