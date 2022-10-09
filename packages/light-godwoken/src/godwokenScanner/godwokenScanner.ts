@@ -2,10 +2,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { Hash } from "@ckb-lumos/base";
 import { HexString } from "@ckb-lumos/lumos";
 import { DepositHistoryResponse } from "./requestTypes/depositHistories";
-import {
-  WithdrawalHistoryResponse,
-  WithdrawalHistoryV0Response
-} from "./requestTypes/withdrawalHistories";
+import { WithdrawalHistoryResponse, WithdrawalHistoryV0Response } from "./requestTypes/withdrawalHistories";
 
 export class GodwokenScanner {
   private readonly axios: AxiosInstance;
@@ -51,6 +48,6 @@ export class GodwokenScanner {
   }
 
   async getWithdrawalHistoriesV0(ownerLockHash: Hash, page: number = 1) {
-    return await this.getWithdrawalHistories(ownerLockHash, page) as WithdrawalHistoryV0Response;
+    return (await this.getWithdrawalHistories(ownerLockHash, page)) as WithdrawalHistoryV0Response;
   }
 }

@@ -55,7 +55,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       manual: true,
       target: listRef,
       isNoMore: (data) => data?.hasMore === false,
-    }
+    },
   );
 
   // When LightGodwoken client rebuild, reset pagination
