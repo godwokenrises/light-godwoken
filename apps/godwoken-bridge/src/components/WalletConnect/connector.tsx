@@ -1,31 +1,45 @@
 import React, { useEffect } from "react";
 import styled from "styled-components";
 import { COLOR } from "../../style/variables";
-import { SecondeButton } from "../../style/common";
-import { URI_AVAILABLE } from "@web3-react/walletconnect";
-import { Popover } from "antd";
+import { ConfirmModal } from "../../style/common";
 import { connectors } from "./connectors";
+import { ReactComponent as MetaMaskIcon } from "../../assets/wallets/metamask.svg";
+import { ReactComponent as WalletConnectIcon } from "../../assets/wallets/wallet-connect.svg";
+import { ReactComponent as ImTokenIcon } from "../../assets/wallets/imtoken.svg";
+import { ReactComponent as SafePalIcon } from "../../assets/wallets/safepal.svg";
 
 const StyleWrapper = styled.div`
   display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const WalletBoxWrapper = styled.div`
+  display: flex;
   flex-direction: column;
-  > a,
-  > button {
+  width: 150px;
+  height: 100px;
+  color: ${COLOR.primary};
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0 10px;
+  border-radius: 8px;
+  margin: 10px 10px;
+  text-align: center;
+  line-height: 33px;
+  font-size: 14px;
+  font-weight: bold;
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
     color: ${COLOR.primary};
-    text-decoration: none;
-    cursor: pointer;
-    height: 33px;
-    padding: 0 10px;
-    border-radius: 8px;
-    margin: 4px 0px;
-    text-align: center;
-    line-height: 33px;
-    font-size: 14px;
-    font-weight: bold;
-    &:hover {
-      background: rgba(0, 0, 0, 0.1);
-      color: ${COLOR.primary};
-    }
+  }
+  > svg {
+    width: 120px;
+    height: 80px;
+  }
+  .title {
+    color: ${COLOR.primary};
   }
 `;
 
@@ -59,20 +73,35 @@ export const SelectMenu: React.FC<SelectMenuProps> = ({ handleClick }) => {
 
   return (
     <StyleWrapper>
-      <SecondeButton onClick={connectMetamask}>Metamask</SecondeButton>
-      <SecondeButton onClick={connectImToken}>ImToken</SecondeButton>
-      <SecondeButton onClick={connectSafePal}>SafePal</SecondeButton>
-      <SecondeButton onClick={connectWalletConnect}>WalletConnect</SecondeButton>
+      <WalletBoxWrapper onClick={connectMetamask}>
+        <MetaMaskIcon />
+        <div className="title">Metamask</div>
+      </WalletBoxWrapper>
+
+      <WalletBoxWrapper onClick={connectImToken}>
+        <ImTokenIcon />
+        <div className="title">ImToken</div>
+      </WalletBoxWrapper>
+
+      <WalletBoxWrapper onClick={connectSafePal}>
+        <SafePalIcon />
+        <div className="title">SafePal</div>
+      </WalletBoxWrapper>
+
+      <WalletBoxWrapper onClick={connectWalletConnect}>
+        <WalletConnectIcon />
+        <div className="title">WalletConnect</div>
+      </WalletBoxWrapper>
     </StyleWrapper>
   );
 };
 
-type ConnectorPopoverProps = {
+type ConnectorModalProps = {
   connectBtnQuerySelector: string;
   popoverVisible: boolean;
   setPopoverVisible: (v: boolean) => void;
 };
-export const ConnectorPopover: React.FC<ConnectorPopoverProps> = ({
+export const ConnectorModal: React.FC<ConnectorModalProps> = ({
   connectBtnQuerySelector,
   popoverVisible,
   setPopoverVisible,
@@ -91,12 +120,15 @@ export const ConnectorPopover: React.FC<ConnectorPopoverProps> = ({
   });
 
   return (
-    <Popover
-      content={() => <SelectMenu handleClick={closeSelectMenu}></SelectMenu>}
-      trigger="click"
-      overlayClassName="popover-menu"
+    <ConfirmModal
+      title={"Choose Wallet"}
       visible={popoverVisible}
-      placement="top"
-    ></Popover>
+      onOk={closeSelectMenu}
+      onCancel={closeSelectMenu}
+      footer={null}
+      width={400}
+    >
+      <SelectMenu handleClick={closeSelectMenu}></SelectMenu>
+    </ConfirmModal>
   );
 };

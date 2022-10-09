@@ -5,7 +5,7 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { availableVersions } from "../../utils/environment";
-import { ConnectorPopover } from "./connector";
+import { ConnectorModal } from "./connector";
 import { connectors } from "./connectors";
 import { URI_AVAILABLE } from "@web3-react/walletconnect";
 
@@ -79,11 +79,11 @@ export const WalletConnect: React.FC = () => {
       <SecondeButton className="connect-wallet" onClick={connect}>
         Connect
       </SecondeButton>
-      <ConnectorPopover
+      <ConnectorModal
         connectBtnQuerySelector=".connect-wallet"
         popoverVisible={openWalletSelector}
         setPopoverVisible={setOpenWalletSelector}
-      ></ConnectorPopover>
+      ></ConnectorModal>
     </StyleWrapper>
   );
 };
