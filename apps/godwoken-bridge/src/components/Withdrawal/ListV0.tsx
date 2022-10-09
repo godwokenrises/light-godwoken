@@ -1,17 +1,18 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 import Tooltip from "antd/lib/tooltip";
 import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOutlined";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { LightGodwokenV0 } from "light-godwoken";
+import { useInfiniteScroll } from "ahooks";
+import { useQuery } from "react-query";
+import { providers } from "ethers";
 import { LinkList, Tab } from "../../style/common";
 import { useClock } from "../../hooks/useClock";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { useQuery } from "react-query";
 import { Placeholder } from "../Placeholder";
-import { LightGodwokenV0 } from "light-godwoken";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { createLightGodwokenV1 } from "../../utils/lightGodwoken";
-import { providers } from "ethers";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -31,43 +32,86 @@ export const WithdrawalList: React.FC = () => {
     navigate(`/${params.version}/withdrawal/${targetStatus}`);
   }
 
-  const lightGodwoken = useLightGodwoken();
   const now = useClock();
+  const lightGodwoken = useLightGodwoken();
+  const lightGodwokenV1 = createLightGodwokenV1(
+    lightGodwoken!.provider.getL2Address(),
+    lightGodwoken!.provider.getNetwork(),
+    (lightGodwoken!.provider.ethereum.provider as providers.Web3Provider).provider,
+  );
 
-  const withdrawalListQuery = useQuery(
-    ["queryWithdrawList", { version: lightGodwoken?.getVersion(), l2Address: lightGodwoken?.provider.getL2Address() }],
-    () => {
-      const lightGodwokenV1 = createLightGodwokenV1(
-        lightGodwoken!.provider.getL2Address(),
-        lightGodwoken!.provider.getNetwork(),
-        (lightGodwoken!.provider.ethereum.provider as providers.Web3Provider).provider,
-      );
+  const listRef = useRef<HTMLDivElement>(null);
+  const withdrawalHistory = useInfiniteScroll(
+    async (data) => {
+      const normalPage = data?.normalpage ? (data?.normalHasMore ? data?.normalpage + 1 : data?.normalPage) : 1;
+      const fastPage = data?.fastPage ? (data?.fastHasMore ? data?.fastPage + 1 : data?.fastPage) : 1;
 
-      const normalWithdrawalList = (lightGodwoken as LightGodwokenV0).listWithdrawWithScannerApi();
-      const fastWithdrawalList = (lightGodwoken as LightGodwokenV0).listFastWithdrawWithScannerApi(lightGodwokenV1);
-      return Promise.all([normalWithdrawalList, fastWithdrawalList]);
+      const [normalList, fastList] = await Promise.all([
+        (() => {
+          if (data?.normalHasMore || normalPage === 1) {
+            return (lightGodwoken as LightGodwokenV0).getWithdrawalHistories(normalPage);
+          } else {
+            return [];
+          }
+        })(),
+        (() => {
+          if (data?.fastPage || fastPage === 1) {
+            return (lightGodwoken as LightGodwokenV0).getFastWithdrawalHistories(lightGodwokenV1, fastPage);
+          } else {
+            return [];
+          }
+        })(),
+      ]);
+      const normalHasMore = normalList.length > 0;
+      const fastHasMore = fastList.length > 0;
+
+      return {
+        initialized: true,
+        list: [...normalList, ...fastList],
+        normalPage,
+        normalHasMore,
+        fastPage,
+        fastHasMore,
+        hasMore: normalHasMore || fastHasMore,
+      };
     },
     {
-      enabled: !!lightGodwoken,
+      manual: true,
+      target: listRef,
+      isNoMore: (data) => data?.hasMore === false,
     },
   );
-  const { data: withdrawalList, isLoading } = withdrawalListQuery;
-  const formattedWithdrawalList = withdrawalList ? [...withdrawalList[0], ...withdrawalList[1]] : [];
-  const sortedWithdrawalList = formattedWithdrawalList.sort(
-    (a, b) => b.withdrawalBlockNumber - a.withdrawalBlockNumber,
-  );
-  const pendingList = sortedWithdrawalList.filter((history) => history.status === "pending");
-  const completedList = sortedWithdrawalList.filter(
-    (history) => history.status === "success" || history.status === "failed",
-  );
 
-  if (!lightGodwoken) {
-    return <WithdrawalListDiv>please connect wallet first</WithdrawalListDiv>;
-  }
+  // When LightGodwoken client rebuild, reset pagination
+  useEffect(() => {
+    if (lightGodwoken && !withdrawalHistory.loading) {
+      withdrawalHistory.mutate(void 0);
+      withdrawalHistory.reload();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lightGodwoken]);
+
+  const isLoading = withdrawalHistory.loading || withdrawalHistory.loadingMore;
+  const withdrawalList = useMemo(() => {
+    const list = withdrawalHistory.data?.list ?? [];
+    if (list.length) {
+      list.sort((a, b) => {
+        return b.withdrawalBlockNumber - a.withdrawalBlockNumber;
+      });
+    }
+    return list;
+  }, [withdrawalHistory.data?.list]);
+  const pendingList = useMemo(() => {
+    return withdrawalList.filter((history) => history.status === "pending");
+  }, [withdrawalList]);
+  const completedList = useMemo(() => {
+    return withdrawalList.filter((history) => history.status !== "pending");
+  }, [withdrawalList]);
+
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;
   }
-  if (!withdrawalList) {
+  if (!lightGodwoken || !withdrawalHistory.data?.initialized) {
     return (
       <WithdrawalListDiv>
         <Placeholder />

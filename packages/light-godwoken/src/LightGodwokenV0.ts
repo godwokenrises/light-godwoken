@@ -22,7 +22,6 @@ import { AbiItems } from "@polyjuice-provider/base";
 import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GodwokenClient } from "./godwoken/godwokenV0";
 import LightGodwokenProvider from "./lightGodwokenProvider";
-import DefaultLightGodwokenProvider from "./lightGodwokenProvider";
 import { RawWithdrwal, RawWithdrwalCodec, V0DepositLockArgs, WithdrawalRequestExtraCodec } from "./schemas/codecV0";
 import { debug } from "./debug";
 import DefaultLightGodwokenV1 from "./LightGodwokenV1";
@@ -268,20 +267,29 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     );
   }
 
-  async listWithdrawWithScannerApi(): Promise<WithdrawResultV0[]> {
+  async getWithdrawalHistories(page?: number): Promise<WithdrawResultV0[]> {
     const ownerLockHash = await this.provider.getLayer1LockScriptHash();
-    return await this.listWithdrawByOwnerLockHash(ownerLockHash);
+    return await this.getWithdrawalHistoriesByOwnerLockHash(ownerLockHash, page);
   }
 
-  async listFastWithdrawWithScannerApi(lightGodwokenV1: DefaultLightGodwokenV1): Promise<WithdrawResultV0[]> {
+  async getFastWithdrawalHistories(
+    lightGodwokenV1: DefaultLightGodwokenV1,
+    page?: number,
+  ): Promise<WithdrawResultV0[]> {
     const v1DepositLock = lightGodwokenV1.generateDepositLock();
-    return await this.listWithdrawByOwnerLockHash(utils.computeScriptHash(v1DepositLock));
+    return await this.getWithdrawalHistoriesByOwnerLockHash(utils.computeScriptHash(v1DepositLock), page);
   }
 
-  async listWithdrawByOwnerLockHash(ownerLockHash: Hash): Promise<WithdrawResultV0[]> {
-    const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash);
+  async getWithdrawalHistoriesByOwnerLockHash(ownerLockHash: Hash, page?: number): Promise<WithdrawResultV0[]> {
+    const histories = await this.godwokenScannerClient.getWithdrawalHistoriesV0(ownerLockHash, page);
+    if (!histories.data.length || (page && histories.meta.total_page < page)) {
+      return [];
+    }
+
     const lastFinalizedBlockNumber = await this.provider.getLastFinalizedBlockNumber();
-    const collectedWithdrawals: WithdrawResultV0[] = histories.map((item) => {
+    return histories.data.map((data) => {
+      const item = data.attributes;
+
       let amount = "0x0";
       let erc20 = undefined;
       if (item.udt_id !== CKB_SUDT_ID) {
@@ -302,7 +310,6 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         status: item.state === "succeed" ? "success" : item.state,
       };
     });
-    return collectedWithdrawals;
   }
 
   getWithdrawalCellSearchParams(ethAddress: string) {

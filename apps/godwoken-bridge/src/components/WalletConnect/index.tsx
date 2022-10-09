@@ -2,9 +2,10 @@ import { Select } from "antd";
 import styled from "styled-components";
 import { SecondeButton } from "../../style/common";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { useNavigate, useParams } from "react-router-dom";
+import { availableVersions } from "../../utils/environment";
 const { Option } = Select;
 const StyleWrapper = styled.div`
   display: flex;
@@ -49,8 +50,11 @@ export const WalletConnect: React.FC = () => {
   return (
     <StyleWrapper>
       <Select className="network-select" value={version} onChange={handleChange}>
-        <Option value="v0">Godwoken V0</Option>
-        <Option value="v1">Godwoken V1</Option>
+        {availableVersions.map((version) => (
+          <Option value={version} key={version}>
+            Godwoken {version.toUpperCase()}
+          </Option>
+        ))}
       </Select>
       <SecondeButton onClick={connect}>Connect</SecondeButton>
     </StyleWrapper>
