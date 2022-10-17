@@ -417,7 +417,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     const withdrawalRequestExtra = {
       request: withdrawalRequest,
-      owner_lock: ownerLock,
+      // owner_lock: ownerLock,
       withdraw_to_v1: withdrawToV1 ? 1 : 0,
     };
 
