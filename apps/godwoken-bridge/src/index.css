@@ -41,7 +41,7 @@ code {
 .ant-popover-arrow {
   display: none;
 }
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
   .ant-popover.popover-menu {
     padding-bottom: 13px;
   }

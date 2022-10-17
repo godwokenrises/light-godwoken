@@ -27,6 +27,8 @@ import {
   SUDT_CELL_CAPACITY,
   GetSudtBalance,
   DepositResult,
+  L1TransferPayload,
+  L1TransactionEventEmitter,
 } from "./lightGodwokenType";
 import {
   DepositCanceledError,
@@ -34,17 +36,17 @@ import {
   DepositRejectedError,
   DepositTimeoutError,
   DepositTxNotFoundError,
+  L1TransactionRejectedError,
   Layer1RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
   TransactionSignError,
   WithdrawalTimeoutError,
 } from "./constants/error";
-import { getTokenList } from "./tokens";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
-  constructor(provider: LightGodwokenProvider) {
+  protected constructor(provider: LightGodwokenProvider) {
     this.provider = provider;
   }
 
@@ -840,6 +842,303 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     };
     const capacity = helpers.minimalCellCapacity(cell);
     return "0x" + capacity.toString(16);
+  }
+
+  async l1Transfer(payload: L1TransferPayload): Promise<Hash> {
+    let unsignedTx = await this.generateL1TransferTx(payload);
+    unsignedTx = await this.payTxFee(unsignedTx);
+
+    let signedTx: Transaction;
+    try {
+      signedTx = await this.provider.signL1TxSkeleton(unsignedTx);
+    } catch (e) {
+      throw new TransactionSignError((e as Error).message, "Failed to sign transaction");
+    }
+
+    debug("signedTx", signedTx);
+
+    let txHash: Hash;
+    try {
+      txHash = await this.provider.sendL1Transaction(signedTx);
+    } catch (e) {
+      throw new Layer1RpcError((e as Error).message, "Failed to send transaction");
+    }
+
+    return txHash;
+  }
+
+  async generateL1TransferTx(payload: L1TransferPayload): Promise<helpers.TransactionSkeletonType> {
+    const config = this.getConfig();
+
+    const isTransferSudt = payload.sudtType !== void 0;
+    const ckbAmount = !isTransferSudt ? payload.amount : BI.from(SUDT_CELL_CAPACITY).toHexString();
+    const sudtAmount = isTransferSudt ? payload.amount : "0x0";
+    const senderLock = helpers.parseAddress(this.provider.l1Address, {
+      config: config.lumosConfig,
+    });
+
+    // always need to left 64CKB for exchange of CKB cell
+    let neededCkb = BI.from(ckbAmount).add(64_00000000);
+    const neededSudt = BI.from(sudtAmount);
+
+    let collectedCkb = BI.from(0);
+    let collectedSudt = BI.from(0);
+    const collectedCells: Cell[] = [];
+
+    // collect sUDT
+    if (isTransferSudt && neededSudt.gt(0)) {
+      // if user doesn't transfer all sUDT, collect more CKB to exchange for sUDT
+      // add `neededCkb` here instead before here to collect as more free sUDT cells
+      const sudtBalance = await this.getSudtBalance({
+        type: payload.sudtType!,
+      });
+      if (neededSudt.lt(BI.from(sudtBalance))) {
+        neededCkb = neededCkb.add(SUDT_CELL_CAPACITY);
+      }
+
+      const sudtCollector = this.provider.ckbIndexer.collector({
+        lock: senderLock,
+        type: payload.sudtType,
+      });
+      for await (const cell of sudtCollector.collect()) {
+        collectedCells.push(cell);
+        collectedCkb = collectedCkb.add(BI.from(cell.cell_output.capacity));
+        collectedSudt = collectedSudt.add(utils.readBigUInt128LECompatible(cell.data));
+        if (collectedSudt.gte(neededSudt)) {
+          break;
+        }
+      }
+    }
+
+    // collect sUDT cells with extra free capacity
+    const collectedFreeCells: Cell[] = [];
+    if (collectedCkb.lt(neededCkb)) {
+      const freeCkbCollector = this.provider.ckbIndexer.collector({
+        lock: senderLock,
+        type: {
+          code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
+          hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+          args: "0x",
+        },
+      });
+      for await (const cell of freeCkbCollector.collect()) {
+        const hasFreeCkb = BI.from(cell.cell_output.capacity).gt(SUDT_CELL_CAPACITY);
+        const alreadyCollected = collectedCells.some((collected) => {
+          return (
+            isEqual(collected.out_point?.tx_hash, cell.out_point?.tx_hash) &&
+            isEqual(collected.out_point?.index, cell.out_point?.index)
+          );
+        });
+
+        if (hasFreeCkb && !alreadyCollected) {
+          collectedFreeCells.push(cell);
+          collectedCkb = collectedCkb.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+        }
+        if (collectedCkb.gte(neededCkb)) {
+          break;
+        }
+      }
+    }
+
+    // collect CKB
+    if (collectedCkb.lt(neededCkb)) {
+      const ckbCollector = this.provider.ckbIndexer.collector({
+        lock: senderLock,
+        type: "empty",
+        outputDataLenRange: ["0x0", "0x1"],
+      });
+      for await (const cell of ckbCollector.collect()) {
+        collectedCkb = collectedCkb.add(BI.from(cell.cell_output.capacity));
+        collectedCells.push(cell);
+        if (collectedCkb.gte(neededCkb)) {
+          break;
+        }
+      }
+    }
+
+    // if still not enough, throw error
+    if (collectedCkb.lt(neededCkb)) {
+      const message = `Not enough CKB, expected: ${neededCkb}, actual: ${collectedCkb}`;
+      throw new NotEnoughCapacityError({ expected: neededCkb, actual: collectedCkb }, message);
+    }
+    if (collectedSudt.lt(neededSudt)) {
+      const message = `Not enough sUDT, expected: ${neededSudt}, actual: ${collectedSudt}`;
+      throw new NotEnoughSudtError({ expected: neededSudt, actual: collectedSudt }, message);
+    }
+
+    const outputCells = this.generateL1TransferOutputCells(payload, collectedCells, collectedFreeCells);
+    let txSkeleton = helpers.TransactionSkeleton({
+      cellProvider: this.provider.ckbIndexer,
+    });
+
+    txSkeleton = txSkeleton
+      .update("cellDeps", (cell_deps) => {
+        const deps = [
+          getCellDep(config.layer1Config.SCRIPTS.omni_lock),
+          getCellDep(config.layer1Config.SCRIPTS.secp256k1_blake160),
+        ];
+        if (isTransferSudt || collectedFreeCells.length > 0) {
+          deps.push(getCellDep(config.layer1Config.SCRIPTS.sudt));
+        }
+        return cell_deps.push(...deps);
+      })
+      .update("inputs", (inputs) => {
+        return inputs.push(...collectedCells, ...collectedFreeCells);
+      })
+      .update("outputs", (outputs) => {
+        return outputs.push(...outputCells);
+      });
+
+    return txSkeleton;
+  }
+
+  generateL1TransferOutputCells(payload: L1TransferPayload, collectedCells: Cell[], collectedFreeCells: Cell[]) {
+    const config = this.getConfig();
+    const minimumCellCapacity = BI.from(63_00000000);
+    const minimumSudtCellCapacity = BI.from(SUDT_CELL_CAPACITY);
+
+    const isTransferSudt = payload.sudtType !== void 0;
+    const sudtAmount = isTransferSudt ? payload.amount : "0x0";
+
+    // if transferring CKB, ckbAmount should >= 63 CKB,
+    // if transferring sUDT, ckbAmount should >= 144 CKB
+    const ckbAmount = !isTransferSudt ? payload.amount : minimumSudtCellCapacity.toHexString();
+    const senderLock = helpers.parseAddress(this.provider.l1Address, {
+      config: config.lumosConfig,
+    });
+
+    const collectedCkb = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    const collectedFreeCkb = collectedFreeCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    const collectedSudt = collectedCells.reduce((acc, cell) => {
+      if (cell.cell_output.type) {
+        return acc.add(utils.readBigUInt128LE(cell.data));
+      } else {
+        return acc;
+      }
+    }, BI.from(0));
+
+    const returnSudtCellsMap: Record<HexString, Cell> = {};
+    collectedFreeCells.forEach((cell) => {
+      const sudtTypeArgs = cell.cell_output.type!.args;
+      if (sudtTypeArgs in returnSudtCellsMap) {
+        // if sUDT cell already exist, combine cell.data
+        const cellAmount = utils.readBigUInt128LECompatible(cell.data);
+        const mapCellAmount = utils.readBigUInt128LECompatible(returnSudtCellsMap[sudtTypeArgs].data);
+        returnSudtCellsMap[sudtTypeArgs].data = utils.toBigUInt128LE(cellAmount.add(mapCellAmount));
+      } else {
+        // we don't need block_number, bloch_hash and out_point in tx output cells
+        // return free sUDT cells with only minimum capacity
+        returnSudtCellsMap[sudtTypeArgs] = {
+          data: cell.data,
+          cell_output: {
+            ...cell.cell_output,
+            capacity: BI.from(SUDT_CELL_CAPACITY).toHexString(),
+          },
+        };
+      }
+    });
+
+    // transfer to target address
+    const transferCell: Cell = {
+      cell_output: {
+        capacity: ckbAmount,
+        lock: helpers.parseAddress(payload.toAddress, {
+          config: config.lumosConfig,
+        }),
+      },
+      data: "0x",
+    };
+
+    // if transferring sUDT
+    if (isTransferSudt && !["0x", "0x0"].includes(sudtAmount)) {
+      transferCell.cell_output.type = payload.sudtType;
+      transferCell.data = utils.toBigUInt128LE(payload.amount);
+
+      const sudtTypeArgs = payload.sudtType!.args;
+      const exchangeSudtAmount = collectedSudt.sub(sudtAmount);
+      if (exchangeSudtAmount.gt(0)) {
+        if (sudtTypeArgs in returnSudtCellsMap) {
+          const existFreeCell = returnSudtCellsMap[sudtTypeArgs];
+          const existFreeCellAmount = utils.readBigUInt128LECompatible(existFreeCell.data);
+          existFreeCell.data = utils.toBigUInt128LE(existFreeCellAmount.add(exchangeSudtAmount));
+        } else {
+          returnSudtCellsMap[sudtTypeArgs] = {
+            data: utils.toBigUInt128LE(exchangeSudtAmount),
+            cell_output: {
+              lock: senderLock,
+              type: payload.sudtType,
+              capacity: minimumSudtCellCapacity.toHexString(),
+            },
+          };
+        }
+      }
+
+      const returnSudtCells = Object.values(returnSudtCellsMap);
+      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+
+      const outputCells = [transferCell, ...returnSudtCells];
+
+      const exchangeCkbFromReturnCells = collectedFreeCkb.sub(returnSudtCellsCkb);
+      const exchangeCkb = collectedCkb.add(exchangeCkbFromReturnCells).sub(ckbAmount);
+      const exchangeShannons = `0x${exchangeCkb.toString(16)}`;
+
+      debug("collectedCells.length", collectedCells.length);
+      debug("collectedFreeCells.length", collectedFreeCells.length);
+      debug("collectedCkb", collectedCkb.toString());
+      debug("collectedFreeCkb", collectedFreeCkb.toString());
+      debug("returnSudtCellsCkb", returnSudtCellsCkb.toString());
+      debug("exchangeCkb", exchangeCkb.toString());
+
+      if (BI.from(exchangeShannons).gte(minimumCellCapacity)) {
+        outputCells.push({
+          cell_output: {
+            capacity: exchangeShannons,
+            lock: senderLock,
+          },
+          data: "0x",
+        });
+      }
+
+      return outputCells;
+    } else {
+      // transferring CKB
+      const returnSudtCells = Object.values(returnSudtCellsMap);
+      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+
+      const outputCells = [transferCell, ...returnSudtCells];
+
+      const exchangeCkbFromReturnCells = collectedFreeCkb.sub(returnSudtCellsCkb);
+      const exchangeCkb = collectedCkb.add(exchangeCkbFromReturnCells).sub(ckbAmount);
+      const exchangeShannons = `0x${exchangeCkb.toString(16)}`;
+      if (BI.from(exchangeShannons).gte(minimumCellCapacity)) {
+        outputCells.push({
+          cell_output: {
+            capacity: exchangeShannons,
+            lock: senderLock,
+          },
+          data: "0x",
+        });
+      }
+
+      return outputCells;
+    }
+  }
+
+  subscribePendingL1Transactions(txs: Hash[]): L1TransactionEventEmitter {
+    const eventEmitter = new EventEmitter();
+    for (let i = 0; i < txs.length; i++) {
+      (async () => {
+        const txHash = txs[i];
+        try {
+          await this.provider.waitForL1Transaction(txHash);
+          eventEmitter.emit("success", txHash);
+        } catch (e) {
+          eventEmitter.emit("fail", e);
+        }
+      })();
+    }
+
+    return eventEmitter;
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<HexNumber> {

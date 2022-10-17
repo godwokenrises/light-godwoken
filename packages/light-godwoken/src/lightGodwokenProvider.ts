@@ -1,7 +1,7 @@
 import Web3 from "web3";
 import { providers } from "ethers";
 import { number } from "@ckb-lumos/codec";
-import { OutPoint } from "@ckb-lumos/base";
+import { OutPoint, TransactionWithStatus } from "@ckb-lumos/base";
 import { initializeConfig } from "@ckb-lumos/config-manager";
 import { utils, core, toolkit, helpers } from "@ckb-lumos/lumos";
 import { Address, Indexer, RPC, Transaction, HexString, Hash, Cell, HashType, Script, BI } from "@ckb-lumos/lumos";
@@ -14,8 +14,14 @@ import { SUDT_ERC20_PROXY_ABI } from "./constants/sudtErc20ProxyAbi";
 import { GetL1CkbBalancePayload, LightGodwokenProvider, SUDT_CELL_CAPACITY } from "./lightGodwokenType";
 import { initConfig, validateLightGodwokenConfig } from "./config";
 import { GodwokenVersion, LightGodwokenConfig, GodwokenNetwork } from "./config";
-import { EnvNotFoundError } from "./constants/error";
+import {
+  EnvNotFoundError,
+  L1TransactionNotExistError,
+  L1TransactionRejectedError,
+  L1TransactionTimeoutError,
+} from "./constants/error";
 import { debug } from "./debug";
+import { retryIfFailed } from "./utils/async";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address;
@@ -298,5 +304,30 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   async asyncSleep(ms = 0) {
     return new Promise((r) => setTimeout(r, ms));
+  }
+
+  async waitForL1Transaction(txHash: Hash): Promise<TransactionWithStatus> {
+    const tx = await retryIfFailed(
+      async () => {
+        const txWithStatus = await this.ckbRpc.get_transaction(txHash);
+        debug("waitForL1Transaction", txHash, txWithStatus);
+        if (!txWithStatus) {
+          throw new L1TransactionNotExistError(txHash, "L1 Tx not exist");
+        }
+        if (["committed", "rejected"].includes(txWithStatus.tx_status.status)) {
+          return txWithStatus;
+        } else {
+          throw new L1TransactionTimeoutError(txHash, "L1 tx timeout");
+        }
+      },
+      60,
+      1000,
+    );
+
+    if (tx.tx_status.status === "rejected") {
+      throw new L1TransactionRejectedError(txHash, "L1 tx rejected");
+    }
+
+    return tx;
   }
 }
