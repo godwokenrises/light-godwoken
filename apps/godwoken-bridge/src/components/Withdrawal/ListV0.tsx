@@ -114,19 +114,8 @@ export const WithdrawalList: React.FC = () => {
 
   const godwokenVersion = useGodwokenVersion();
   const l1Address = useMemo(() => lightGodwoken?.provider.getL1Address(), [lightGodwoken]);
-  const { unlockHistory, addUnlockHistoryItem, setUnlockHistory } = useL1UnlockHistory(
-    `${godwokenVersion}/${l1Address}/unlock`,
-  );
+  const { unlockHistory, setUnlockHistory } = useL1UnlockHistory(`${godwokenVersion}/${l1Address}/unlock`);
   useEffect(() => {
-    // TODO: delete after testing
-    /*const pendingTestTarget = pendingList.find((row) => row.layer1TxHash === "0x9434a536abf55ff5f275eea637cad6eb560df61cff53a0bc2bd376e1b9266e61");
-    if (pendingTestTarget) {
-      addUnlockHistoryItem({
-        withdrawalTxHash: pendingTestTarget.layer1TxHash,
-        unlockTxHash: pendingTestTarget.layer1TxHash,
-      });
-    }*/
-
     const removed = unlockHistory.filter((row) => !completedLayer1TxHashList.includes(row.withdrawalTxHash));
     if (removed.length < unlockHistory.length) {
       setUnlockHistory(removed);

@@ -183,15 +183,16 @@ const Unlock: React.FC<UnlockProps> = ({ layer1TxHash, erc20, cell }) => {
             </LoadingWrapper>
           )}
           {isUnlocking && <Tips>Waiting for User Confirmation</Tips>}
-
-          <Actions>
-            <PlainButton className="cancel" onClick={handleCancel}>
-              Cancel
-            </PlainButton>
-            <SecondeButton className="confirm" onClick={unlock} disabled={isUnlocking}>
-              Confirm
-            </SecondeButton>
-          </Actions>
+          {!isUnlocking && (
+            <Actions>
+              <PlainButton className="cancel" onClick={handleCancel}>
+                Cancel
+              </PlainButton>
+              <SecondeButton className="confirm" onClick={unlock} disabled={isUnlocking}>
+                Confirm
+              </SecondeButton>
+            </Actions>
+          )}
         </ModalContent>
       </ConfirmModal>
     </div>

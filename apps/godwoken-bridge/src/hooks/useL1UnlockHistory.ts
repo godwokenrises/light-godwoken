@@ -1,5 +1,5 @@
 import { Hash } from "@ckb-lumos/lumos";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useLocalStorage } from "@rehooks/local-storage";
 
 export interface ManualUnlockHistory {
@@ -9,6 +9,16 @@ export interface ManualUnlockHistory {
 
 export function useL1UnlockHistory(storageKey: string) {
   const [unlockHistory, setUnlockHistory] = useLocalStorage<ManualUnlockHistory[]>(storageKey, []);
+
+  useEffect(() => {
+    try {
+      const list = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      setUnlockHistory(list);
+    } catch {
+      console.warn("no storage was found for storageKey:", storageKey);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
   const updateUnlockHistoryItem = useCallback(
     (history: ManualUnlockHistory) => {

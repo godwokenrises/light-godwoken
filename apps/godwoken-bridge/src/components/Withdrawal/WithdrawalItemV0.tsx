@@ -146,14 +146,17 @@ const WithdrawalRequestCard = ({
   }, [unlockHistory, layer1TxHash]);
 
   const [isLiveCell, setIsLiveCell] = useState<boolean | undefined>();
+  const [isLoadingLiveCell, setIsLoadingLiveCell] = useState(false);
   useEffect(() => {
     async function updateIsLiveCell() {
       if (status === "available" && hasOutpoint) {
+        setIsLoadingLiveCell(true);
         const liveCell = await lightGodwoken!.provider.ckbRpc.get_live_cell(cell!.out_point!, false);
         setIsLiveCell(liveCell.status === "live");
       } else {
         setIsLiveCell(false);
       }
+      setIsLoadingLiveCell(false);
     }
     updateIsLiveCell();
   }, [lightGodwoken, hasOutpoint, status, cell]);
@@ -230,11 +233,13 @@ const WithdrawalRequestCard = ({
               <Unlock cell={cell!} layer1TxHash={layer1TxHash!} erc20={erc20} />
             </Tooltip>
           )}
-          {status === "available" && hasOutpoint && (matchedUnlockHistory || isLiveCell === false) && (
-            <Tooltip title="Unlocking withdrawal">
-              <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
-            </Tooltip>
-          )}
+          {status === "available" &&
+            hasOutpoint &&
+            (isLoadingLiveCell || matchedUnlockHistory || isLiveCell === false) && (
+              <Tooltip title="Unlocking withdrawal">
+                <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
+              </Tooltip>
+            )}
           {status === "succeed" && (
             <Tooltip title="Withdrawal succeed">
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
