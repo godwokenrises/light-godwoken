@@ -98,6 +98,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
     return getInputError({
       CKBInput,
       CKBBalance,
+      CKBDecimals: 18,
       sudtValue,
       sudtBalance,
       sudtDecimals: selectedSudt?.decimals,
