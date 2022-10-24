@@ -30,11 +30,12 @@ export const isCKBInputValidate = (
 };
 type InputType = {
   CKBInput: string;
-  CKBBalance: string | undefined;
+  CKBBalance?: string;
+  CKBDecimals?: number;
   sudtValue: string;
-  sudtBalance: string | undefined;
-  sudtDecimals: number | undefined;
-  sudtSymbol: string | undefined;
+  sudtBalance?: string;
+  sudtDecimals?: number;
+  sudtSymbol?: string;
 };
 type InputOptionType = {
   minimumCKBAmount: number;
@@ -47,7 +48,7 @@ type InputOptionType = {
  * if it is invalid, return an error message
  */
 export const getInputError = (
-  { CKBInput, CKBBalance, sudtValue, sudtBalance, sudtDecimals, sudtSymbol }: InputType,
+  { CKBInput, CKBBalance, CKBDecimals, sudtValue, sudtBalance, sudtDecimals, sudtSymbol }: InputType,
   limit: InputOptionType = { minimumCKBAmount: 400 },
 ): string | undefined => {
   if (CKBInput === "") {
@@ -56,7 +57,10 @@ export const getInputError = (
   if (parseStringToBI(CKBInput, 8).lt(BI.from(limit.minimumCKBAmount).mul(BI.from(10).pow(8)))) {
     return `Minimum ${limit.minimumCKBAmount} CKB`;
   }
-  if (CKBBalance && parseStringToBI(CKBInput, 8).gt(parseStringToBI(CKBBalance))) {
+  if (CKBBalance) {
+    console.log(parseStringToBI(CKBInput, CKBDecimals ?? 8).toString(), parseStringToBI(CKBBalance).toString());
+  }
+  if (CKBBalance && parseStringToBI(CKBInput, CKBDecimals ?? 8).gt(parseStringToBI(CKBBalance))) {
     return "Insufficient CKB Amount";
   }
   if (sudtValue && sudtBalance && parseStringToBI(sudtValue, sudtDecimals).gt(parseStringToBI(sudtBalance))) {
