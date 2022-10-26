@@ -108,7 +108,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       </LinkList>
       {isPending && (
         <div className="list pending-list">
-          {pendingList.length + displayLocalTxHistory.length === 0 && "There is no pending withdrawal request here"}
+          {pendingList.length + displayLocalTxHistory.length === 0 && "There is no pending withdrawal request here [test]"}
           {displayLocalTxHistory.map((withdraw, index) => (
             <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
           ))}
