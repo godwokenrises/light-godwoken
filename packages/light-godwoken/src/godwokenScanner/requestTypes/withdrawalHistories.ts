@@ -12,7 +12,7 @@ export interface WithdrawalHistory {
   layer1_output_index: number;
   layer1_tx_hash: Hash;
   owner_lock_hash: Hash;
-  state: "pending" | "succeed" | "failed";
+  state: "pending" | "available" | "succeed" | "failed";
   timestamp: string;
   udt_id: number;
   udt_script_hash: Hash;

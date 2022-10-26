@@ -40,7 +40,6 @@ import {
   TransactionSignError,
   WithdrawalTimeoutError,
 } from "./constants/error";
-import { getTokenList } from "./tokens";
 
 export default abstract class DefaultLightGodwoken implements LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -885,9 +884,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
    *
    * @param tx
    * @param fromScript
-   * @param capacity
+   * @param neededCapacity
    *
-   * collect some pure cells and apend them to both input and output sides of the tx.
+   * collect some pure cells and append them to both input and output sides of the tx.
    * later we can pay tx fee from output side.
    */
   async appendPureCkbCell(
@@ -909,8 +908,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     if (collectedSum.lt(neededCapacity)) {
       const message = `Not enough CKB, expected: ${neededCapacity}, actual: ${collectedSum} `;
-      const error = new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedSum }, message);
-      throw error;
+      throw new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedSum }, message);
     }
     const changeOutput: Cell = {
       cell_output: {

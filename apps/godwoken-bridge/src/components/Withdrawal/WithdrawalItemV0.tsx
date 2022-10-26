@@ -1,18 +1,21 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
-import getTimePeriods from "../../utils/getTimePeriods";
-import { getDisplayAmount } from "../../utils/formatTokenAmount";
+import { Tooltip } from "antd";
+import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined, LoadingOutlined } from "@ant-design/icons";
 import { BI, Cell, HexNumber, HexString } from "@ckb-lumos/lumos";
 import { ProxyERC20 } from "light-godwoken";
+import getTimePeriods from "../../utils/getTimePeriods";
+import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { ReactComponent as ArrowDownIcon } from "../../assets/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../assets/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
-import { CheckCircleOutlined, CloseCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
-import { Tooltip } from "antd";
 import { TokenInfoWithAmount } from "./TokenInfoWithAmount";
+import Unlock from "./Unlock";
+import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import { useL1UnlockHistory } from "../../hooks/useL1UnlockHistory";
 
 const StyleWrapper = styled.div`
   background: #f3f3f3;
@@ -39,11 +42,15 @@ const StyleWrapper = styled.div`
       height: 22px;
       margin-right: 5px;
     }
+    .ckb-icon {
+      display: flex;
+      align-items: center;
+    }
     .ckb-amount {
       display: flex;
     }
     .sudt-amount + .ckb-amount {
-      margin-top: 10px;
+      margin-top: 6px;
     }
   }
   .right-side {
@@ -61,6 +68,7 @@ const StyleWrapper = styled.div`
     }
   }
   .list-detail {
+    margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
     a {
@@ -86,12 +94,12 @@ export interface IWithdrawalRequestCardProps {
   remainingBlockNumber?: number;
   capacity: HexNumber;
   amount: HexNumber;
-  status: string;
   cell?: Cell;
   erc20?: ProxyERC20;
   now?: number;
   layer1TxHash?: HexString;
   isFastWithdrawal: boolean;
+  status: "pending" | "available" | "succeed" | "failed";
 }
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
@@ -99,22 +107,32 @@ const WithdrawalRequestCard = ({
   amount,
   status,
   erc20,
+  cell,
   now = 0,
   layer1TxHash,
   isFastWithdrawal,
 }: IWithdrawalRequestCardProps) => {
+  // state
   const [shouldShowMore, setShouldShowMore] = useState(false);
-  const [blockProduceTime, setBlockProduceTime] = useState(0);
-  const lightGodwoken = useLightGodwoken();
-  const l1ScannerUrl = lightGodwoken?.getConfig().layer1Config.SCANNER_URL;
 
+  // light-godwoken
+  const lightGodwoken = useLightGodwoken();
+  const l1Address = useMemo(() => lightGodwoken?.provider.getL1Address(), [lightGodwoken]);
+  const l1ScannerUrl = useMemo(() => lightGodwoken?.getConfig().layer1Config.SCANNER_URL, [lightGodwoken]);
+
+  // block produce time
+  const [blockProduceTime, setBlockProduceTime] = useState(0);
   useEffect(() => {
-    const fetchBlockProduceTime = async () => {
+    async function fetchBlockProduceTime() {
       const result: number = (await lightGodwoken?.getBlockProduceTime()) || 0;
       setBlockProduceTime(result);
-    };
+    }
     fetchBlockProduceTime();
   }, [lightGodwoken]);
+
+  // unlock history
+  const godwokenVersion = useGodwokenVersion();
+  const { unlockHistory } = useL1UnlockHistory(`${godwokenVersion}/${l1Address}/unlock`);
 
   const estimatedArrivalDate = useMemo(
     () => Date.now() + remainingBlockNumber * blockProduceTime,
@@ -122,6 +140,26 @@ const WithdrawalRequestCard = ({
   );
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
+  const hasOutpoint = useMemo(() => cell?.out_point !== void 0, [cell]);
+  const matchedUnlockHistory = useMemo(() => {
+    return layer1TxHash ? unlockHistory.find((row) => row.withdrawalTxHash === layer1TxHash) : void 0;
+  }, [unlockHistory, layer1TxHash]);
+
+  const [isLiveCell, setIsLiveCell] = useState<boolean | undefined>();
+  const [isLoadingLiveCell, setIsLoadingLiveCell] = useState(false);
+  useEffect(() => {
+    async function updateIsLiveCell() {
+      if (status === "available" && hasOutpoint) {
+        setIsLoadingLiveCell(true);
+        const liveCell = await lightGodwoken!.provider.ckbRpc.get_live_cell(cell!.out_point!, false);
+        setIsLiveCell(liveCell.status === "live");
+      } else {
+        setIsLiveCell(false);
+      }
+      setIsLoadingLiveCell(false);
+    }
+    updateIsLiveCell();
+  }, [lightGodwoken, hasOutpoint, status, cell]);
 
   const {
     days: daysLeft,
@@ -157,7 +195,7 @@ const WithdrawalRequestCard = ({
           {erc20 && <TokenInfoWithAmount amount={amount} {...erc20} />}
           <div className="ckb-amount">
             <div className="ckb-icon">
-              <CKBIcon></CKBIcon>
+              <CKBIcon />
             </div>
             <MainText>{CKBAmount}</MainText>
             {isFastWithdrawal && (
@@ -170,23 +208,42 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" &&
-            (shouldShowMore ? (
-              <div className="time">
-                <ArrowUpIcon />
-              </div>
-            ) : (
-              <div className="time">
-                <MainText title="Estimated time left">{isDue ? "Unlocking, please wait..." : countdownText}</MainText>
-                {isDue ? null : <ArrowDownIcon />}
-              </div>
-            ))}
-          {status === "success" && (
-            <>
-              <Tooltip title={status}>
-                <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+          {status === "pending" && shouldShowMore && (
+            <div className="time">
+              <ArrowUpIcon />
+            </div>
+          )}
+          {status === "pending" && !shouldShowMore && (
+            <div className="time">
+              {isDue && (
+                <Tooltip title="Unlocking withdrawal">
+                  <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
+                </Tooltip>
+              )}
+              {!isDue && (
+                <>
+                  <MainText title="Estimated time left">{countdownText}</MainText>
+                  <ArrowDownIcon />
+                </>
+              )}
+            </div>
+          )}
+          {status === "available" && hasOutpoint && !matchedUnlockHistory && isLiveCell === true && (
+            <Tooltip title="Unlock withdrawal to your address">
+              <Unlock cell={cell!} layer1TxHash={layer1TxHash!} erc20={erc20} />
+            </Tooltip>
+          )}
+          {status === "available" &&
+            hasOutpoint &&
+            (isLoadingLiveCell || matchedUnlockHistory || isLiveCell === false) && (
+              <Tooltip title="Unlocking withdrawal">
+                <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
               </Tooltip>
-            </>
+            )}
+          {status === "succeed" && (
+            <Tooltip title="Withdrawal succeed">
+              <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
           )}
           {status === "failed" && (
             <Tooltip title="Withdrawal failed">
@@ -195,7 +252,7 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
-      {status === "success" && (
+      {status === "succeed" && (
         <div className="list-detail">
           <FixedHeightRow>
             <MainText title={layer1TxHash}>
