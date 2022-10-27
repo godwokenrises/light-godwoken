@@ -347,6 +347,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           config: this.getConfig().lumosConfig,
         }),
         type: payload.sudtType,
+        // if sudt cell's data has more info than just amount (16 bytes), skip it
+        // because we don't know what the extension bytes contain
+        outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCapatity = collectedCapatity.add(BI.from(cell.cell_output.capacity));
@@ -367,6 +370,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
           args: "0x",
         },
+        // if sudt cell's data has more info than just amount (16 bytes), skip it
+        // because we don't know what the extension bytes contain
+        outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of freeCkbCollector.collect()) {
         const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cell_output.capacity);
@@ -899,6 +905,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const sudtCollector = this.provider.ckbIndexer.collector({
         lock: senderLock,
         type: payload.sudtType,
+        // if sudt cell's data has more info than just amount (16 bytes), skip it
+        // because we don't know what the extension bytes contain
+        outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCells.push(cell);
@@ -920,6 +929,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
           args: "0x",
         },
+        // if sudt cell's data has more info than just amount (16 bytes), skip it
+        // because we don't know what the extension bytes contain
+        outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of freeCkbCollector.collect()) {
         const hasFreeCkb = BI.from(cell.cell_output.capacity).gt(SUDT_CELL_CAPACITY);

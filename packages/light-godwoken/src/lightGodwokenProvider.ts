@@ -129,6 +129,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
         hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
         args: "0x",
       },
+      // if sudt cell's data has more info than just amount (16 bytes), skip it
+      // because we don't know what the extension bytes contain
+      outputDataLenRange: ["0x10", "0x11"],
     });
     for await (const cell of freeCkbCollector.collect()) {
       ckbBalance = ckbBalance.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
