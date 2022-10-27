@@ -87,11 +87,13 @@ describe("test light godwoken generateDepositOutputCell", () => {
       .withArgs({
         lock: lightGodwokenV1.provider.getLayer1Lock(),
         type: sudtTypeWithoutArgs,
+        outputDataLenRange: ["0x10", "0x11"],
       })
       .returns(mockFreeSudtCollector)
       .withArgs({
         lock: lightGodwokenV1.provider.getLayer1Lock(),
         type: depositSudtTypeScript,
+        outputDataLenRange: ["0x10", "0x11"],
       })
       .returns(mockSudtCollector);
 

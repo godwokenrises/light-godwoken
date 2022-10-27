@@ -1173,6 +1173,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         ...sudtTypeScript,
         args: "0x",
       },
+      // if sudt cell's data has more info than just amount (16 bytes), skip it
+      // because we don't know what the extension bytes contain
+      outputDataLenRange: ["0x10", "0x11"],
     });
 
     // type hash list of all sudt that user want to query
