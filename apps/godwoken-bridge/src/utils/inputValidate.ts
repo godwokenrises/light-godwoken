@@ -126,12 +126,12 @@ export interface L1TransferInputParams {
 }
 
 export const getL1TransferInputError = (params: L1TransferInputParams): string | undefined => {
-  const minCkbCell = "63";
-  const minCkbCellShannons = parseStringToBI(minCkbCell, 8);
-  const minCkbCellWithFee = "64";
-  const minCkbCellWithFeeShannons = parseStringToBI(minCkbCellWithFee, 8);
-  const minSudtCell = "144";
-  const minSudtCellShannons = parseStringToBI(minSudtCell, 8);
+  const minCkbCellCapacity = "63";
+  const minCkbCellShannons = parseStringToBI(minCkbCellCapacity, 8);
+  const minCkbCellCapacityWithFee = "64";
+  const minCkbCellShannonsWithFee = parseStringToBI(minCkbCellCapacityWithFee, 8);
+  const minSudtCellCapacity = "144";
+  const minSudtCellShannons = parseStringToBI(minSudtCellCapacity, 8);
 
   const ckbAmount = parseStringToBI(params.ckbValue || "0", 8);
   const ckbBalance = parseStringToBI(params.ckbBalance || "0");
@@ -139,10 +139,10 @@ export const getL1TransferInputError = (params: L1TransferInputParams): string |
     return `Enter Transfer Amount`;
   }
   if (params.ckbValue && ckbAmount.lt(minCkbCellShannons)) {
-    return `Minimum ${minCkbCell} CKB`;
+    return `Minimum ${minCkbCellCapacity} CKB`;
   }
-  if (ckbBalance.lt(ckbAmount.add(minCkbCellWithFeeShannons))) {
-    return `Balance Less Than ${minCkbCellWithFee} CKB`;
+  if (ckbBalance.lt(ckbAmount.add(minCkbCellShannonsWithFee))) {
+    return `Balance Less Than ${minCkbCellCapacityWithFee} CKB`;
   }
 
   const sudtAmount = parseStringToBI(params.sudtValue || "0", params.sudtDecimals);
@@ -155,8 +155,8 @@ export const getL1TransferInputError = (params: L1TransferInputParams): string |
     return `Insufficient ${params.sudtSymbol} Amount`;
   }
 
-  const minSudtExchange = BI.from(minCkbCellWithFee).add(minSudtCell);
-  const minSudtExchangeShannons = minCkbCellWithFeeShannons.add(minSudtCellShannons);
+  const minSudtExchange = BI.from(minCkbCellCapacityWithFee).add(minSudtCellCapacity);
+  const minSudtExchangeShannons = minCkbCellShannonsWithFee.add(minSudtCellShannons);
   if (params.sudtValue && sudtLeft.gt(0) && ckbBalance.lt(minSudtExchangeShannons)) {
     return `Balance Less Than ${minSudtExchange.toString()} CKB`;
   }

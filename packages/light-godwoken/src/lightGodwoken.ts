@@ -873,6 +873,25 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     return txHash;
   }
 
+  /**
+   * The cell collecting & returning strategies in `l1-transfer` and `deposit` are different.
+   *
+   * ## Capacity collecting:
+   * In l1-transfer, the capacity collecting order: free sudt cell > ckb cell.
+   * In deposit, the capacity collecting order: ckb cell > free sudt cell.
+   *
+   * It means in l1-transfer, we will collect as more free sudt cells as possible,
+   * while in deposit we collect ckb cells first, and when we cannot find more ckb cells,
+   * we collect free sudt cells.
+   *
+   * ## Free sudt cells returning:
+   * In l1-transfer, the returning rule: merge same type of sudt cells into one.
+   * In deposit, the returning rule: we return how many cells as we collected.
+   *
+   * It means if we've collected 2 USDC cells,
+   * in l1-transfer we only return 1 USDC cell and the rest of capacity will be return in a ckb cell,
+   * while in deposit, we will return 2 USDC cells as we collected.
+   */
   async generateL1TransferTx(payload: L1TransferPayload): Promise<helpers.TransactionSkeletonType> {
     const config = this.getConfig();
 
