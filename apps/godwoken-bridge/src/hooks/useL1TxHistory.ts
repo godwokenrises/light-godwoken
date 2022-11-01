@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { writeStorage } from "@rehooks/local-storage";
-import { UniversalToken } from "light-godwoken";
+import { useLocalStorage } from "@rehooks/local-storage";
+import { useCallback, useEffect, useMemo } from "react";
 import { format } from "date-fns";
+import { UniversalToken } from "light-godwoken";
+import { Hash } from "@ckb-lumos/lumos";
 
-type L1TxType = "deposit" | "withdrawal";
+type L1TxType = "deposit" | "withdrawal" | "transfer";
 
 export interface BaseL1TxHistoryInterface {
   type: L1TxType;
@@ -22,99 +23,95 @@ export interface L1TxHistoryInterface extends BaseL1TxHistoryInterface {
   date: string;
 }
 
-export function useL1TxHistory(storageKey: string) {
-  const [txHistory, setTxHistory] = useState<L1TxHistoryInterface[]>(() => []);
-  const storageValue = localStorage.getItem(storageKey);
-  useLayoutEffect(() => {
-    if (storageValue == null) {
-      setTxHistory([]);
-      return;
-    }
+export function useL1TxHistory(storageKey: string | null) {
+  const [txHistory, setTxHistory] = useLocalStorage<L1TxHistoryInterface[]>(storageKey || "", []);
 
+  useEffect(() => {
     try {
-      setTxHistory(JSON.parse(storageValue));
-    } catch (err) {
-      console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+      if (storageKey == null) return;
+      setTxHistory(JSON.parse(localStorage.getItem(storageKey) ?? "[]"));
+    } catch {
+      console.warn("no storage was found for storageKey:", storageKey);
     }
-  }, [storageValue, storageKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
   const addTxToHistory = useCallback(
     (newTxHistory: BaseL1TxHistoryInterface) => {
-      if (storageKey == null) {
-        return;
-      }
-      const newRecord = { ...newTxHistory, date: format(new Date(), "yyyy-MM-dd HH:mm:ss") };
-      const latestTxHistoryRaw = storageValue || "[]";
-      try {
-        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        if (!latestTxHistory.find((item: L1TxHistoryInterface) => item.txHash === newRecord.txHash)) {
-          const newTxHistoryList = [newRecord].concat(latestTxHistory);
-          setTxHistory(newTxHistoryList);
-          writeStorage(storageKey, JSON.stringify(newTxHistoryList));
-        }
-      } catch (err) {
-        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+      if (storageKey == null) return;
+
+      if (!txHistory.find((row) => row.txHash === newTxHistory.txHash)) {
+        setTxHistory([
+          {
+            ...newTxHistory,
+            date: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+          },
+          ...txHistory,
+        ]);
       }
     },
-    [storageValue, storageKey],
+    [storageKey, txHistory, setTxHistory],
   );
 
   const updateTxHistory = useCallback(
-    (txHistory: L1TxHistoryInterface) => {
-      if (storageKey == null) {
-        return;
-      }
-      const latestTxHistoryRaw = storageValue || "[]";
-      try {
-        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
-          if (tx.txHash === txHistory.txHash) {
-            tx = { ...tx, ...txHistory };
-            return tx;
+    (newTxHistory: L1TxHistoryInterface) => {
+      if (storageKey == null) return;
+      setTxHistory(
+        txHistory.map((tx: L1TxHistoryInterface) => {
+          if (tx.txHash === newTxHistory.txHash) {
+            return {
+              ...tx,
+              ...newTxHistory,
+            };
           }
           return tx;
-        });
-        writeStorage(storageKey, JSON.stringify(newHistory));
-        setTxHistory(newHistory);
-      } catch (err) {
-        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
-      }
+        }),
+      );
     },
-    [storageValue, storageKey],
+    [storageKey, txHistory, setTxHistory],
   );
 
   const updateTxWithStatus = useCallback(
-    (txHash: string, status: string) => {
-      if (storageKey == null) {
-        return;
-      }
-      const latestTxHistoryRaw = storageValue || "[]";
-      try {
-        const latestTxHistory = JSON.parse(latestTxHistoryRaw);
-        const newHistory = latestTxHistory.map((tx: L1TxHistoryInterface) => {
-          if (tx.txHash === txHash) {
-            tx = { ...tx, status };
-            return tx;
-          }
-          return tx;
-        });
-        writeStorage(storageKey, JSON.stringify(newHistory));
-        setTxHistory(newHistory);
-      } catch (err) {
-        console.warn("[warn] failed to parse layer 1 transaction history", storageKey, err);
+    (txHash: Hash, status: string) => {
+      if (storageKey == null) return;
+
+      const latestTxHistory = [...txHistory];
+      const index = latestTxHistory.findIndex((row) => row.txHash === txHash);
+      if (index > -1) {
+        latestTxHistory[index] = {
+          ...latestTxHistory[index],
+          status,
+        };
+
+        setTxHistory(latestTxHistory);
       }
     },
-    [storageKey, storageValue],
+    [storageKey, txHistory, setTxHistory],
+  );
+
+  const removeTxWithTxHashes = useCallback(
+    (txHashes: Hash[]) => {
+      if (storageKey == null) return;
+      const filtered = txHistory.filter((row) => {
+        return !txHashes.includes(row.txHash);
+      });
+
+      if (filtered.length !== txHistory.length) {
+        setTxHistory(filtered);
+      }
+    },
+    [storageKey, txHistory, setTxHistory],
   );
 
   return useMemo(
     () => ({
       txHistory,
-      addTxToHistory,
       setTxHistory,
+      addTxToHistory,
       updateTxHistory,
       updateTxWithStatus,
+      removeTxWithTxHashes,
     }),
-    [addTxToHistory, txHistory, updateTxHistory, updateTxWithStatus],
+    [addTxToHistory, removeTxWithTxHashes, setTxHistory, txHistory, updateTxHistory, updateTxWithStatus],
   );
 }

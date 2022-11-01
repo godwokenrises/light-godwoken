@@ -53,11 +53,13 @@ const stubCellCollector = (options: StubOptions) => {
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: sudtTypeWithoutArgs,
+        outputDataLenRange: ["0x10", "0x11"],
       })
       .returns(mockFreeSudtCollector)
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: options.type,
+        outputDataLenRange: ["0x10", "0x11"],
       })
       .returns(mockSudtCollector);
   } else {
@@ -72,6 +74,7 @@ const stubCellCollector = (options: StubOptions) => {
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: sudtTypeWithoutArgs,
+        outputDataLenRange: ["0x10", "0x11"],
       })
       .returns(mockFreeSudtCollector);
   }

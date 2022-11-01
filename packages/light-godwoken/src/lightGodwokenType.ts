@@ -2,6 +2,7 @@ import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexSt
 import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig } from "./config";
 import { GodwokenScannerDataTypes } from "./godwokenScanner";
 import EventEmitter from "events";
+import { TransactionWithStatus } from "@ckb-lumos/base";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -69,6 +70,12 @@ interface DepositListener {
   (event: "fail", listener: (e: Error) => void): void;
 }
 
+interface L1TransactionListener {
+  (event: "pending", listener: (txHash: Hash) => void): void;
+  (event: "success", listener: (txHash: Hash) => void): void;
+  (event: "fail", listener: (e: Error) => void): void;
+}
+
 export interface WithdrawalEventEmitter {
   on: WithdrawListener;
   removeAllListeners(event?: string | symbol): this;
@@ -79,6 +86,12 @@ export interface DepositEventEmitter {
   on: DepositListener;
   removeAllListeners(event?: string | symbol): this;
   emit: (event: "sent" | "pending" | "success" | "fail", payload: any) => void;
+}
+
+export interface L1TransactionEventEmitter {
+  on: L1TransactionListener;
+  removeAllListeners(event?: string | symbol): this;
+  emit: (event: "pending" | "success" | "fail", payload: any) => void;
 }
 
 export interface BaseWithdrawalEventEmitterPayload {
@@ -159,6 +172,8 @@ export interface LightGodwokenProvider {
 
   // now only supported omni lock, the other lock type will be supported later
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
+
+  waitForL1Transaction: (txHash: Hash) => Promise<TransactionWithStatus>;
 }
 
 export type DepositRequest = {
@@ -176,6 +191,12 @@ export type DepositResult = {
   sudt?: SUDT;
   status: "pending" | "success" | "failed";
 };
+
+export interface L1TransferPayload {
+  toAddress: Address;
+  amount: HexNumber;
+  sudtType?: Script;
+}
 
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -222,6 +243,10 @@ export interface LightGodwokenBase {
   subscribPendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+
+  l1Transfer: (payload: L1TransferPayload, eventEmitter?: EventEmitter) => Promise<Hash>;
+
+  subscribePendingL1Transactions: (txs: Hash[]) => L1TransactionEventEmitter;
 
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 

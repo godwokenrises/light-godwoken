@@ -9,20 +9,20 @@ import { isMainnet } from "../../utils/environment";
 const StyledPage = styled.div`
   position: fixed;
   bottom: 0;
-  height: 48px;
+  height: 60px;
   width: 100%;
-  padding: 16px 8px;
+  padding: 8px 8px 16px 8px;
   display: flex;
   justify-content: end;
   align-items: center;
   background: white;
   margin-top: 24px;
-  @media (min-width: 600px) {
+  @media (min-width: 1024px) {
     display: none;
   }
 `;
 
-const PageFooter: React.FC = () => {
+export default function PageFooter() {
   const [popoverVisible, setPopoverVisible] = useState(false);
 
   useEffect(() => {
@@ -43,20 +43,18 @@ const PageFooter: React.FC = () => {
   };
   return (
     <StyledPage>
-      <VersionSelect></VersionSelect>
+      <VersionSelect />
       {!isMainnet && (
         <Popover
-          content={() => <PopoverMenu handleClick={closePopoverMenu}></PopoverMenu>}
           trigger="click"
+          placement="bottomLeft"
           overlayClassName="popover-menu"
           visible={popoverVisible}
-          placement="bottomLeft"
+          content={() => <PopoverMenu handleClick={closePopoverMenu} />}
         >
-          <Hamburger className="hamburger-menu-bottom" onClick={openPopoverMenu}></Hamburger>
+          <Hamburger className="hamburger-menu-bottom" onClick={openPopoverMenu} />
         </Popover>
       )}
     </StyledPage>
   );
-};
-
-export default PageFooter;
+}
