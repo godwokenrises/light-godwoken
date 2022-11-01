@@ -4,7 +4,7 @@ import { notification, Tooltip } from "antd";
 import { BI, Cell, Hash, utils } from "@ckb-lumos/lumos";
 import { captureException } from "@sentry/react";
 import { LoadingOutlined } from "@ant-design/icons";
-import { NotEnoughCapacityError, ProxyERC20 } from "light-godwoken";
+import { NotEnoughCapacityError, ProxyERC20, TransactionSignError } from "light-godwoken";
 import {
   Actions,
   ConfirmModal,
@@ -126,6 +126,12 @@ const Unlock: React.FC<UnlockProps> = ({ layer1TxHash, erc20, cell }) => {
   function handleError(e: unknown) {
     (() => {
       console.error(e);
+      if (e instanceof TransactionSignError) {
+        notification.error({
+          message: `User cancelled sign in metamask, please try again.`,
+        });
+        return;
+      }
       if (e instanceof NotEnoughCapacityError) {
         notification.error({ message: `Unlock Transaction fail, you need to get some ckb on L1 first` });
         return;
