@@ -1,5 +1,7 @@
-import { BI } from "@ckb-lumos/lumos";
+import { Address, BI } from "@ckb-lumos/lumos";
+import { parseAddress } from "@ckb-lumos/helpers";
 import { parseStringToBI } from "./numberFormat";
+import { LightGodwokenConfig } from "light-godwoken";
 
 export const isSudtInputValidate = (sudtValue: string, sudtBalance?: string, decimal?: number) => {
   if (sudtValue === "0" || sudtValue === "") {
@@ -30,11 +32,12 @@ export const isCKBInputValidate = (
 };
 type InputType = {
   CKBInput: string;
-  CKBBalance: string | undefined;
+  CKBBalance?: string;
+  CKBDecimals?: number;
   sudtValue: string;
-  sudtBalance: string | undefined;
-  sudtDecimals: number | undefined;
-  sudtSymbol: string | undefined;
+  sudtBalance?: string;
+  sudtDecimals?: number;
+  sudtSymbol?: string;
 };
 type InputOptionType = {
   minimumCKBAmount: number;
@@ -47,7 +50,7 @@ type InputOptionType = {
  * if it is invalid, return an error message
  */
 export const getInputError = (
-  { CKBInput, CKBBalance, sudtValue, sudtBalance, sudtDecimals, sudtSymbol }: InputType,
+  { CKBInput, CKBBalance, CKBDecimals, sudtValue, sudtBalance, sudtDecimals, sudtSymbol }: InputType,
   limit: InputOptionType = { minimumCKBAmount: 400 },
 ): string | undefined => {
   if (CKBInput === "") {
@@ -56,7 +59,10 @@ export const getInputError = (
   if (parseStringToBI(CKBInput, 8).lt(BI.from(limit.minimumCKBAmount).mul(BI.from(10).pow(8)))) {
     return `Minimum ${limit.minimumCKBAmount} CKB`;
   }
-  if (CKBBalance && parseStringToBI(CKBInput, 8).gt(parseStringToBI(CKBBalance))) {
+  if (CKBBalance) {
+    console.log(parseStringToBI(CKBInput, CKBDecimals ?? 8).toString(), parseStringToBI(CKBBalance).toString());
+  }
+  if (CKBBalance && parseStringToBI(CKBInput, CKBDecimals ?? 8).gt(parseStringToBI(CKBBalance))) {
     return "Insufficient CKB Amount";
   }
   if (sudtValue && sudtBalance && parseStringToBI(sudtValue, sudtDecimals).gt(parseStringToBI(sudtBalance))) {
@@ -108,5 +114,73 @@ export const getDepositInputError = ({
   ) {
     return "Must Left 0 Or 64 More CKB";
   }
+  return undefined;
+};
+
+export interface L1TransferInputParams {
+  ckbValue: string;
+  ckbBalance?: string;
+  sudtValue: string;
+  sudtBalance?: string;
+  sudtDecimals?: number;
+  sudtSymbol?: string;
+  senderAddress: Address;
+  recipientAddress: Address;
+  config: LightGodwokenConfig;
+}
+
+export const getL1TransferInputError = (params: L1TransferInputParams): string | undefined => {
+  const minCkbCellCapacity = "63";
+  const minCkbCellShannons = parseStringToBI(minCkbCellCapacity, 8);
+  const minCkbCellCapacityWithFee = "64";
+  const minCkbCellShannonsWithFee = parseStringToBI(minCkbCellCapacityWithFee, 8);
+  const minSudtCellCapacity = "144";
+  const minSudtCellShannons = parseStringToBI(minSudtCellCapacity, 8);
+
+  const ckbAmount = parseStringToBI(params.ckbValue || "0", 8);
+  const ckbBalance = parseStringToBI(params.ckbBalance || "0");
+  if (!params.ckbValue && !params.sudtValue) {
+    return `Enter Transfer Amount`;
+  }
+  if (params.ckbValue && ckbAmount.lt(minCkbCellShannons)) {
+    return `Minimum ${minCkbCellCapacity} CKB`;
+  }
+  if (ckbBalance.lt(ckbAmount.add(minCkbCellShannonsWithFee))) {
+    return `Balance Less Than ${minCkbCellCapacityWithFee} CKB`;
+  }
+
+  const sudtAmount = parseStringToBI(params.sudtValue || "0", params.sudtDecimals);
+  const sudtBalance = parseStringToBI(params.sudtBalance || "0");
+  const sudtLeft = sudtBalance.sub(sudtAmount);
+  if (params.sudtValue && sudtAmount.lte(0)) {
+    return `Enter An Amount`;
+  }
+  if (params.sudtValue && sudtAmount.gt(sudtBalance)) {
+    return `Insufficient ${params.sudtSymbol} Amount`;
+  }
+
+  const minSudtExchange = BI.from(minCkbCellCapacityWithFee).add(minSudtCellCapacity);
+  const minSudtExchangeShannons = minCkbCellShannonsWithFee.add(minSudtCellShannons);
+  if (params.sudtValue && sudtLeft.gt(0) && ckbBalance.lt(minSudtExchangeShannons)) {
+    return `Balance Less Than ${minSudtExchange.toString()} CKB`;
+  }
+
+  const hasAmount = params.ckbValue || params.sudtValue;
+  const recipient = params.recipientAddress.trim();
+  const sender = params.senderAddress.trim();
+  if (hasAmount && !recipient) {
+    return "Enter Recipient Address";
+  }
+  try {
+    parseAddress(recipient, {
+      config: params.config.lumosConfig,
+    });
+  } catch {
+    return "Invalid CKB Address";
+  }
+  if (hasAmount && recipient === sender) {
+    return "Unsupported Self Transfer";
+  }
+
   return undefined;
 };

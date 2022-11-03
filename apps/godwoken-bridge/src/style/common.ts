@@ -3,22 +3,23 @@ import styled from "styled-components";
 import { COLOR } from "./variables";
 
 export const Card = styled.div`
-  width: 400px;
-  background: white;
-  border-radius: 24px;
-  color: black;
   padding: 24px;
   margin-bottom: 16px;
-  @media (max-width: 600px) {
-    width: calc(100% - 8px);
-    margin: 16px 4px 64px;
+  width: 400px;
+  color: black;
+  background: white;
+  border-radius: 24px;
+  @media (max-width: 768px) {
+    width: 100%;
   }
 `;
 export const PageContent = styled.div`
-  width: 400px;
-  @media (max-width: 600px) {
-    width: calc(100% - 16px);
-  }
+  padding: 0 16px;
+  margin-bottom: 70px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
 `;
 export const Text = styled.span`
   font-size: 12px;
@@ -279,7 +280,7 @@ export const Tab = styled.span`
   text-align: center;
   color: black;
   border-radius: 8px;
-  @media (max-width: 600px) {
+  @media (max-width: 1024px) {
     width: 100px;
     .right-side {
       display: none;

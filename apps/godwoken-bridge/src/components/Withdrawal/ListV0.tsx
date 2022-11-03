@@ -5,7 +5,6 @@ import QuestionCircleOutlined from "@ant-design/icons/lib/icons/QuestionCircleOu
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { LightGodwokenV0 } from "light-godwoken";
 import { useInfiniteScroll } from "ahooks";
-import { useQuery } from "react-query";
 import { providers } from "ethers";
 import { LinkList, Tab } from "../../style/common";
 import { useClock } from "../../hooks/useClock";
@@ -13,6 +12,8 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Placeholder } from "../Placeholder";
 import WithdrawalRequestCard from "./WithdrawalItemV0";
 import { createLightGodwokenV1 } from "../../utils/lightGodwoken";
+import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import { useL1UnlockHistory } from "../../hooks/useL1UnlockHistory";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -102,11 +103,25 @@ export const WithdrawalList: React.FC = () => {
     return list;
   }, [withdrawalHistory.data?.list]);
   const pendingList = useMemo(() => {
-    return withdrawalList.filter((history) => history.status === "pending");
+    return withdrawalList.filter((history) => ["pending", "available"].includes(history.status));
   }, [withdrawalList]);
   const completedList = useMemo(() => {
-    return withdrawalList.filter((history) => history.status !== "pending");
+    return withdrawalList.filter((history) => !["pending", "available"].includes(history.status));
   }, [withdrawalList]);
+  const completedLayer1TxHashList = useMemo(() => {
+    return completedList.map((history) => history.layer1TxHash);
+  }, [completedList]);
+
+  const godwokenVersion = useGodwokenVersion();
+  const l1Address = useMemo(() => lightGodwoken?.provider.getL1Address(), [lightGodwoken]);
+  const { unlockHistory, setUnlockHistory } = useL1UnlockHistory(`${godwokenVersion}/${l1Address}/unlock`);
+  useEffect(() => {
+    const removed = unlockHistory.filter((row) => !completedLayer1TxHashList.includes(row.withdrawalTxHash));
+    if (removed.length < unlockHistory.length) {
+      setUnlockHistory(removed);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedList]);
 
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;
@@ -136,7 +151,7 @@ export const WithdrawalList: React.FC = () => {
         <div className="list pending-list">
           {pendingList.length === 0 && "There is no pending withdrawal request here"}
           {pendingList.map((withdraw, index) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}
         </div>
       )}
@@ -144,7 +159,7 @@ export const WithdrawalList: React.FC = () => {
         <div className="list pending-list">
           {completedList.length === 0 && "There is no completed withdrawal request here"}
           {completedList.map((withdraw: any, index: number) => (
-            <WithdrawalRequestCard now={now} {...withdraw} key={index}></WithdrawalRequestCard>
+            <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}
         </div>
       )}

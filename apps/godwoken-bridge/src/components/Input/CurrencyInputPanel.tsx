@@ -3,7 +3,7 @@ import { List, Tooltip } from "antd";
 import { FixedHeightRow } from "../Withdrawal/WithdrawalItemV0";
 import NumericalInput from "./NumericalInput";
 import { DownOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { UniversalToken, translate } from "light-godwoken";
 import { BI } from "@ckb-lumos/lumos";
@@ -73,6 +73,7 @@ interface CurrencyInputPanelProps {
   balancesList: string[] | undefined;
   tokenList: UniversalToken[] | undefined;
   dataLoading: boolean;
+  selected?: UniversalToken;
   onSelectedChange: (value: UniversalToken, balance: string) => void;
 }
 export default function CurrencyInputPanel({
@@ -83,6 +84,7 @@ export default function CurrencyInputPanel({
   balancesList,
   tokenList,
   dataLoading,
+  selected,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const lightGodwoken = useLightGodwoken();
@@ -115,12 +117,30 @@ export default function CurrencyInputPanel({
       }
     });
 
+  const selectedTokenWithBalance = useMemo(() => {
+    if (!selected) return undefined;
+    return tokenListWithBalanceSorted.find((row) => row.uan === selected.uan);
+  }, [tokenListWithBalanceSorted, selected]);
+
   useEffect(() => {
-    setCurrencyBalance(undefined);
-    setSelectedCurrency(undefined);
-    setDisableInput(true);
+    if (selectedTokenWithBalance) {
+      setCurrencyBalance(selectedTokenWithBalance?.balance);
+      setSelectedCurrency(selected);
+      setDisableInput(false);
+    } else {
+      setSelectedCurrency(undefined);
+      setCurrencyBalance(undefined);
+      setDisableInput(true);
+    }
+  }, [
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightGodwoken?.getVersion(), lightGodwoken?.provider.getL2Address()]);
+    lightGodwoken?.provider.getL2Address(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    lightGodwoken?.getVersion(),
+    selectedTokenWithBalance,
+    selected,
+  ]);
+
   const handleOk = () => {
     setIsModalVisible(false);
   };

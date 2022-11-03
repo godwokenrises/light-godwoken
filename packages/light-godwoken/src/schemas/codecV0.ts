@@ -6,7 +6,7 @@ const { table, option, struct } = molecule;
 const { Bytes, Byte32 } = blockchain;
 const { Uint32, Uint128, Uint8, Uint64 } = number;
 
-export type RawWithdrwal = {
+export type RawWithdrawal = {
   nonce: number;
   capacity: BI;
   amount: BI;
@@ -21,7 +21,7 @@ export type RawWithdrwal = {
     amount: BI;
   };
 };
-export const RawWithdrwalCodec = struct(
+export const RawWithdrawalCodec = struct(
   {
     nonce: Uint32,
     capacity: Uint64,
@@ -57,7 +57,7 @@ export const WithdrawalRequestExtraCodec = table(
   {
     request: table(
       {
-        raw: RawWithdrwalCodec,
+        raw: RawWithdrawalCodec,
         signature: Bytes,
       },
       ["raw", "signature"],

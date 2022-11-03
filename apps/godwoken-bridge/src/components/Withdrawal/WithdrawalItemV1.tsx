@@ -49,7 +49,7 @@ const StyleWrapper = styled.div`
       align-items: center;
     }
     .sudt-amount + .ckb-amount {
-      margin-top: 10px;
+      margin-top: 6px;
     }
   }
   .right-side {
@@ -68,6 +68,7 @@ const StyleWrapper = styled.div`
     }
   }
   .list-detail {
+    margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
     a {
@@ -177,7 +178,7 @@ const WithdrawalRequestCard = ({
                 <ArrowDownIcon />
               </div>
             ))}
-          {status === "success" && (
+          {status === "succeed" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
@@ -196,7 +197,7 @@ const WithdrawalRequestCard = ({
           )}
         </div>
       </div>
-      {status === "success" && (
+      {status === "succeed" && (
         <div className="list-detail">
           <FixedHeightRow>
             <MainText title={layer1TxHash}>

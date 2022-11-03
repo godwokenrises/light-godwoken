@@ -5,6 +5,7 @@ import { Provider as LightGodwokenProvider } from "./contexts/LightGodwokenConte
 import GodwokenBridge from "./views/GodwokenBridge";
 import Deposit from "./views/Deposit";
 import Withdrawal from "./views/withdrawal/Withdrawal";
+import L1Transfer from "./views/L1Transfer";
 
 function App() {
   const queryClient = new QueryClient();
@@ -24,6 +25,10 @@ function App() {
               <Route path="withdrawal">
                 <Route index element={<Navigate to="pending" />} />
                 <Route path=":status" element={<Withdrawal />} />
+              </Route>
+              <Route path="transfer">
+                <Route index element={<Navigate to="pending" />} />
+                <Route path=":status" element={<L1Transfer />} />
               </Route>
             </Route>
           </Routes>

@@ -14,7 +14,7 @@ export const TokenInfoWithAmount: TokenInfoWithAmountType = (props: TokenInfoWit
   }
 
   return (
-    <div style={{ marginTop: 10 }}>
+    <div className="sudt-amount">
       {props.tokenURI ? (
         <img src={props.tokenURI} alt="" />
       ) : (

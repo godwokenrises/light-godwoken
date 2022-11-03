@@ -258,10 +258,10 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
         withdrawalBlockNumber: item.block_number,
         remainingBlockNumber: Math.max(0, item.block_number - lastFinalizedBlockNumber),
         capacity: BI.from(item.capacity).toHexString(),
-        amount,
         sudt_script_hash: item.udt_script_hash,
+        amount,
         erc20,
-        status: item.state === "succeed" ? "success" : item.state,
+        status: item.state,
       };
     });
   }

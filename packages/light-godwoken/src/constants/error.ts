@@ -36,4 +36,8 @@ export class DepositRejectedError extends LightGodwokenError<string> {}
 export class DepositCanceledError extends LightGodwokenError<string> {}
 export class WithdrawalTimeoutError extends LightGodwokenError<string> {}
 
+export class L1TransactionTimeoutError extends LightGodwokenError<string> {}
+export class L1TransactionRejectedError extends LightGodwokenError<string> {}
+export class L1TransactionNotExistError extends LightGodwokenError<string> {}
+
 export class TokenListNotFoundError extends LightGodwokenError<string> {}

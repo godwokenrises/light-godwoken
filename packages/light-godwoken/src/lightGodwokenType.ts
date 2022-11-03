@@ -2,6 +2,7 @@ import { Address, Cell, Hash, HexNumber, Transaction, helpers, Script, BI, HexSt
 import { GodwokenNetwork, GodwokenVersion, LightGodwokenConfig } from "./config";
 import { GodwokenScannerDataTypes } from "./godwokenScanner";
 import EventEmitter from "events";
+import { TransactionWithStatus } from "@ckb-lumos/base";
 
 export interface GetL2CkbBalancePayload {
   l2Address?: string;
@@ -69,6 +70,12 @@ interface DepositListener {
   (event: "fail", listener: (e: Error) => void): void;
 }
 
+interface L1TransactionListener {
+  (event: "pending", listener: (txHash: Hash) => void): void;
+  (event: "success", listener: (txHash: Hash) => void): void;
+  (event: "fail", listener: (e: Error) => void): void;
+}
+
 export interface WithdrawalEventEmitter {
   on: WithdrawListener;
   removeAllListeners(event?: string | symbol): this;
@@ -79,6 +86,12 @@ export interface DepositEventEmitter {
   on: DepositListener;
   removeAllListeners(event?: string | symbol): this;
   emit: (event: "sent" | "pending" | "success" | "fail", payload: any) => void;
+}
+
+export interface L1TransactionEventEmitter {
+  on: L1TransactionListener;
+  removeAllListeners(event?: string | symbol): this;
+  emit: (event: "pending" | "success" | "fail", payload: any) => void;
 }
 
 export interface BaseWithdrawalEventEmitterPayload {
@@ -115,12 +128,13 @@ export interface WithdrawResultWithCell extends WithdrawBase {
 }
 export interface WithdrawResultV1 extends WithdrawBase {
   layer1TxHash: HexString;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "available" | "succeed" | "failed";
 }
 export interface WithdrawResultV0 extends WithdrawBase {
+  cell?: Cell;
   layer1TxHash: HexString;
   isFastWithdrawal: boolean;
-  status: "pending" | "success" | "failed";
+  status: "pending" | "available" | "succeed" | "failed";
 }
 
 export interface UnlockPayload {
@@ -158,6 +172,8 @@ export interface LightGodwokenProvider {
 
   // now only supported omni lock, the other lock type will be supported later
   sendL1Transaction: (tx: Transaction) => Promise<Hash>;
+
+  waitForL1Transaction: (txHash: Hash) => Promise<TransactionWithStatus>;
 }
 
 export type DepositRequest = {
@@ -175,6 +191,12 @@ export type DepositResult = {
   sudt?: SUDT;
   status: "pending" | "success" | "failed";
 };
+
+export interface L1TransferPayload {
+  toAddress: Address;
+  amount: HexNumber;
+  sudtType?: Script;
+}
 
 export interface LightGodwokenBase {
   provider: LightGodwokenProvider;
@@ -222,6 +244,10 @@ export interface LightGodwokenBase {
 
   withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
 
+  l1Transfer: (payload: L1TransferPayload, eventEmitter?: EventEmitter) => Promise<Hash>;
+
+  subscribePendingL1Transactions: (txs: Hash[]) => L1TransactionEventEmitter;
+
   getL2CkbBalance: (payload?: GetL2CkbBalancePayload) => Promise<HexNumber>;
 
   getL1CkbBalance: (payload?: GetL1CkbBalancePayload) => Promise<HexNumber>;
@@ -237,7 +263,7 @@ export interface LightGodwokenBase {
 
 export interface LightGodwokenV0 extends LightGodwokenBase {
   getMinimalWithdrawalToV1Capacity(): BI;
-  // unlock: (payload: UnlockPayload) => Promise<Hash>;
+  unlock: (payload: UnlockPayload) => Promise<Hash>;
   withdrawToV1WithEvent: (payload: WithdrawalToV1EventEmitterPayload) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {}
