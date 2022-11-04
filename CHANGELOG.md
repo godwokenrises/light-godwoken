@@ -10,8 +10,14 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * Fix ckb validation in withdrawal_v1 route ([#195](https://github.com/godwokenrises/light-godwoken/issues/195))
 
 ### Features
-* Unlock legacy withdrawal cells feature ([#200](https://github.com/godwokenrises/light-godwoken/pull/200))
-* L1-transfer feature ([#210](https://github.com/godwokenrises/light-godwoken/pull/210))
+* Support unlocking legacy withdrawal cells from Godwoken_v0 ([#200](https://github.com/godwokenrises/light-godwoken/pull/200))
+> This feature provides a convenient function for users to unlock legacy(v0) withdrawal cells through https://bridge.godwoken.io/#/v0/withdrawal/pending
+> [What is legacy withdrawal cells (v0)?](https://github.com/godwokenrises/godwoken/blob/develop/docs/deposit_and_withdrawal.md#legacy-withdrawal-cells-v0)
+
+* Support layer1-transfer ([#210](https://github.com/godwokenrises/light-godwoken/pull/210))
+> This feature provides a handy function for users to send CKB to their CEX or wallet or other L1 addresses through Godwoken Bridge. It helps users to transfer the extra CKB inside a sUDT cell (usually a withdrawal cell), a tool that was missing in Nervos ecosystem.
+> Thanks @alejandroRbit for [the feature request](https://github.com/godwokenrises/light-godwoken/issues/189).
+
 * Replace testnet_v1 tokens with Goerli tokens ([#208](https://github.com/godwokenrises/light-godwoken/pull/208))
 * Add token logo for "COOP" ([#212](https://github.com/godwokenrises/light-godwoken/pull/212))
 
