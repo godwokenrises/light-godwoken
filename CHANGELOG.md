@@ -15,7 +15,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 > [What is legacy withdrawal cells (v0)?](https://github.com/godwokenrises/godwoken/blob/develop/docs/deposit_and_withdrawal.md#legacy-withdrawal-cells-v0)
 
 * Support layer1-transfer ([#210](https://github.com/godwokenrises/light-godwoken/pull/210))
-> This feature provides a handy function for users to send CKB to their CEX or wallet or other L1 addresses through Godwoken Bridge. It helps users to transfer the extra CKB inside a sUDT cell (usually a withdrawal cell), a tool that was missing in  Nervos ecosystem.
+> This feature provides a handy function for users to send CKB to their CEX or wallet or other L1 addresses through Godwoken Bridge. It helps users to transfer the extra CKB inside a sUDT cell (usually a withdrawal cell), a tool that was missing in Nervos ecosystem.
 > Thanks @alejandroRbit for [the feature request](https://github.com/godwokenrises/light-godwoken/issues/189).
 
 * Replace testnet_v1 tokens with Goerli tokens ([#208](https://github.com/godwokenrises/light-godwoken/pull/208))
