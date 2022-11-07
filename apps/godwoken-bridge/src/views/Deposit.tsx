@@ -11,6 +11,7 @@ import { useL1CKBBalance } from "../hooks/useL1CKBBalance";
 import { useL2CKBBalance } from "../hooks/useL2CKBBalance";
 import { DepositEventEmitter, SUDT, UniversalToken } from "light-godwoken";
 import {
+  PageContent,
   ConfirmModal,
   Card,
   PlusIconContainer,
@@ -252,7 +253,7 @@ export default function Deposit() {
   };
 
   return (
-    <>
+    <PageContent>
       <Card>
         <WalletConnect></WalletConnect>
         <div style={{ opacity: lightGodwoken ? "1" : "0.5" }}>
@@ -335,6 +336,6 @@ export default function Deposit() {
           <Tips>Waiting for User Confirmation</Tips>
         </ModalContent>
       </ConfirmModal>
-    </>
+    </PageContent>
   );
 }
