@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
-import { isMainnet } from "../../utils/environment";
 import { matchPath, useLocation, useNavigate, useParams } from "react-router-dom";
 
 const StyledPage = styled.div`
@@ -139,17 +138,14 @@ export default function PageHeader() {
       </div>
       <div className="right-side">
         <VersionSelect />
-        {!isMainnet && (
-          <Popover
-            trigger="click"
-            placement="bottomLeft"
-            overlayClassName="popover-menu"
-            visible={popoverVisible}
-            content={() => <PopoverMenu handleClick={() => setPopoverVisible(false)} />}
-          >
-            <Hamburger className="hamburger-menu" onClick={() => setPopoverVisible(true)} />
-          </Popover>
-        )}
+        <Popover
+          trigger="hover"
+          placement="bottomLeft"
+          overlayClassName="popover-menu"
+          content={() => <PopoverMenu handleClick={() => setPopoverVisible(false)} />}
+        >
+          <Hamburger className="hamburger-menu" />
+        </Popover>
       </div>
     </StyledPage>
   );
