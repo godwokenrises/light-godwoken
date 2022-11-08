@@ -11,6 +11,8 @@ import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import { LightGodwokenError } from "light-godwoken";
 import { isMainnet } from "./utils/environment";
+import { Web3ReactProvider } from "@web3-react/core";
+import { connectorArray } from "./components/WalletConnect/connectors";
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
@@ -46,7 +48,9 @@ config.initializeConfig(isMainnet ? config.predefined.LINA : config.predefined.A
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <Web3ReactProvider connectors={connectorArray}>
+      <App />
+    </Web3ReactProvider>
   </React.StrictMode>,
   document.getElementById("root"),
 );

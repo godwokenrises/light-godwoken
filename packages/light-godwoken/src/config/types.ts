@@ -31,6 +31,7 @@ export type Layer2Config = {
     rollup_type_script: Script;
   };
   GW_POLYJUICE_RPC_URL: string;
+  GW_POLYJUICE_CHAIN_ID: number;
   SCANNER_URL: string;
   SCANNER_API: string;
   CHAIN_NAME: string;
