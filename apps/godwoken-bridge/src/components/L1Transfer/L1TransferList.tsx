@@ -64,9 +64,9 @@ export default function L1TransferList() {
         if (e instanceof L1TransactionRejectedError) {
           updateTxWithStatus(e.metadata, "rejected");
         } else if (e instanceof LightGodwokenError) {
-          updateTxWithStatus(e.metadata, "fail");
+          console.error(`L1 transaction "${e.metadata}" failed with:`, e);
         } else {
-          console.error("Unknown L1 transaction error:", e);
+          console.error("L1 transaction failed with unknown error:", e);
         }
       });
 
