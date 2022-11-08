@@ -11,6 +11,7 @@ import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { Placeholder } from "../Placeholder";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
 import WithdrawalRequestCard from "./WithdrawalItemV1";
+import { Empty } from "../Container/Empty";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -108,7 +109,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       </LinkList>
       {isPending && (
         <div className="list pending-list">
-          {pendingList.length + displayLocalTxHistory.length === 0 && "There is no pending withdrawal request here"}
+          {pendingList.length + displayLocalTxHistory.length === 0 && <Empty>No pending withdrawals</Empty>}
           {displayLocalTxHistory.map((withdraw, index) => (
             <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
           ))}
@@ -119,7 +120,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       )}
       {isCompleted && (
         <div ref={listRef} className="list pending-list">
-          {completedList.length === 0 && "There is no completed withdrawal request here"}
+          {completedList.length === 0 && <Empty>No completed withdrawals</Empty>}
           {completedList.map((withdraw, index) => (
             <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
           ))}

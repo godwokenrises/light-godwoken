@@ -11,6 +11,7 @@ import { Placeholder } from "../Placeholder";
 import { LinkList, Tab } from "../../style/common";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { DepositHistoryType } from "../../hooks/useDepositTxHistory";
+import { Empty } from "../Container/Empty";
 
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -113,7 +114,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
       </LinkList>
       {isPending && (
         <div className="list pending-list">
-          {pendingList.length === 0 && "There is no pending deposit request here"}
+          {pendingList.length === 0 && <Empty>No pending deposits</Empty>}
           {pendingList.map((deposit, index) => (
             <DepositItem {...deposit} key={index}></DepositItem>
           ))}
@@ -121,7 +122,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
       )}
       {isCompleted && (
         <div ref={listRef} className="list completed-list">
-          {!completedList.length && !depositHistoryList.length && "There is no completed deposit request here"}
+          {!completedList.length && !depositHistoryList.length && <Empty>No completed deposits</Empty>}
           {completedList.map((deposit, index) => (
             <DepositItem {...deposit} key={index}></DepositItem>
           ))}
