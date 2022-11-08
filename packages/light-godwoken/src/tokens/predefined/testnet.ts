@@ -11,6 +11,8 @@ export const TestnetTokenListV0: LightGodwokenToken[] = [
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
     layer1UAN: "TTKN.ckb",
     layer2UAN: "TTKN.gw|gb.ckb",
+    layer1DisplayName: "TTKN",
+    layer2DisplayName: "TTKN (via GodwokenBridge from CKB)",
   },
   {
     id: 35,
@@ -77,6 +79,8 @@ export const TestnetTokenListV1: LightGodwokenToken[] = [
     l1LockArgs: "0x58bef38794236b315b7c23fd8132d7f42676228d659b291936e8c6c7ba9f064e",
     layer1UAN: "TTKN.ckb",
     layer2UAN: "TTKN.gw|gb.ckb",
+    layer1DisplayName: "TTKN",
+    layer2DisplayName: "TTKN (via GodwokenBridge from CKB)",
   },
   {
     id: 77042,
