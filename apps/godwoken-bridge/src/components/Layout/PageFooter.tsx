@@ -46,7 +46,7 @@ export default function PageFooter() {
         overlayClassName="popover-menu"
         visible={popoverVisible}
         getPopupContainer={() => footerRef.current}
-        content={<PopoverMenu handleClick={() => setPopoverVisible(false)} />}
+        content={<PopoverMenu onClick={() => setPopoverVisible(false)} />}
       >
         <Hamburger className="hamburger-menu-bottom" onClick={() => setPopoverVisible(true)} />
       </Popover>
