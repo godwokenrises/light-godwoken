@@ -91,6 +91,10 @@ export default function RequestL1Transfer() {
     }
   }, [isSelectedCkb, ckbBalanceQuery.data]);
 
+  // if selected ckb, add a extract balance to the input
+  // this is for the "max" button in the input
+  const extractBalance = useMemo(() => (isSelectedCkb ? "6400000000" : void 0), [isSelectedCkb]);
+
   // currency list
   const tokenList = useMemo(() => [CkbAsSudt, ...(lightGodwoken?.getBuiltinSUDTList() ?? [])], [lightGodwoken]);
 
@@ -216,6 +220,7 @@ export default function RequestL1Transfer() {
         onUserInput={setAmount}
         tokenList={tokenList}
         selected={selected}
+        extractBalance={extractBalance}
         onSelectedChange={onSelectedChanged}
         balancesList={currencyBalanceList}
         dataLoading={sudtBalanceQuery.isLoading}

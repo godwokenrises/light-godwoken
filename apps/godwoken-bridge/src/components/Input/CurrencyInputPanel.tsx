@@ -6,7 +6,7 @@ import { DownOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-desi
 import React, { useEffect, useMemo, useState } from "react";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
 import { UniversalToken, translate } from "light-godwoken";
-import { BI } from "@ckb-lumos/lumos";
+import { BI, HexNumber } from "@ckb-lumos/lumos";
 import { ConfirmModal, InputCard, Row, Text } from "../../style/common";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
@@ -75,6 +75,7 @@ interface CurrencyInputPanelProps {
   dataLoading: boolean;
   selected?: UniversalToken;
   onSelectedChange: (value: UniversalToken, balance: string) => void;
+  extractBalance?: HexNumber;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -85,6 +86,7 @@ export default function CurrencyInputPanel({
   tokenList,
   dataLoading,
   selected,
+  extractBalance,
   onSelectedChange,
 }: CurrencyInputPanelProps) {
   const lightGodwoken = useLightGodwoken();
@@ -122,9 +124,26 @@ export default function CurrencyInputPanel({
     return tokenListWithBalanceSorted.find((row) => row.uan === selected.uan);
   }, [tokenListWithBalanceSorted, selected]);
 
+  const availableBalance = useMemo(() => {
+    const formattedBalance = BI.from(selectedTokenWithBalance?.balance || 0);
+    if (!extractBalance) {
+      return formattedBalance;
+    }
+    if (formattedBalance.gt(extractBalance)) {
+      return formattedBalance.sub(extractBalance);
+    }
+    return BI.from("0");
+  }, [selectedTokenWithBalance, extractBalance]);
+
+  const availableFormattedBalance = useMemo(() => {
+    return getFullDisplayAmount(availableBalance, selectedCurrency?.decimals, {
+      maxDecimalPlace: selectedCurrency?.decimals,
+    });
+  }, [availableBalance, selectedCurrency?.decimals]);
+
   useEffect(() => {
     if (selectedTokenWithBalance) {
-      setCurrencyBalance(selectedTokenWithBalance?.balance);
+      setCurrencyBalance(availableBalance.toString());
       setSelectedCurrency(selected);
       setDisableInput(false);
     } else {
@@ -138,6 +157,7 @@ export default function CurrencyInputPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     lightGodwoken?.getVersion(),
     selectedTokenWithBalance,
+    availableBalance,
     selected,
   ]);
 
@@ -169,11 +189,7 @@ export default function CurrencyInputPanel({
     if (selectedCurrencyBalance === undefined) {
       throw new Error("Currency Balance Not Found");
     }
-    onUserInput(
-      getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
-        maxDecimalPlace: selectedCurrency?.decimals,
-      }),
-    );
+    onUserInput(availableFormattedBalance);
   };
 
   return (
@@ -181,14 +197,7 @@ export default function CurrencyInputPanel({
       <Row className="first-row">
         <Text>{label}</Text>
         <Text className="balance" onClick={selectedCurrency && handelMaxClick}>
-          Max:{" "}
-          {selectedCurrencyBalance
-            ? formatToThousands(
-                getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
-                  maxDecimalPlace: selectedCurrency?.decimals,
-                }),
-              )
-            : "-"}
+          Max: {selectedCurrencyBalance ? availableFormattedBalance : "-"}
         </Text>
       </Row>
       <Row className="second-row">
