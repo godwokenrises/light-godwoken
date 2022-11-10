@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 
+# 0.3.1 (2022-11-10)
+
+### Bug Fixes
+* Fix misplaced UAN of dCKB and YOK ([#224](https://github.com/godwokenrises/light-godwoken/pull/224)) 
+* Fix l1-transfer status update logic and ckb balance validation issues ([#228](https://github.com/godwokenrises/light-godwoken/pull/228))  
+
+### Features
+* Improve styles of Header/Footer/Body ([#221](https://github.com/godwokenrises/light-godwoken/pull/221))
+> We've added some official links into the menu popover, including GitHub and our Godwoken Docs.
+> In addition, the layout style of Godwoken Bridge has also been beautified.
+
+* Add `waitForCompletion` option to deposit/withdraw functions ([#222](https://github.com/godwokenrises/light-godwoken/pull/222))
+> This feature gives developers an option to avoid listen to the final result of the deposit/withdrawal.
+> For more details, please visit: [Feat: add waitForCompletion to deposit/withdraw](https://github.com/godwokenrises/light-godwoken/pull/222).
+
 # 0.3.0 (2022-11-01)
 
 ### Bug Fixes
