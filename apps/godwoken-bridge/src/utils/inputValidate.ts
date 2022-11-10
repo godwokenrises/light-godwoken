@@ -59,14 +59,11 @@ export const getInputError = (
   if (parseStringToBI(CKBInput, 8).lt(BI.from(limit.minimumCKBAmount).mul(BI.from(10).pow(8)))) {
     return `Minimum ${limit.minimumCKBAmount} CKB`;
   }
-  if (CKBBalance) {
-    console.log(parseStringToBI(CKBInput, CKBDecimals ?? 8).toString(), parseStringToBI(CKBBalance).toString());
-  }
   if (CKBBalance && parseStringToBI(CKBInput, CKBDecimals ?? 8).gt(parseStringToBI(CKBBalance))) {
-    return "Insufficient CKB Amount";
+    return "Insufficient CKB Balance";
   }
   if (sudtValue && sudtBalance && parseStringToBI(sudtValue, sudtDecimals).gt(parseStringToBI(sudtBalance))) {
-    return `Insufficient ${sudtSymbol} Amount`;
+    return `Insufficient ${sudtSymbol} Balance`;
   }
   return undefined;
 };
@@ -145,24 +142,27 @@ export const getL1TransferInputError = (params: L1TransferInputParams): string |
   if (params.ckbValue && ckbAmount.lt(minCkbCellShannons)) {
     return `Minimum ${minCkbCellCapacity} CKB`;
   }
+  if (ckbBalance.lt(ckbAmount)) {
+    return `Insufficient CKB Balance`;
+  }
   if (ckbBalance.lt(ckbAmount.add(minCkbCellShannonsWithFee))) {
-    return `Balance Less Than ${minCkbCellCapacityWithFee} CKB`;
+    return `Must Left At Least ${minCkbCellCapacityWithFee} CKB`;
   }
 
   const sudtAmount = parseStringToBI(params.sudtValue || "0", params.sudtDecimals);
   const sudtBalance = parseStringToBI(params.sudtBalance || "0");
   const sudtLeft = sudtBalance.sub(sudtAmount);
   if (params.sudtValue && sudtAmount.lte(0)) {
-    return `Enter An Amount`;
+    return `Enter ${params.sudtSymbol} Amount`;
   }
   if (params.sudtValue && sudtAmount.gt(sudtBalance)) {
-    return `Insufficient ${params.sudtSymbol} Amount`;
+    return `Insufficient ${params.sudtSymbol} Balance`;
   }
 
   const minSudtExchange = BI.from(minCkbCellCapacityWithFee).add(minSudtCellCapacity);
   const minSudtExchangeShannons = minCkbCellShannonsWithFee.add(minSudtCellShannons);
   if (params.sudtValue && sudtLeft.gt(0) && ckbBalance.lt(minSudtExchangeShannons)) {
-    return `Balance Less Than ${minSudtExchange.toString()} CKB`;
+    return `Must Left At Least ${minSudtExchange.toString()} CKB`;
   }
 
   const hasAmount = params.ckbValue || params.sudtValue;
