@@ -56,6 +56,10 @@ export const InputCard = styled.div`
       text-decoration-line: underline;
       font-weight: normal;
       cursor: pointer;
+
+      &.disabled {
+        cursor: default;
+      }
     }
   }
   .second-row {

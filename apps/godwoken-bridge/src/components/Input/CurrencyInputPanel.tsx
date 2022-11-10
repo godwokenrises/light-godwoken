@@ -75,6 +75,7 @@ interface CurrencyInputPanelProps {
   dataLoading: boolean;
   selected?: UniversalToken;
   onSelectedChange: (value: UniversalToken, balance: string) => void;
+  disableMaxButton?: boolean;
 }
 export default function CurrencyInputPanel({
   autoFocus,
@@ -86,6 +87,7 @@ export default function CurrencyInputPanel({
   dataLoading,
   selected,
   onSelectedChange,
+  disableMaxButton,
 }: CurrencyInputPanelProps) {
   const lightGodwoken = useLightGodwoken();
   const [selectedCurrencyBalance, setCurrencyBalance] = useState<string>();
@@ -180,15 +182,18 @@ export default function CurrencyInputPanel({
     <InputCard>
       <Row className="first-row">
         <Text>{label}</Text>
-        <Text className="balance" onClick={selectedCurrency && handelMaxClick}>
-          Max:{" "}
-          {selectedCurrencyBalance
-            ? formatToThousands(
-                getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
-                  maxDecimalPlace: selectedCurrency?.decimals,
-                }),
-              )
-            : "-"}
+        <Text
+          className={disableMaxButton ? "balance disabled" : "balance"}
+          onClick={selectedCurrency && !disableMaxButton ? handelMaxClick : void 0}
+        >
+          {disableMaxButton ? "Balance: " : "Max: "}
+          {!selectedCurrencyBalance && "-"}
+          {selectedCurrencyBalance &&
+            formatToThousands(
+              getFullDisplayAmount(BI.from(selectedCurrencyBalance), selectedCurrency?.decimals, {
+                maxDecimalPlace: selectedCurrency?.decimals,
+              }),
+            )}
         </Text>
       </Row>
       <Row className="second-row">

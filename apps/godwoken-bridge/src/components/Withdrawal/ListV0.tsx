@@ -14,6 +14,7 @@ import WithdrawalRequestCard from "./WithdrawalItemV0";
 import { createLightGodwokenV1 } from "../../utils/lightGodwoken";
 import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
 import { useL1UnlockHistory } from "../../hooks/useL1UnlockHistory";
+import { Empty } from "../Container/Empty";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -149,7 +150,7 @@ export const WithdrawalList: React.FC = () => {
       </LinkList>
       {isPending && (
         <div className="list pending-list">
-          {pendingList.length === 0 && "There is no pending withdrawal request here"}
+          {pendingList.length === 0 && <Empty>No pending withdrawals</Empty>}
           {pendingList.map((withdraw, index) => (
             <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}
@@ -157,7 +158,7 @@ export const WithdrawalList: React.FC = () => {
       )}
       {isCompleted && (
         <div className="list pending-list">
-          {completedList.length === 0 && "There is no completed withdrawal request here"}
+          {completedList.length === 0 && <Empty>No completed withdrawals</Empty>}
           {completedList.map((withdraw: any, index: number) => (
             <WithdrawalRequestCard now={now} {...withdraw} key={index} />
           ))}

@@ -33,7 +33,10 @@ code {
 
 /* ant-popover-reset */
 .ant-popover.popover-menu {
-  padding-top: 30px;
+  padding-top: 25px;
+}
+.ant-popover.popover-menu .ant-popover-inner {
+  border-radius: 10px 0 10px 10px;
 }
 .ant-popover.popover-menu .ant-popover-inner-content {
   padding: 8px;
@@ -44,6 +47,10 @@ code {
 @media (max-width: 1024px) {
   .ant-popover.popover-menu {
     padding-bottom: 13px;
+  }
+  .ant-popover.popover-menu .ant-popover-inner {
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 0;
   }
 }
 

@@ -8,6 +8,7 @@ import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { Placeholder } from "../Placeholder";
 import L1TransferItem from "./L1TransferItem";
 import { L1TransactionEventEmitter, L1TransactionRejectedError, LightGodwokenError } from "light-godwoken";
+import { Empty } from "../Container/Empty";
 
 const L1TransferListStyleWrapper = styled.div`
   border-bottom-left-radius: 24px;
@@ -64,9 +65,9 @@ export default function L1TransferList() {
         if (e instanceof L1TransactionRejectedError) {
           updateTxWithStatus(e.metadata, "rejected");
         } else if (e instanceof LightGodwokenError) {
-          updateTxWithStatus(e.metadata, "fail");
+          console.error(`L1 transaction "${e.metadata}" failed with:`, e);
         } else {
-          console.error("Unknown L1 transaction error:", e);
+          console.error("L1 transaction failed with unknown error:", e);
         }
       });
 
@@ -102,7 +103,7 @@ export default function L1TransferList() {
       </LinkList>
       {isPending && (
         <div className="list pending-list">
-          {pendingList.length === 0 && "There is no pending transfers here"}
+          {pendingList.length === 0 && <Empty>No pending transfers</Empty>}
           {pendingList.map((props, index) => (
             <L1TransferItem {...props} key={index} />
           ))}
@@ -110,7 +111,7 @@ export default function L1TransferList() {
       )}
       {isCompleted && (
         <div className="list completed-list">
-          {completedList.length === 0 && "There is no completed transfers here"}
+          {completedList.length === 0 && <Empty>No completed transfers</Empty>}
           {completedList.map((props, index) => (
             <L1TransferItem {...props} key={index} />
           ))}

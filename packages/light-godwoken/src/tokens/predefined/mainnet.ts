@@ -13,6 +13,8 @@ export const MainnetTokenListV0: LightGodwokenToken[] = [
     l1LockArgs: "0xe5451c05231e1df43e4b199b5d12dbed820dfbea2769943bb593f874526eeb55",
     layer1UAN: "dCKB.ckb",
     layer2UAN: "dCKB.gw|gb.ckb",
+    layer1DisplayName: "dCKB",
+    layer2DisplayName: "dCKB (via GodwokenBridge from CKB)",
   },
   {
     id: 0,
@@ -24,6 +26,8 @@ export const MainnetTokenListV0: LightGodwokenToken[] = [
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
     layer1UAN: "TAI.ckb",
     layer2UAN: "TAI.gw|gb.ckb",
+    layer1DisplayName: "TAI",
+    layer2DisplayName: "TAI (via GodwokenBridge from CKB)",
   },
   {
     id: 0,
@@ -584,8 +588,10 @@ export const MainnetTokenListV1: LightGodwokenToken[] = [
     tokenURI: "https://cryptologos.cc/logos/nervos-network-ckb-logo.svg?v=002",
     address: "0x893474456C475E738b13DdA824979bF7a355DE39",
     l1LockArgs: "0xe5451c05231e1df43e4b199b5d12dbed820dfbea2769943bb593f874526eeb55",
-    layer1UAN: "YOK.ckb",
-    layer2UAN: "YOK.gw|gb.ckb",
+    layer1UAN: "dCKB.ckb",
+    layer2UAN: "dCKB.gw|gb.ckb",
+    layer1DisplayName: "dCKB",
+    layer2DisplayName: "dCKB (via GodwokenBridge from CKB)",
   },
   {
     id: 0,
@@ -597,6 +603,8 @@ export const MainnetTokenListV1: LightGodwokenToken[] = [
     l1LockArgs: "0x08430183dda1cbd81912c4762a3006a59e2291d5bd43b48bb7fa7544cace9e4a",
     layer1UAN: "TAI.ckb",
     layer2UAN: "TAI.gw|gb.ckb",
+    layer1DisplayName: "TAI",
+    layer2DisplayName: "TAI (via GodwokenBridge from CKB)",
   },
   {
     id: 0,

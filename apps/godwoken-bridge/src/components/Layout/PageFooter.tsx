@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
 
 import styled from "styled-components";
 import { Popover } from "antd";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
-import { isMainnet } from "../../utils/environment";
+
 const StyledPage = styled.div`
   position: fixed;
   bottom: 0;
@@ -23,38 +23,33 @@ const StyledPage = styled.div`
 `;
 
 export default function PageFooter() {
+  const footerRef = useRef<HTMLDivElement>() as React.MutableRefObject<HTMLInputElement>;
   const [popoverVisible, setPopoverVisible] = useState(false);
 
   useEffect(() => {
     document.addEventListener("click", (e) => {
       const target = document.querySelector(".hamburger-menu-bottom");
       if (!(e.target && e.target instanceof Element && (e.target === target || target?.contains(e.target)))) {
-        closePopoverMenu();
+        setPopoverVisible(false);
       }
     });
   });
 
-  const openPopoverMenu = () => {
-    setPopoverVisible(true);
-  };
-
-  const closePopoverMenu = () => {
-    setPopoverVisible(false);
-  };
   return (
-    <StyledPage>
-      <VersionSelect />
-      {!isMainnet && (
-        <Popover
-          trigger="click"
-          placement="bottomLeft"
-          overlayClassName="popover-menu"
-          visible={popoverVisible}
-          content={() => <PopoverMenu handleClick={closePopoverMenu} />}
-        >
-          <Hamburger className="hamburger-menu-bottom" onClick={openPopoverMenu} />
-        </Popover>
-      )}
+    <StyledPage ref={footerRef}>
+      <VersionSelect placement="topRight" />
+      <Popover
+        autoAdjustOverflow
+        destroyTooltipOnHide
+        trigger="focus"
+        placement="topRight"
+        overlayClassName="popover-menu"
+        visible={popoverVisible}
+        getPopupContainer={() => footerRef.current}
+        content={<PopoverMenu onClick={() => setPopoverVisible(false)} />}
+      >
+        <Hamburger className="hamburger-menu-bottom" onClick={() => setPopoverVisible(true)} />
+      </Popover>
     </StyledPage>
   );
 }
