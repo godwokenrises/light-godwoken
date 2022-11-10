@@ -1,7 +1,7 @@
 import { GodwokenScanner } from "./godwokenScanner";
 import { BI, Cell, Hash, HashType, helpers, HexNumber, HexString, Script, toolkit, utils } from "@ckb-lumos/lumos";
 import EventEmitter from "events";
-import { Godwoken as GodwokenV1 } from "./godwoken/godwokenV1";
+import { GodwokenV1 } from "./godwoken";
 import {
   DepositResult,
   GetErc20Balances,
@@ -284,9 +284,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return this.godwokenClient.getWithdrawal(txHash);
   }
 
-  withdrawWithEvent(payload: WithdrawalEventEmitterPayload): WithdrawalEventEmitter {
+  withdrawWithEvent(payload: WithdrawalEventEmitterPayload, waitForCompletion?: boolean): WithdrawalEventEmitter {
     const eventEmitter = new EventEmitter();
-    this.withdraw(eventEmitter, payload);
+    this.withdraw(eventEmitter, payload, waitForCompletion);
     return eventEmitter;
   }
 
@@ -294,7 +294,11 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     return this.godwokenClient.getChainId();
   }
 
-  async withdraw(eventEmitter: EventEmitter, payload: WithdrawalEventEmitterPayload): Promise<void> {
+  async withdraw(
+    eventEmitter: EventEmitter,
+    payload: WithdrawalEventEmitterPayload,
+    waitForCompletion = true,
+  ): Promise<void> {
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     const typedMsg = this.generateTypedMsg(rawWithdrawalRequest);
 
@@ -330,7 +334,9 @@ export default class DefaultLightGodwokenV1 extends DefaultLightGodwoken impleme
     if (txHash) {
       eventEmitter.emit("sent", txHash);
       debug("withdrawal request result:", txHash, eventEmitter);
-      this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      if (waitForCompletion) {
+        this.waitForWithdrawalToComplete(txHash, eventEmitter);
+      }
     }
   }
 

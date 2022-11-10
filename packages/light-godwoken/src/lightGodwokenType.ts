@@ -236,13 +236,13 @@ export interface LightGodwokenBase {
 
   generateDepositAddress: (cancelTimeout?: number) => Address;
 
-  deposit: (payload: DepositPayload, eventEmitter: EventEmitter) => Promise<Hash>;
+  deposit: (payload: DepositPayload, eventEmitter?: EventEmitter, waitForCompletion?: boolean) => Promise<Hash>;
 
-  depositWithEvent: (payload: DepositPayload) => DepositEventEmitter;
+  depositWithEvent: (payload: DepositPayload, waitForCompletion?: boolean) => DepositEventEmitter;
 
   subscribPendingDepositTransactions: (payload: PendingDepositTransaction[]) => DepositEventEmitter;
 
-  withdrawWithEvent: (payload: WithdrawalEventEmitterPayload) => WithdrawalEventEmitter;
+  withdrawWithEvent: (payload: WithdrawalEventEmitterPayload, waitForCompletion?: boolean) => WithdrawalEventEmitter;
 
   l1Transfer: (payload: L1TransferPayload, eventEmitter?: EventEmitter) => Promise<Hash>;
 
@@ -264,6 +264,9 @@ export interface LightGodwokenBase {
 export interface LightGodwokenV0 extends LightGodwokenBase {
   getMinimalWithdrawalToV1Capacity(): BI;
   unlock: (payload: UnlockPayload) => Promise<Hash>;
-  withdrawToV1WithEvent: (payload: WithdrawalToV1EventEmitterPayload) => WithdrawalEventEmitter;
+  withdrawToV1WithEvent: (
+    payload: WithdrawalToV1EventEmitterPayload,
+    waitForCompletion?: boolean,
+  ) => WithdrawalEventEmitter;
 }
 export interface LightGodwokenV1 extends LightGodwokenBase {}
