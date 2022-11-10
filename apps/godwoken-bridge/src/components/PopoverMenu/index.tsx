@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, ReactNode } from "react";
+import React, { ReactNode } from "react";
 import styled from "styled-components";
 import { COLOR } from "../../style/variables";
 import { ClaimSudt } from "../ClaimSudt";
@@ -48,24 +48,24 @@ const PopoverMenuLinkStyleWrapper = styled.a`
 `;
 
 export interface PopoverMenuProps {
-  handleClick: () => void;
+  onClick?: () => void;
 }
 
-export function PopoverMenu({ handleClick }: PopoverMenuProps) {
+export function PopoverMenu({ onClick }: PopoverMenuProps) {
   return (
     <PopoverMenuStyleWrapper>
       {!isMainnet && (
-        <div className="claim-sudt-container" onClick={handleClick}>
+        <div className="claim-sudt-container" onClick={onClick}>
           <ClaimSudt />
         </div>
       )}
-      <PopoverMenuLink href="https://faucet.nervos.org" onClick={handleClick}>
+      <PopoverMenuLink href="https://faucet.nervos.org" onClick={onClick}>
         Claim CKB Faucet on L1
       </PopoverMenuLink>
-      <PopoverMenuLink href="https://docs.godwoken.io" onClick={handleClick}>
+      <PopoverMenuLink href="https://docs.godwoken.io" onClick={onClick}>
         Godwoken Docs
       </PopoverMenuLink>
-      <PopoverMenuLink href="https://github.com/godwokenrises/light-godwoken" onClick={handleClick}>
+      <PopoverMenuLink href="https://github.com/godwokenrises/light-godwoken" onClick={onClick}>
         GitHub
       </PopoverMenuLink>
     </PopoverMenuStyleWrapper>

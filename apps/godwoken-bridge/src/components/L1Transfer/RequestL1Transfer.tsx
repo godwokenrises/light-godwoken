@@ -219,6 +219,7 @@ export default function RequestL1Transfer() {
         onSelectedChange={onSelectedChanged}
         balancesList={currencyBalanceList}
         dataLoading={sudtBalanceQuery.isLoading}
+        disableMaxButton={isSelectedCkb}
       />
       <div className="icon-container">
         <Icon>
