@@ -124,7 +124,7 @@ export const TestnetLayer2ConfigV1: LightGodwokenConfig = {
     SCANNER_API: "https://api.v1.betanet.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Testnet v1",
     FINALITY_BLOCKS: 100,
-    BLOCK_PRODUCE_TIME: 30,
+    BLOCK_PRODUCE_TIME: 8, // L2 average block produce time from GwScan
     MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
 
     // https://github.com/mds1/multicall/blob/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7/README.md

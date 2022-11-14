@@ -19,6 +19,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 > This feature gives developers an option to avoid listen to the final result of the deposit/withdrawal.
 > For more details, please visit: [Feat: add waitForCompletion to deposit/withdraw](https://github.com/godwokenrises/light-godwoken/pull/222).
 
+
 # 0.3.0 (2022-11-01)
 
 ### Bug Fixes
