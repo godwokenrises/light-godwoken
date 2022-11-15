@@ -102,7 +102,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
         </TimeInfo>
         <TimeInfo>
           <MainText className="title">Estimated time</MainText>
-          <Text>{estimatedTime}</Text>
+          <Text>~{estimatedTime}</Text>
         </TimeInfo>
         <Tips>
           Layer 2 assets will be locked in Withdrawal Request, available to withdraw to Layer 1 after maturity.
