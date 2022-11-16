@@ -59,9 +59,11 @@ export function PopoverMenu({ onClick }: PopoverMenuProps) {
           <ClaimSudt />
         </div>
       )}
-      <PopoverMenuLink href="https://faucet.nervos.org" onClick={onClick}>
-        Claim CKB Faucet on L1
-      </PopoverMenuLink>
+      {!isMainnet && (
+        <PopoverMenuLink href="https://faucet.nervos.org" onClick={onClick}>
+          Claim CKB Faucet on L1
+        </PopoverMenuLink>
+      )}
       <PopoverMenuLink href="https://docs.godwoken.io" onClick={onClick}>
         Godwoken Docs
       </PopoverMenuLink>
