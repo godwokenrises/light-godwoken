@@ -11,6 +11,9 @@ import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { QrCodeModal } from "../QrCodeModal";
+import { useDotBitAlias } from "../../hooks/useDotBit";
+import { QuestionCircleOutlined } from "@ant-design/icons";
+import { COLOR } from "../../style/variables";
 
 const StyleWrapper = styled.div`
   display: flex;
@@ -37,6 +40,14 @@ const StyleWrapper = styled.div`
     }
     .actions {
       display: flex;
+    }
+    .help {
+      margin-left: 4px;
+      color: ${COLOR.primary};
+    }
+    .alias-icon-lg {
+      width: 16px;
+      height: 16px;
     }
   }
 `;
@@ -115,6 +126,8 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
   const lightGodwoken = useLightGodwoken();
   const decimals = lightGodwoken?.getNativeAsset().decimals;
 
+  const dotbitAlias = useDotBitAlias(ethAddress);
+
   const [qr, setQr] = useState<QrCodeValue | undefined>();
   const [qrVisible, setQrVisible] = useState(false);
   function onCloseQrCodeModal() {
@@ -145,6 +158,10 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
     copy(value);
     message.success(`${title} is copied`);
   }
+  function toUrl(url: string) {
+    window.open(url, "_blank");
+  }
+
   function truncateMiddle(str: string, first = 40, last = 6) {
     return str.substring(0, first) + "..." + str.substring(str.length - last);
   }
@@ -226,6 +243,37 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
               </Icon>
             </ActionButton>
           </Tooltip>
+        </div>
+      </div>
+
+      <div className="address-col">
+        <div>
+          <Tooltip title="You can give your Ethereum Address a memorable, striking personality with .bit alias">
+            <Text className="title">
+              <span>Address Alias</span>
+              <QuestionCircleOutlined className="help" />
+            </Text>
+          </Tooltip>
+          <PrimaryText className="address">
+            {dotbitAlias.isLoading && <Placeholder />}
+            {!dotbitAlias.isLoading && (dotbitAlias.data ? dotbitAlias.data.account : "-")}
+          </PrimaryText>
+        </div>
+        <div className="actions">
+          <Tooltip title="Manage alias">
+            <ActionButton className="button" onClick={() => toUrl("https://app.did.id/me")}>
+              <img src="/static/dotbit.ico" alt="ico" className="alias-icon-lg" />
+            </ActionButton>
+          </Tooltip>
+          {dotbitAlias.data && (
+            <Tooltip title="Copy alias">
+              <ActionButton className="button" onClick={() => copyValue("DotBit Alias", dotbitAlias.data!.account)}>
+                <Icon>
+                  <ContentCopyOutlined />
+                </Icon>
+              </ActionButton>
+            </Tooltip>
+          )}
         </div>
       </div>
 
