@@ -116,7 +116,7 @@ export const testConfig: LightGodwokenConfigMap = {
           args: "0x86c7429247beba7ddd6e4361bcdfc0510b0b644131e2afb7e486375249a01802",
         },
       },
-      GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
+      GW_POLYJUICE_RPC_URL: "https://v1.testnet.godwoken.io/rpc",
       CHAIN_NAME: "https://testnet.ckb.dev",
       SCANNER_URL: "",
       SCANNER_API: "",
