@@ -2,7 +2,7 @@ import styled from "styled-components";
 import CkbSvg, { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { BI } from "@ckb-lumos/lumos";
 import { HashType } from "@ckb-lumos/base";
-import { notification } from "antd";
+import { notification, Tooltip } from "antd";
 import {
   L1TransactionRejectedError,
   NotEnoughCapacityError,
@@ -16,17 +16,21 @@ import { getL1TransferInputError } from "../../utils/inputValidate";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useL1CKBBalance } from "../../hooks/useL1CKBBalance";
 import { useSUDTBalance } from "../../hooks/useSUDTBalance";
-import CurrencyInputPanel from "../Input/CurrencyInputPanel";
-import GeneralInputPanel from "../Input/GeneralInputPanel";
 import { ConfirmModal, InputInfo, LoadingWrapper, MainText, PrimaryButton, Tips } from "../../style/common";
 import { ArrowDownwardFilled } from "@ricons/material";
 import { Icon } from "@ricons/utils";
 import { formatToThousands, parseStringToBI } from "../../utils/numberFormat";
 import { LoadingOutlined } from "@ant-design/icons";
 import { getFullDisplayAmount } from "../../utils/formatTokenAmount";
+import { truncateCkbAddress, truncateDotBitAlias, truncateEthAddress } from "../../utils/stringFormat";
 import { captureException } from "@sentry/react";
 import { useL1TxHistory } from "../../hooks/useL1TxHistory";
 import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
+import CurrencyInputPanel from "../Input/CurrencyInputPanel";
+import DotBitL1Input from "../DotBit/DotBitL1Input";
+import { DotBitL1AddressData } from "../DotBit/DotBitL1AddressOption";
+import { DotBitCoinType } from "../../hooks/useDotBit";
+import { COLOR } from "../../style/variables";
 
 const CkbAsSudt: SUDT = {
   name: "CKB",
@@ -54,6 +58,35 @@ const ModalContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+`;
+const DotBitAliasCard = styled.div`
+  padding: 6px 10px;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #c3d6c3;
+  background-color: #e8f6e8;
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .title {
+    font-weight: 600;
+    color: ${COLOR.secondary};
+  }
+  .value {
+    display: inline-flex;
+    align-items: center;
+  }
+  .avatar {
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f2f2f2;
+    border: 1px solid #c3d6c3;
+  }
 `;
 
 export default function RequestL1Transfer() {
@@ -107,6 +140,16 @@ export default function RequestL1Transfer() {
     return [ckbBalanceQuery.data ?? "0x0", ...(sudtBalanceQuery.data?.balances ?? [])];
   }, [currencyBalanceLoading, ckbBalanceQuery.data, sudtBalanceQuery.data]);
 
+  // dotbit account
+  const isValidDotBitAlias = useMemo(() => (recipient ? /.+\.bit$/.test(recipient) : false), [recipient]);
+  const [selectedAliasAddress, setSelectedAliasAddress] = useState<DotBitL1AddressData | undefined>();
+
+  // recipient final address
+  const recipientAddress = useMemo(() => {
+    return isValidDotBitAlias ? selectedAliasAddress?.value ?? "" : recipient;
+  }, [isValidDotBitAlias, selectedAliasAddress, recipient]);
+
+  // input error message
   const inputError = useMemo(() => {
     if (!lightGodwoken) {
       return "Wallet Not Connected";
@@ -118,12 +161,24 @@ export default function RequestL1Transfer() {
       sudtBalance: !isSelectedCkb ? selectedBalance : void 0,
       sudtSymbol: !isSelectedCkb ? selected.symbol : void 0,
       sudtDecimals: !isSelectedCkb ? selected.decimals : void 0,
-      recipientAddress: recipient,
+      isSelectedAliasAddress: isValidDotBitAlias,
+      recipientAddress: recipientAddress,
       senderAddress: lightGodwoken.provider.l1Address,
       config: lightGodwoken!.getConfig(),
     });
-  }, [amount, ckbBalanceQuery.data, isSelectedCkb, lightGodwoken, recipient, selected, selectedBalance]);
+  }, [
+    amount,
+    ckbBalanceQuery.data,
+    isSelectedCkb,
+    isValidDotBitAlias,
+    lightGodwoken,
+    recipientAddress,
+    selected.decimals,
+    selected.symbol,
+    selectedBalance,
+  ]);
 
+  // confirmation dialog
   const [modalVisible, setModalVisible] = useState(false);
   useEffect(() => setModalVisible(false), [lightGodwoken]);
 
@@ -140,14 +195,14 @@ export default function RequestL1Transfer() {
       const txHash = await lightGodwoken.l1Transfer({
         amount: parsedAmount.toHexString(),
         sudtType: isSelectedSudt ? selected.type : void 0,
-        toAddress: recipient.trim(),
+        toAddress: recipientAddress.trim(),
       });
 
       addTxToHistory({
         txHash,
         type: "transfer",
         status: "pending",
-        recipient: recipient.trim(),
+        recipient: recipientAddress.trim(),
         capacity: isSelectedCkb ? parsedAmount.toString() : "0",
         amount: isSelectedSudt ? parsedAmount.toString() : "0",
         token: isSelectedSudt ? selected : void 0,
@@ -226,7 +281,14 @@ export default function RequestL1Transfer() {
           <ArrowDownwardFilled />
         </Icon>
       </div>
-      <GeneralInputPanel label="Recipient" placeholder="CKB Address" value={recipient} onUserInput={setRecipient} />
+      <DotBitL1Input
+        label="Recipient"
+        placeholder="CKB Address Or .Bit Account"
+        value={recipient}
+        onUserInput={setRecipient}
+        selected={selectedAliasAddress}
+        onSelected={(address) => setSelectedAliasAddress(address)}
+      />
       <PrimaryButton disabled={!amount || inputError !== void 0} onClick={l1Transfer}>
         {inputError || "Transfer"}
       </PrimaryButton>
@@ -259,6 +321,33 @@ export default function RequestL1Transfer() {
               )}
             </div>
           </InputInfo>
+          <InputInfo>
+            <span className="title">Recipient</span>
+            <Tooltip title={recipientAddress} placement="topRight">
+              <div className="address">{truncateCkbAddress(recipientAddress)}</div>
+            </Tooltip>
+          </InputInfo>
+          {isValidDotBitAlias && selectedAliasAddress && (
+            <DotBitAliasCard>
+              <div className="row">
+                <div className="title">Recipient alias to</div>
+                <Tooltip title={recipient} placement="topRight">
+                  <MainText className="value">
+                    <img src={`https://display.did.id/identicon/${recipient}`} alt="avatar" className="avatar" />
+                    <span>{truncateDotBitAlias(recipient)}</span>
+                  </MainText>
+                </Tooltip>
+              </div>
+              {selectedAliasAddress.coinType === DotBitCoinType.Eth && (
+                <div className="row">
+                  <div className="title">Ethereum address</div>
+                  <Tooltip title={selectedAliasAddress.address} placement="topRight">
+                    <MainText className="value">{truncateEthAddress(selectedAliasAddress.address)}</MainText>
+                  </Tooltip>
+                </div>
+              )}
+            </DotBitAliasCard>
+          )}
           <LoadingWrapper>
             <LoadingOutlined />
           </LoadingWrapper>
