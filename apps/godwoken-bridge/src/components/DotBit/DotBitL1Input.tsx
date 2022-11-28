@@ -68,6 +68,7 @@ export default function DotBitL1Input(props: DotBitL1InputProps) {
     return query.addresses.map((row) => ({
       coinType: row.coin_type,
       address: row.value,
+      label: row.label?.length ? row.label : void 0,
       value: convertToAvailableAddress(row.coin_type, row.value),
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps

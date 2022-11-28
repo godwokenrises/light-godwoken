@@ -1,6 +1,11 @@
 import { Tooltip } from "antd";
 import { Icon } from "@ricons/utils";
-import { RadioButtonCheckedRound, RadioButtonUncheckedRound } from "@ricons/material";
+import {
+  RadioButtonCheckedRound,
+  RadioButtonUncheckedRound,
+  ArrowRightAltTwotone,
+  BookmarkBorderTwotone,
+} from "@ricons/material";
 import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { DotBitCoinType } from "../../hooks/useDotBit";
 import { COLOR } from "../../style/variables";
@@ -17,7 +22,7 @@ const StyleWrapper = styled.div`
   cursor: pointer;
 
   .radio {
-    margin-left: 6px;
+    margin-left: 10px;
     flex: none;
     display: flex;
     font-size: 26px;
@@ -28,9 +33,15 @@ const StyleWrapper = styled.div`
       color: ${COLOR.brand};
     }
   }
+
   .content {
     flex: auto;
+    overflow: hidden;
 
+    .content-row {
+      display: flex;
+      align-items: center;
+    }
     .content-address {
       display: inline-flex;
       align-items: center;
@@ -42,11 +53,37 @@ const StyleWrapper = styled.div`
       height: 16px;
       user-select: none;
     }
+    .content-tag {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 4px;
+      border-radius: 6px;
+      color: ${COLOR.label};
+      border: 1px solid #e0e0e0;
+      font-size: 12px;
+
+      > .xicon {
+        margin-right: 2px;
+        font-size: 16px;
+        color: ${COLOR.primary};
+      }
+      & + .content-tag {
+        margin-left: 4px;
+      }
+    }
+    .content-overflow {
+      flex-shrink: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
   }
 
   &:not(:first-child) {
     border-top: 1px solid #dedede;
   }
+
   &:hover {
     background-color: #f2f2f2;
   }
@@ -62,6 +99,7 @@ export interface DotBitL1AddressData {
   coinType: string;
   address: string;
   value: string;
+  label?: string;
 }
 
 export default function DotBitL1AddressOption(props: DotBitOptionProps) {
@@ -88,9 +126,37 @@ export default function DotBitL1AddressOption(props: DotBitOptionProps) {
             )}
           </div>
         </Tooltip>
-        <div>
-          {props.data.coinType === DotBitCoinType.Eth && "Transfer to L1 Wallet Address"}
-          {props.data.coinType === DotBitCoinType.Ckb && "Transfer to Address"}
+        <div className="content-row">
+          {props.data.coinType === DotBitCoinType.Eth && (
+            <Tooltip title="Transfer to L1 Wallet Address" placement="topLeft">
+              <div className="content-tag">
+                <Icon>
+                  <ArrowRightAltTwotone />
+                </Icon>
+                <span>L1 Wallet Address</span>
+              </div>
+            </Tooltip>
+          )}
+          {props.data.coinType === DotBitCoinType.Ckb && (
+            <Tooltip title="Transfer to this L1 Address" placement="topLeft">
+              <div className="content-tag">
+                <Icon>
+                  <ArrowRightAltTwotone />
+                </Icon>
+                <span>L1 Address</span>
+              </div>
+            </Tooltip>
+          )}
+          {props.data.label && (
+            <Tooltip title={`Label: ${props.data.label}`} placement="top">
+              <div className="content-tag content-overflow">
+                <Icon>
+                  <BookmarkBorderTwotone />
+                </Icon>
+                <span className="content-overflow">{props.data.label}</span>
+              </div>
+            </Tooltip>
+          )}
         </div>
       </div>
       <div className={classes("radio", props.selected ? "selected" : "")}>
