@@ -239,6 +239,10 @@ export const InputInfo = styled.div`
       margin-top: 10px;
     }
   }
+  .address {
+    display: flex;
+    text-align: right;
+  }
 `;
 export const Actions = styled.div`
   margin-top: 64px;

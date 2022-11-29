@@ -123,6 +123,7 @@ export interface L1TransferInputParams {
   sudtSymbol?: string;
   senderAddress: Address;
   recipientAddress: Address;
+  isSelectedAliasAddress: boolean;
   config: LightGodwokenConfig;
 }
 
@@ -166,19 +167,20 @@ export const getL1TransferInputError = (params: L1TransferInputParams): string |
   }
 
   const hasAmount = params.ckbValue || params.sudtValue;
-  const recipient = params.recipientAddress.trim();
+  const recipientAddress = params.recipientAddress.trim();
+  const isSelectedAliasAddress = params.isSelectedAliasAddress;
   const sender = params.senderAddress.trim();
-  if (hasAmount && !recipient) {
-    return "Enter Recipient Address";
+  if (hasAmount && !recipientAddress) {
+    return isSelectedAliasAddress ? "Select Recipient Address" : "Enter Recipient Address";
   }
   try {
-    parseAddress(recipient, {
+    parseAddress(recipientAddress, {
       config: params.config.lumosConfig,
     });
   } catch {
-    return "Invalid CKB Address";
+    return "Invalid Recipient Address";
   }
-  if (hasAmount && recipient === sender) {
+  if (hasAmount && recipientAddress === sender) {
     return "Unsupported Self Transfer";
   }
 
