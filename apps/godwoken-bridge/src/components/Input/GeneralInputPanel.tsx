@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, ReactNode } from "react";
 import { InputCard, Text, Row } from "../../style/common";
 import styled from "styled-components";
 
@@ -37,49 +37,50 @@ const StyledInput = styled.input<{ error?: boolean; fontSize?: string; align?: s
 `;
 
 export interface GeneralInputPanelProps {
+  // value
   value: string;
   onUserInput: (value: string) => void;
+  // info
   label?: string;
-  maxAmount?: string;
-  CKBBalance?: string;
-  isLoading?: boolean;
-  decimals?: number;
   placeholder?: string;
+  disabled?: boolean;
+  // slots
+  appendLabel?: ReactNode;
+  appendInput?: ReactNode;
+  appendCard?: ReactNode;
 }
 
-export default function GeneralInputPanel({
-  value,
-  onUserInput,
-  label,
-  isLoading,
-  placeholder,
-}: GeneralInputPanelProps) {
+export default function GeneralInputPanel(props: GeneralInputPanelProps) {
   function onInput(event: ChangeEvent<HTMLInputElement>) {
-    onUserInput(event.target.value);
+    props.onUserInput(event.target.value);
   }
 
   return (
     <InputCard>
       <Row className="first-row">
-        <Text>{label}</Text>
+        <Text>{props.label}</Text>
+        {props.appendLabel}
       </Row>
       <Row className="second-row">
         <StyledInput
           className="token-amount-input"
-          value={value}
+          value={props.value}
           onInput={onInput}
+          disabled={props.disabled}
           // text input options
           inputMode="text"
-          title={label}
+          title={props.label}
           autoComplete="off"
           autoCorrect="off"
           // text-specific options
           type="text"
-          placeholder={placeholder}
+          placeholder={props.placeholder}
           minLength={1}
           spellCheck="false"
         />
+        {props.appendInput}
       </Row>
+      {props.appendCard}
     </InputCard>
   );
 }

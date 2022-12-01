@@ -125,8 +125,7 @@ export const MainnetLayer2ConfigV1: LightGodwokenConfig = {
     SCANNER_API: "https://api.v1.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Mainnet v1",
     FINALITY_BLOCKS: 16800,
-    // Assuming layer 1 block produce time is 12 seconds, layer 2 produces 1 block every 3 layer 1 blocks
-    BLOCK_PRODUCE_TIME: 12 * 3,
+    BLOCK_PRODUCE_TIME: 45, // L2 average block produce time from GwScan
     MIN_CANCEL_DEPOSIT_TIME: 604800,
 
     // https://github.com/mds1/multicall/commit/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7

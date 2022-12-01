@@ -119,12 +119,12 @@ export const TestnetLayer2ConfigV1: LightGodwokenConfig = {
         args: "0x86c7429247beba7ddd6e4361bcdfc0510b0b644131e2afb7e486375249a01802",
       },
     },
-    GW_POLYJUICE_RPC_URL: "https://godwoken-testnet-v1.ckbapp.dev",
-    SCANNER_URL: "https://v1.betanet.gwscan.com/",
+    GW_POLYJUICE_RPC_URL: "https://v1.testnet.godwoken.io/rpc/instant-finality-hack",
+    SCANNER_URL: "https://v1.testnet.gwscan.com/",
     SCANNER_API: "https://api.v1.betanet.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Testnet v1",
     FINALITY_BLOCKS: 100,
-    BLOCK_PRODUCE_TIME: 30,
+    BLOCK_PRODUCE_TIME: 8, // L2 average block produce time from GwScan
     MIN_CANCEL_DEPOSIT_TIME: 604800, // 7 days in seconds
 
     // https://github.com/mds1/multicall/blob/a6ed03f4bb232a573e9f6d4bdeca21a4edd3c1f7/README.md

@@ -4,6 +4,7 @@ import { BI } from "@ckb-lumos/lumos";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
+import { truncateCkbAddress } from "../../utils/stringFormat";
 import { ReactComponent as CKBIcon } from "../../assets/ckb.svg";
 import { CheckCircleOutlined, ExclamationCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { ArrowRightAltTwotone } from "@ricons/material";
@@ -99,11 +100,8 @@ export default function L1TransferItem(props: L1TransferItemProps) {
     if (!transferredSudt) return "";
     return `${getDisplayAmount(BI.from(amount), token!.decimals)} ${token!.symbol}`;
   }, [transferredSudt, amount, token]);
-  const shortenRecipient = useMemo(() => (recipient ? truncateMiddle(recipient, 11, 11) : ""), [recipient]);
+  const shortenRecipient = useMemo(() => (recipient ? truncateCkbAddress(recipient) : ""), [recipient]);
 
-  function truncateMiddle(str: string, first = 40, last = 6) {
-    return str.substring(0, first) + "..." + str.substring(str.length - last);
-  }
   function toExplorer() {
     if (!lightGodwoken) return;
     const config = lightGodwoken.getConfig();
