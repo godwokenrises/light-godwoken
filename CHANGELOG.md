@@ -1,7 +1,16 @@
 # Change Log
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+# 0.3.2 (2022-12-1)
+
+### Bug Fixes
+* Fix ckb faucet display logic on mainnet ([#232](https://github.com/godwokenrises/light-godwoken/pull/232))
+
+### Features
+* Update block produce time on v1 networks ([#231](https://github.com/godwokenrises/light-godwoken/pull/231))
+> We have updated the average block produce time on Godwoken Bridge so the estimated withdrawal time left is displayed more accurately. Thanks to @alejandroRbit for the suggestion.
+
+* Support dotbit forward/reverse search features ([#234](https://github.com/godwokenrises/light-godwoken/pull/234))
+> Dotbit is now supported by Godwoken Bridge. You can check your dotbit alias on Godwoken Bridge. And when l1-transferring, you can enter the recipient's dotbit account and select an address to transfer assets instead of copying and pasting a CKB address.
 
 
 # 0.3.1 (2022-11-10)
