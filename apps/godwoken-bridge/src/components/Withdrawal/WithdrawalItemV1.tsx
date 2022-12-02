@@ -126,7 +126,7 @@ const WithdrawalRequestCard = ({
     [blockProduceTime, remainingBlockNumber],
   );
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
-  const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
+  const isMature = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
 
   const {
     days: daysLeft,
@@ -178,7 +178,7 @@ const WithdrawalRequestCard = ({
               <ArrowDownIcon />
             </div>
           )}
-          {status === "pending" && isMature && (
+          {((status === "pending" && isMature) || status === "available") && (
             <Tooltip title="Unlocking withdrawal">
               <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
             </Tooltip>

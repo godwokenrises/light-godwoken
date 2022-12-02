@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LightGodwokenV1 } from "light-godwoken";
 import { AxiosError } from "axios";
 import styled from "styled-components";
@@ -58,30 +58,53 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       isNoMore: (data) => data?.hasMore === false,
     },
   );
+  const reloadWithdrawalHistory = useCallback(() => {
+    withdrawalHistory.mutate(void 0);
+    withdrawalHistory.reload();
+  }, [withdrawalHistory]);
 
-  // When LightGodwoken client rebuild, reset pagination
+  // When LightGodwoken client rebuilt, reload the list
   useEffect(() => {
     if (lightGodwoken && !withdrawalHistory.loading) {
-      withdrawalHistory.mutate(void 0);
-      withdrawalHistory.reload();
+      reloadWithdrawalHistory();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightGodwoken]);
 
   const isLoading = withdrawalHistory.loading || withdrawalHistory.loadingMore;
-
-  const withdrawalList = withdrawalHistory?.data?.list || [];
-  const pendingList = withdrawalList?.filter((history) => history.status === "pending") || [];
-  const completedList = withdrawalList?.filter((history) => history.status !== "pending") || [];
+  const withdrawalList = useMemo(() => {
+    return withdrawalHistory?.data?.list || [];
+  }, [withdrawalHistory]);
+  const pendingList = useMemo(() => {
+    return withdrawalList?.filter((history) => ["pending", "available"].includes(history.status)) || [];
+  }, [withdrawalList]);
+  const completedList = useMemo(() => {
+    return withdrawalList?.filter((history) => history.status === "succeed") || [];
+  }, [withdrawalList]);
 
   const displayLocalTxHistory = localTxHistory
     .filter((history) => history.status === "l2Pending")
-    .map((history) => {
-      return {
-        ...history,
-        status: "l2Pending",
-      };
-    });
+    .map((history) => ({
+      ...history,
+      status: "l2Pending",
+    }));
+
+  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout>();
+  const intervalReloadHistory = useCallback(() => {
+    setRefreshTimer(
+      setTimeout(() => {
+        if (isPending) {
+          reloadWithdrawalHistory();
+          intervalReloadHistory();
+        }
+      }, 30000),
+    );
+  }, [isPending, reloadWithdrawalHistory]);
+  useEffect(() => {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    if (isPending) intervalReloadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending, params.status]);
 
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;
