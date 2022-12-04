@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { LightGodwokenV1 } from "light-godwoken";
 import { AxiosError } from "axios";
 import styled from "styled-components";
@@ -89,22 +89,28 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
       status: "l2Pending",
     }));
 
-  const [refreshTimer, setRefreshTimer] = useState<NodeJS.Timeout>();
+  const refreshTimer = useRef<NodeJS.Timeout>();
   const intervalReloadHistory = useCallback(() => {
-    setRefreshTimer(
-      setTimeout(() => {
-        if (isPending) {
-          reloadWithdrawalHistory();
-          intervalReloadHistory();
-        }
-      }, 30000),
-    );
+    if (refreshTimer.current) {
+      clearTimeout(refreshTimer.current);
+      if (!isPending) return;
+    }
+    refreshTimer.current = setTimeout(() => {
+      if (isPending) {
+        reloadWithdrawalHistory();
+        intervalReloadHistory();
+      }
+    }, 30000);
   }, [isPending, reloadWithdrawalHistory]);
   useEffect(() => {
-    if (refreshTimer) clearTimeout(refreshTimer);
-    if (isPending) intervalReloadHistory();
+    intervalReloadHistory();
+    return () => {
+      if (refreshTimer.current) {
+        clearTimeout(refreshTimer.current);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPending, params.status]);
+  }, [isPending]);
 
   if (!isPending && !isCompleted) {
     return <Navigate to={`/${params.version}/withdrawal/pending`} />;
