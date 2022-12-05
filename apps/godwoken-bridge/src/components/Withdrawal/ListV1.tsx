@@ -100,7 +100,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
         reloadWithdrawalHistory();
         intervalReloadHistory();
       }
-    }, 30000);
+    }, 60000);
   }, [isPending, reloadWithdrawalHistory]);
   useEffect(() => {
     intervalReloadHistory();
