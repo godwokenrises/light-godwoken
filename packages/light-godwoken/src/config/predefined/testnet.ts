@@ -119,7 +119,7 @@ export const TestnetLayer2ConfigV1: LightGodwokenConfig = {
         args: "0x86c7429247beba7ddd6e4361bcdfc0510b0b644131e2afb7e486375249a01802",
       },
     },
-    GW_POLYJUICE_RPC_URL: "https://v1.testnet.godwoken.io/rpc/instant-finality-hack",
+    GW_POLYJUICE_RPC_URL: "https://v1.testnet.godwoken.io/rpc",
     SCANNER_URL: "https://v1.testnet.gwscan.com/",
     SCANNER_API: "https://api.v1.betanet.gwscan.com/api/",
     CHAIN_NAME: "Godwoken Testnet v1",
