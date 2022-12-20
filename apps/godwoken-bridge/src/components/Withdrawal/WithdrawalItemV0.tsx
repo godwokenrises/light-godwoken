@@ -208,25 +208,21 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" && shouldShowMore && (
+          {status === "pending" && !isDue && shouldShowMore && (
             <div className="time">
               <ArrowUpIcon />
             </div>
           )}
-          {status === "pending" && !shouldShowMore && (
+          {status === "pending" && !isDue && !shouldShowMore && (
             <div className="time">
-              {isDue && (
-                <Tooltip title="Unlocking withdrawal">
-                  <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
-                </Tooltip>
-              )}
-              {!isDue && (
-                <>
-                  <MainText title="Estimated time left">{countdownText}</MainText>
-                  <ArrowDownIcon />
-                </>
-              )}
+              <MainText title="Estimated time left">{countdownText}</MainText>
+              <ArrowDownIcon />
             </div>
+          )}
+          {status === "pending" && isDue && !shouldShowMore && (
+            <Tooltip title="Unlocking withdrawal">
+              <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
           )}
           {status === "available" && hasOutpoint && !matchedUnlockHistory && isLiveCell === true && (
             <Tooltip title="Unlock withdrawal to your address">
