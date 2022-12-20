@@ -1,5 +1,5 @@
 import "antd/dist/antd.css";
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, Outlet, useParams } from "react-router-dom";
 import Page from "../components/Layout/Page";
 import PageHeader from "../components/Layout/PageHeader";
@@ -11,12 +11,20 @@ import { availableVersions } from "../utils/environment";
 
 export default function GodwokenBridge() {
   const lightGodwoken = useLightGodwoken();
-  if (lightGodwoken instanceof LightGodwokenV1) {
-    addNetwork(lightGodwoken.provider.ethereum, lightGodwoken);
-  }
 
   const params = useParams();
   const version = params.version;
+
+  useEffect(() => {
+    if (lightGodwoken instanceof LightGodwokenV1) {
+      const ethereum = lightGodwoken.provider.ethereum;
+      addNetwork(ethereum, lightGodwoken);
+      (ethereum.provider as any).provider.on?.("chainChanged", () => {
+        addNetwork(ethereum, lightGodwoken);
+      });
+    }
+  }, [lightGodwoken, params]);
+
   if (!version || !availableVersions.includes(version as GodwokenVersion)) {
     return <Navigate to={`/v1/${params["*"]}`} />;
   }
