@@ -208,18 +208,18 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" && !isDue && shouldShowMore && (
+          {status === "pending" && !isDue && !isFastWithdrawal && shouldShowMore && (
             <div className="time">
               <ArrowUpIcon />
             </div>
           )}
-          {status === "pending" && !isDue && !shouldShowMore && (
+          {status === "pending" && !isDue && !isFastWithdrawal && !shouldShowMore && (
             <div className="time">
               <MainText title="Estimated time left">{countdownText}</MainText>
               <ArrowDownIcon />
             </div>
           )}
-          {status === "pending" && isDue && !shouldShowMore && (
+          {status === "pending" && (isDue || isFastWithdrawal) && (
             <Tooltip title="Unlocking withdrawal">
               <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
