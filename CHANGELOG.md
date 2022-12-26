@@ -1,5 +1,18 @@
 # Change Log
 
+# 0.3.3 (2022-12-27)
+
+### Bug Fixes
+* Fix the display of fast withdrawal time ([#246](https://github.com/godwokenrises/light-godwoken/pull/246))
+
+### Features
+* Improve the display logic of pending withdrawals  ([#240](https://github.com/godwokenrises/light-godwoken/pull/240))
+> Previously, pending v1 withdrawals were not properly displayed while waiting to be unlocked. Now added the logic: when a withdrawal's time is up, it will show a loading indicator instead of "00:00". Also, to improve user experience, I added an interval which reloads the v1 pending withdrawal list every 60 seconds.
+
+* Watch network changes ([#241](https://github.com/godwokenrises/light-godwoken/pull/241))
+> Now Godwoken Bridge can detect if the current network has changed.
+
+
 # 0.3.2 (2022-12-1)
 
 ### Bug Fixes
