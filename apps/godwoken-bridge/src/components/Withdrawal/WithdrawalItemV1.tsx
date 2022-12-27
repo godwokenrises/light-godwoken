@@ -10,7 +10,7 @@ import { ReactComponent as ArrowDownIcon } from "../../assets/arrow-down.svg";
 import { ReactComponent as ArrowUpIcon } from "../../assets/arrow-up.svg";
 import { MainText } from "../../style/common";
 import { COLOR } from "../../style/variables";
-import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, LoadingOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { Tooltip } from "antd";
 import { useClock } from "../../hooks/useClock";
 import { TokenInfoWithAmount } from "./TokenInfoWithAmount";
@@ -126,7 +126,7 @@ const WithdrawalRequestCard = ({
     [blockProduceTime, remainingBlockNumber],
   );
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
-  const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
+  const isMature = useMemo(() => estimatedSecondsLeft === 0, [estimatedSecondsLeft]);
 
   const {
     days: daysLeft,
@@ -162,22 +162,27 @@ const WithdrawalRequestCard = ({
           </div>
         </div>
         <div className="right-side">
-          {status === "pending" &&
-            (shouldShowMore ? (
-              <div className="time">
-                <ArrowUpIcon />
-              </div>
-            ) : (
-              <div className="time">
-                <MainText title="Estimated time left">
-                  {daysLeft ? `${daysLeft} day${daysLeft > 1 ? "s" : ""}, ` : ""}
-                  {hoursLeft ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}
-                  {`${minutesLeft.toString().padStart(2, "0")}:`}
-                  {`${secondsLeft.toString().padStart(2, "0")}`}
-                </MainText>
-                <ArrowDownIcon />
-              </div>
-            ))}
+          {status === "pending" && !isMature && shouldShowMore && (
+            <div className="time">
+              <ArrowUpIcon />
+            </div>
+          )}
+          {status === "pending" && !isMature && !shouldShowMore && (
+            <div className="time">
+              <MainText title="Estimated time left">
+                {daysLeft ? `${daysLeft} day${daysLeft > 1 ? "s" : ""}, ` : ""}
+                {hoursLeft ? `${hoursLeft.toString().padStart(2, "0")}:` : ""}
+                {`${minutesLeft.toString().padStart(2, "0")}:`}
+                {`${secondsLeft.toString().padStart(2, "0")}`}
+              </MainText>
+              <ArrowDownIcon />
+            </div>
+          )}
+          {((status === "pending" && isMature) || status === "available") && (
+            <Tooltip title="Unlocking withdrawal">
+              <LoadingOutlined style={{ color: "#484848", height: "21px", lineHeight: "21px" }} />
+            </Tooltip>
+          )}
           {status === "succeed" && (
             <Tooltip title={status}>
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
