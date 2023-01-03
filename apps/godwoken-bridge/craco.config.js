@@ -1,9 +1,23 @@
 // const SentryPlugin = require("@sentry/webpack-plugin");
 
 function getProductionSetting() {
-  if (process.env.NODE_ENV !== "production") return {};
-  return {
+  /*if (process.env.NODE_ENV !== "production") return {
     presets: ["@babel/preset-env"],
+  };*/
+  return {
+    presets: [
+      [
+        "@babel/preset-env",
+        {
+          loose: false,
+        },
+      ],
+    ],
+    plugins: [
+      "@babel/plugin-proposal-private-property-in-object",
+      "@babel/plugin-proposal-class-properties",
+      "@babel/plugin-proposal-private-methods",
+    ],
   };
 }
 

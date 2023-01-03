@@ -2,7 +2,9 @@ import EventEmitter from "events";
 import { debug } from "./debug";
 import isEqual from "lodash.isequal";
 import * as secp256k1 from "secp256k1";
-import { toolkit, utils, core } from "@ckb-lumos/lumos";
+import { utils } from "@ckb-lumos/lumos";
+import { bytes, number } from "@ckb-lumos/codec";
+import { blockchain } from "@ckb-lumos/base";
 import { Cell, Hash, helpers, HexNumber, HexString, Script, BI, Transaction } from "@ckb-lumos/lumos";
 import { CellDep, CellWithStatus, DepType, OutPoint, Output, TransactionWithStatus } from "@ckb-lumos/base";
 import { getCellDep, getAdvancedSettings, GodwokenVersion, LightGodwokenConfig } from "./config";
@@ -36,7 +38,6 @@ import {
   DepositRejectedError,
   DepositTimeoutError,
   DepositTxNotFoundError,
-  L1TransactionRejectedError,
   Layer1RpcError,
   NotEnoughCapacityError,
   NotEnoughSudtError,
@@ -108,7 +109,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   async getCkbCurrentBlockNumber(): Promise<BI> {
-    return BI.from((await this.provider.ckbIndexer.tip()).block_number);
+    return BI.from((await this.provider.ckbRpc.getIndexerTip()).blockNumber);
   }
 
   generateDepositAddress(cancelTimeout?: number) {
@@ -125,17 +126,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const currentCkbBlockNumber = await this.getCkbCurrentBlockNumber();
     const depositList: DepositRequest[] = [];
     for await (const cell of ckbCollector.collect()) {
-      const amount = cell.data && cell.data !== "0x" ? utils.readBigUInt128LECompatible(cell.data) : BI.from(0);
+      const amount = cell.data && cell.data !== "0x" ? number.Uint128LE.unpack(cell.data) : BI.from(0);
       depositList.push({
         rawCell: cell,
-        blockNumber: BI.from(cell.block_number),
-        capacity: BI.from(cell.cell_output.capacity),
+        blockNumber: BI.from(cell.blockNumber),
+        capacity: BI.from(cell.cellOutput.capacity),
         cancelTime: BI.from(this.getCancelTimeout())
           .mul(1000) // milliseconds per second
-          .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.block_number)).mul(this.getCkbBlockProduceTime())),
+          .sub(BI.from(currentCkbBlockNumber).sub(BI.from(cell.blockNumber)).mul(this.getCkbBlockProduceTime())),
         amount,
-        sudt: cell.cell_output.type
-          ? this.getBuiltinSUDTMapByTypeHash()[utils.computeScriptHash(cell.cell_output.type)]
+        sudt: cell.cellOutput.type
+          ? this.getBuiltinSUDTMapByTypeHash()[utils.computeScriptHash(cell.cellOutput.type)]
           : undefined,
       });
     }
@@ -154,7 +155,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
   async cancelDeposit(depositTxHash: string, cancelTimeout: number): Promise<HexString> {
     const depositLock = this.generateDepositLock(cancelTimeout);
-    const tx = await this.provider.ckbRpc.get_transaction(depositTxHash);
+    const tx = await this.provider.ckbRpc.getTransaction(depositTxHash);
     if (!tx) {
       throw new DepositTxNotFoundError(depositTxHash, "Deposit transaction not found");
     }
@@ -164,14 +165,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const output = txOutputs[index];
       if (utils.computeScriptHash(output.lock) === utils.computeScriptHash(depositLock)) {
         depositCell = {
-          cell_output: {
+          cellOutput: {
             capacity: output.capacity,
             lock: output.lock,
             type: output.type,
           },
-          data: tx.transaction.outputs_data[index],
-          out_point: {
-            tx_hash: depositTxHash,
+          data: tx.transaction.outputsData[index],
+          outPoint: {
+            txHash: depositTxHash,
             index: BI.from(index).toHexString(),
           },
         };
@@ -195,7 +196,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let txSkeleton = helpers.TransactionSkeleton({ cellProvider: this.provider.ckbIndexer });
     const outputCells: Cell[] = [];
     const inputCells: Cell[] = [cell];
-    const inputCapacity = BI.from(cell.cell_output.capacity);
+    const inputCapacity = BI.from(cell.cellOutput.capacity);
     const ownerLock = this.provider.getLayer1Lock();
 
     // collect one owner cell
@@ -206,22 +207,22 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     });
     let ownerCellCapacity = BI.from(0);
     for await (const cell of ownerCellCollector.collect()) {
-      ownerCellCapacity = ownerCellCapacity.add(cell.cell_output.capacity);
+      ownerCellCapacity = ownerCellCapacity.add(cell.cellOutput.capacity);
       inputCells.unshift(cell);
       break;
     }
 
-    if (!!cell.cell_output.type) {
+    if (!!cell.cellOutput.type) {
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           capacity: BI.from(14400000000).toHexString(),
           lock: ownerLock,
-          type: cell.cell_output.type,
+          type: cell.cellOutput.type,
         },
         data: cell.data,
       });
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           capacity: inputCapacity.sub(14400000000).add(ownerCellCapacity).toHexString(),
           lock: ownerLock,
         },
@@ -229,7 +230,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       });
     } else {
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           capacity: inputCapacity.add(ownerCellCapacity).toHexString(),
           lock: ownerLock,
         },
@@ -238,11 +239,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     }
     const { layer2Config, layer1Config } = this.provider.getConfig();
     const depositLockDep: CellDep = {
-      out_point: {
-        tx_hash: layer2Config.SCRIPTS.deposit_lock.cell_dep.out_point.tx_hash,
-        index: layer2Config.SCRIPTS.deposit_lock.cell_dep.out_point.index,
+      outPoint: {
+        txHash: layer2Config.SCRIPTS.depositLock.cellDep.outPoint.txHash,
+        index: layer2Config.SCRIPTS.depositLock.cellDep.outPoint.index,
       },
-      dep_type: layer2Config.SCRIPTS.deposit_lock.cell_dep.dep_type as DepType,
+      depType: layer2Config.SCRIPTS.depositLock.cellDep.depType as DepType,
     };
     const rollupCellDep: CellDep = await this.getRollupCellDep();
 
@@ -253,22 +254,22 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       .update("outputs", (outputs) => {
         return outputs.push(...outputCells);
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.omni_lock));
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.omniLock));
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(depositLockDep);
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(depositLockDep);
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(rollupCellDep);
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(rollupCellDep);
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.secp256k1Blake160));
       });
 
-    if (!!cell.cell_output.type) {
-      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
+    if (!!cell.cellOutput.type) {
+      txSkeleton = txSkeleton.update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
     return txSkeleton;
@@ -283,14 +284,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw new Error("Last submitted tx not found!");
     }
     let rollupIndex = tx.transaction.outputs.findIndex((output: Output) => {
-      return output.type && utils.computeScriptHash(output.type) === layer2Config.ROLLUP_CONFIG.rollup_type_hash;
+      return output.type && utils.computeScriptHash(output.type) === layer2Config.ROLLUP_CONFIG.rollupTypeHash;
     });
     return {
-      out_point: {
-        tx_hash: txHash,
+      outPoint: {
+        txHash: txHash,
         index: `0x${rollupIndex.toString(16)}`,
       },
-      dep_type: "code",
+      depType: "code",
     };
   }
 
@@ -298,7 +299,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let tx: TransactionWithStatus | null = null;
     // retry 10 times, and sleep 1s
     for (let i = 0; i < 10; i++) {
-      tx = await this.provider.ckbRpc.get_transaction(txHash);
+      tx = await this.provider.ckbRpc.getTransaction(txHash);
       if (tx != null) {
         return tx;
       }
@@ -332,7 +333,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of ckbCollector.collect()) {
-      collectedCapacity = collectedCapacity.add(BI.from(cell.cell_output.capacity));
+      collectedCapacity = collectedCapacity.add(BI.from(cell.cellOutput.capacity));
       collectedCells.push(cell);
       if (collectedCapacity.gte(neededCapacity)) break;
     }
@@ -352,8 +353,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of sudtCollector.collect()) {
-        collectedCapacity = collectedCapacity.add(BI.from(cell.cell_output.capacity));
-        collectedSudtAmount = collectedSudtAmount.add(utils.readBigUInt128LECompatible(cell.data));
+        collectedCapacity = collectedCapacity.add(BI.from(cell.cellOutput.capacity));
+        collectedSudtAmount = collectedSudtAmount.add(number.Uint128LE.unpack(cell.data));
         collectedCells.push(cell);
         if (collectedSudtAmount.gte(neededSudtAmount)) break;
       }
@@ -366,8 +367,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           config: this.getConfig().lumosConfig,
         }),
         type: {
-          code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-          hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
+          codeHash: this.getConfig().layer1Config.SCRIPTS.sudt.codeHash,
+          hashType: this.getConfig().layer1Config.SCRIPTS.sudt.hashType,
           args: "0x",
         },
         // if sudt cell's data has more info than just amount (16 bytes), skip it
@@ -375,17 +376,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of freeCkbCollector.collect()) {
-        const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cell_output.capacity);
+        const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cellOutput.capacity);
         const alreadyCollected = collectedCells.some((collectedCell) => {
           return !!(
-            isEqual(collectedCell.out_point?.tx_hash, cell.out_point?.tx_hash) &&
-            isEqual(collectedCell.out_point?.index, cell.out_point?.index)
+            isEqual(collectedCell.outPoint?.txHash, cell.outPoint?.txHash) &&
+            isEqual(collectedCell.outPoint?.index, cell.outPoint?.index)
           );
         });
         // envolve SUDT cells that has more capacity than SUDT_CELL_CAPACITY
         if (haveFreeCapacity && !alreadyCollected) {
           freeCapacityProviderCells.push(cell);
-          collectedCapacity = collectedCapacity.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+          collectedCapacity = collectedCapacity.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY);
         }
         if (collectedCapacity.gte(neededCapacity)) {
           break;
@@ -420,16 +421,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       .update("outputs", (outputs) => {
         return outputs.push(...outputCell);
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.omni_lock));
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.omniLock));
       })
-      .update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.secp256k1_blake160));
+      .update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.secp256k1Blake160));
       });
 
     if (payload.sudtType || freeCapacityProviderCells.length > 0) {
-      txSkeleton = txSkeleton.update("cellDeps", (cell_deps) => {
-        return cell_deps.push(getCellDep(layer1Config.SCRIPTS.sudt));
+      txSkeleton = txSkeleton.update("cellDeps", (cellDeps) => {
+        return cellDeps.push(getCellDep(layer1Config.SCRIPTS.sudt));
       });
     }
     return txSkeleton;
@@ -440,7 +441,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const txFee = await this.calculateTxFee(signedTx);
     txSkeleton = txSkeleton.update("outputs", (outputs) => {
       const exchangeOutput: Cell = outputs.get(outputs.size - 1)!;
-      exchangeOutput.cell_output.capacity = BI.from(exchangeOutput.cell_output.capacity).sub(txFee).toHexString();
+      exchangeOutput.cellOutput.capacity = BI.from(exchangeOutput.cellOutput.capacity).sub(txFee).toHexString();
       return outputs;
     });
     return txSkeleton;
@@ -512,13 +513,13 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // 1. wait for deposit tx to be commited
       if (!depositTx) {
-        const txOnChain = await this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
-        if (txOnChain && txOnChain.tx_status.status === "committed") {
+        const txOnChain = await this.provider.ckbRpc.getTransaction(txHash as unknown as Hash);
+        if (txOnChain && txOnChain.txStatus.status === "committed") {
           depositTx = txOnChain;
           loop = 0;
           debug("depositTx", depositTx);
         }
-        if (txOnChain && txOnChain.tx_status.status === "rejected") {
+        if (txOnChain && txOnChain.txStatus.status === "rejected") {
           clearInterval(nIntervId);
           eventEmitter.emit("fail", new DepositRejectedError(txHash, "Deposit rejected"));
         }
@@ -531,12 +532,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           const output = txOutputs[index];
           const depositLock = this.generateDepositLock();
           if (
-            depositLock.code_hash === output.lock.code_hash &&
-            depositLock.hash_type === output.lock.hash_type &&
+            depositLock.codeHash === output.lock.codeHash &&
+            depositLock.hashType === output.lock.hashType &&
             depositLock.args === output.lock.args
           ) {
             depositCellOutPoint = {
-              tx_hash: txHash,
+              txHash: txHash,
               index: BI.from(index).toHexString(),
             };
             loop = 0;
@@ -548,7 +549,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       // 3. wait for deposit cell to be consumed
       if (depositCellOutPoint) {
-        depositCell = await this.provider.ckbRpc.get_live_cell(depositCellOutPoint, false);
+        depositCell = await this.provider.ckbRpc.getLiveCell(depositCellOutPoint, false);
         debug("depositCell", depositCell);
       }
 
@@ -558,15 +559,15 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         const ownerLock = this.provider.getLayer1Lock();
         const transactions = await this.provider.ckbIndexer.getTransactions({
           script: depositLock,
-          script_type: "lock",
+          scriptType: "lock",
         });
         const txHashList = transactions.objects
-          .map((object) => object.tx_hash)
+          .map((object) => object.txHash)
           .slice(-10)
           .reverse();
         debug("txHashList", txHashList);
         const promises = txHashList.map(async (txHash) => {
-          return this.provider.ckbRpc.get_transaction(txHash as unknown as Hash);
+          return this.provider.ckbRpc.getTransaction(txHash as unknown as Hash);
         });
         const txList = await Promise.all(promises);
         for (let index = 0; index < txList.length; index++) {
@@ -574,16 +575,16 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
           // eslint-disable-next-line no-loop-func
           const txConsumedDepositCell = tx?.transaction.inputs.some((input) => {
             return (
-              input.previous_output.tx_hash === depositCellOutPoint!.tx_hash &&
-              input.previous_output.index === depositCellOutPoint!.index
+              input.previousOutput.txHash === depositCellOutPoint!.txHash &&
+              input.previousOutput.index === depositCellOutPoint!.index
             );
           });
           if (txConsumedDepositCell) {
             // eslint-disable-next-line no-loop-func
             const outputContainsOwnerLock = tx?.transaction.outputs.some((output) => {
               return (
-                output.lock.code_hash === ownerLock.code_hash &&
-                output.lock.hash_type === ownerLock.hash_type &&
+                output.lock.codeHash === ownerLock.codeHash &&
+                output.lock.hashType === ownerLock.hashType &&
                 output.lock.args === ownerLock.args
               );
             });
@@ -608,7 +609,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const eventEmitter = new EventEmitter();
     for (let index = 0; index < payload.length; index++) {
       const element = payload[index];
-      this.waitForDepositToComplete(element.tx_hash, eventEmitter);
+      this.waitForDepositToComplete(element.txHash, eventEmitter);
     }
     return eventEmitter;
   }
@@ -664,10 +665,9 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }
 
   getTransactionSizeByTx(tx: Transaction): number {
-    const serializedTx = core.SerializeTransaction(toolkit.normalizers.NormalizeTransaction(tx));
-    // 4 is serialized offset bytesize
-    const size = serializedTx.byteLength + 4;
-    return size;
+    const serializedTx = blockchain.Transaction.pack(tx);
+    // 4 is serialized offset byte size
+    return serializedTx.buffer.byteLength + 4;
   }
 
   /**
@@ -683,30 +683,30 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     payload: DepositPayload,
   ): Cell[] {
     const depositLock = this.generateDepositLock();
-    let sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    let sumCapacity = collectedCells.reduce((acc, cell) => acc.add(cell.cellOutput.capacity), BI.from(0));
     // start freeCapacityProviderCells: extract free capacity and return SUDT cell from freeCapacityProviderCells
     const freeCapacity = freeCapacityProviderCells.reduce(
-      (acc, cell) => acc.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY),
+      (acc, cell) => acc.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY),
       BI.from(0),
     );
     sumCapacity = sumCapacity.add(freeCapacity);
     const returnFreeCapacityCells = freeCapacityProviderCells.map((cell) => ({
       ...cell,
-      // we don't need block number and out_point in tx output cells
-      block_number: undefined,
-      out_point: undefined,
-      cell_output: { ...cell.cell_output, capacity: BI.from(SUDT_CELL_CAPACITY).toHexString() },
+      // we don't need block number and outPoint in tx output cells
+      blockNumber: undefined,
+      outPoint: undefined,
+      cellOutput: { ...cell.cellOutput, capacity: BI.from(SUDT_CELL_CAPACITY).toHexString() },
     }));
     // end freeCapacityProviderCells
     const sumSudtAmount = collectedCells.reduce((acc, cell) => {
-      if (cell.cell_output.type) {
-        return acc.add(utils.readBigUInt128LE(cell.data));
+      if (cell.cellOutput.type) {
+        return acc.add(number.Uint128LE.unpack(cell.data));
       } else {
         return acc;
       }
     }, BI.from(0));
     const depositCell: Cell = {
-      cell_output: {
+      cellOutput: {
         capacity: BI.from(payload.capacity).toHexString(),
         lock: depositLock,
       },
@@ -715,7 +715,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     const exchangeCapacity = sumCapacity.sub(payload.capacity);
     const exchangeCell: Cell = {
-      cell_output: {
+      cellOutput: {
         capacity: "0x" + exchangeCapacity.toString(16),
         lock: helpers.parseAddress(this.provider.l1Address, {
           config: this.getConfig().lumosConfig,
@@ -725,14 +725,14 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     };
 
     if (payload.sudtType && payload.amount && payload.amount !== "0x" && payload.amount !== "0x0") {
-      depositCell.cell_output.type = payload.sudtType;
-      depositCell.data = utils.toBigUInt128LE(payload.amount);
+      depositCell.cellOutput.type = payload.sudtType;
+      depositCell.data = bytes.hexify(number.Uint128LE.pack(payload.amount));
       let outputCells = [...returnFreeCapacityCells, depositCell];
 
       // contruct sudt exchange cell
-      const sudtAmount = utils.toBigUInt128LE(sumSudtAmount.sub(payload.amount));
+      const sudtAmount = bytes.hexify(number.Uint128LE.pack(sumSudtAmount.sub(payload.amount)));
       const exchangeSudtCell: Cell = {
-        cell_output: {
+        cellOutput: {
           capacity: "0x0",
           lock: helpers.parseAddress(this.provider.l1Address, {
             config: this.getConfig().lumosConfig,
@@ -742,24 +742,24 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         data: sudtAmount,
       };
       const sudtCapacity = helpers.minimalCellCapacity(exchangeSudtCell);
-      exchangeSudtCell.cell_output.capacity = "0x" + sudtCapacity.toString(16);
+      exchangeSudtCell.cellOutput.capacity = "0x" + sudtCapacity.toString(16);
 
       // exchange sudt if any left after deposit
       if (BI.from(sudtAmount).gt(BI.from(0))) {
         outputCells = [exchangeSudtCell].concat(...outputCells);
-        exchangeCell.cell_output.capacity = exchangeCapacity.sub(sudtCapacity).toHexString();
+        exchangeCell.cellOutput.capacity = exchangeCapacity.sub(sudtCapacity).toHexString();
       } else {
-        exchangeCell.cell_output.capacity = `0x${exchangeCapacity.toString(16)}`;
+        exchangeCell.cellOutput.capacity = `0x${exchangeCapacity.toString(16)}`;
       }
 
-      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+      if (BI.from(exchangeCell.cellOutput.capacity).gte(BI.from(6300000000))) {
         outputCells = outputCells.concat(exchangeCell);
       }
 
       return outputCells;
     } else {
       let outputCells = [...returnFreeCapacityCells, depositCell];
-      if (BI.from(exchangeCell.cell_output.capacity).gte(BI.from(6300000000))) {
+      if (BI.from(exchangeCell.cellOutput.capacity).gte(BI.from(6300000000))) {
         outputCells = outputCells.concat(exchangeCell);
       }
       return outputCells;
@@ -784,10 +784,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
   }*/
 
   signMessage(message: Hash, privateKey: HexString): HexString {
-    const signObject = secp256k1.ecdsaSign(
-      new Uint8Array(new toolkit.Reader(message).toArrayBuffer()),
-      new Uint8Array(new toolkit.Reader(privateKey).toArrayBuffer()),
-    );
+    const signObject = secp256k1.ecdsaSign(bytes.bytify(message), bytes.bytify(privateKey));
     const signatureBuffer = new ArrayBuffer(65);
     const signatureArray = new Uint8Array(signatureBuffer);
     signatureArray.set(signObject.signature, 0);
@@ -796,13 +793,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       v -= 27;
     }
     signatureArray.set([v], 64);
-
-    return new toolkit.Reader(signatureBuffer).serializeJson();
+    return bytes.hexify(signatureBuffer);
   }
 
   generateWithdrawalMessageToSign(serializedRawWithdrawalRequest: HexString, rollupTypeHash: Hash): Hash {
-    const data = new toolkit.Reader(rollupTypeHash + serializedRawWithdrawalRequest.slice(2)).toArrayBuffer();
-    return utils.ckbHash(data).serializeJson();
+    const data = bytes.bytify(rollupTypeHash + serializedRawWithdrawalRequest.slice(2));
+    return utils.ckbHash(data);
   }
 
   minimalWithdrawalCapacity(isSudt: boolean): HexNumber {
@@ -827,22 +823,22 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     // debug("serialized", serialized, serialized.length);
     const args = dummyRollupTypeHash + "00".repeat(dummyWithdrawalLockArgsByteLength);
     const lock: Script = {
-      code_hash: dummyHash,
-      hash_type: "data",
+      codeHash: dummyHash,
+      hashType: "data",
       args,
     };
     let type: Script | undefined = undefined;
     let data = "0x";
     if (isSudt) {
       type = {
-        code_hash: dummyHash,
-        hash_type: "data",
+        codeHash: dummyHash,
+        hashType: "data",
         args: dummyHash,
       };
       data = "0x" + "00".repeat(16);
     }
     const cell: Cell = {
-      cell_output: {
+      cellOutput: {
         lock,
         type,
         capacity: dummyHexNumber,
@@ -933,8 +929,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCells.push(cell);
-        collectedCkb = collectedCkb.add(BI.from(cell.cell_output.capacity));
-        collectedSudt = collectedSudt.add(utils.readBigUInt128LECompatible(cell.data));
+        collectedCkb = collectedCkb.add(BI.from(cell.cellOutput.capacity));
+        collectedSudt = collectedSudt.add(number.Uint128LE.unpack(cell.data));
         if (collectedSudt.gte(neededSudt)) {
           break;
         }
@@ -947,8 +943,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const freeCkbCollector = this.provider.ckbIndexer.collector({
         lock: senderLock,
         type: {
-          code_hash: config.layer1Config.SCRIPTS.sudt.code_hash,
-          hash_type: config.layer1Config.SCRIPTS.sudt.hash_type,
+          codeHash: config.layer1Config.SCRIPTS.sudt.codeHash,
+          hashType: config.layer1Config.SCRIPTS.sudt.hashType,
           args: "0x",
         },
         // if sudt cell's data has more info than just amount (16 bytes), skip it
@@ -956,17 +952,17 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of freeCkbCollector.collect()) {
-        const hasFreeCkb = BI.from(cell.cell_output.capacity).gt(SUDT_CELL_CAPACITY);
+        const hasFreeCkb = BI.from(cell.cellOutput.capacity).gt(SUDT_CELL_CAPACITY);
         const alreadyCollected = collectedCells.some((collected) => {
           return (
-            isEqual(collected.out_point?.tx_hash, cell.out_point?.tx_hash) &&
-            isEqual(collected.out_point?.index, cell.out_point?.index)
+            isEqual(collected.outPoint?.txHash, cell.outPoint?.txHash) &&
+            isEqual(collected.outPoint?.index, cell.outPoint?.index)
           );
         });
 
         if (hasFreeCkb && !alreadyCollected) {
           collectedFreeCells.push(cell);
-          collectedCkb = collectedCkb.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+          collectedCkb = collectedCkb.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY);
         }
         if (collectedCkb.gte(neededCkb)) {
           break;
@@ -982,7 +978,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         outputDataLenRange: ["0x0", "0x1"],
       });
       for await (const cell of ckbCollector.collect()) {
-        collectedCkb = collectedCkb.add(BI.from(cell.cell_output.capacity));
+        collectedCkb = collectedCkb.add(BI.from(cell.cellOutput.capacity));
         collectedCells.push(cell);
         if (collectedCkb.gte(neededCkb)) {
           break;
@@ -1006,15 +1002,15 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     });
 
     txSkeleton = txSkeleton
-      .update("cellDeps", (cell_deps) => {
+      .update("cellDeps", (cellDeps) => {
         const deps = [
-          getCellDep(config.layer1Config.SCRIPTS.omni_lock),
-          getCellDep(config.layer1Config.SCRIPTS.secp256k1_blake160),
+          getCellDep(config.layer1Config.SCRIPTS.omniLock),
+          getCellDep(config.layer1Config.SCRIPTS.secp256k1Blake160),
         ];
         if (isTransferSudt || collectedFreeCells.length > 0) {
           deps.push(getCellDep(config.layer1Config.SCRIPTS.sudt));
         }
-        return cell_deps.push(...deps);
+        return cellDeps.push(...deps);
       })
       .update("inputs", (inputs) => {
         return inputs.push(...collectedCells, ...collectedFreeCells);
@@ -1041,11 +1037,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       config: config.lumosConfig,
     });
 
-    const collectedCkb = collectedCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
-    const collectedFreeCkb = collectedFreeCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+    const collectedCkb = collectedCells.reduce((acc, cell) => acc.add(cell.cellOutput.capacity), BI.from(0));
+    const collectedFreeCkb = collectedFreeCells.reduce((acc, cell) => acc.add(cell.cellOutput.capacity), BI.from(0));
     const collectedSudt = collectedCells.reduce((acc, cell) => {
-      if (cell.cell_output.type) {
-        return acc.add(utils.readBigUInt128LE(cell.data));
+      if (cell.cellOutput.type) {
+        return acc.add(number.Uint128LE.unpack(cell.data));
       } else {
         return acc;
       }
@@ -1053,19 +1049,19 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     const returnSudtCellsMap: Record<HexString, Cell> = {};
     collectedFreeCells.forEach((cell) => {
-      const sudtTypeArgs = cell.cell_output.type!.args;
+      const sudtTypeArgs = cell.cellOutput.type!.args;
       if (sudtTypeArgs in returnSudtCellsMap) {
         // if sUDT cell already exist, combine cell.data
-        const cellAmount = utils.readBigUInt128LECompatible(cell.data);
-        const mapCellAmount = utils.readBigUInt128LECompatible(returnSudtCellsMap[sudtTypeArgs].data);
-        returnSudtCellsMap[sudtTypeArgs].data = utils.toBigUInt128LE(cellAmount.add(mapCellAmount));
+        const cellAmount = number.Uint128LE.unpack(cell.data);
+        const mapCellAmount = number.Uint128LE.unpack(returnSudtCellsMap[sudtTypeArgs].data);
+        returnSudtCellsMap[sudtTypeArgs].data = bytes.hexify(number.Uint128LE.pack(cellAmount.add(mapCellAmount)));
       } else {
-        // we don't need block_number, bloch_hash and out_point in tx output cells
+        // we don't need blockNumber, bloch_hash and outPoint in tx output cells
         // return free sUDT cells with only minimum capacity
         returnSudtCellsMap[sudtTypeArgs] = {
           data: cell.data,
-          cell_output: {
-            ...cell.cell_output,
+          cellOutput: {
+            ...cell.cellOutput,
             capacity: BI.from(SUDT_CELL_CAPACITY).toHexString(),
           },
         };
@@ -1074,7 +1070,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     // transfer to target address
     const transferCell: Cell = {
-      cell_output: {
+      cellOutput: {
         capacity: ckbAmount,
         lock: helpers.parseAddress(payload.toAddress, {
           config: config.lumosConfig,
@@ -1085,20 +1081,20 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     // if transferring sUDT
     if (isTransferSudt && !["0x", "0x0"].includes(sudtAmount)) {
-      transferCell.cell_output.type = payload.sudtType;
-      transferCell.data = utils.toBigUInt128LE(payload.amount);
+      transferCell.cellOutput.type = payload.sudtType;
+      transferCell.data = bytes.hexify(number.Uint128LE.pack(payload.amount));
 
       const sudtTypeArgs = payload.sudtType!.args;
       const exchangeSudtAmount = collectedSudt.sub(sudtAmount);
       if (exchangeSudtAmount.gt(0)) {
         if (sudtTypeArgs in returnSudtCellsMap) {
           const existFreeCell = returnSudtCellsMap[sudtTypeArgs];
-          const existFreeCellAmount = utils.readBigUInt128LECompatible(existFreeCell.data);
-          existFreeCell.data = utils.toBigUInt128LE(existFreeCellAmount.add(exchangeSudtAmount));
+          const existFreeCellAmount = number.Uint128LE.unpack(existFreeCell.data);
+          existFreeCell.data = bytes.hexify(number.Uint128LE.pack(existFreeCellAmount.add(exchangeSudtAmount)));
         } else {
           returnSudtCellsMap[sudtTypeArgs] = {
-            data: utils.toBigUInt128LE(exchangeSudtAmount),
-            cell_output: {
+            data: bytes.hexify(number.Uint128LE.pack(exchangeSudtAmount)),
+            cellOutput: {
               lock: senderLock,
               type: payload.sudtType,
               capacity: minimumSudtCellCapacity.toHexString(),
@@ -1108,7 +1104,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }
 
       const returnSudtCells = Object.values(returnSudtCellsMap);
-      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cellOutput.capacity), BI.from(0));
 
       const outputCells = [transferCell, ...returnSudtCells];
 
@@ -1125,7 +1121,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
       if (BI.from(exchangeShannons).gte(minimumCellCapacity)) {
         outputCells.push({
-          cell_output: {
+          cellOutput: {
             capacity: exchangeShannons,
             lock: senderLock,
           },
@@ -1137,7 +1133,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     } else {
       // transferring CKB
       const returnSudtCells = Object.values(returnSudtCellsMap);
-      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cell_output.capacity), BI.from(0));
+      const returnSudtCellsCkb = returnSudtCells.reduce((acc, cell) => acc.add(cell.cellOutput.capacity), BI.from(0));
 
       const outputCells = [transferCell, ...returnSudtCells];
 
@@ -1146,7 +1142,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       const exchangeShannons = `0x${exchangeCkb.toString(16)}`;
       if (BI.from(exchangeShannons).gte(minimumCellCapacity)) {
         outputCells.push({
-          cell_output: {
+          cellOutput: {
             capacity: exchangeShannons,
             lock: senderLock,
           },
@@ -1204,12 +1200,12 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     const typeScriptHashList = payload.types.map((typeScript) => utils.computeScriptHash(typeScript));
 
     for await (const cell of collector.collect()) {
-      const currentCellTypeHash = utils.computeScriptHash(cell.cell_output.type!);
+      const currentCellTypeHash = utils.computeScriptHash(cell.cellOutput.type!);
       const currentSudtIndex = typeScriptHashList.indexOf(currentCellTypeHash);
       if (currentSudtIndex !== -1) {
         let currentSudtSum = result.balances[currentSudtIndex];
         result.balances[currentSudtIndex] = BI.from(currentSudtSum)
-          .add(utils.readBigUInt128LECompatible(cell.data))
+          .add(number.Uint128LE.unpack(cell.data))
           .toHexString();
       }
     }
@@ -1239,7 +1235,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of collector.collect()) {
-      collectedSum = collectedSum.add(cell.cell_output.capacity);
+      collectedSum = collectedSum.add(cell.cellOutput.capacity);
       collectedCells.push(cell);
       if (collectedSum.gte(neededCapacity)) break;
     }
@@ -1248,7 +1244,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       throw new NotEnoughCapacityError({ expected: neededCapacity, actual: collectedSum }, message);
     }
     const changeOutput: Cell = {
-      cell_output: {
+      cellOutput: {
         capacity: collectedSum.toHexString(),
         lock: fromScript,
       },

@@ -140,7 +140,7 @@ const WithdrawalRequestCard = ({
   );
   const estimatedSecondsLeft = useMemo(() => Math.max(0, estimatedArrivalDate - now), [now, estimatedArrivalDate]);
   const isMature = useMemo(() => remainingBlockNumber === 0, [remainingBlockNumber]);
-  const hasOutpoint = useMemo(() => cell?.out_point !== void 0, [cell]);
+  const hasOutpoint = useMemo(() => cell?.outPoint !== void 0, [cell]);
   const matchedUnlockHistory = useMemo(() => {
     return layer1TxHash ? unlockHistory.find((row) => row.withdrawalTxHash === layer1TxHash) : void 0;
   }, [unlockHistory, layer1TxHash]);
@@ -151,7 +151,7 @@ const WithdrawalRequestCard = ({
     async function updateIsLiveCell() {
       if (status === "available" && hasOutpoint) {
         setIsLoadingLiveCell(true);
-        const liveCell = await lightGodwoken!.provider.ckbRpc.get_live_cell(cell!.out_point!, false);
+        const liveCell = await lightGodwoken!.provider.ckbRpc.getLiveCell(cell!.outPoint!, false);
         setIsLiveCell(liveCell.status === "live");
       } else {
         setIsLiveCell(false);

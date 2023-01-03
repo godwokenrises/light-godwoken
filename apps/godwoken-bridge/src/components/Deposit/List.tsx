@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import React, { useEffect, useRef } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { number } from "@ckb-lumos/codec";
 import { useInfiniteScroll } from "ahooks";
-import { utils } from "@ckb-lumos/lumos";
 import { format } from "date-fns";
 import { AxiosError } from "axios";
 import { LightGodwoken } from "light-godwoken";
@@ -39,7 +39,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
       const history = await getDepositHistories(lightGodwoken!, page);
       const list = history.map((deposit): DepositHistoryType => {
         const date = format(new Date(deposit.history.timestamp), "yyyy-MM-dd HH:mm:ss");
-        const sudtAmount = deposit.sudt ? utils.readBigUInt128LECompatible(deposit.cell.data).toHexString() : "0x0";
+        const sudtAmount = deposit.sudt ? number.Uint128LE.unpack(deposit.cell.data).toHexString() : "0x0";
 
         return {
           txHash: deposit.history.layer1_tx_hash || "",

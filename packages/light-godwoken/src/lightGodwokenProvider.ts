@@ -1,9 +1,9 @@
 import Web3 from "web3";
 import { providers } from "ethers";
-import { number } from "@ckb-lumos/codec";
-import { OutPoint, TransactionWithStatus } from "@ckb-lumos/base";
+import { number, bytes } from "@ckb-lumos/codec";
+import { utils, helpers } from "@ckb-lumos/lumos";
 import { initializeConfig } from "@ckb-lumos/config-manager";
-import { utils, core, toolkit, helpers } from "@ckb-lumos/lumos";
+import { blockchain, OutPoint, TransactionWithStatus } from "@ckb-lumos/base";
 import { Address, Indexer, RPC, Transaction, HexString, Hash, Cell, HashType, Script, BI } from "@ckb-lumos/lumos";
 import { core as godwokenCore } from "@polyjuice-provider/godwoken";
 import { PolyjuiceHttpProvider } from "@polyjuice-provider/web3";
@@ -103,8 +103,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   }
 
   async getMinFeeRate(): Promise<BI> {
-    const feeRate = await this.ckbRpc.tx_pool_info();
-    return BI.from(feeRate.min_fee_rate);
+    const feeRate = await this.ckbRpc.txPoolInfo();
+    return BI.from(feeRate.minFeeRate);
   }
 
   async getL1CkbBalance(payload?: GetL1CkbBalancePayload): Promise<BI> {
@@ -118,15 +118,15 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       outputDataLenRange: ["0x0", "0x1"],
     });
     for await (const cell of pureCkbCollector.collect()) {
-      ckbBalance = ckbBalance.add(cell.cell_output.capacity);
+      ckbBalance = ckbBalance.add(cell.cellOutput.capacity);
     }
     const freeCkbCollector = this.ckbIndexer.collector({
       lock: helpers.parseAddress(queryAddress, {
         config: this.getConfig().lumosConfig,
       }),
       type: {
-        code_hash: this.getConfig().layer1Config.SCRIPTS.sudt.code_hash,
-        hash_type: this.getConfig().layer1Config.SCRIPTS.sudt.hash_type,
+        codeHash: this.getConfig().layer1Config.SCRIPTS.sudt.codeHash,
+        hashType: this.getConfig().layer1Config.SCRIPTS.sudt.hashType,
         args: "0x",
       },
       // if sudt cell's data has more info than just amount (16 bytes), skip it
@@ -134,15 +134,15 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       outputDataLenRange: ["0x10", "0x11"],
     });
     for await (const cell of freeCkbCollector.collect()) {
-      ckbBalance = ckbBalance.add(cell.cell_output.capacity).sub(SUDT_CELL_CAPACITY);
+      ckbBalance = ckbBalance.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY);
     }
     return ckbBalance;
   }
 
   generateL1Address(l2Address: Address): Address {
     const omniLock: Script = {
-      code_hash: this.config.layer1Config.SCRIPTS.omni_lock.code_hash,
-      hash_type: this.config.layer1Config.SCRIPTS.omni_lock.hash_type as HashType,
+      codeHash: this.config.layer1Config.SCRIPTS.omniLock.codeHash,
+      hashType: this.config.layer1Config.SCRIPTS.omniLock.hashType as HashType,
       // omni flag       pubkey hash   omni lock flags
       // chain identity   eth addr      function flag()
       // 00: Nervos       👇            00: owner
@@ -158,7 +158,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   // // now only supported omni lock, the other lock type will be supported later
   async sendL1Transaction(tx: Transaction): Promise<Hash> {
-    return await this.ckbRpc.send_transaction(tx, "passthrough");
+    return await this.ckbRpc.sendTransaction(tx, "passthrough");
   }
 
   async signMessage(message: string, dummySign = false): Promise<string> {
@@ -173,11 +173,11 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (v >= 27) v -= 27;
     signedMessage = "0x" + signedMessage.slice(2, -2) + v.toString(16).padStart(2, "0");
     debug("message after sign", signedMessage);
-    const signedWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs({
+    const signedWitness = bytes.hexify(
+      blockchain.WitnessArgs.pack({
         lock: OmniLockWitnessLockCodec.pack({ signature: signedMessage }).buffer,
       }),
-    ).serializeJson();
+    );
     debug("signedWitness", signedWitness);
     return signedWitness;
   }
@@ -203,11 +203,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   generateMessageByTransaction(transaction: Transaction): HexString {
     const hasher = new utils.CKBHasher();
-    const rawTxHash = utils.ckbHash(
-      core.SerializeRawTransaction(toolkit.normalizers.NormalizeRawTransaction(transaction)),
-    );
-    const serializedWitness = core.SerializeWitnessArgs({
-      lock: new toolkit.Reader("0x" + "00".repeat(85)),
+    const rawTxHash = utils.ckbHash(blockchain.RawTransaction.pack(transaction).buffer);
+    const serializedWitness = blockchain.WitnessArgs.pack({
+      lock: bytes.bytify("0x" + "00".repeat(85)),
     });
     hasher.update(rawTxHash);
     this.hashWitness(hasher, serializedWitness);
@@ -224,9 +222,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const rollupConfig = this.config.layer2Config.ROLLUP_CONFIG;
     const queryOptions = {
       type: {
-        code_hash: rollupConfig.rollup_type_script.code_hash,
-        hash_type: rollupConfig.rollup_type_script.hash_type,
-        args: rollupConfig.rollup_type_script.args,
+        codeHash: rollupConfig.rollupTypeScript.codeHash,
+        hashType: rollupConfig.rollupTypeScript.hashType,
+        args: rollupConfig.rollupTypeScript.args,
       },
     };
     const collector = this.ckbIndexer.collector(queryOptions);
@@ -244,9 +242,9 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   getLayer2LockScript(): Script {
     return {
-      code_hash: this.config.layer2Config.SCRIPTS.eth_account_lock.script_type_hash as string,
-      hash_type: "type",
-      args: this.config.layer2Config.ROLLUP_CONFIG.rollup_type_hash + this.l2Address.slice(2).toLowerCase(),
+      codeHash: this.config.layer2Config.SCRIPTS.ethAccountLock.scriptTypeHash as string,
+      hashType: "type",
+      args: this.config.layer2Config.ROLLUP_CONFIG.rollupTypeHash + this.l2Address.slice(2).toLowerCase(),
     };
   }
 
@@ -265,28 +263,28 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       config: this.getConfig().lumosConfig,
     });
     const ownerLock: Script = {
-      code_hash: ownerCKBLock.code_hash,
+      codeHash: ownerCKBLock.codeHash,
       args: ownerCKBLock.args,
-      hash_type: ownerCKBLock.hash_type as HashType,
+      hashType: ownerCKBLock.hashType as HashType,
     };
     return utils.computeScriptHash(ownerLock);
   }
 
   async getLayer1Cell(outPoint: OutPoint): Promise<Cell | null> {
-    const queried = await this.ckbRpc.get_transaction(outPoint.tx_hash);
+    const queried = await this.ckbRpc.getTransaction(outPoint.txHash);
     if (!queried) return null;
 
     const tx = queried.transaction;
-    const status = queried.tx_status;
-    const block = status.block_hash ? await this.ckbRpc.get_block(status.block_hash) : null;
+    const status = queried.txStatus;
+    const block = status.blockHash ? await this.ckbRpc.getBlock(status.blockHash) : null;
     const index = BI.from(outPoint.index).toNumber();
     const output = tx.outputs[index];
     return {
-      cell_output: output,
-      out_point: outPoint,
-      data: tx.outputs_data[index],
-      block_hash: status.block_hash,
-      block_number: block?.header.number,
+      cellOutput: output,
+      outPoint: outPoint,
+      data: tx.outputsData[index],
+      blockHash: status.blockHash,
+      blockNumber: block?.header.number,
     };
   }
 
@@ -295,7 +293,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     if (!rollupCell === undefined) {
       return 0;
     }
-    const globalState = new godwokenCore.GlobalState(new toolkit.Reader(rollupCell!.data));
+    const globalState = new godwokenCore.GlobalState(bytes.bytify(rollupCell!.data).buffer);
     const lastFinalizedBlockNumber = Number(globalState.getLastFinalizedBlockNumber().toLittleEndianBigUint64());
     debug("last finalized block number: ", lastFinalizedBlockNumber);
     return lastFinalizedBlockNumber;
@@ -308,12 +306,12 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
   async waitForL1Transaction(txHash: Hash): Promise<TransactionWithStatus> {
     const tx = await retryIfFailed(
       async () => {
-        const txWithStatus = await this.ckbRpc.get_transaction(txHash);
+        const txWithStatus = await this.ckbRpc.getTransaction(txHash);
         debug("waitForL1Transaction", txHash, txWithStatus);
         if (!txWithStatus) {
           throw new L1TransactionNotExistError(txHash, "L1 Tx not exist");
         }
-        if (["committed", "rejected"].includes(txWithStatus.tx_status.status)) {
+        if (["committed", "rejected"].includes(txWithStatus.txStatus.status)) {
           return txWithStatus;
         } else {
           throw new L1TransactionTimeoutError(txHash, "L1 tx timeout");
@@ -323,7 +321,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       1000,
     );
 
-    if (tx.tx_status.status === "rejected") {
+    if (tx.txStatus.status === "rejected") {
       throw new L1TransactionRejectedError(txHash, "L1 tx rejected");
     }
 

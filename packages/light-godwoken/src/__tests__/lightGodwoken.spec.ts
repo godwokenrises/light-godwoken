@@ -27,7 +27,7 @@ describe("test light godwoken generateDepositOutputCell", () => {
       capacity: BI.from(400e8).toHexString(),
     });
     expect(outputCells.length).toEqual(1);
-    expect(outputCells[0].cell_output.capacity).toEqual(BI.from(400e8).toHexString());
+    expect(outputCells[0].cellOutput.capacity).toEqual(BI.from(400e8).toHexString());
   });
   it("should deposit 400 CKB, 300 pure CKB and 100 free CKB", async () => {
     const typeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
@@ -38,9 +38,9 @@ describe("test light godwoken generateDepositOutputCell", () => {
     });
     const [sudtExchangeCell, depositCell] = outputCells;
     expect(outputCells.length).toEqual(2);
-    expect(sudtExchangeCell.cell_output.capacity).toEqual(BI.from(144e8).toHexString());
-    expect(sudtExchangeCell.cell_output.type).toEqual(typeScript);
-    expect(depositCell.cell_output.capacity).toEqual(BI.from(400e8).toHexString());
+    expect(sudtExchangeCell.cellOutput.capacity).toEqual(BI.from(144e8).toHexString());
+    expect(sudtExchangeCell.cellOutput.type).toEqual(typeScript);
+    expect(depositCell.cellOutput.capacity).toEqual(BI.from(400e8).toHexString());
   });
   it("should deposit 400 CKB, 250 pure CKB and 100 from free CKB and 50 from sudt cell", async () => {
     const freeTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
@@ -56,15 +56,15 @@ describe("test light godwoken generateDepositOutputCell", () => {
     const [sudtExchangeCell, depositCell, ckbExchangeCell] = outputCells;
     expect(outputCells.length).toEqual(3);
     // output 0 is free ckb provider cell after taken free ckb away
-    expect(sudtExchangeCell.cell_output.capacity).toEqual(BI.from(144e8).toHexString());
-    expect(sudtExchangeCell.cell_output.type).toEqual(freeTypeScript);
+    expect(sudtExchangeCell.cellOutput.capacity).toEqual(BI.from(144e8).toHexString());
+    expect(sudtExchangeCell.cellOutput.type).toEqual(freeTypeScript);
     // output 1 is deposit cell
-    expect(depositCell.cell_output.capacity).toEqual(BI.from(400e8).toHexString());
-    expect(depositCell.cell_output.type).toEqual(depositSudtTypeScript);
+    expect(depositCell.cellOutput.capacity).toEqual(BI.from(400e8).toHexString());
+    expect(depositCell.cellOutput.type).toEqual(depositSudtTypeScript);
     // output 2 is exchangecell
-    expect(ckbExchangeCell.cell_output.capacity).toEqual(BI.from(144e8).toHexString());
-    expect(ckbExchangeCell.cell_output.type).toEqual(undefined);
-    expect(ckbExchangeCell.cell_output.lock).toEqual(lightGodwokenV1.provider.getLayer1Lock());
+    expect(ckbExchangeCell.cellOutput.capacity).toEqual(BI.from(144e8).toHexString());
+    expect(ckbExchangeCell.cellOutput.type).toEqual(undefined);
+    expect(ckbExchangeCell.cellOutput.lock).toEqual(lightGodwokenV1.provider.getLayer1Lock());
   });
   it("should generateDepositTx if user deposit 400 CKB, and user has 250 pure CKB and 100 from free CKB and 50 from sudt cell", async () => {
     const freeTypeScript: Script = randomSudtTypeScript(lightGodwokenV1.getConfig());
