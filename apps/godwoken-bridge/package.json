@@ -3,13 +3,12 @@
   "version": "0.3.3",
   "private": true,
   "scripts": {
-    "start": "craco start",
+    "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco start",
     "build": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) craco --max_old_space_size=4096  build",
     "clean": "rm -rf ./dist && rm tsconfig.tsbuildinfo",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
     "format:fix": "prettier --write '**/*.{js,jsx,ts,tsx}'",
-    "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
