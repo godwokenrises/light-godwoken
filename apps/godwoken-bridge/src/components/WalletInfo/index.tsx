@@ -331,7 +331,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
                 </ActionButton>
               </div>
               <SecondeButton className="new-tab-button" onClick={() => toUrl(qr.href)}>
-                Open in browser
+                Open in explorer
               </SecondeButton>
             </DetailRow>
           }
