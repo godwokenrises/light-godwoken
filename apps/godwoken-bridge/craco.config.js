@@ -1,31 +1,15 @@
 // const SentryPlugin = require("@sentry/webpack-plugin");
 
-function getProductionSetting() {
-  /*if (process.env.NODE_ENV !== "production") return {
+const commitHash = require("child_process").execSync("git rev-parse --short HEAD");
+
+module.exports = {
+  babel: {
     presets: ["@babel/preset-env"],
-  };*/
-  return {
-    presets: [
-      [
-        "@babel/preset-env",
-        {
-          loose: false,
-        },
-      ],
-    ],
     plugins: [
       "@babel/plugin-proposal-private-property-in-object",
       "@babel/plugin-proposal-class-properties",
       "@babel/plugin-proposal-private-methods",
     ],
-  };
-}
-
-const commitHash = require("child_process").execSync("git rev-parse --short HEAD");
-
-module.exports = {
-  babel: {
-    ...getProductionSetting(),
   },
   webpack: {
     alias: {},
