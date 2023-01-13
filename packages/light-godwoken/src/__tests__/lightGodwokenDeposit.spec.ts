@@ -85,8 +85,8 @@ describe("test light godwoken v1 deposit", () => {
     const lock = await lightGodwokenV1.generateDepositLock();
     expect(lock).toEqual({
       args: "0x702359ea7f073558921eb50d8c1c77e92f760c8f8656bde4995f26b8963e2dd8a900000014000000340000009d000000a50000003837aad0e28da55d366d62b7df9b1b0613c39c730c4c409b9722d4bed8cfa9266900000010000000300000003100000007521d0aa8e66ef441ebc31204d86bb23fc83e9edc58c19dbb1b0ebe64336ec00134000000702359ea7f073558921eb50d8c1c77e92f760c8f8656bde4995f26b8963e2dd80c1efcca2bcb65a532274f3ef24c044ef4ab6d73803a0900000000c002000000",
-      code_hash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
-      hash_type: "type",
+      codeHash: "0x50704b84ecb4c4b12b43c7acb260ddd69171c21b4c0ba15f3c469b7d143f6f18",
+      hashType: "type",
     });
   });
   it("should deposit 2000 ckb ok when user balance is 2000", async () => {
@@ -95,7 +95,7 @@ describe("test light godwoken v1 deposit", () => {
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
     });
 
-    expect(tx.outputs.get(0)?.cell_output.capacity).toEqual(BI.from(2000).mul(BI.from(10).pow(8)).toHexString());
+    expect(tx.outputs.get(0)?.cellOutput.capacity).toEqual(BI.from(2000).mul(BI.from(10).pow(8)).toHexString());
     expect(outputCapacityOf(tx).toString()).toEqual("2000");
   });
   it("should deposit 2000 ckb fail when user balance is 1999", async () => {
@@ -159,7 +159,7 @@ describe("test light godwoken v1 deposit", () => {
       capacity: BI.from(2000).mul(BI.from(10).pow(8)).toHexString(),
     });
 
-    expect(tx.outputs.get(0)?.cell_output.capacity).toEqual(BI.from(2000).mul(BI.from(10).pow(8)).toHexString());
+    expect(tx.outputs.get(0)?.cellOutput.capacity).toEqual(BI.from(2000).mul(BI.from(10).pow(8)).toHexString());
     expect(outputCapacityOf(tx).toString()).toEqual("2000");
   });
   it("should deposit 2000 ckb fail when user balance is 1999", async () => {

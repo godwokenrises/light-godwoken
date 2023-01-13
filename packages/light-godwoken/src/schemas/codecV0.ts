@@ -1,10 +1,11 @@
-import { molecule, number, blockchain } from "@ckb-lumos/codec/";
+import { molecule, number } from "@ckb-lumos/codec";
 import { BI, HexString } from "@ckb-lumos/lumos";
+import { blockchain } from "@ckb-lumos/base";
 import { hashTypeCodec } from "./baseCodec";
 
 const { table, option, struct } = molecule;
-const { Bytes, Byte32 } = blockchain;
 const { Uint32, Uint128, Uint8, Uint64 } = number;
+const { Bytes, Byte32 } = blockchain;
 
 export type RawWithdrawal = {
   nonce: number;

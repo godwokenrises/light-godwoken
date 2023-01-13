@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 import { notification, Tooltip } from "antd";
-import { BI, Cell, Hash, utils } from "@ckb-lumos/lumos";
+import { number } from "@ckb-lumos/codec";
+import { BI, Cell, Hash } from "@ckb-lumos/lumos";
 import { captureException } from "@sentry/react";
 import { LoadingOutlined } from "@ant-design/icons";
 import { NotEnoughCapacityError, ProxyERC20, TransactionSignError } from "light-godwoken";
@@ -81,12 +82,12 @@ const Unlock: React.FC<UnlockProps> = ({ layer1TxHash, erc20, cell }) => {
 
   // ckb capacity
   const ckbCapacity = useMemo(() => {
-    return getDisplayAmount(BI.from(cell.cell_output.capacity), 8);
-  }, [cell.cell_output.capacity]);
+    return getDisplayAmount(BI.from(cell.cellOutput.capacity), 8);
+  }, [cell.cellOutput.capacity]);
 
   // sudt
   const amount = useMemo(() => {
-    return cell.cell_output.type ? utils.readBigUInt128LECompatible(cell.data) : "0x0";
+    return cell.cellOutput.type ? number.Uint128LE.unpack(cell.data) : "0x0";
   }, [cell]);
 
   if (lightGodwoken?.getVersion().toString() !== "v0") {
