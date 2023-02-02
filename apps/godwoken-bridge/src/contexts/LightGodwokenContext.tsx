@@ -5,7 +5,7 @@ import detectEthereumProvider from "@metamask/detect-provider";
 import React, { createContext, useEffect, useState } from "react";
 import { GodwokenVersion, GodwokenNetwork, LightGodwoken } from "light-godwoken";
 import { createLightGodwokenV0, createLightGodwokenV1 } from "../utils/lightGodwoken";
-import {ConfirmModal, PrimaryButton} from "../style/common";
+import { ConfirmModal, PrimaryButton } from "../style/common";
 
 export const LightGodwokenContext = createContext<LightGodwoken | undefined>(undefined);
 LightGodwokenContext.displayName = "LightGodwokenContext";
@@ -53,23 +53,23 @@ export const Provider: React.FC = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightGodwoken, location.pathname, network]);
 
-  return <>
-    <LightGodwokenContext.Provider value={lightGodwoken || undefined}>
-      {props.children}
-    </LightGodwokenContext.Provider>
-    <ConfirmModal
+  return (
+    <>
+      <LightGodwokenContext.Provider value={lightGodwoken || undefined}>{props.children}</LightGodwokenContext.Provider>
+      <ConfirmModal
         width={400}
         visible={showInstallTips}
         transitionName=""
         maskTransitionName=""
         footer={null}
-        onCancel={()=>setShowInstallTips(false)}
-    >
-      <div style={{textAlign: "left", paddingTop: 24}}>
-        <h1>Tips</h1>
-        <div>Please install MetaMask to use Godwoken Bridge!</div>
-      </div>
-      <PrimaryButton onClick={()=>setShowInstallTips(false)}>Ok</PrimaryButton>
-    </ConfirmModal>
-  </>;
+        onCancel={() => setShowInstallTips(false)}
+      >
+        <div style={{ textAlign: "left", paddingTop: 24 }}>
+          <h1>Tips</h1>
+          <div>Please install MetaMask to use Godwoken Bridge!</div>
+        </div>
+        <PrimaryButton onClick={() => setShowInstallTips(false)}>Ok</PrimaryButton>
+      </ConfirmModal>
+    </>
+  );
 };
