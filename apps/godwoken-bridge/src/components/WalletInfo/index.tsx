@@ -312,11 +312,11 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </PrimaryText>
       </BalanceRow>
 
-      {qr && (
+      {qr && qrVisible && (
         <QrCodeModal
           title="Address Details"
           value={qr.value}
-          visible={qrVisible}
+          visible={true}
           append={
             <DetailRow>
               <div className="box">

@@ -31,6 +31,7 @@ export const QrCodeModal: React.FC<QRCodeModalProps> = (props) => {
       title={props.title}
       visible={props.visible}
       onOk={props.onClose}
+      zIndex={1070}
       onCancel={props.onClose}
       footer={null}
       width={400}
