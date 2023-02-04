@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Actions,
   ConfirmModal,
@@ -30,6 +30,7 @@ const TimeInfo = styled.div`
 interface Props {
   sendWithdrawal: () => void;
   loading: boolean;
+  cancelLoading: () => void;
   blockWait: string;
   estimatedTime: string;
   CKBInput: string;
@@ -44,6 +45,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
   sendWithdrawal,
   disabled,
   loading,
+  cancelLoading,
   blockWait,
   estimatedTime,
   CKBInput,
@@ -52,17 +54,23 @@ const SubmitWithdrawal: React.FC<Props> = ({
   sudtSymbol,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  useEffect(() => {
+    setIsModalVisible(loading);
+  }, [loading]);
 
   const showModal = () => {
     setIsModalVisible(true);
   };
 
   const handleCancel = () => {
-    setIsModalVisible(false);
+    if (loading) {
+      cancelLoading();
+    } else {
+      setIsModalVisible(false);
+    }
   };
   const handleSubmit = async () => {
     await sendWithdrawal();
-    setIsModalVisible(false);
   };
 
   return (
@@ -70,13 +78,7 @@ const SubmitWithdrawal: React.FC<Props> = ({
       <PrimaryButton className="submit-button" disabled={disabled} onClick={showModal}>
         {buttonText || "Request Withdrawal"}
       </PrimaryButton>
-      <ConfirmModal
-        title="Confirm Request"
-        visible={isModalVisible || loading}
-        onCancel={handleCancel}
-        footer={null}
-        width={400}
-      >
+      <ConfirmModal title="Confirm Request" visible={isModalVisible} onCancel={handleCancel} footer={null} width={400}>
         <InputInfo>
           <span className="title">Withdrawing</span>
           <div className="amount">

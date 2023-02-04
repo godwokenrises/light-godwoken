@@ -140,6 +140,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
           blockWait={String(withdrawalWaitBlock)}
           estimatedTime={getEstimateWaitTime(withdrawalWaitBlock, blockProduceTime)}
           loading={loading}
+          cancelLoading={() => setLoading(false)}
           buttonText={inputError}
           CKBInput={CKBInput}
           sudtInput={sudtValue}
