@@ -177,6 +177,7 @@ const RequestWithdrawalV0: React.FC = () => {
             targetValue === CKB_L1 ? getEstimateWaitTime(withdrawalWaitBlock, blockProduceTime) : "a few minutes"
           }
           loading={loading}
+          cancelLoading={() => setLoading(false)}
           buttonText={inputError}
           CKBInput={CKBInput}
           sudtInput={sudtValue}
