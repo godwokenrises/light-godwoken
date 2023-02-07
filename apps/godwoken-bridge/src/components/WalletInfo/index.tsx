@@ -15,6 +15,7 @@ import { useDotBitReverseAlias } from "../../hooks/useDotBit";
 import { Placeholder } from "../Placeholder";
 import { QrCodeModal } from "../QrCodeModal";
 import { COLOR } from "../../style/variables";
+import { CustomTooltip } from "../CustomTooltip";
 
 const StyleWrapper = styled.div`
   display: flex;
@@ -188,7 +189,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check address details">
+          <CustomTooltip title="Check address details">
             <ActionButton
               className="button"
               onClick={() => showQrCode("L1 Wallet Address", l1Address, getL1BrowserLink(l1Address))}
@@ -197,14 +198,14 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
                 <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
-          <Tooltip title="Copy address">
+          </CustomTooltip>
+          <CustomTooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("L1 Wallet Address", l1Address)}>
               <Icon>
                 <ContentCopyOutlined />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
         </div>
       </div>
 
@@ -217,7 +218,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check address details">
+          <CustomTooltip title="Check address details">
             <ActionButton
               className="button"
               onClick={() => showQrCode("L1 Deposit Address", depositAddress, getL1BrowserLink(depositAddress))}
@@ -226,14 +227,14 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
                 <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
-          <Tooltip title="Copy address">
+          </CustomTooltip>
+          <CustomTooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("L1 Deposit Address", depositAddress)}>
               <Icon>
                 <ContentCopyOutlined />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
         </div>
       </div>
 
@@ -244,7 +245,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check address details">
+          <CustomTooltip title="Check address details">
             <ActionButton
               className="button"
               onClick={() => showQrCode("Ethereum Address", ethAddress, getL2BrowserLink(ethAddress))}
@@ -253,7 +254,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
                 <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
           <Tooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("Ethereum Address", ethAddress)}>
               <Icon>
