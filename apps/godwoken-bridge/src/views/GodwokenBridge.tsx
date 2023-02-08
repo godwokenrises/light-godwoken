@@ -54,16 +54,16 @@ export default function GodwokenBridge() {
   }
 
   return (
-      <Page>
-        <PageHeader />
-        <Outlet />
-        <PageFooter />
-        <NetworkMismatchModal
-            visible={isModalVisible}
-            networkName={displayNetworkName}
-            handleCancel={handleCancel}
-            handleConfirm={changeChain}
-        />
-      </Page>
+    <Page>
+      <PageHeader />
+      <Outlet />
+      <PageFooter />
+      <NetworkMismatchModal
+        visible={isModalVisible}
+        networkName={displayNetworkName}
+        handleCancel={handleCancel}
+        handleConfirm={changeChain}
+      />
+    </Page>
   );
 }
