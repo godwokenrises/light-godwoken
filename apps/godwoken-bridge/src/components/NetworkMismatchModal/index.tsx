@@ -14,7 +14,7 @@ export const NetworkMismatchModal: React.FC<NetworkMismatchModalProps> = ({
   handleConfirm,
 }) => {
   return (
-    <ConfirmModal width={400} visible={visible} footer={null} onCancel={handleCancel}>
+    <ConfirmModal width={400} visible={visible} footer={null} onCancel={handleCancel} maskClosable={false} keyboard={false}>
       <div style={{ textAlign: "left", paddingTop: 24 }}>
         <h1>Network mismatch</h1>
         <p>

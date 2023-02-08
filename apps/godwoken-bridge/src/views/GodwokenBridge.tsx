@@ -26,9 +26,9 @@ export default function GodwokenBridge() {
         const chainId = network.chainId;
         const godWokenChainId = parseInt(await lightGodwoken.getChainId(), 16);
         if (chainId !== godWokenChainId) {
-          const godwokenNetwork = await lightGodwoken.getNetwork();
-          const networkName = godwokenNetwork[0].toUpperCase() + godwokenNetwork.substr(1);
-          setDisplayNetworkName(`Godwoken ${networkName}`);
+          const lightGodwokenConfig = lightGodwoken.getConfig();
+          const networkName = lightGodwokenConfig.layer2Config.CHAIN_NAME;
+          setDisplayNetworkName(networkName);
           setIsModalVisible(true);
         }
       });
@@ -54,18 +54,16 @@ export default function GodwokenBridge() {
   }
 
   return (
-    <>
       <Page>
         <PageHeader />
         <Outlet />
         <PageFooter />
+        <NetworkMismatchModal
+            visible={isModalVisible}
+            networkName={displayNetworkName}
+            handleCancel={handleCancel}
+            handleConfirm={changeChain}
+        />
       </Page>
-      <NetworkMismatchModal
-        visible={isModalVisible}
-        networkName={displayNetworkName}
-        handleCancel={handleCancel}
-        handleConfirm={changeChain}
-      />
-    </>
   );
 }
