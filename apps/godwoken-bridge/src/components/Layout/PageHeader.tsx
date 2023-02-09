@@ -192,7 +192,7 @@ export default function PageHeader() {
               <div className="divider" />
             </div>
           )}
-          {!isMainnet && <HeaderLink href="https://test-unipass-sdk.vercel.app">NFT Bridge</HeaderLink>}
+          {!isMainnet && <HeaderLink href="https://testnet.nft-bridge.godwoken.io">NFT Bridge</HeaderLink>}
         </div>
         <div className="right-side">
           <VersionSelect />
