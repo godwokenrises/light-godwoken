@@ -27,23 +27,26 @@ const StyledPage = styled.div`
     min-height: 64px;
     width: 100%;
     display: flex;
+    position: relative;
     align-items: center;
     justify-content: space-between;
   }
 
   .logo-container {
-    width: 182px;
-    flex: 1;
+    flex: none;
   }
 
   .link-list {
-    flex: 1;
-    height: 100%;
     display: flex;
+    position: absolute;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
   }
 
   .right-side {
-    flex: 1;
+    flex: none;
     display: flex;
     justify-content: end;
 
@@ -88,6 +91,8 @@ const StyledPage = styled.div`
       overflow-x: auto;
       overflow-y: hidden;
       white-space: nowrap;
+      position: static;
+      transform: none;
 
       > a {
         display: inline-block;
