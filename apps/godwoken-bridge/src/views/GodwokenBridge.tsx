@@ -7,7 +7,7 @@ import PageFooter from "../components/Layout/PageFooter";
 import { addNetwork } from "../utils/addNetwork";
 import { useLightGodwoken } from "../hooks/useLightGodwoken";
 import { GodwokenVersion, LightGodwokenV1 } from "light-godwoken";
-import { availableVersions } from "../utils/environment";
+import { availableVersions, isMainnet } from "../utils/environment";
 import { NetworkMismatchModal } from "../components/NetworkMismatchModal";
 
 export default function GodwokenBridge() {
@@ -26,8 +26,7 @@ export default function GodwokenBridge() {
         const chainId = network.chainId;
         const godWokenChainId = parseInt(await lightGodwoken.getChainId(), 16);
         if (chainId !== godWokenChainId) {
-          const lightGodwokenConfig = lightGodwoken.getConfig();
-          const networkName = lightGodwokenConfig.layer2Config.CHAIN_NAME;
+          const networkName = `Godwoken ${isMainnet ? "Mainnet" : "Testnet"}`;
           setDisplayNetworkName(networkName);
           setIsModalVisible(true);
         }
