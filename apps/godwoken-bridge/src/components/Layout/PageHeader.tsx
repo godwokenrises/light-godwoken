@@ -192,7 +192,7 @@ export default function PageHeader() {
               <div className="divider" />
             </div>
           )}
-          {!isMainnet && <HeaderLink href="https://testnet.nft-bridge.godwoken.io">NFT Bridge</HeaderLink>}
+          {!isMainnet && <HeaderLink href="https://testnet.nft-bridge.godwoken.io">NFT Bridge (Beta)</HeaderLink>}
         </div>
         <div className="right-side">
           <VersionSelect />
