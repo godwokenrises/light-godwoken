@@ -35,7 +35,7 @@ export const ClaimSudt: React.FC = () => {
         // Pool rejected duplicated transaction
         // If it appears in multiple places, consider turning it into a common error
         if (errObj.code === -1107) {
-          notification.error({message: "The transaction is already in the pool. Please try again later"});
+          notification.error({ message: "The transaction is already in the pool. Please try again later" });
           return;
         }
       }
