@@ -3,7 +3,6 @@ import { notification } from "antd";
 import { claimUSDC } from "./sudtFaucet";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { LightGodwokenNotFoundError, NotEnoughCapacityError } from "light-godwoken";
-
 export const ClaimSudt: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
 
@@ -28,9 +27,20 @@ export const ClaimSudt: React.FC = () => {
         setTimeout(() => {
           window.open("https://faucet.nervos.org", "_blank");
         }, 3000);
-      } else {
-        throw error;
+        return;
       }
+
+      if (error instanceof Error) {
+        const errObj = JSON.parse(error.message);
+        // Pool rejected duplicated transaction
+        // If it appears in multiple places, consider turning it into a common error
+        if (errObj.code === -1107) {
+          notification.error({message: "The transaction is already in the pool. Please try again later"});
+          return;
+        }
+      }
+
+      throw error;
     }
   };
   return <div onClick={claimSudt}>Get 1,000 Test Token(TTKN) on L1</div>;
