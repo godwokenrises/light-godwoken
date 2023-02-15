@@ -1,5 +1,6 @@
+import { blockchain } from "@ckb-lumos/base";
 import { BI, HexString } from "@ckb-lumos/lumos";
-import { molecule, number, blockchain, createObjectCodec, enhancePack } from "@ckb-lumos/codec";
+import { molecule, number, createObjectCodec, enhancePack } from "@ckb-lumos/codec";
 import { hashTypeCodec } from "./baseCodec";
 
 const { table, struct } = molecule;

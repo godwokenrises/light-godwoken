@@ -39,8 +39,8 @@ const CkbAsSudt: SUDT = {
   decimals: 8,
   tokenURI: CkbSvg,
   type: {
-    hash_type: "0x" as HashType,
-    code_hash: "0x",
+    hashType: "0x" as HashType,
+    codeHash: "0x",
     args: "0x",
   },
 };

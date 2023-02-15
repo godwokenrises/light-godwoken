@@ -1,137 +1,253 @@
-import React, { useMemo } from "react";
-import { ReactComponent as Logo } from "../../assets/logo.svg";
-import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
-
 import styled from "styled-components";
+import React, { PropsWithChildren, useMemo } from "react";
 import { Popover } from "antd";
+import { Link } from "react-router-dom";
+import { PathPattern } from "react-router";
+import { Icon } from "@ricons/utils";
+import { OpenInNewRound } from "@ricons/material";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
-import { matchPath, useLocation, useNavigate, useParams } from "react-router-dom";
+import { matchPath, useLocation, useParams } from "react-router-dom";
+
+import { ReactComponent as Logo } from "../../assets/logo.svg";
+import { ReactComponent as Hamburger } from "../../assets/hamburger.svg";
+import { isMainnet } from "../../utils/environment";
+import { COLOR } from "../../style/variables";
 
 const StyledPage = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 16px 100px;
-  min-height: 64px;
   margin-bottom: 24px;
-  background: white;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: white;
   color: black;
-  .logo-container {
-    width: 182px;
-    flex: 1;
-  }
-  .link-list {
-    flex: 1;
+
+  .wrapper {
+    padding: 0 100px;
+    min-height: 64px;
+    width: 100%;
     display: flex;
-    justify-content: center;
+    position: relative;
+    align-items: center;
+    justify-content: space-between;
   }
+
+  .logo-container {
+    flex: none;
+  }
+
+  .link-list {
+    display: flex;
+    position: absolute;
+    height: 100%;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
+  }
+
   .right-side {
-    flex: 1;
+    flex: none;
     display: flex;
     justify-content: end;
+
     > &:hover {
       cursor: pointer;
     }
   }
+
   .hamburger-menu {
     cursor: pointer;
   }
+
+  .vertical-divider {
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+
+    .divider {
+      width: 1px;
+      height: 40%;
+      background-color: #e1e1e1;
+    }
+  }
+
   @media (max-width: 1024px) {
-    padding: 16px 8px;
-    flex-direction: column;
+    .wrapper {
+      padding: 0;
+      flex-direction: column;
+    }
 
     .logo-container {
+      padding: 20px 0 12px 0;
+      flex: none;
       display: flex;
       justify-content: center;
     }
+
     .link-list {
-      margin-top: 12px;
-      padding-top: 16px;
-      border-top: 1px solid #eee;
+      width: 100%;
+      height: initial;
+      flex: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      position: static;
+      transform: none;
+
+      > a {
+        display: inline-block;
+
+        :first-child {
+          margin-left: auto;
+        }
+
+        :last-child {
+          margin-right: auto;
+        }
+      }
     }
+
     .right-side {
       display: none;
     }
   }
 `;
-const Link = styled.span`
-  height: 32px;
-  line-height: 32px;
-  width: 120px;
-  font-size: 14px;
-  font-weight: bold;
-  text-align: center;
-  color: black;
-  border-radius: 8px;
-  @media (max-width: 1024px) {
-    width: 100px;
-    .right-side {
-      display: none;
-    }
+const NavLink = styled.span`
+  padding: 16px 8px;
+  flex: 0 0 auto;
+  position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  min-width: 96px;
+  height: 100%;
+
+  .text {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 14px;
+    color: ${COLOR.label};
+    opacity: 0.7;
   }
-  &.active {
-    background: #18efb1;
+
+  .decorator {
+    bottom: 0;
+    left: 50%;
+    width: 40%;
+    height: 4px;
+    position: absolute;
+    transform: translate(-50%, 0);
   }
+
+  .icon {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 3px;
+  }
+
   &:hover {
     cursor: pointer;
+    .text {
+      color: #6fa26f;
+    }
+  }
+
+  &.active {
+    .text {
+      opacity: 1;
+      font-weight: bold;
+      color: ${COLOR.primary};
+    }
+
+    .decorator {
+      background-color: #6fa26f;
+    }
   }
 `;
 
-enum HeaderPaths {
-  Deposit = "deposit",
-  Withdrawal = "withdrawal",
-  L1Transfer = "transfer",
-}
-
 export default function PageHeader() {
-  const location = useLocation();
-  const currentPath = useMemo(() => {
-    return (
-      Object.values(HeaderPaths).find((path) => {
-        return matchPath(`/:version/${path}/*`, location.pathname) !== null;
-      }) ?? null
-    );
-  }, [location.pathname]);
-
   const params = useParams();
-  const navigate = useNavigate();
-  function toRoute(path: HeaderPaths) {
-    navigate(`/${params.version}/${path}`);
-  }
 
   return (
     <StyledPage>
-      <div className="logo-container">
-        <Logo height={27} />
-      </div>
-      <div className="link-list">
-        <Link
-          className={currentPath === HeaderPaths.Deposit ? "active" : ""}
-          onClick={() => toRoute(HeaderPaths.Deposit)}
-        >
-          Deposit
-        </Link>
-        <Link
-          className={currentPath === HeaderPaths.Withdrawal ? "active" : ""}
-          onClick={() => toRoute(HeaderPaths.Withdrawal)}
-        >
-          Withdrawal
-        </Link>
-        <Link
-          className={currentPath === HeaderPaths.L1Transfer ? "active" : ""}
-          onClick={() => toRoute(HeaderPaths.L1Transfer)}
-        >
-          L1 Transfer
-        </Link>
-      </div>
-      <div className="right-side">
-        <VersionSelect />
-        <Popover trigger="hover" placement="bottomLeft" overlayClassName="popover-menu" content={() => <PopoverMenu />}>
-          <Hamburger className="hamburger-menu" />
-        </Popover>
+      <div className="wrapper">
+        <div className="logo-container">
+          <Logo height={27} />
+        </div>
+        <div className="link-list">
+          <HeaderTab to={`/${params.version}/deposit`} pattern="/:version/deposit/*">
+            Deposit
+          </HeaderTab>
+          <HeaderTab to={`/${params.version}/withdrawal`} pattern="/:version/withdrawal/*">
+            Withdrawal
+          </HeaderTab>
+          <HeaderTab to={`/${params.version}/transfer`} pattern="/:version/transfer/*">
+            L1 Transfer
+          </HeaderTab>
+          {!isMainnet && (
+            <div className="vertical-divider">
+              <div className="divider" />
+            </div>
+          )}
+          {!isMainnet && <HeaderLink href="https://testnet.nft-bridge.godwoken.io">NFT Bridge (Beta)</HeaderLink>}
+        </div>
+        <div className="right-side">
+          <VersionSelect />
+          <Popover
+            trigger="hover"
+            placement="bottomLeft"
+            overlayClassName="popover-menu"
+            content={() => <PopoverMenu />}
+          >
+            <Hamburger className="hamburger-menu" />
+          </Popover>
+        </div>
       </div>
     </StyledPage>
+  );
+}
+
+export interface HeaderTabProps<TPath extends string = string> {
+  to: string;
+  pattern: TPath | PathPattern<TPath>;
+}
+export function HeaderTab(props: PropsWithChildren<HeaderTabProps>) {
+  const location = useLocation();
+  const isActive = useMemo(
+    () => matchPath(props.pattern, location.pathname) !== null,
+    [props.pattern, location.pathname],
+  );
+
+  return (
+    <Link to={props.to}>
+      <NavLink className={isActive ? "active" : void 0}>
+        <div className="text">{props.children}</div>
+        <div className="decorator" />
+      </NavLink>
+    </Link>
+  );
+}
+
+export interface HeaderLinkProps {
+  href: string;
+}
+export function HeaderLink(props: PropsWithChildren<HeaderLinkProps>) {
+  return (
+    <a href={props.href} target="_blank" rel="noreferrer">
+      <NavLink>
+        <div className="text">
+          {props.children}
+          <div className="icon">
+            <Icon>
+              <OpenInNewRound />
+            </Icon>
+          </div>
+        </div>
+        <div className="decorator" />
+      </NavLink>
+    </a>
   );
 }

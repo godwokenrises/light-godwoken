@@ -1,10 +1,10 @@
-import React, { ReactNode } from "react";
 import styled from "styled-components";
-import { COLOR } from "../../style/variables";
-import { ClaimSudt } from "../ClaimSudt";
-import { isMainnet } from "../../utils/environment";
-import { OpenInNewRound } from "@ricons/material";
+import React, { ReactNode } from "react";
 import { Icon } from "@ricons/utils";
+import { OpenInNewRound } from "@ricons/material";
+import { COLOR } from "../../style/variables";
+import { isMainnet } from "../../utils/environment";
+import { ClaimSudt } from "../ClaimSudt";
 
 const PopoverMenuStyleWrapper = styled.div`
   display: flex;
@@ -69,6 +69,12 @@ export function PopoverMenu({ onClick }: PopoverMenuProps) {
       </PopoverMenuLink>
       <PopoverMenuLink href="https://github.com/godwokenrises/light-godwoken" onClick={onClick}>
         GitHub
+      </PopoverMenuLink>
+      <PopoverMenuLink
+        href={`https://github.com/godwokenrises/light-godwoken/commits/${process.env.REACT_APP_COMMIT_HASH}`}
+        onClick={onClick}
+      >
+        About (#{process.env.REACT_APP_COMMIT_HASH})
       </PopoverMenuLink>
     </PopoverMenuStyleWrapper>
   );

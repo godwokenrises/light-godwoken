@@ -1,21 +1,8 @@
-import {
-  BI,
-  Cell,
-  CellDep,
-  Hash,
-  HashType,
-  helpers,
-  HexNumber,
-  HexString,
-  Script,
-  Transaction,
-  core,
-  toolkit,
-  utils,
-  WitnessArgs,
-} from "@ckb-lumos/lumos";
-import { Hexadecimal } from "@ckb-lumos/base";
 import EventEmitter from "events";
+import { bytes } from "@ckb-lumos/codec";
+import { helpers, utils } from "@ckb-lumos/lumos";
+import { Hexadecimal, blockchain } from "@ckb-lumos/base";
+import { BI, Cell, CellDep, Hash, HashType, HexNumber, HexString, Script, Transaction } from "@ckb-lumos/lumos";
 import DefaultLightGodwoken from "./lightGodwoken";
 import {
   DepositResult,
@@ -77,11 +64,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   getMinimalWithdrawalCapacity(): BI {
     const minimalCapacity =
       8 + // capacity
-      32 + // withdrawal_lock.code_hash
-      1 + // withdrawal_lock.hash_type
+      32 + // withdrawal_lock.codeHash
+      1 + // withdrawal_lock.hashType
       303 + // withdrawal_lock.args TODO: explain why this is 303
-      32 + // sudt_type.code_hash
-      1 + // sudt_type.hash_type
+      32 + // sudt_type.codeHash
+      1 + // sudt_type.hashType
       32 + // sudt_type.args
       16; // sudt_amount
 
@@ -121,8 +108,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       const tokenScriptHash = utils.computeScriptHash(tokenL1Script);
@@ -141,13 +128,13 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
   getBuiltinErc20ByTypeHash(sudtTypeHash: HexString): ProxyERC20 {
     const list = this.getBuiltinErc20List();
-    const filterd = list.filter((item) => {
+    const filtered = list.filter((item) => {
       return item.sudt_script_hash === sudtTypeHash;
     });
-    if (filterd.length === 0) {
+    if (filtered.length === 0) {
       throw new Erc20NotFoundError(sudtTypeHash, `Builtin erc20 not found with sudtTypeHash: ${sudtTypeHash}`);
     }
-    return filterd[0];
+    return filtered[0];
   }
 
   getBuiltinSUDTList(): SUDT[] {
@@ -155,8 +142,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const sudtScriptConfig = this.provider.getConfig().layer1Config.SCRIPTS.sudt;
     this.getTokenList().forEach((token) => {
       const tokenL1Script: Script = {
-        code_hash: sudtScriptConfig.code_hash,
-        hash_type: sudtScriptConfig.hash_type as HashType,
+        codeHash: sudtScriptConfig.codeHash,
+        hashType: sudtScriptConfig.hashType as HashType,
         args: token.l1LockArgs,
       };
       map.push({
@@ -206,8 +193,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         new PolyjuiceJsonRpcProvider(
           {
             web3Url: this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
-            rollupTypeHash: this.getConfig().layer2Config.ROLLUP_CONFIG.rollup_type_hash,
-            ethAccountLockCodeHash: this.getConfig().layer2Config.SCRIPTS.eth_account_lock.script_type_hash,
+            rollupTypeHash: this.getConfig().layer2Config.ROLLUP_CONFIG.rollupTypeHash,
+            ethAccountLockCodeHash: this.getConfig().layer2Config.SCRIPTS.ethAccountLock.scriptTypeHash,
           },
           this.getConfig().layer2Config.GW_POLYJUICE_RPC_URL,
         ),
@@ -256,19 +243,19 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       histories.data.map(async (data) => {
         const history = data.attributes;
         const cell = (await this.provider.getLayer1Cell({
-          tx_hash: history.layer1_tx_hash,
+          txHash: history.layer1_tx_hash,
           index: BI.from(history.layer1_output_index).toHexString(),
         })) as Cell;
 
         // if GwScan-api (v0) didn't provide `capacity` field,
         // then we need to get it from the target cell
         if (history.capacity === void 0) {
-          history.capacity = cell.cell_output.capacity;
+          history.capacity = cell.cellOutput.capacity;
         }
 
         let sudt: SUDT | undefined;
-        if (cell?.cell_output.type) {
-          const typeHash = utils.computeScriptHash(cell.cell_output.type);
+        if (cell?.cellOutput.type) {
+          const typeHash = utils.computeScriptHash(cell.cellOutput.type);
           const typeHashMap = this.getBuiltinSUDTMapByTypeHash();
           sudt = typeHashMap[typeHash];
         }
@@ -312,7 +299,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const promises = histories.data.map(async (data) => {
       const item = data.attributes;
       const cell = await this.provider.getLayer1Cell({
-        tx_hash: item.layer1_tx_hash,
+        txHash: item.layer1_tx_hash,
         index: BI.from(item.layer1_output_index).toHexString(),
       });
 
@@ -348,17 +335,16 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const { layer2Config } = this.provider.getConfig();
     return {
       script: {
-        code_hash: layer2Config.SCRIPTS.withdrawal_lock.script_type_hash,
-        hash_type: "type" as HashType,
-        args: `${layer2Config.ROLLUP_CONFIG.rollup_type_hash}${accountScriptHash.slice(2)}`,
+        codeHash: layer2Config.SCRIPTS.withdrawalLock.scriptTypeHash,
+        hashType: "type" as HashType,
+        args: `${layer2Config.ROLLUP_CONFIG.rollupTypeHash}${accountScriptHash.slice(2)}`,
       },
-      script_type: "lock",
+      scriptType: "lock",
     };
   }
 
   async getWithdrawal(txHash: Hash): Promise<unknown> {
-    const result = this.godwokenClient.getWithdrawal(txHash);
-    return result;
+    return this.godwokenClient.getWithdrawal(txHash);
   }
 
   withdrawWithEvent(payload: WithdrawalEventEmitterPayload, waitForCompletion?: boolean): WithdrawalEventEmitter {
@@ -402,8 +388,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const rawWithdrawalRequest = await this.generateRawWithdrawalRequest(eventEmitter, payload);
     debug("rawWithdrawalRequest:", rawWithdrawalRequest);
     const message = this.generateWithdrawalMessageToSign(
-      new toolkit.Reader(RawWithdrawalCodec.pack(rawWithdrawalRequest)).serializeJson(),
-      layer2Config.ROLLUP_CONFIG.rollup_type_hash,
+      bytes.hexify(RawWithdrawalCodec.pack(rawWithdrawalRequest)),
+      layer2Config.ROLLUP_CONFIG.rollupTypeHash,
     );
     debug("message:", message);
     let signatureMetamaskPersonalSign: HexString = "";
@@ -422,7 +408,11 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
 
     const withdrawalRequestExtra = {
       request: withdrawalRequest,
-      owner_lock: ownerLock,
+      owner_lock: {
+        code_hash: ownerLock.codeHash,
+        hash_type: ownerLock.hashType,
+        args: ownerLock.args,
+      },
       withdraw_to_v1: withdrawToV1 ? 1 : 0,
     };
 
@@ -431,7 +421,7 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     let txHash: HexString = "";
     try {
       txHash = (await this.godwokenClient.submitWithdrawalRequest(
-        new toolkit.Reader(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)).serializeJson(),
+        bytes.hexify(WithdrawalRequestExtraCodec.pack(withdrawalRequestExtra)),
       )) as unknown as HexString;
     } catch (error) {
       const rpcError = new V0WithdrawTokenNotEnoughError(JSON.stringify(error), "Send withdrawal failed!");
@@ -550,45 +540,45 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
   }
 
   async unlock({ cell }: UnlockPayload): Promise<Hash> {
-    const isSudtCell = cell.cell_output.type !== void 0;
+    const isSudtCell = cell.cellOutput.type !== void 0;
     const l1Address = this.provider.getL1Address();
     const l1Lock = helpers.parseAddress(l1Address);
     const outputCells: Cell[] = [];
 
     if (isSudtCell) {
       const sudtCapacity = helpers.minimalCellCapacityCompatible({
-        cell_output: {
+        cellOutput: {
           capacity: "0x0",
           lock: l1Lock,
-          type: cell.cell_output.type,
+          type: cell.cellOutput.type,
         },
         data: cell.data,
       });
-      const capacityLeft = BI.from(cell.cell_output.capacity).sub(sudtCapacity);
+      const capacityLeft = BI.from(cell.cellOutput.capacity).sub(sudtCapacity);
 
       debug("unlock sudt cell capacity", sudtCapacity, capacityLeft);
 
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           capacity: capacityLeft.toHexString(),
           lock: l1Lock,
         },
         data: "0x",
       });
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           lock: l1Lock,
-          type: cell.cell_output.type,
+          type: cell.cellOutput.type,
           capacity: `0x${sudtCapacity.toString(16)}`,
         },
         data: cell.data,
       });
     } else {
       outputCells.push({
-        cell_output: {
+        cellOutput: {
           lock: l1Lock,
-          type: cell.cell_output.type,
-          capacity: cell.cell_output.capacity,
+          type: cell.cellOutput.type,
+          capacity: cell.cellOutput.capacity,
         },
         data: cell.data,
       });
@@ -600,23 +590,21 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
       cellProvider: this.provider.ckbIndexer,
     });
 
-    const withdrawalLockCellDep = layer2Config.SCRIPTS.withdrawal_lock.cell_dep;
+    const withdrawalLockCellDep = layer2Config.SCRIPTS.withdrawalLock.cellDep;
     const withdrawalLockDep: CellDep = {
-      out_point: {
-        tx_hash: withdrawalLockCellDep.out_point.tx_hash,
-        index: withdrawalLockCellDep.out_point.index,
+      outPoint: {
+        txHash: withdrawalLockCellDep.outPoint.txHash,
+        index: withdrawalLockCellDep.outPoint.index,
       },
-      dep_type: withdrawalLockCellDep.dep_type,
+      depType: withdrawalLockCellDep.depType,
     };
 
     // https://github.com/classicalliu/gw-demos/blob/main/src/unlock.ts#L48
-    const withdrawalWitness = new toolkit.Reader(
-      core.SerializeWitnessArgs(
-        toolkit.normalizers.NormalizeWitnessArgs({
-          lock: "0x0000000004000000",
-        }),
-      ),
-    ).serializeJson();
+    const withdrawalWitness = bytes.hexify(
+      blockchain.WitnessArgs.pack({
+        lock: "0x0000000004000000",
+      }),
+    );
 
     txSkeleton = txSkeleton
       .update("inputs", (inputs) => {
@@ -629,8 +617,8 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
         cellDeps = cellDeps.push(
           withdrawalLockDep,
           rollupCellDep,
-          getCellDep(layer1Config.SCRIPTS.omni_lock),
-          getCellDep(layer1Config.SCRIPTS.secp256k1_blake160),
+          getCellDep(layer1Config.SCRIPTS.omniLock),
+          getCellDep(layer1Config.SCRIPTS.secp256k1Blake160),
         );
         if (isSudtCell) {
           cellDeps = cellDeps.push(getCellDep(layer1Config.SCRIPTS.sudt));
@@ -676,21 +664,22 @@ export default class DefaultLightGodwokenV0 extends DefaultLightGodwoken impleme
     const layer2Lock: Script = this.provider.getLayer2LockScript();
     const depositLockArgs = {
       owner_lock_hash: ownerLockHash,
-      layer2_lock: layer2Lock,
+      layer2_lock: {
+        code_hash: layer2Lock.codeHash,
+        hash_type: layer2Lock.hashType,
+        args: layer2Lock.args,
+      },
       cancel_timeout: BI.from(`0xc0${BI.from(cancelTimeOut).toHexString().slice(2).padStart(14, "0")}`),
       // cancel_timeout: BI.from("0xc0000000000004b0"), // default value
       // cancel_timeout: "0xc000000000000001", // min time to test cancel deposit
     };
-    const depositLockArgsHexString: HexString = new toolkit.Reader(
-      V0DepositLockArgs.pack(depositLockArgs),
-    ).serializeJson();
+    const depositLockArgsHexString: HexString = bytes.hexify(V0DepositLockArgs.pack(depositLockArgs));
     const { SCRIPTS, ROLLUP_CONFIG } = this.provider.getConfig().layer2Config;
-    const depositLock: Script = {
-      code_hash: SCRIPTS.deposit_lock.script_type_hash,
-      hash_type: "type",
-      args: ROLLUP_CONFIG.rollup_type_hash + depositLockArgsHexString.slice(2),
+    return {
+      codeHash: SCRIPTS.depositLock.scriptTypeHash,
+      hashType: "type",
+      args: ROLLUP_CONFIG.rollupTypeHash + depositLockArgsHexString.slice(2),
     };
-    return depositLock;
   }
 }
 

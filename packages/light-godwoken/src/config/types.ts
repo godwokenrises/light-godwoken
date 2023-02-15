@@ -14,21 +14,21 @@ export enum GodwokenNetwork {
 
 export type Layer2Config = {
   SCRIPTS: {
-    deposit_lock: {
-      script_type_hash: Hash;
-      cell_dep: CellDep;
+    depositLock: {
+      scriptTypeHash: Hash;
+      cellDep: CellDep;
     };
-    withdrawal_lock: {
-      script_type_hash: Hash;
-      cell_dep: CellDep;
+    withdrawalLock: {
+      scriptTypeHash: Hash;
+      cellDep: CellDep;
     };
-    eth_account_lock: {
-      script_type_hash: Hash;
+    ethAccountLock: {
+      scriptTypeHash: Hash;
     };
   };
   ROLLUP_CONFIG: {
-    rollup_type_hash: Hash;
-    rollup_type_script: Script;
+    rollupTypeHash: Hash;
+    rollupTypeScript: Script;
   };
   GW_POLYJUICE_RPC_URL: string;
   SCANNER_URL: string;
@@ -40,19 +40,19 @@ export type Layer2Config = {
   MULTICALL_ADDRESS?: string;
 };
 
-export type ScriptType = {
-  code_hash: Hash;
-  hash_type: HashType;
-  tx_hash: Hash;
+export type Layer1ConfigScript = {
+  codeHash: Hash;
+  hashType: HashType;
+  txHash: Hash;
   index: Hexadecimal;
-  dep_type: DepType;
+  depType: DepType;
 };
 
 export type Layer1Config = {
   SCRIPTS: {
-    omni_lock: ScriptType;
-    secp256k1_blake160: ScriptType;
-    sudt: ScriptType;
+    omniLock: Layer1ConfigScript;
+    secp256k1Blake160: Layer1ConfigScript;
+    sudt: Layer1ConfigScript;
   };
   CKB_INDEXER_URL: string;
   CKB_RPC_URL: string;

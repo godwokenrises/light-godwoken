@@ -4,9 +4,9 @@ import styled from "styled-components";
 import { BI } from "@ckb-lumos/lumos";
 import { Icon } from "@ricons/utils";
 import { QuestionCircleOutlined } from "@ant-design/icons";
-import { ContentCopyOutlined, QrCodeOutlined } from "@ricons/material";
+import { ContentCopyOutlined, MoreVertRound } from "@ricons/material";
 import { message, Tooltip } from "antd";
-import { PrimaryText, Text } from "../../style/common";
+import { PrimaryText, SecondeButton, Text } from "../../style/common";
 import { truncateCkbAddress, truncateDotBitAlias, truncateEthAddress } from "../../utils/stringFormat";
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
@@ -15,6 +15,7 @@ import { useDotBitReverseAlias } from "../../hooks/useDotBit";
 import { Placeholder } from "../Placeholder";
 import { QrCodeModal } from "../QrCodeModal";
 import { COLOR } from "../../style/variables";
+import { CustomTooltip } from "../CustomTooltip";
 
 const StyleWrapper = styled.div`
   display: flex;
@@ -87,17 +88,18 @@ const BalanceRow = styled.div`
   justify-content: space-between;
 `;
 
-const CopyRow = styled.div`
-  margin-top: 16px;
-  padding: 8px 12px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-radius: 12px;
-  border: 1px solid #e8e8e8;
-  background-color: #fbfbfb;
-
+const DetailRow = styled.div`
+  .box {
+    margin-top: 16px;
+    padding: 8px 12px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 12px;
+    border: 1px solid #e8e8e8;
+    background-color: #fbfbfb;
+  }
   .copy-group {
     margin-right: 16px;
     text-align: left;
@@ -112,6 +114,9 @@ const CopyRow = styled.div`
     word-break: break-all;
     font-size: 12px;
   }
+  .new-tab-button {
+    margin-top: 8px;
+  }
 `;
 
 export interface WalletInfoProps {
@@ -125,6 +130,7 @@ export interface WalletInfoProps {
 export interface QrCodeValue {
   title: string;
   value: string;
+  href: string;
 }
 
 export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
@@ -132,6 +138,7 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
 
   const lightGodwoken = useLightGodwoken();
   const decimals = lightGodwoken?.getNativeAsset().decimals;
+  const lightGodwokenConfig = lightGodwoken?.provider.getConfig();
 
   const dotbitAlias = useDotBitReverseAlias(ethAddress);
 
@@ -147,23 +154,27 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightGodwoken]);
 
-  function showQrCode(title: string, value?: string) {
-    if (!value) {
-      message.error(`${title} is not ready`);
-      return;
+  function showQrCode(title: string, value?: string, href?: string) {
+    if (value && href) {
+      setQr({ title, value, href });
+      setQrVisible(true);
     }
-
-    setQr({ title, value });
-    setQrVisible(true);
   }
   function copyValue(title: string, value?: string) {
-    if (!value) {
-      message.error(`${title} is not ready`);
-      return;
+    if (value) {
+      copy(value);
+      message.success(`${title} is copied`);
     }
-
-    copy(value);
-    message.success(`${title} is copied`);
+  }
+  function getL1BrowserLink(address?: string) {
+    if (!address) return void 0;
+    const prefix = lightGodwokenConfig?.layer1Config.SCANNER_URL;
+    return `${prefix}/address/${address}`;
+  }
+  function getL2BrowserLink(address?: string) {
+    if (!address) return void 0;
+    const prefix = lightGodwokenConfig?.layer2Config.SCANNER_URL;
+    return `${prefix}/address/${address}`;
   }
   function toUrl(url: string) {
     window.open(url, "_blank");
@@ -178,20 +189,23 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check QR code">
-            <ActionButton className="button" onClick={() => showQrCode("L1 Wallet Address", l1Address)}>
+          <CustomTooltip title="Check address details">
+            <ActionButton
+              className="button"
+              onClick={() => showQrCode("L1 Wallet Address", l1Address, getL1BrowserLink(l1Address))}
+            >
               <Icon>
-                <QrCodeOutlined />
+                <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
-          <Tooltip title="Copy address">
+          </CustomTooltip>
+          <CustomTooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("L1 Wallet Address", l1Address)}>
               <Icon>
                 <ContentCopyOutlined />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
         </div>
       </div>
 
@@ -204,20 +218,23 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check QR code">
-            <ActionButton className="button" onClick={() => showQrCode("L1 Deposit Address", depositAddress)}>
+          <CustomTooltip title="Check address details">
+            <ActionButton
+              className="button"
+              onClick={() => showQrCode("L1 Deposit Address", depositAddress, getL1BrowserLink(depositAddress))}
+            >
               <Icon>
-                <QrCodeOutlined />
+                <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
-          <Tooltip title="Copy address">
+          </CustomTooltip>
+          <CustomTooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("L1 Deposit Address", depositAddress)}>
               <Icon>
                 <ContentCopyOutlined />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
         </div>
       </div>
 
@@ -228,13 +245,16 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
 
         <div className="actions">
-          <Tooltip title="Check QR code">
-            <ActionButton className="button" onClick={() => showQrCode("Ethereum Address", ethAddress)}>
+          <CustomTooltip title="Check address details">
+            <ActionButton
+              className="button"
+              onClick={() => showQrCode("Ethereum Address", ethAddress, getL2BrowserLink(ethAddress))}
+            >
               <Icon>
-                <QrCodeOutlined />
+                <MoreVertRound />
               </Icon>
             </ActionButton>
-          </Tooltip>
+          </CustomTooltip>
           <Tooltip title="Copy address">
             <ActionButton className="button" onClick={() => copyValue("Ethereum Address", ethAddress)}>
               <Icon>
@@ -299,17 +319,22 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
           value={qr.value}
           visible={qrVisible}
           append={
-            <CopyRow>
-              <div className="copy-group">
-                <div className="copy-title">{qr.title}</div>
-                <div className="copy-text">{qr.value}</div>
+            <DetailRow>
+              <div className="box">
+                <div className="copy-group">
+                  <div className="copy-title">{qr.title}</div>
+                  <div className="copy-text">{qr.value}</div>
+                </div>
+                <ActionButton className="button" onClick={() => copyValue(qr.title, qr.value)}>
+                  <Icon>
+                    <ContentCopyOutlined />
+                  </Icon>
+                </ActionButton>
               </div>
-              <ActionButton className="button" onClick={() => copyValue(qr.title, qr.value)}>
-                <Icon>
-                  <ContentCopyOutlined />
-                </Icon>
-              </ActionButton>
-            </CopyRow>
+              <SecondeButton className="new-tab-button" onClick={() => toUrl(qr.href)}>
+                Open in explorer
+              </SecondeButton>
+            </DetailRow>
           }
           onClose={onCloseQrCodeModal}
         />

@@ -1,13 +1,13 @@
 import { CellDep } from "@ckb-lumos/lumos";
-import { ScriptType } from "./types";
+import { Layer1ConfigScript } from "./types";
 
-export function getCellDep(script: ScriptType): CellDep {
+export function getCellDep(script: Layer1ConfigScript): CellDep {
   return {
-    out_point: {
-      tx_hash: script.tx_hash,
+    outPoint: {
+      txHash: script.txHash,
       index: script.index,
     },
-    dep_type: script.dep_type,
+    depType: script.depType,
   };
 }
 

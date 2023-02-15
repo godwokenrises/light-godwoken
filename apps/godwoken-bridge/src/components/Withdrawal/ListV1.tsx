@@ -44,6 +44,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory }) =
     async (data) => {
       const page = data?.page ? data.page + 1 : 1;
       const list = await getWithdrawalHistories(lightGodwoken as LightGodwokenV1, page);
+      console.log("list", list);
 
       return {
         list,
