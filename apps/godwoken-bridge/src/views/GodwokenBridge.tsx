@@ -22,10 +22,16 @@ export default function GodwokenBridge() {
   useEffect(() => {
     if (lightGodwoken instanceof LightGodwokenV1) {
       const ethereum = lightGodwoken.provider.ethereum;
+      (ethereum.provider as any).provider.once?.("chainChanged", async (chainId: any) => {
+        chainId = parseInt(chainId, 16);
+        const godWokenChainId = parseInt(await lightGodwoken.getChainId(), 16);
+        setIsModalVisible(!(chainId === godWokenChainId));
+      });
+
       ethereum.provider.getNetwork().then(async (network) => {
         const chainId = network.chainId;
         const godWokenChainId = parseInt(await lightGodwoken.getChainId(), 16);
-        if (chainId !== godWokenChainId) {
+        if (godWokenChainId !== chainId) {
           const networkName = `Godwoken ${isMainnet ? "Mainnet" : "Testnet"}`;
           setDisplayNetworkName(networkName);
           setIsModalVisible(true);
@@ -38,9 +44,6 @@ export default function GodwokenBridge() {
     if (lightGodwoken instanceof LightGodwokenV1) {
       const ethereum = lightGodwoken.provider.ethereum;
       addNetwork(ethereum, lightGodwoken).then();
-      (ethereum.provider as any).provider.on?.("chainChanged", () => {
-        setIsModalVisible(false);
-      });
     }
   };
 
