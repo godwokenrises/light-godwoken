@@ -6,6 +6,7 @@ import { isMainnet } from "../../utils/environment";
 import { addNetwork } from "../../utils/addNetwork";
 import { Button } from "antd";
 import styled from "styled-components";
+import useBreakpoint from "antd/es/grid/hooks/useBreakpoint";
 
 const SimpleAlert = styled("div")`
   width: 100vw;
@@ -23,6 +24,10 @@ const SimpleAlert = styled("div")`
       margin-bottom: 10px;
       margin-right: 24px;
       display: inline-block;
+
+      > b {
+        text-decoration: underline;
+      }
     }
 
     > .ant-btn {
@@ -42,6 +47,7 @@ const SimpleAlert = styled("div")`
 
 export default function NetworkMismatchAlert() {
   const lightGodwoken = useLightGodwoken();
+  const { xs } = useBreakpoint();
   const [displayNetworkName, setDisplayNetworkName] = useState("");
   const [visible, setVisible] = useState(false);
   const params = useParams();
@@ -81,8 +87,7 @@ export default function NetworkMismatchAlert() {
         <SimpleAlert>
           <div className={"content"}>
             <p>
-              <b>Network mismatch:</b> The current network does not match. Do you want to switch to [{" "}
-              <b>{displayNetworkName} </b>] ?
+              The current network does not match. Do you want to switch to <b>{displayNetworkName}</b> ?
             </p>
             <Button onClick={changeChain}>Change network</Button>
           </div>
