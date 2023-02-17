@@ -6,7 +6,6 @@ import { isMainnet } from "../../utils/environment";
 import { addNetwork } from "../../utils/addNetwork";
 import { Button } from "antd";
 import styled from "styled-components";
-import useBreakpoint from "antd/es/grid/hooks/useBreakpoint";
 
 const SimpleAlert = styled("div")`
   width: 100vw;
@@ -47,7 +46,6 @@ const SimpleAlert = styled("div")`
 
 export default function NetworkMismatchAlert() {
   const lightGodwoken = useLightGodwoken();
-  const { xs } = useBreakpoint();
   const [displayNetworkName, setDisplayNetworkName] = useState("");
   const [visible, setVisible] = useState(false);
   const params = useParams();
@@ -69,8 +67,6 @@ export default function NetworkMismatchAlert() {
           setVisible(true);
         }
       });
-    } else {
-      setVisible(false);
     }
   }, [lightGodwoken, params]);
 
