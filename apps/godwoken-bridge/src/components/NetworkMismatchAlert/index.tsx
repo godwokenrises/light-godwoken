@@ -11,13 +11,12 @@ const SimpleAlert = styled("div")`
   width: 100vw;
   padding: 16px 16px 0px 16px;
   background-color: #fff7ed;
-  color: #f97316;
   display: flex;
   justify-content: center;
   align-items: center;
 
   .content {
-    text-align: left;
+    text-align: center;
 
     > p {
       margin-bottom: 10px;
@@ -31,14 +30,14 @@ const SimpleAlert = styled("div")`
 
     > .ant-btn {
       margin-bottom: 16px;
-      background-color: #f97316;
-      color: #fffbeb;
-      border: none;
+      background-color: #ff9c4d;
+      color: #ffffff;
+      border: #f97316 solid 1px;
       border-radius: 8px;
       font-weight: 600;
 
       &:hover {
-        background-color: #fb923c;
+        background-color: #f97316;
       }
     }
   }
@@ -85,7 +84,7 @@ export default function NetworkMismatchAlert() {
             <p>
               The current network does not match. Do you want to switch to <b>{displayNetworkName}</b> ?
             </p>
-            <Button onClick={changeChain}>Change network</Button>
+            <Button onClick={changeChain}>Switch Network</Button>
           </div>
         </SimpleAlert>
       )}
