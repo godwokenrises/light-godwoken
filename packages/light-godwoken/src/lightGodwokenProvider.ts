@@ -22,6 +22,7 @@ import {
 } from "./constants/error";
 import { debug } from "./debug";
 import { retryIfFailed } from "./utils/async";
+import TransactionManager from "@ckb-lumos/transaction-manager";
 
 export default class DefaultLightGodwokenProvider implements LightGodwokenProvider {
   l2Address: Address;
@@ -34,6 +35,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   config: LightGodwokenConfig;
   network: GodwokenNetwork | string;
+  transactionManage: TransactionManager;
 
   constructor(params: {
     ethAddress: Address;
@@ -50,6 +52,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const { layer1Config, layer2Config, lumosConfig } = this.config;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
+    this.transactionManage = new TransactionManager(this.ckbIndexer);
 
     initializeConfig(lumosConfig);
 

@@ -6,6 +6,7 @@ import { number } from "@ckb-lumos/codec";
 import { hd, helpers, utils } from "@ckb-lumos/lumos";
 import { RPC, Script, HashType, BI, Cell, CellDep, HexString } from "@ckb-lumos/lumos";
 import { LightGodwokenConfig, EthereumProvider, NotEnoughCapacityError, CodecLayer1 } from "light-godwoken";
+import TransactionManager from "@ckb-lumos/transaction-manager";
 
 // The private key for transferring SUDT
 const DEFAULT_ISSUER_PRIVATE_KEY = process.env.REACT_APP_L1_TEST_TOKEN_ISSUER_PRIVATE_KEY!;
@@ -16,12 +17,14 @@ export async function claimUSDC(params: {
   ethAddress: HexString;
   rpc: RPC;
   indexer: CkbIndexer;
+  transactionManager: TransactionManager;
   issuerPrivateKey?: HexString;
 }): Promise<HexString> {
   let txSkeleton = await generateClaimUSDCTxSkeleton(
     params.config,
     params.ethAddress,
     params.indexer,
+    params.transactionManager,
     params.issuerPrivateKey,
   );
   const userSignature = await userSignTransaction(txSkeleton, params.ethereum);
@@ -29,7 +32,7 @@ export async function claimUSDC(params: {
   txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(userSignature, issuerSignature));
   const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
 
-  const txHash = await params.rpc.sendTransaction(signedTx, "passthrough");
+  const txHash = await (params.transactionManager as any).sendTransaction(signedTx, "passthrough");
   console.debug("claim sudt txHash is:", txHash);
   return txHash;
 }
@@ -38,6 +41,7 @@ export async function generateClaimUSDCTxSkeleton(
   config: LightGodwokenConfig,
   ethAddress: HexString,
   indexer: CkbIndexer,
+  transactionManager: TransactionManager,
   issuerPrivateKey?: HexString,
 ): Promise<helpers.TransactionSkeletonType> {
   const { omniLock, sudt, secp256k1Blake160: secp256k1 } = config.layer1Config.SCRIPTS;
@@ -67,10 +71,10 @@ export async function generateClaimUSDCTxSkeleton(
 
   let txSkeleton = helpers.TransactionSkeleton({ cellProvider: indexer });
 
-  const userCellCollector = indexer.collector({
+  const userCellCollector = transactionManager.collector({
     lock: userOmniLock,
     type: "empty",
-    outputDataLenRange: ["0x0", "0x1"],
+    //outputDataLenRange: ["0x0", "0x1"],
   });
   let collectedSum = BI.from(0);
   const collectedCells: Cell[] = [];
@@ -90,10 +94,10 @@ export async function generateClaimUSDCTxSkeleton(
   }
 
   // collect one isuer cell, so that the issuer will need to sign the transaction, which is essential in sudt mint
-  const issuerCellCollector = indexer.collector({
+  const issuerCellCollector = transactionManager.collector({
     lock: issuerLock,
     type: "empty",
-    outputDataLenRange: ["0x0", "0x1"],
+    //outputDataLenRange: ["0x0", "0x1"],
   });
   let issuerCellCapacity = BI.from(0);
   for await (const cell of issuerCellCollector.collect()) {

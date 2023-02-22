@@ -1569,6 +1569,17 @@
   resolved "https://registry.yarnpkg.com/@ckb-lumos/toolkit/-/toolkit-0.20.0-alpha.1.tgz#a29b03f4f363c3c58aa2d95af743d4b62ebf963b"
   integrity sha512-JwQGRMNuZpPW6y8Z2JFLy1jyCfWVC5iKU+zP0yEXfWNPH/tWI7xOzBNnRuuYlicbweKlRxp7wlWkGp5O2jb2OQ==
 
+"@ckb-lumos/transaction-manager@^0.20.0-alpha.1":
+  version "0.20.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@ckb-lumos/transaction-manager/-/transaction-manager-0.20.0-alpha.1.tgz#315e9f38b78bd25ae9f72e1d6385fae509487ad5"
+  integrity sha512-ShLESd5jKBMCg8pgrjQz1p2qpHmuE5Of0ISG6MQwA6buF9hX4d898rLb8wIxRRXG30H4r8syyuSaEYQ9q+kd2Q==
+  dependencies:
+    "@ckb-lumos/base" "0.20.0-alpha.1"
+    "@ckb-lumos/ckb-indexer" "0.20.0-alpha.1"
+    "@ckb-lumos/rpc" "0.20.0-alpha.1"
+    "@ckb-lumos/toolkit" "0.20.0-alpha.1"
+    immutable "^4.0.0-rc.12"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.npmjs.org/@cnakazawa/watch/-/watch-1.0.4.tgz"
