@@ -161,7 +161,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   // // now only supported omni lock, the other lock type will be supported later
   async sendL1Transaction(tx: Transaction): Promise<Hash> {
-    return await this.ckbRpc.sendTransaction(tx, "passthrough");
+    return await this.transactionManage.sendTransaction(tx);
   }
 
   async signMessage(message: string, dummySign = false): Promise<string> {

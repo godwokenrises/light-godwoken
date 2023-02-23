@@ -325,7 +325,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     let collectedCapacity = BI.from(0);
     let collectedSudtAmount = BI.from(0);
     const collectedCells: Cell[] = [];
-    const ckbCollector = this.provider.ckbIndexer.collector({
+    const ckbCollector = this.provider.transactionManage.collector({
       lock: helpers.parseAddress(this.provider.l1Address, {
         config: this.getConfig().lumosConfig,
       }),
@@ -343,7 +343,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if user don't deposit all sudt, we need to collect more capacity to exchange for sudt
         neededCapacity = neededCapacity.add(BI.from(SUDT_CELL_CAPACITY));
       }
-      const sudtCollector = this.provider.ckbIndexer.collector({
+      const sudtCollector = this.provider.transactionManage.collector({
         lock: helpers.parseAddress(this.provider.l1Address, {
           config: this.getConfig().lumosConfig,
         }),
@@ -362,7 +362,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     // if ckb is not enough, try find some free capacity from sudt cell
     const freeCapacityProviderCells: Cell[] = [];
     if (collectedCapacity.lt(neededCapacity)) {
-      const freeCkbCollector = this.provider.ckbIndexer.collector({
+      const freeCkbCollector = this.provider.transactionManage.collector({
         lock: helpers.parseAddress(this.provider.l1Address, {
           config: this.getConfig().lumosConfig,
         }),
@@ -920,12 +920,11 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         neededCkb = neededCkb.add(SUDT_CELL_CAPACITY);
       }
 
-      const sudtCollector = this.provider.ckbIndexer.collector({
+      const sudtCollector = this.provider.transactionManage.collector({
         lock: senderLock,
         type: payload.sudtType,
         // if sudt cell's data has more info than just amount (16 bytes), skip it
         // because we don't know what the extension bytes contain
-        outputDataLenRange: ["0x10", "0x11"],
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCells.push(cell);
@@ -940,7 +939,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     // collect sUDT cells with extra free capacity
     const collectedFreeCells: Cell[] = [];
     if (collectedCkb.lt(neededCkb)) {
-      const freeCkbCollector = this.provider.ckbIndexer.collector({
+      const freeCkbCollector = this.provider.transactionManage.collector({
         lock: senderLock,
         type: {
           codeHash: config.layer1Config.SCRIPTS.sudt.codeHash,
@@ -972,7 +971,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
 
     // collect CKB
     if (collectedCkb.lt(neededCkb)) {
-      const ckbCollector = this.provider.ckbIndexer.collector({
+      const ckbCollector = this.provider.transactionManage.collector({
         lock: senderLock,
         type: "empty",
         outputDataLenRange: ["0x0", "0x1"],

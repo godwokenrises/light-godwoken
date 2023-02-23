@@ -32,7 +32,7 @@ export async function claimUSDC(params: {
   txSkeleton = txSkeleton.update("witnesses", (witnesses) => witnesses.push(userSignature, issuerSignature));
   const signedTx = helpers.createTransactionFromSkeleton(txSkeleton);
 
-  const txHash = await (params.transactionManager as any).sendTransaction(signedTx, "passthrough");
+  const txHash = await params.transactionManager.sendTransaction(signedTx);
   console.debug("claim sudt txHash is:", txHash);
   return txHash;
 }
@@ -74,7 +74,7 @@ export async function generateClaimUSDCTxSkeleton(
   const userCellCollector = transactionManager.collector({
     lock: userOmniLock,
     type: "empty",
-    //outputDataLenRange: ["0x0", "0x1"],
+    outputDataLenRange: ["0x0", "0x1"],
   });
   let collectedSum = BI.from(0);
   const collectedCells: Cell[] = [];
@@ -97,7 +97,7 @@ export async function generateClaimUSDCTxSkeleton(
   const issuerCellCollector = transactionManager.collector({
     lock: issuerLock,
     type: "empty",
-    //outputDataLenRange: ["0x0", "0x1"],
+    outputDataLenRange: ["0x0", "0x1"],
   });
   let issuerCellCapacity = BI.from(0);
   for await (const cell of issuerCellCollector.collect()) {
