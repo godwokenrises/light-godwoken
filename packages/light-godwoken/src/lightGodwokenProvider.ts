@@ -35,7 +35,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   config: LightGodwokenConfig;
   network: GodwokenNetwork | string;
-  transactionManage: TransactionManager;
+  transactionManager: TransactionManager;
 
   constructor(params: {
     ethAddress: Address;
