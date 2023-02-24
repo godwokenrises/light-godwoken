@@ -53,6 +53,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
     this.transactionManager = new TransactionManager(this.ckbIndexer);
+    this.transactionManager.start();
 
     initializeConfig(lumosConfig);
 
