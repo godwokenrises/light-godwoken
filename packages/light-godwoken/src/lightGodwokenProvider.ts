@@ -52,7 +52,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
     const { layer1Config, layer2Config, lumosConfig } = this.config;
     this.ckbIndexer = new Indexer(layer1Config.CKB_INDEXER_URL, layer1Config.CKB_RPC_URL);
     this.ckbRpc = new RPC(layer1Config.CKB_RPC_URL);
-    this.transactionManage = new TransactionManager(this.ckbIndexer);
+    this.transactionManager = new TransactionManager(this.ckbIndexer);
 
     initializeConfig(lumosConfig);
 
@@ -161,7 +161,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   // // now only supported omni lock, the other lock type will be supported later
   async sendL1Transaction(tx: Transaction): Promise<Hash> {
-    return await this.transactionManage.sendTransaction(tx);
+    return await this.transactionManager.sendTransaction(tx);
   }
 
   async signMessage(message: string, dummySign = false): Promise<string> {

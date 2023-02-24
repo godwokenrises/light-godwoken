@@ -18,7 +18,7 @@ export const ClaimSudt: React.FC = () => {
         config: lightGodwoken.provider.getConfig(),
         ethereum: lightGodwoken.provider.ethereum,
         rpc: lightGodwoken.provider.ckbRpc,
-        transactionManager: lightGodwoken.provider.transactionManage,
+        transactionManager: lightGodwoken.provider.transactionManager,
         indexer: lightGodwoken.provider.ckbIndexer,
       });
       notification.success({ message: `claim 1,000 TTKN successful Tx: ${txHash}` });
