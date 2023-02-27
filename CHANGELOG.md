@@ -1,4 +1,9 @@
-# Change Log
+# [Changelog](https://keepachangelog.com/en/1.0.0/)
+
+# 0.4.1 (2023-02-27)
+### Godwoken Bridge
+- Refactor UI/UX for network mismatch notification by @GitOfJason in https://github.com/godwokenrises/light-godwoken/pull/273
+
 
 # 0.4.0 (2023-02-15)
 
