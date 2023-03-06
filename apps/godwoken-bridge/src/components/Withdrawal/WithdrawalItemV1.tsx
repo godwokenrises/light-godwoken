@@ -145,7 +145,7 @@ const WithdrawalRequestCard = ({
   }, [capacity]);
 
   const handleToggleShowMore = useCallback(() => {
-    if (isMature) return;
+    if (isMature || status !== "pending") return;
     setShouldShowMore((value) => !value);
   }, [isMature]);
 
@@ -188,7 +188,7 @@ const WithdrawalRequestCard = ({
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}
-          {status === "fail" && (
+          {status === "failed" && (
             <Tooltip title={status}>
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
             </Tooltip>

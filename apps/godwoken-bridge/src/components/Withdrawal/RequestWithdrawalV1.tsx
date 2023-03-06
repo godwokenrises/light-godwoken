@@ -75,7 +75,7 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
     }
 
     eventEmitter.on("sent", (txHash) => {
-      addTxToHistory({ txHash, amount, capacity, type: "withdrawal" });
+      addTxToHistory({ txHash, amount, capacity, type: "withdrawal", token: selectedSudt });
       notification.success({
         message: `Withdrawal Tx(${txHash}) has been sent`,
       });

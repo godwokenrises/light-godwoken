@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LightGodwokenV1 } from "light-godwoken";
+import { LightGodwokenV1, ProxyERC20 } from "light-godwoken";
 import { AxiosError } from "axios";
 import styled from "styled-components";
 import { LinkList, Tab } from "../../style/common";
@@ -31,6 +31,7 @@ interface WithdrawalHistoryType {
   txHash: string;
   amount: string;
   capacity: string;
+  erc20?: ProxyERC20;
 }
 
 interface Props {
@@ -247,6 +248,7 @@ async function getPendingHistoriesByRPC(lightGodwoken: LightGodwokenV1, txHistor
           capacity: item.capacity,
           status: "l2Pending",
           txHash: item.txHash,
+          erc20: item.token as ProxyERC20,
         };
         try {
           const result = (await lightGodwoken.getWithdrawal(item.txHash)) as any;
@@ -258,6 +260,7 @@ async function getPendingHistoriesByRPC(lightGodwoken: LightGodwokenV1, txHistor
               remainingBlockNumber: blockNumber ? Math.max(0, blockNumber - lastFinalizedBlockNumber) : undefined,
               withdrawalBlockNumber: blockNumber,
               layer1TxHash: result?.l1_committed_info?.transaction_hash,
+              sudt_script_hash: result?.withdrawal?.request?.raw?.sudt_script_hash,
             };
           }
           resolve(data);
