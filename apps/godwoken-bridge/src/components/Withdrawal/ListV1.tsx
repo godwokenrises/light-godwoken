@@ -196,16 +196,16 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       {isPending && (
         <div className="list pending-list">
           {pendingList.length === 0 && <Empty>No pending withdrawals</Empty>}
-          {pendingList.map((withdraw, index) => (
-            <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
+          {pendingList.map((withdraw) => (
+            <WithdrawalRequestCard {...withdraw} key={withdraw.txHash}></WithdrawalRequestCard>
           ))}
         </div>
       )}
       {isCompleted && (
         <div ref={listRef} className="list pending-list">
           {completedList.length === 0 && <Empty>No completed withdrawals</Empty>}
-          {completedList.map((withdraw, index) => (
-            <WithdrawalRequestCard {...withdraw} key={index}></WithdrawalRequestCard>
+          {completedList.map((withdraw) => (
+            <WithdrawalRequestCard {...withdraw} key={withdraw.layer1TxHash}></WithdrawalRequestCard>
           ))}
         </div>
       )}
