@@ -19,9 +19,11 @@ const StyleWrapper = styled.div`
   background: #f3f3f3;
   padding: 16px;
   border-radius: 12px;
+
   & + & {
     margin-top: 16px;
   }
+
   .main-row {
     display: flex;
     flex-direction: row;
@@ -30,28 +32,34 @@ const StyleWrapper = styled.div`
     line-height: 1.5;
     font-size: 14px;
   }
+
   .amount {
     display: flex;
     flex-direction: column;
     justify-content: center;
+
     img,
     svg {
       width: 22px;
       height: 22px;
       margin-right: 5px;
     }
+
     .ckb-icon {
       display: flex;
       align-items: center;
     }
+
     .ckb-amount {
       display: flex;
       align-items: center;
     }
+
     .sudt-amount + .ckb-amount {
       margin-top: 6px;
     }
   }
+
   .right-side {
     height: 40px;
     display: flex;
@@ -60,17 +68,21 @@ const StyleWrapper = styled.div`
     justify-content: center;
     cursor: pointer;
   }
+
   .time {
     font-size: 12px;
     color: ${COLOR.secondary};
+
     svg {
       margin-left: 5px;
     }
   }
+
   .list-detail {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed rgba(0, 0, 0, 0.2);
+
     a {
       color: ${COLOR.brand};
       text-decoration: none;
@@ -82,6 +94,7 @@ export const FixedHeightRow = styled.div`
   height: 24px;
   display: flex;
   justify-content: space-between;
+
   .ant-typography {
     color: black;
     font-size: 16px;
@@ -99,6 +112,7 @@ export interface IWithdrawalRequestCardProps {
   erc20?: ProxyERC20;
   now?: number;
 }
+
 const WithdrawalRequestCard = ({
   remainingBlockNumber = 0,
   layer1TxHash,
@@ -145,9 +159,15 @@ const WithdrawalRequestCard = ({
   }, [capacity]);
 
   const handleToggleShowMore = useCallback(() => {
-    if (isMature) return;
+    if (isMature || status !== "pending") return;
     setShouldShowMore((value) => !value);
-  }, [isMature]);
+  }, [isMature, status]);
+
+  useEffect(() => {
+    if ((status === "available" || (status === "pending" && isMature)) && shouldShowMore) {
+      setShouldShowMore(false);
+    }
+  }, [status, isMature]);
 
   return (
     <StyleWrapper onClick={handleToggleShowMore}>
@@ -188,7 +208,7 @@ const WithdrawalRequestCard = ({
               <CheckCircleOutlined style={{ color: "#00CC9B", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}
-          {status === "fail" && (
+          {status === "failed" && (
             <Tooltip title={status}>
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
