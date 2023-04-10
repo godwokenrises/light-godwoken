@@ -4,13 +4,15 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "antd/dist/antd.css";
 import "./index.css";
-
 import { config } from "@ckb-lumos/lumos";
 
 import * as Sentry from "@sentry/react";
 import { BrowserTracing } from "@sentry/tracing";
 import { LightGodwokenError } from "light-godwoken";
 import { isMainnet } from "./utils/environment";
+
+
+
 
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
