@@ -11,9 +11,6 @@ import { BrowserTracing } from "@sentry/tracing";
 import { LightGodwokenError } from "light-godwoken";
 import { isMainnet } from "./utils/environment";
 
-
-
-
 if (process.env.NODE_ENV === "production") {
   Sentry.init({
     environment: process.env.NODE_ENV,

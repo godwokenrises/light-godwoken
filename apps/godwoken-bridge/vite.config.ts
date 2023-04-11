@@ -1,20 +1,20 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
-import envCompatible from 'vite-plugin-env-compatible'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import svgr from "vite-plugin-svgr";
+import envCompatible from "vite-plugin-env-compatible";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(),svgr(), envCompatible(/* options */)],
-  build:{
-    outDir:'build'
+  plugins: [react(), svgr(), envCompatible(/* options */)],
+  build: {
+    outDir: "build",
   },
   optimizeDeps: {
     esbuildOptions: {
-        // Node.js global to browser globalThis
-        define: {
-            global: 'globalThis'
-        },
-    }
-}
-})
+      // Node.js global to browser globalThis
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
+});
