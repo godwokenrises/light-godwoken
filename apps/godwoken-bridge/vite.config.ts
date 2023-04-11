@@ -8,5 +8,13 @@ export default defineConfig({
   plugins: [react(),svgr(), envCompatible(/* options */)],
   build:{
     outDir:'build'
-  }
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+            global: 'globalThis'
+        },
+    }
+}
 })

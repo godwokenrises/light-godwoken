@@ -9,7 +9,6 @@ import L1Transfer from "./views/L1Transfer";
 
 function App() {
   const queryClient = new QueryClient();
-  console.log('2222')
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
