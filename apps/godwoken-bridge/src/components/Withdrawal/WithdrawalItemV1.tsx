@@ -167,6 +167,7 @@ const WithdrawalRequestCard = ({
     if ((status === "available" || (status === "pending" && isMature)) && shouldShowMore) {
       setShouldShowMore(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, isMature]);
 
   return (
