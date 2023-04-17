@@ -3,7 +3,7 @@
 # 0.4.2 (2023-4-17)
 ### Features
 - Refactor the Withdrawal Pending List ([#280](https://github.com/godwokenrises/light-godwoken/pull/280)) (@GitOfJason)
-- create-react migration to vite ([#289](https://github.com/godwokenrises/light-godwoken/pull/289)) (@frmachao)
+- refactor: migrate create-react to vite ([#289](https://github.com/godwokenrises/light-godwoken/pull/289)) (@frmachao)
 
 # 0.4.1 (2023-02-27)
 ### Godwoken Bridge
