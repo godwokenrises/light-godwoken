@@ -1,8 +1,7 @@
 import { GodwokenNetwork, GodwokenVersion } from "light-godwoken";
 
-console.debug("process.env.REACT_APP_NETWORK: ", process.env.REACT_APP_NETWORK);
+console.debug("env.REACT_APP_NETWORK: ", process.env.REACT_APP_NETWORK);
 export const isMainnet = process.env.REACT_APP_NETWORK === GodwokenNetwork.Mainnet;
-
 // Available network versions,
 // some versions of the network is deprecated
 export const availableNetworkVersions: Record<GodwokenNetwork, GodwokenVersion[]> = {
