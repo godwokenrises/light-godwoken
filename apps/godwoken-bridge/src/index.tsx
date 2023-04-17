@@ -4,7 +4,6 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "antd/dist/antd.css";
 import "./index.css";
-
 import { config } from "@ckb-lumos/lumos";
 
 import * as Sentry from "@sentry/react";
