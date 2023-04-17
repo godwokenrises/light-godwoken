@@ -1,6 +1,6 @@
 {
   "name": "godwoken-bridge",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "scripts": {
     "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite",
