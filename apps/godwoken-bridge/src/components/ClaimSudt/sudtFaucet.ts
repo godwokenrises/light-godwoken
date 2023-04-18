@@ -71,6 +71,7 @@ export async function generateClaimUSDCTxSkeleton(
     lock: userOmniLock,
     type: "empty",
     outputDataLenRange: ["0x0", "0x1"],
+    scriptSearchMode: "exact",
   });
   let collectedSum = BI.from(0);
   const collectedCells: Cell[] = [];
@@ -94,6 +95,7 @@ export async function generateClaimUSDCTxSkeleton(
     lock: issuerLock,
     type: "empty",
     outputDataLenRange: ["0x0", "0x1"],
+    scriptSearchMode: "exact",
   });
   let issuerCellCapacity = BI.from(0);
   for await (const cell of issuerCellCollector.collect()) {

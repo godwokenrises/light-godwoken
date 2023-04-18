@@ -17,10 +17,10 @@
     "dist"
   ],
   "dependencies": {
-    "@ckb-lumos/base": "^0.20.0-alpha.1",
-    "@ckb-lumos/bi": "^0.20.0-alpha.1",
-    "@ckb-lumos/codec": "^0.20.0-alpha.1",
-    "@ckb-lumos/lumos": "^0.20.0-alpha.1",
+    "@ckb-lumos/base": "^0.20.0-alpha.2",
+    "@ckb-lumos/bi": "^0.20.0-alpha.2",
+    "@ckb-lumos/codec": "^0.20.0-alpha.2",
+    "@ckb-lumos/lumos": "^0.20.0-alpha.2",
     "@polyjuice-provider/base": "^0.1.1",
     "@polyjuice-provider/ethers": "^0.1.5",
     "@polyjuice-provider/godwoken": "^0.1.1",
