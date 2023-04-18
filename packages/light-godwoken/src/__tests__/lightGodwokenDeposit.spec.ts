@@ -48,18 +48,21 @@ const stubCellCollector = (options: StubOptions) => {
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: "empty",
         outputDataLenRange: ["0x0", "0x1"],
+        scriptSearchMode: "exact",
       })
       .returns(mockCollector)
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: sudtTypeWithoutArgs,
         outputDataLenRange: ["0x10", "0x11"],
+        scriptSearchMode: "exact",
       })
       .returns(mockFreeSudtCollector)
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: options.type,
         outputDataLenRange: ["0x10", "0x11"],
+        scriptSearchMode: "exact",
       })
       .returns(mockSudtCollector);
   } else {
@@ -69,12 +72,14 @@ const stubCellCollector = (options: StubOptions) => {
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: "empty",
         outputDataLenRange: ["0x0", "0x1"],
+        scriptSearchMode: "exact",
       })
       .returns(mockCollector)
       .withArgs({
         lock: lightGodwokenInstance.provider.getLayer1Lock(),
         type: sudtTypeWithoutArgs,
         outputDataLenRange: ["0x10", "0x11"],
+        scriptSearchMode: "exact",
       })
       .returns(mockFreeSudtCollector);
   }
