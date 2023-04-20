@@ -270,7 +270,7 @@ async function getPendingHistoriesByRPC(
           } else {
             // If a withdrawal stays in l2Pending too long, then it may have failed for some reason,
             // such as `over-withdraw`.
-            const elapsedMins = (Date.now() - new Date(withdrawalTx.date)) / 1000 / 60;
+            const elapsedMins = (Date.now() - new Date(withdrawalTx.date).getTime()) / 1000 / 60;
             if (elapsedMins > 3) withHis.status = "failed";
           }
           resolve(withHis);
