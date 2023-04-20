@@ -10,7 +10,7 @@ const WithdrawalV1: React.FC = () => {
   const lightGodwoken = useLightGodwoken();
   const godwokenVersion = useGodwokenVersion();
   const l1Address = lightGodwoken?.provider.getL1Address();
-  const { txHistory, addTxToHistory, removeTxWithTxHashes, updateTxWithStatus } = useL1TxHistory(
+  const { txHistory, addTxToHistory, removeTxWithTxHashes } = useL1TxHistory(
     `${godwokenVersion}/${l1Address}/withdrawal`,
   );
 
@@ -31,11 +31,7 @@ const WithdrawalV1: React.FC = () => {
       </Card>
       {lightGodwoken && (
         <Card className="content">
-          <WithdrawalList
-            txHistory={txHistory}
-            updateTxWithStatus={updateTxWithStatus}
-            removeTxWithTxHashes={removeTxWithTxHashes}
-          />
+          <WithdrawalList txHistory={txHistory} removeTxWithTxHashes={removeTxWithTxHashes} />
         </Card>
       )}
     </PageContent>

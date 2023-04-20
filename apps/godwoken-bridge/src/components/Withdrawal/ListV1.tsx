@@ -10,7 +10,6 @@ import { Placeholder } from "../Placeholder";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
 import WithdrawalRequestCard from "./WithdrawalItemV1";
 import { Empty } from "../Container/Empty";
-import { Hash } from "@ckb-lumos/lumos";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -37,20 +36,16 @@ interface WithdrawalHistoryType {
 
 interface Props {
   txHistory: L1TxHistoryInterface[];
-  updateTxWithStatus: (txHash: Hash, status: string) => void;
   removeTxWithTxHashes: (txHash: string[]) => void;
 }
 
-export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, removeTxWithTxHashes }: Props) {
+export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, removeTxWithTxHashes }) => {
   const params = useParams();
   const navigate = useNavigate();
   const isPending = params.status === "pending";
   const isCompleted = params.status === "completed";
   const lightGodwoken = useLightGodwoken();
   const [pendingHistory, setPendingHistory] = useState<WithdrawalHistoryType[] | undefined>(undefined);
-  // The Godwoken state won't store failed withdrawals. failedHistory have to be stored
-  // TODO: maybe the failedHistory could be deleted after 90 days?
-  const [failedHistory, SetFailedHistory] = useState<WithdrawalHistoryType[] | undefined>(undefined);
 
   function navigateStatus(targetStatus: "pending" | "completed") {
     navigate(`/${params.version}/withdrawal/${targetStatus}`);
@@ -62,8 +57,6 @@ export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, 
       const page = data?.page ? data.page + 1 : 1;
       const list = await getWithdrawalHistories(lightGodwoken as LightGodwokenV1, page);
 
-      // TODO: add failed withdrawal ??
-      // TODO: compare with list date?
       return {
         list,
         page,
@@ -95,7 +88,7 @@ export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, 
     return withdrawalHistory?.data?.list || [];
   }, [withdrawalHistory]);
   const pendingList = useMemo(() => {
-    return pendingHistory?.filter((pw) => ["pending", "l2Pending"].includes(pw.status)) || [];
+    return pendingHistory || [];
   }, [pendingHistory]);
   const hasL2Pending = useMemo(() => {
     return pendingList.filter((pw) => pw.status === "l2Pending").length > 0;
@@ -109,11 +102,7 @@ export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, 
       setPendingHistory([]);
       return;
     }
-
-    getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory, updateTxWithStatus)
-      .then((list) =>
-      setPendingHistory(list),
-    );
+    getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory).then((list) => setPendingHistory(list));
   }, [localTxHistory, lightGodwoken]);
 
   useDebounceEffect(() => loadPendingHistory(), [localTxHistory]);
@@ -129,8 +118,16 @@ export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, 
         removeHashes.push(pw.txHash);
       }
     }
+
+    // remove outdated failed tx, failed records will be cleared after 3 days.
+    for (const lth of localTxHistory) {
+      if (lth.status !== "failed") continue;
+      const elapseddays = (Date.now() - new Date(lth.date).getTime()) / 1000 / 60 / 60 / 24;
+      if (elapseddays > 3) removeHashes.push(lth.txHash);
+    }
+
     removeTxWithTxHashes(removeHashes);
-  }, [completedList, pendingList, removeTxWithTxHashes]);
+  }, [completedList, pendingList, localTxHistory, removeTxWithTxHashes]);
 
   useDebounceEffect(() => removeLocalTxHistory(), [withdrawalHistory]);
 
@@ -223,7 +220,7 @@ export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, 
       {isCompleted && isLoading && <Placeholder />}
     </WithdrawalListDiv>
   );
-}
+};
 
 async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: number) {
   try {
@@ -250,20 +247,17 @@ async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: numb
 async function getPendingHistoriesByRPC(
   lightGodwoken: LightGodwokenV1,
   localTxHistory: L1TxHistoryInterface[],
-  updateTxWithStatus: (txHash: Hash, status: string) => void,
 ): Promise<WithdrawalHistoryType[]> {
   if (localTxHistory.length === 0) return [];
   const lastFinalizedBlockNumber = await lightGodwoken.provider.getLastFinalizedBlockNumber();
   const promises: any[] = [];
   for (const withdrawalTx of localTxHistory) {
-    if (withdrawalTx.status === "failed") continue;
-
     promises.push(
       new Promise(async (resolve) => {
         let withHis: WithdrawalHistoryType = {
           amount: withdrawalTx.amount,
           capacity: withdrawalTx.capacity,
-          status: "l2Pending",
+          status: withdrawalTx.status ?? "l2Pending",
           txHash: withdrawalTx.txHash,
           erc20: withdrawalTx.token as ProxyERC20,
         };
@@ -287,7 +281,6 @@ async function getPendingHistoriesByRPC(
             const elapsedMins = (Date.now() - new Date(withdrawalTx.date).getTime()) / 1000 / 60;
             if (elapsedMins > 3) {
               withHis.status = "failed";
-              updateTxWithStatus(withHis.txHash, "failed");
             }
           }
           resolve(withHis);
