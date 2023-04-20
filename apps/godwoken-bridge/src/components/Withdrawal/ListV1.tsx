@@ -10,6 +10,7 @@ import { Placeholder } from "../Placeholder";
 import { L1TxHistoryInterface } from "../../hooks/useL1TxHistory";
 import WithdrawalRequestCard from "./WithdrawalItemV1";
 import { Empty } from "../Container/Empty";
+import { Hash } from "@ckb-lumos/lumos";
 
 const WithdrawalListDiv = styled.div`
   border-bottom-left-radius: 24px;
@@ -36,16 +37,20 @@ interface WithdrawalHistoryType {
 
 interface Props {
   txHistory: L1TxHistoryInterface[];
+  updateTxWithStatus: (txHash: Hash, status: string) => void;
   removeTxWithTxHashes: (txHash: string[]) => void;
 }
 
-export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, removeTxWithTxHashes }) => {
+export function WithdrawalList({ txHistory: localTxHistory, updateTxWithStatus, removeTxWithTxHashes }: Props) {
   const params = useParams();
   const navigate = useNavigate();
   const isPending = params.status === "pending";
   const isCompleted = params.status === "completed";
   const lightGodwoken = useLightGodwoken();
   const [pendingHistory, setPendingHistory] = useState<WithdrawalHistoryType[] | undefined>(undefined);
+  // The Godwoken state won't store failed withdrawals. failedHistory have to be stored
+  // TODO: maybe the failedHistory could be deleted after 90 days?
+  const [failedHistory, SetFailedHistory] = useState<WithdrawalHistoryType[] | undefined>(undefined);
 
   function navigateStatus(targetStatus: "pending" | "completed") {
     navigate(`/${params.version}/withdrawal/${targetStatus}`);
@@ -57,6 +62,8 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       const page = data?.page ? data.page + 1 : 1;
       const list = await getWithdrawalHistories(lightGodwoken as LightGodwokenV1, page);
 
+      // TODO: add failed withdrawal ??
+      // TODO: compare with list date?
       return {
         list,
         page,
@@ -88,13 +95,13 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     return withdrawalHistory?.data?.list || [];
   }, [withdrawalHistory]);
   const pendingList = useMemo(() => {
-    return pendingHistory || [];
+    return pendingHistory?.filter((pw) => ["pending", "l2Pending"].includes(pw.status)) || [];
   }, [pendingHistory]);
   const hasL2Pending = useMemo(() => {
-    return pendingList.filter((item) => item.status === "l2Pending").length > 0;
+    return pendingList.filter((pw) => pw.status === "l2Pending").length > 0;
   }, [pendingList]);
   const completedList = useMemo(() => {
-    return withdrawalList?.filter((history) => history.status === "succeed") || [];
+    return withdrawalList?.filter((cw) => ["succeed", "failed"].includes(cw.status)) || [];
   }, [withdrawalList]);
 
   const loadPendingHistory = useCallback(() => {
@@ -102,7 +109,11 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       setPendingHistory([]);
       return;
     }
-    getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory).then((list) => setPendingHistory(list));
+
+    getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory, updateTxWithStatus)
+      .then((list) =>
+      setPendingHistory(list),
+    );
   }, [localTxHistory, lightGodwoken]);
 
   useDebounceEffect(() => loadPendingHistory(), [localTxHistory]);
@@ -110,12 +121,12 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
   const removeLocalTxHistory = useCallback(() => {
     if (pendingList.length === 0) return;
     const removeHashes = [];
-    for (const item of pendingList) {
+    for (const pw of pendingList) {
       const index = completedList.findIndex(
-        (_) => _.layer1TxHash === item.layer1TxHash && ["succeed", "failed"].includes(_.status),
+        (_) => _.layer1TxHash === pw.layer1TxHash && ["succeed", "failed"].includes(_.status),
       );
       if (index >= 0) {
-        removeHashes.push(item.txHash);
+        removeHashes.push(pw.txHash);
       }
     }
     removeTxWithTxHashes(removeHashes);
@@ -212,7 +223,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       {isCompleted && isLoading && <Placeholder />}
     </WithdrawalListDiv>
   );
-};
+}
 
 async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: number) {
   try {
@@ -238,12 +249,15 @@ async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: numb
 
 async function getPendingHistoriesByRPC(
   lightGodwoken: LightGodwokenV1,
-  txHistory: L1TxHistoryInterface[],
+  localTxHistory: L1TxHistoryInterface[],
+  updateTxWithStatus: (txHash: Hash, status: string) => void,
 ): Promise<WithdrawalHistoryType[]> {
-  if (txHistory.length === 0) return [];
+  if (localTxHistory.length === 0) return [];
   const lastFinalizedBlockNumber = await lightGodwoken.provider.getLastFinalizedBlockNumber();
   const promises: any[] = [];
-  for (const withdrawalTx of txHistory) {
+  for (const withdrawalTx of localTxHistory) {
+    if (withdrawalTx.status === "failed") continue;
+
     promises.push(
       new Promise(async (resolve) => {
         let withHis: WithdrawalHistoryType = {
@@ -271,7 +285,10 @@ async function getPendingHistoriesByRPC(
             // If a withdrawal stays in l2Pending too long, then it may have failed for some reason,
             // such as `over-withdraw`.
             const elapsedMins = (Date.now() - new Date(withdrawalTx.date).getTime()) / 1000 / 60;
-            if (elapsedMins > 3) withHis.status = "failed";
+            if (elapsedMins > 3) {
+              withHis.status = "failed";
+              updateTxWithStatus(withHis.txHash, "failed");
+            }
           }
           resolve(withHis);
         } catch (_) {
