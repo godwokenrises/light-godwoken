@@ -24,5 +24,12 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
+    resolve: {
+      alias: {
+        https: "agent-base",
+        // comment above line and uncomment below line if it does not work
+        // http: "agent-base",
+      },
+    },
   };
 });
