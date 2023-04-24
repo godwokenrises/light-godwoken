@@ -75,9 +75,9 @@ const RequestWithdrawalV1: React.FC<{ addTxToHistory: (txHistory: BaseL1TxHistor
     }
 
     eventEmitter.on("sent", (txHash) => {
+      addTxToHistory({ txHash, amount, capacity, type: "withdrawal", token: selectedSudt });
       notification.success({
-        message: `Withdrawal Tx(${txHash}) has been sent,it will take less than 5 minutes before the tx can be tracked and appear in the pending list, please wait...`,
-        duration: 0,
+        message: `Withdrawal Tx(${txHash}) has been sent`,
       });
       setCKBInput("");
       setSudtValue("");
