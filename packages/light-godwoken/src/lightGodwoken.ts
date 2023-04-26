@@ -122,6 +122,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
     debug("depositLock", depositLock);
     const ckbCollector = this.provider.ckbIndexer.collector({
       lock: depositLock,
+      scriptSearchMode: "exact",
     });
     const currentCkbBlockNumber = await this.getCkbCurrentBlockNumber();
     const depositList: DepositRequest[] = [];
@@ -204,6 +205,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       lock: ownerLock,
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
+      scriptSearchMode: "exact",
     });
     let ownerCellCapacity = BI.from(0);
     for await (const cell of ownerCellCollector.collect()) {
@@ -331,6 +333,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       }),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
+      scriptSearchMode: "exact",
     });
     for await (const cell of ckbCollector.collect()) {
       collectedCapacity = collectedCapacity.add(BI.from(cell.cellOutput.capacity));
@@ -343,6 +346,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if user don't deposit all sudt, we need to collect more capacity to exchange for sudt
         neededCapacity = neededCapacity.add(BI.from(SUDT_CELL_CAPACITY));
       }
+      // Throw https://github.com/ckb-js/lumos/blob/v0.20.0-alpha.2/packages/ckb-indexer/src/services.ts#L23-L30
+      // When both `lock` and `type` in search key, the script search mode will works on `lock`
       const sudtCollector = this.provider.ckbIndexer.collector({
         lock: helpers.parseAddress(this.provider.l1Address, {
           config: this.getConfig().lumosConfig,
@@ -351,6 +356,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if sudt cell's data has more info than just amount (16 bytes), skip it
         // because we don't know what the extension bytes contain
         outputDataLenRange: ["0x10", "0x11"],
+        scriptSearchMode: "exact",
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCapacity = collectedCapacity.add(BI.from(cell.cellOutput.capacity));
@@ -374,6 +380,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if sudt cell's data has more info than just amount (16 bytes), skip it
         // because we don't know what the extension bytes contain
         outputDataLenRange: ["0x10", "0x11"],
+        // `exact` only works on lock
+        scriptSearchMode: "exact",
       });
       for await (const cell of freeCkbCollector.collect()) {
         const haveFreeCapacity = BI.from(SUDT_CELL_CAPACITY).lt(cell.cellOutput.capacity);
@@ -926,6 +934,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if sudt cell's data has more info than just amount (16 bytes), skip it
         // because we don't know what the extension bytes contain
         outputDataLenRange: ["0x10", "0x11"],
+        scriptSearchMode: "exact",
       });
       for await (const cell of sudtCollector.collect()) {
         collectedCells.push(cell);
@@ -950,6 +959,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         // if sudt cell's data has more info than just amount (16 bytes), skip it
         // because we don't know what the extension bytes contain
         outputDataLenRange: ["0x10", "0x11"],
+        // `exact` only works on lock
+        scriptSearchMode: "exact",
       });
       for await (const cell of freeCkbCollector.collect()) {
         const hasFreeCkb = BI.from(cell.cellOutput.capacity).gt(SUDT_CELL_CAPACITY);
@@ -976,6 +987,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
         lock: senderLock,
         type: "empty",
         outputDataLenRange: ["0x0", "0x1"],
+        scriptSearchMode: "exact",
       });
       for await (const cell of ckbCollector.collect()) {
         collectedCkb = collectedCkb.add(BI.from(cell.cellOutput.capacity));
@@ -1194,6 +1206,8 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       // if sudt cell's data has more info than just amount (16 bytes), skip it
       // because we don't know what the extension bytes contain
       outputDataLenRange: ["0x10", "0x11"],
+      // `exact` only works on lock
+      scriptSearchMode: "exact",
     });
 
     // type hash list of all sudt that user want to query
@@ -1233,6 +1247,7 @@ export default abstract class DefaultLightGodwoken implements LightGodwokenBase 
       lock: fromScript,
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
+      scriptSearchMode: "exact",
     });
     for await (const cell of collector.collect()) {
       collectedSum = collectedSum.add(cell.cellOutput.capacity);
