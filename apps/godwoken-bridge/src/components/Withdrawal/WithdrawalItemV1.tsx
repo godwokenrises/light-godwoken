@@ -110,7 +110,6 @@ export interface IWithdrawalRequestCardProps {
   amount: HexNumber;
   status: string;
   erc20?: ProxyERC20;
-  now?: number;
 }
 
 const WithdrawalRequestCard = ({
@@ -210,7 +209,7 @@ const WithdrawalRequestCard = ({
             </Tooltip>
           )}
           {status === "failed" && (
-            <Tooltip title={status}>
+            <Tooltip title={"Failed withdrawal requests are not stored on-chain, and will be cleared after 3 days."}>
               <CloseCircleOutlined style={{ color: "#D03A3A", height: "21px", lineHeight: "21px" }} />
             </Tooltip>
           )}

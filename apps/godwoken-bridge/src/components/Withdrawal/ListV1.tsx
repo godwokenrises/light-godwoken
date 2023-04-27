@@ -91,10 +91,10 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     return pendingHistory || [];
   }, [pendingHistory]);
   const hasL2Pending = useMemo(() => {
-    return pendingList.filter((item) => item.status === "l2Pending").length > 0;
+    return pendingList.filter((pw) => pw.status === "l2Pending").length > 0;
   }, [pendingList]);
   const completedList = useMemo(() => {
-    return withdrawalList?.filter((history) => history.status === "succeed") || [];
+    return withdrawalList?.filter((cw) => ["succeed", "failed"].includes(cw.status)) || [];
   }, [withdrawalList]);
 
   const loadPendingHistory = useCallback(() => {
@@ -110,16 +110,24 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
   const removeLocalTxHistory = useCallback(() => {
     if (pendingList.length === 0) return;
     const removeHashes = [];
-    for (const item of pendingList) {
+    for (const pw of pendingList) {
       const index = completedList.findIndex(
-        (_) => _.layer1TxHash === item.layer1TxHash && ["succeed", "failed"].includes(_.status),
+        (_) => _.layer1TxHash === pw.layer1TxHash && ["succeed", "failed"].includes(_.status),
       );
       if (index >= 0) {
-        removeHashes.push(item.txHash);
+        removeHashes.push(pw.txHash);
       }
     }
+
+    // remove outdated failed tx, failed records will be cleared after 3 days.
+    for (const lth of localTxHistory) {
+      if (lth.status !== "failed") continue;
+      const elapseddays = (Date.now() - new Date(lth.date).getTime()) / 1000 / 60 / 60 / 24;
+      if (elapseddays > 3) removeHashes.push(lth.txHash);
+    }
+
     removeTxWithTxHashes(removeHashes);
-  }, [completedList, pendingList, removeTxWithTxHashes]);
+  }, [completedList, pendingList, localTxHistory, removeTxWithTxHashes]);
 
   useDebounceEffect(() => removeLocalTxHistory(), [withdrawalHistory]);
 
@@ -236,36 +244,48 @@ async function getWithdrawalHistories(lightGodwoken: LightGodwokenV1, page: numb
   }
 }
 
-async function getPendingHistoriesByRPC(lightGodwoken: LightGodwokenV1, txHistory: L1TxHistoryInterface[]) {
-  if (txHistory.length === 0) return [];
+async function getPendingHistoriesByRPC(
+  lightGodwoken: LightGodwokenV1,
+  localTxHistory: L1TxHistoryInterface[],
+): Promise<WithdrawalHistoryType[]> {
+  if (localTxHistory.length === 0) return [];
   const lastFinalizedBlockNumber = await lightGodwoken.provider.getLastFinalizedBlockNumber();
   const promises: any[] = [];
-  for (const item of txHistory) {
+  for (const withdrawalTx of localTxHistory) {
     promises.push(
       new Promise(async (resolve) => {
-        let data: WithdrawalHistoryType = {
-          amount: item.amount,
-          capacity: item.capacity,
-          status: "l2Pending",
-          txHash: item.txHash,
-          erc20: item.token as ProxyERC20,
+        let withHis: WithdrawalHistoryType = {
+          amount: withdrawalTx.amount,
+          capacity: withdrawalTx.capacity,
+          status: withdrawalTx.status ?? "l2Pending",
+          txHash: withdrawalTx.txHash,
+          erc20: withdrawalTx.token as ProxyERC20,
         };
         try {
-          const result = (await lightGodwoken.getWithdrawal(item.txHash)) as any;
+          const result = (await lightGodwoken.getWithdrawal(withdrawalTx.txHash)) as any;
           const blockNumber = result?.l2_committed_info.block_number;
+
           if (blockNumber) {
-            data = {
-              ...data,
+            // result?.status === "committed"
+            withHis = {
+              ...withHis,
               status: result?.l1_committed_info?.transaction_hash ? "pending" : "l2Pending",
               remainingBlockNumber: blockNumber ? Math.max(0, blockNumber - lastFinalizedBlockNumber) : undefined,
               withdrawalBlockNumber: blockNumber,
               layer1TxHash: result?.l1_committed_info?.transaction_hash,
               sudt_script_hash: result?.withdrawal?.request?.raw?.sudt_script_hash,
             };
+          } else {
+            // If a withdrawal stays in l2Pending too long, then it may have failed for some reason,
+            // such as `over-withdraw`.
+            const elapsedMins = (Date.now() - new Date(withdrawalTx.date).getTime()) / 1000 / 60;
+            if (elapsedMins > 3) {
+              withHis.status = "failed";
+            }
           }
-          resolve(data);
+          resolve(withHis);
         } catch (_) {
-          resolve(data);
+          resolve(withHis);
         }
       }),
     );
