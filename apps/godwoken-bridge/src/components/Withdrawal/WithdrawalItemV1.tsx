@@ -110,7 +110,6 @@ export interface IWithdrawalRequestCardProps {
   amount: HexNumber;
   status: string;
   erc20?: ProxyERC20;
-  now?: number; // TODO: `now` is not used, remove it?
 }
 
 const WithdrawalRequestCard = ({
