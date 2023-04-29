@@ -122,8 +122,8 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     // remove outdated failed tx, failed records will be cleared after 3 days.
     for (const lth of localTxHistory) {
       if (lth.status !== "failed") continue;
-      const elapseddays = (Date.now() - new Date(lth.date).getTime()) / 1000 / 60 / 60 / 24;
-      if (elapseddays > 3) removeHashes.push(lth.txHash);
+      const elapsedMinss = (Date.now() - new Date(lth.date).getTime()) / 1000 / 60;
+      if (elapsedMinss > 3) removeHashes.push(lth.txHash);
     }
 
     removeTxWithTxHashes(removeHashes);
