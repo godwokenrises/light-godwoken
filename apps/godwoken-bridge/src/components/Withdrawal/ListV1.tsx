@@ -123,7 +123,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     for (const lth of localTxHistory) {
       if (lth.status !== "failed") continue;
       const elapsedMinss = (Date.now() - new Date(lth.date).getTime()) / 1000 / 60;
-      if (elapsedMinss > 3) removeHashes.push(lth.txHash);
+      if (elapsedMinss > 30) removeHashes.push(lth.txHash);
     }
 
     removeTxWithTxHashes(removeHashes);
