@@ -3,7 +3,7 @@
   "version": "0.4.3",
   "private": true,
   "scripts": {
-    "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite",
+    "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite --open",
     "build": "tsc && REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite build",
     "clean": "rm -rf ./dist && rm tsconfig.tsbuildinfo",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
