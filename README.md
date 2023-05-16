@@ -32,3 +32,8 @@ $ yarn run clean:packages
 ```
 
 
+### Run development of Godwoken bridge
+$ cd ./app/godwoken-bridge
+$ yarn install
+$ yarn start
+
