@@ -1,6 +1,6 @@
 {
   "name": "godwoken-bridge",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "scripts": {
     "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite",
@@ -32,9 +32,9 @@
   },
   "dependencies": {
     "@ant-design/icons": "^4.7.0",
-    "@ckb-lumos/bi": "^0.20.0-alpha.1",
-    "@ckb-lumos/codec": "^0.20.0-alpha.1",
-    "@ckb-lumos/lumos": "^0.20.0-alpha.1",
+    "@ckb-lumos/bi": "^0.20.0-alpha.2",
+    "@ckb-lumos/codec": "^0.20.0-alpha.2",
+    "@ckb-lumos/lumos": "^0.20.0-alpha.2",
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/providers": "^8.1.1",
     "@rehooks/local-storage": "^2.4.4",

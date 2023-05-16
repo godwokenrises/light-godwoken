@@ -1,5 +1,11 @@
 # [Changelog](https://keepachangelog.com/en/1.0.0/)
 
+# 0.4.3 (2023-5-12)
+### Bug Fixes
+- Fix the status of a long time l2Pending withdrawal ([#300](https://github.com/godwokenrises/light-godwoken/pull/300)) (@Flouse)
+- https.Agent is not a constructor ([#301](https://github.com/godwokenrises/light-godwoken/pull/301)) (@classicalliu)
+- Remove outdated failed withdrawals ([#304](https://github.com/godwokenrises/light-godwoken/pull/304)) (@ShookLyngs)
+
 # 0.4.2 (2023-4-17)
 ### Features
 - Refactor the Withdrawal Pending List ([#280](https://github.com/godwokenrises/light-godwoken/pull/280)) (@GitOfJason)

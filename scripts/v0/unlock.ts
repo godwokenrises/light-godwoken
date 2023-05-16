@@ -97,6 +97,7 @@ async function main() {
       code_hash: withdrawalLock.script_type_hash,
       args: `${config.layer2Config.ROLLUP_CONFIG.rollup_type_hash}${targetAccountScriptHash.slice(2)}`,
     },
+    scriptSearchMode: "exact",
   });
 
   const cells: Cell[] = [];

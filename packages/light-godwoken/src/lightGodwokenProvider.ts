@@ -116,6 +116,7 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       }),
       type: "empty",
       outputDataLenRange: ["0x0", "0x1"],
+      scriptSearchMode: "exact",
     });
     for await (const cell of pureCkbCollector.collect()) {
       ckbBalance = ckbBalance.add(cell.cellOutput.capacity);
@@ -132,6 +133,8 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
       // if sudt cell's data has more info than just amount (16 bytes), skip it
       // because we don't know what the extension bytes contain
       outputDataLenRange: ["0x10", "0x11"],
+      // `exact` only works on lock
+      scriptSearchMode: "exact",
     });
     for await (const cell of freeCkbCollector.collect()) {
       ckbBalance = ckbBalance.add(cell.cellOutput.capacity).sub(SUDT_CELL_CAPACITY);
@@ -220,14 +223,14 @@ export default class DefaultLightGodwokenProvider implements LightGodwokenProvid
 
   async getRollupCell(): Promise<Cell | undefined> {
     const rollupConfig = this.config.layer2Config.ROLLUP_CONFIG;
-    const queryOptions = {
+    const collector = this.ckbIndexer.collector({
       type: {
         codeHash: rollupConfig.rollupTypeScript.codeHash,
         hashType: rollupConfig.rollupTypeScript.hashType,
         args: rollupConfig.rollupTypeScript.args,
       },
-    };
-    const collector = this.ckbIndexer.collector(queryOptions);
+      scriptSearchMode: "exact",
+    });
     let rollupCell;
     for await (const cell of collector.collect()) {
       if (cell === null) {
