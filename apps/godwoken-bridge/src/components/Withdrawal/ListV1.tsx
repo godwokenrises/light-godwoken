@@ -99,13 +99,18 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     return withdrawalList?.filter((cw) => ["succeed", "failed"].includes(cw.status)) || [];
   }, [withdrawalList]);
 
-  const loadPendingHistory = useCallback((localTxHistory: L1TxHistoryInterface[]) => {
-    if (localTxHistory.length === 0) {
-      setPendingHistory([]);
-      return;
-    }
-    getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory).then((list) => setPendingHistory(list));
-  }, [localTxHistory, lightGodwoken]);
+  const loadPendingHistory = useCallback(
+    (localTxHistory: L1TxHistoryInterface[]) => {
+      if (localTxHistory.length === 0) {
+        setPendingHistory([]);
+        return;
+      }
+      getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory).then((list) =>
+        setPendingHistory(list),
+      );
+    },
+    [localTxHistory, lightGodwoken],
+  );
 
   useDebounceEffect(() => loadPendingHistory(localTxHistory), [localTxHistory]);
 
@@ -147,7 +152,6 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       checkL2PendingTimer.current = setInterval(() => {
         loadPendingHistory(localTxHistoryRef.current);
       }, 15000);
-
     }
     return () => {
       if (checkL2PendingTimer.current) {
