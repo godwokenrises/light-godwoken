@@ -1,9 +1,9 @@
 {
   "name": "godwoken-bridge",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "private": true,
   "scripts": {
-    "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite",
+    "start": "REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite --open",
     "build": "tsc && REACT_APP_COMMIT_HASH=$(git rev-parse --short HEAD) vite build",
     "clean": "rm -rf ./dist && rm tsconfig.tsbuildinfo",
     "format:check": "prettier --check '**/*.{js,jsx,ts,tsx}'",
@@ -86,7 +86,7 @@
     "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3",
-    "vite": "4.2.1",
+    "vite": "4.2.3",
     "vite-plugin-svgr": "^2.4.0"
   },
   "resolutions": {

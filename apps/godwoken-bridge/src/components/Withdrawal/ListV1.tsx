@@ -46,6 +46,8 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
   const isCompleted = params.status === "completed";
   const lightGodwoken = useLightGodwoken();
   const [pendingHistory, setPendingHistory] = useState<WithdrawalHistoryType[] | undefined>(undefined);
+  const localTxHistoryRef = useRef(localTxHistory);
+  localTxHistoryRef.current = localTxHistory;
 
   function navigateStatus(targetStatus: "pending" | "completed") {
     navigate(`/${params.version}/withdrawal/${targetStatus}`);
@@ -97,7 +99,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     return withdrawalList?.filter((cw) => ["succeed", "failed"].includes(cw.status)) || [];
   }, [withdrawalList]);
 
-  const loadPendingHistory = useCallback(() => {
+  const loadPendingHistory = useCallback((localTxHistory: L1TxHistoryInterface[]) => {
     if (localTxHistory.length === 0) {
       setPendingHistory([]);
       return;
@@ -105,7 +107,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
     getPendingHistoriesByRPC(lightGodwoken as LightGodwokenV1, localTxHistory).then((list) => setPendingHistory(list));
   }, [localTxHistory, lightGodwoken]);
 
-  useDebounceEffect(() => loadPendingHistory(), [localTxHistory]);
+  useDebounceEffect(() => loadPendingHistory(localTxHistory), [localTxHistory]);
 
   const removeLocalTxHistory = useCallback(() => {
     if (pendingList.length === 0) return;
@@ -141,9 +143,9 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
       clearTimeout(checkL2PendingTimer.current);
     }
     if (hasL2Pending) {
-      loadPendingHistory();
+      loadPendingHistory(localTxHistory);
       checkL2PendingTimer.current = setInterval(() => {
-        loadPendingHistory();
+        loadPendingHistory(localTxHistoryRef.current);
       }, 15000);
     }
     return () => {
@@ -155,7 +157,7 @@ export const WithdrawalList: React.FC<Props> = ({ txHistory: localTxHistory, rem
 
   const onPendingClick = useCallback(() => {
     if (isPending && pendingList.length > 0 && !hasL2Pending) {
-      loadPendingHistory();
+      loadPendingHistory(localTxHistory);
     }
   }, [isPending, pendingList, hasL2Pending, loadPendingHistory]);
 

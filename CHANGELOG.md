@@ -1,12 +1,17 @@
 # [Changelog](https://keepachangelog.com/en/1.0.0/)
 
-# 0.4.3 (2023-5-12)
+# 0.4.4 (2023-06-21)
+### Bug Fixes
+- update readme file and godwoken bridge script for development([#308](https://github.com/godwokenrises/light-godwoken/commit/1d347d2e3c7af53efa5597606d84ea4f3523d35f))(@lee920217)
+- Fix multi pending list problem ([#311](https://github.com/godwokenrises/light-godwoken/pull/311))(@lee920217)
+
+# 0.4.3 (2023-05-12)
 ### Bug Fixes
 - Fix the status of a long time l2Pending withdrawal ([#300](https://github.com/godwokenrises/light-godwoken/pull/300)) (@Flouse)
 - https.Agent is not a constructor ([#301](https://github.com/godwokenrises/light-godwoken/pull/301)) (@classicalliu)
 - Remove outdated failed withdrawals ([#304](https://github.com/godwokenrises/light-godwoken/pull/304)) (@ShookLyngs)
 
-# 0.4.2 (2023-4-17)
+# 0.4.2 (2023-04-17)
 ### Features
 - Refactor the Withdrawal Pending List ([#280](https://github.com/godwokenrises/light-godwoken/pull/280)) (@GitOfJason)
 - refactor: migrate create-react to vite ([#289](https://github.com/godwokenrises/light-godwoken/pull/289)) (@frmachao)
