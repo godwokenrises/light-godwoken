@@ -139,6 +139,7 @@ export const MainnetLayer2ConfigV1: LightGodwokenConfig = {
     CHAIN_NAME: "Godwoken Mainnet v1",
     FINALITY_BLOCKS: 16800,
     // delay seconds between Godwoken blocks, defined by Godwoken mainnet_v1's fullnode
+    // see https://github.com/godwokenrises/godwoken/blob/v1.14.0/crates/config/src/config.rs#L184-L185
     BLOCK_PRODUCE_TIME: 36,
     MIN_CANCEL_DEPOSIT_TIME: 604800,
 
