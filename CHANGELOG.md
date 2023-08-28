@@ -1,5 +1,8 @@
 # [Changelog](https://keepachangelog.com/en/1.0.0/)
 
+# 0.4.5 (2023-08-22)
+- Update block_interval_seconds of Godwoken mainnet_v1 ([#320](https://github.com/godwokenrises/light-godwoken/pull/320))
+
 # 0.4.4 (2023-06-21)
 ### Bug Fixes
 - update readme file and godwoken bridge script for development([#308](https://github.com/godwokenrises/light-godwoken/commit/1d347d2e3c7af53efa5597606d84ea4f3523d35f))(@lee920217)
