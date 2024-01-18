@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { number } from "@ckb-lumos/codec";
-import { useInfiniteScroll } from "ahooks";
+import { useDeepCompareEffect, useInfiniteScroll } from "ahooks";
 import { format } from "date-fns";
 import { AxiosError } from "axios";
 import { LightGodwoken } from "light-godwoken";
@@ -16,6 +16,7 @@ import { Empty } from "../Container/Empty";
 const DepositListDiv = styled.div`
   border-bottom-left-radius: 24px;
   border-bottom-right-radius: 24px;
+
   .list {
     max-height: 500px;
     min-height: 50px;
@@ -31,6 +32,7 @@ export interface DepositListParams {
 export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoading }) => {
   const lightGodwoken = useLightGodwoken();
   const cancelTimeout = lightGodwoken?.getCancelTimeout() || 0;
+  const [completedList, setCompletedList] = useState<DepositHistoryType[]>([]);
 
   const listRef = useRef<HTMLDivElement>(null);
   const depositHistory = useInfiniteScroll(
@@ -77,7 +79,22 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
   const depositHistoryList = depositHistory.data?.list ?? [];
   const depositHistoryTxHashes = depositHistoryList.map((history) => history.txHash);
   const isListLoading = isLoading || depositHistory.loading || depositHistory.loadingMore;
-
+  useDeepCompareEffect(() => {
+    const res = depositList.filter(
+      (item) => item.status !== "pending" && !depositHistoryTxHashes.includes(item.txHash),
+    );
+    const list = [...depositHistoryList, ...res];
+    list.sort((a, b) => {
+      if (a.date < b.date) {
+        return 1;
+      } else if (a.date > b.date) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    setCompletedList(list);
+  }, [depositHistoryList, depositList]);
   const params = useParams();
   const navigate = useNavigate();
   const isPending = params.status === "pending";
@@ -87,9 +104,7 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
   }
 
   const pendingList = depositList.filter((history) => history.status === "pending");
-  const completedList = depositList.filter((history) => {
-    return history.status !== "pending" && !depositHistoryTxHashes.includes(history.txHash);
-  });
+
   function navigateStatus(targetStatus: "pending" | "completed") {
     navigate(`/${params.version}/deposit/${targetStatus}`);
   }
@@ -122,11 +137,8 @@ export const DepositList: React.FC<DepositListParams> = ({ depositList, isLoadin
       )}
       {isCompleted && (
         <div ref={listRef} className="list completed-list">
-          {!completedList.length && !depositHistoryList.length && <Empty>No completed deposits</Empty>}
+          {completedList.length === 0 && <Empty>No completed deposits</Empty>}
           {completedList.map((deposit, index) => (
-            <DepositItem {...deposit} key={index}></DepositItem>
-          ))}
-          {depositHistoryList.map((deposit, index) => (
             <DepositItem {...deposit} key={index}></DepositItem>
           ))}
         </div>
