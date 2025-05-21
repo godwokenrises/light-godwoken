@@ -265,13 +265,7 @@ export default function Deposit() {
               To deposit, transfer CKB or supported sUDT tokens to your L1 Wallet Address first
             </Text>
           </CardHeader>
-          <WalletInfo
-            l1Address={l1Address}
-            ethAddress={ethAddress}
-            depositAddress={depositAddress}
-            l1Balance={CKBBalance}
-            l2Balance={l2CKBBalance}
-          ></WalletInfo>
+          <WalletInfo />
           <CKBInputPanel
             value={CKBInput}
             onUserInput={setCKBInput}

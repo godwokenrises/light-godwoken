@@ -1,6 +1,8 @@
+import React from "react";
 import { WithdrawalList } from "../../components/Withdrawal/ListV1";
 import RequestWithdrawalV1 from "../../components/Withdrawal/RequestWithdrawalV1";
 import { Card, CardHeader, PageContent, Text } from "../../style/common";
+import { WalletInfo } from "../../components/WalletInfo";
 import { WalletConnect } from "../../components/WalletConnect";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
 import { useGodwokenVersion } from "../../hooks/useGodwokenVersion";
@@ -24,6 +26,7 @@ const WithdrawalV1: React.FC = () => {
               <span>Withdrawal</span>
             </Text>
           </CardHeader>
+          <WalletInfo hideDepositAddress={true} />
           <div className="request-withdrawal">
             <RequestWithdrawalV1 addTxToHistory={addTxToHistory} />
           </div>

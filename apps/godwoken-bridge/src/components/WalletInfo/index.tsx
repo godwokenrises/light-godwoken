@@ -11,6 +11,8 @@ import { truncateCkbAddress, truncateDotBitAlias, truncateEthAddress } from "../
 import { getDisplayAmount } from "../../utils/formatTokenAmount";
 import { formatToThousands } from "../../utils/numberFormat";
 import { useLightGodwoken } from "../../hooks/useLightGodwoken";
+import { useL1CKBBalance } from "../../hooks/useL1CKBBalance";
+import { useL2CKBBalance } from "../../hooks/useL2CKBBalance";
 import { useDotBitReverseAlias } from "../../hooks/useDotBit";
 import { Placeholder } from "../Placeholder";
 import { QrCodeModal } from "../QrCodeModal";
@@ -120,11 +122,9 @@ const DetailRow = styled.div`
 `;
 
 export interface WalletInfoProps {
-  l1Address?: string;
-  l1Balance?: string;
-  l2Balance?: string;
-  ethAddress?: string;
-  depositAddress?: string;
+  hideDepositAddress?: boolean;
+  hideEthAddress?: boolean;
+  hideL2Balance?: boolean;
 }
 
 export interface QrCodeValue {
@@ -134,11 +134,14 @@ export interface QrCodeValue {
 }
 
 export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
-  const { l1Address, ethAddress, depositAddress, l1Balance, l2Balance } = props;
-
   const lightGodwoken = useLightGodwoken();
   const decimals = lightGodwoken?.getNativeAsset().decimals;
   const lightGodwokenConfig = lightGodwoken?.provider.getConfig();
+  const l1Address = lightGodwoken?.provider.getL1Address();
+  const ethAddress = lightGodwoken?.provider.getL2Address();
+  const depositAddress = lightGodwoken?.generateDepositAddress();
+  const { data: l1Balance } = useL1CKBBalance();
+  const { data: l2Balance } = useL2CKBBalance();
 
   const dotbitAlias = useDotBitReverseAlias(ethAddress);
 
@@ -209,61 +212,65 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
         </div>
       </div>
 
-      <div className="address-col">
-        <div>
-          <Text className="title">L1 Deposit Address</Text>
-          <PrimaryText className="address">
-            {depositAddress ? truncateCkbAddress(depositAddress) : <Placeholder />}
-          </PrimaryText>
+      {!props.hideDepositAddress && (
+        <div className="address-col">
+          <div>
+            <Text className="title">L1 Deposit Address</Text>
+            <PrimaryText className="address">
+              {depositAddress ? truncateCkbAddress(depositAddress) : <Placeholder />}
+            </PrimaryText>
+          </div>
+          <div className="actions">
+            <CustomTooltip title="Check address details">
+              <ActionButton
+                className="button"
+                onClick={() => showQrCode("L1 Deposit Address", depositAddress, getL1BrowserLink(depositAddress))}
+              >
+                <Icon>
+                  <MoreVertRound />
+                </Icon>
+              </ActionButton>
+            </CustomTooltip>
+            <CustomTooltip title="Copy address">
+              <ActionButton className="button" onClick={() => copyValue("L1 Deposit Address", depositAddress)}>
+                <Icon>
+                  <ContentCopyOutlined />
+                </Icon>
+              </ActionButton>
+            </CustomTooltip>
+          </div>
         </div>
+      )}
 
-        <div className="actions">
-          <CustomTooltip title="Check address details">
-            <ActionButton
-              className="button"
-              onClick={() => showQrCode("L1 Deposit Address", depositAddress, getL1BrowserLink(depositAddress))}
-            >
-              <Icon>
-                <MoreVertRound />
-              </Icon>
-            </ActionButton>
-          </CustomTooltip>
-          <CustomTooltip title="Copy address">
-            <ActionButton className="button" onClick={() => copyValue("L1 Deposit Address", depositAddress)}>
-              <Icon>
-                <ContentCopyOutlined />
-              </Icon>
-            </ActionButton>
-          </CustomTooltip>
+      {!props.hideEthAddress && (
+        <div className="address-col">
+          <div>
+            <Text className="title">Ethereum Address</Text>
+            <PrimaryText className="address">
+              {ethAddress ? truncateEthAddress(ethAddress) : <Placeholder />}
+            </PrimaryText>
+          </div>
+          <div className="actions">
+            <CustomTooltip title="Check address details">
+              <ActionButton
+                className="button"
+                onClick={() => showQrCode("Ethereum Address", ethAddress, getL2BrowserLink(ethAddress))}
+              >
+                <Icon>
+                  <MoreVertRound />
+                </Icon>
+              </ActionButton>
+            </CustomTooltip>
+            <Tooltip title="Copy address">
+              <ActionButton className="button" onClick={() => copyValue("Ethereum Address", ethAddress)}>
+                <Icon>
+                  <ContentCopyOutlined />
+                </Icon>
+              </ActionButton>
+            </Tooltip>
+          </div>
         </div>
-      </div>
-
-      <div className="address-col">
-        <div>
-          <Text className="title">Ethereum Address</Text>
-          <PrimaryText className="address">{ethAddress ? truncateEthAddress(ethAddress) : <Placeholder />}</PrimaryText>
-        </div>
-
-        <div className="actions">
-          <CustomTooltip title="Check address details">
-            <ActionButton
-              className="button"
-              onClick={() => showQrCode("Ethereum Address", ethAddress, getL2BrowserLink(ethAddress))}
-            >
-              <Icon>
-                <MoreVertRound />
-              </Icon>
-            </ActionButton>
-          </CustomTooltip>
-          <Tooltip title="Copy address">
-            <ActionButton className="button" onClick={() => copyValue("Ethereum Address", ethAddress)}>
-              <Icon>
-                <ContentCopyOutlined />
-              </Icon>
-            </ActionButton>
-          </Tooltip>
-        </div>
-      </div>
+      )}
 
       <div className="address-col">
         <div>
@@ -306,12 +313,14 @@ export const WalletInfo: React.FC<WalletInfoProps> = (props) => {
           {l1Balance ? formatToThousands(getDisplayAmount(BI.from(l1Balance), 8)) + " CKB" : <Placeholder />}
         </PrimaryText>
       </BalanceRow>
-      <BalanceRow>
-        <Text className="title">L2 Balance</Text>
-        <PrimaryText>
-          {l2Balance ? formatToThousands(getDisplayAmount(BI.from(l2Balance), decimals)) + " CKB" : <Placeholder />}
-        </PrimaryText>
-      </BalanceRow>
+      {!props.hideL2Balance && (
+        <BalanceRow>
+          <Text className="title">L2 Balance</Text>
+          <PrimaryText>
+            {l2Balance ? formatToThousands(getDisplayAmount(BI.from(l2Balance), decimals)) + " CKB" : <Placeholder />}
+          </PrimaryText>
+        </BalanceRow>
+      )}
 
       {qr && (
         <QrCodeModal
