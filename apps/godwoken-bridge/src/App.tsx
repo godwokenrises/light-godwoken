@@ -6,6 +6,7 @@ import GodwokenBridge from "./views/GodwokenBridge";
 import Deposit from "./views/Deposit";
 import Withdrawal from "./views/withdrawal/Withdrawal";
 import L1Transfer from "./views/L1Transfer";
+import { ShowOnPhaseOut } from "./components/PhaseOut/ShowOnPhaseOut";
 
 function App() {
   const queryClient = new QueryClient();
@@ -16,10 +17,13 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="v1" />} />
             <Route path=":version/*" element={<GodwokenBridge />}>
-              <Route index element={<Navigate to="deposit" />} />
+              <Route
+                index
+                element={<ShowOnPhaseOut is={<Navigate to="withdrawal" />} not={<Navigate to="deposit" />} />}
+              />
               <Route path="deposit">
                 <Route index element={<Navigate to="pending" />} />
-                <Route path=":status" element={<Deposit />} />
+                <Route path=":status" element={<ShowOnPhaseOut is={<Navigate to="/" />} not={<Deposit />} />} />
               </Route>
               <Route path="withdrawal">
                 <Route index element={<Navigate to="pending" />} />

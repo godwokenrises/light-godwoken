@@ -7,6 +7,7 @@ import { Icon } from "@ricons/utils";
 import { OpenInNewRound } from "@ricons/material";
 import { PopoverMenu } from "../PopoverMenu";
 import { VersionSelect } from "../VersionSelect";
+import { ShowOnPhaseOut } from "../PhaseOut/ShowOnPhaseOut";
 import { matchPath, useLocation, useParams } from "react-router-dom";
 
 import { ReactComponent as Logo } from "../../assets/logo.svg";
@@ -178,9 +179,13 @@ export default function PageHeader() {
           <Logo height={27} />
         </div>
         <div className="link-list">
-          <HeaderTab to={`/${params.version}/deposit`} pattern="/:version/deposit/*">
-            Deposit
-          </HeaderTab>
+          <ShowOnPhaseOut
+            not={
+              <HeaderTab to={`/${params.version}/deposit`} pattern="/:version/deposit/*">
+                Deposit
+              </HeaderTab>
+            }
+          />
           <HeaderTab to={`/${params.version}/withdrawal`} pattern="/:version/withdrawal/*">
             Withdrawal
           </HeaderTab>
