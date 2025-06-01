@@ -7,6 +7,7 @@ import PageFooter from "../components/Layout/PageFooter";
 import { GodwokenVersion } from "light-godwoken";
 import { availableVersions } from "../utils/environment";
 import NetworkMismatchAlert from "../components/NetworkMismatchAlert";
+import { PhaseOutCard } from "../components/PhaseOut/PhaseOutCard";
 
 export default function GodwokenBridge() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function GodwokenBridge() {
     <Page>
       <NetworkMismatchAlert />
       <PageHeader />
+      <PhaseOutCard />
       <Outlet />
       <PageFooter />
     </Page>

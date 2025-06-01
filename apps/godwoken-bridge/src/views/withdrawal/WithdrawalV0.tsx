@@ -1,3 +1,5 @@
+import React from "react";
+import { WalletInfo } from "../../components/WalletInfo";
 import { WalletConnect } from "../../components/WalletConnect";
 import { WithdrawalList } from "../../components/Withdrawal/ListV0";
 import RequestWithdrawalV0 from "../../components/Withdrawal/RequestWithdrawalV0";
@@ -17,6 +19,7 @@ const WithdrawalV0: React.FC = () => {
               <span>Withdrawal</span>
             </Text>
           </CardHeader>
+          <WalletInfo hideDepositAddress={true} />
           <div className="request-withdrawal">
             <RequestWithdrawalV0 />
           </div>

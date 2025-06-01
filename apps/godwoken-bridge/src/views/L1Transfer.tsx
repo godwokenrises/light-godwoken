@@ -1,8 +1,10 @@
-import { useLightGodwoken } from "../hooks/useLightGodwoken";
+import React from "react";
 import { Card, CardHeader, PageContent, Text } from "../style/common";
+import { WalletInfo } from "../components/WalletInfo";
 import { WalletConnect } from "../components/WalletConnect";
-import RequestL1Transfer from "../components/L1Transfer/RequestL1Transfer";
 import L1TransferList from "../components/L1Transfer/L1TransferList";
+import RequestL1Transfer from "../components/L1Transfer/RequestL1Transfer";
+import { useLightGodwoken } from "../hooks/useLightGodwoken";
 
 export default function L1Transfer() {
   // light-godwoken client
@@ -18,6 +20,7 @@ export default function L1Transfer() {
               <span>L1 Transfer</span>
             </Text>
           </CardHeader>
+          <WalletInfo hideDepositAddress={true} hideEthAddress={true} hideL2Balance={true} />
           <RequestL1Transfer />
         </div>
       </Card>
