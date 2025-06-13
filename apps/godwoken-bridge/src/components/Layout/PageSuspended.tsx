@@ -10,7 +10,7 @@ const Wrapper = styled.div`
   height: 100%;
   min-height: calc(100vh);
   background: linear-gradient(111.44deg, #dcf2ed 0%, #d3d9ec 100%);
-  
+
   .header {
     display: flex;
     align-items: center;
@@ -22,7 +22,7 @@ const Wrapper = styled.div`
   .body {
     padding: 0 16px;
     margin: 24px auto 16px auto;
-    
+
     p {
       margin: 0;
     }
@@ -42,8 +42,14 @@ export function PageSuspended() {
       </div>
       <div className="body">
         <Card>
-          <p>At the request of the Force Bridge Team, and in light of the recent incident affecting <b>Force Bridge</b>, the <b>Godwoken Bridge</b> service will also be temporarily suspended. </p>
-          <p>Services will resume once the situation has been fully assessed and clarified. Updates will be shared as the situation progresses. We appreciate your patience and understanding.</p>
+          <p>
+            At the request of the Force Bridge Team, and in light of the recent incident affecting <b>Force Bridge</b>,
+            the <b>Godwoken Bridge</b> service will also be temporarily suspended.{" "}
+          </p>
+          <p>
+            Services will resume once the situation has been fully assessed and clarified. Updates will be shared as the
+            situation progresses. We appreciate your patience and understanding.
+          </p>
         </Card>
       </div>
     </Wrapper>
